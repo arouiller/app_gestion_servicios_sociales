@@ -1,0 +1,104 @@
+.how-it-works {
+  padding: 6rem 0;
+  background: var(--color-bg-soft);
+
+  &__container {
+    max-width: 1200px;
+    margin: 0 auto;
+    padding: 0 1.5rem;
+  }
+
+  &__header {
+    text-align: center;
+    max-width: 560px;
+    margin: 0 auto 4rem;
+  }
+
+  &__title {
+    font-size: clamp(1.75rem, 3vw, 2.5rem);
+    font-weight: 800;
+    color: var(--color-text);
+    line-height: 1.2;
+    margin-bottom: 1rem;
+  }
+
+  &__subtitle {
+    font-size: 1.05rem;
+    color: var(--color-text-light);
+    line-height: 1.7;
+  }
+
+  &__steps {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 2rem;
+    position: relative;
+  }
+}
+
+.step {
+  position: relative;
+  text-align: center;
+  background: var(--color-bg-card);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-md);
+  padding: 2.5rem 2rem;
+  transition: transform var(--transition), box-shadow var(--transition);
+
+  &:hover {
+    transform: translateY(-4px);
+    box-shadow: var(--shadow-md);
+  }
+
+  &__number {
+    font-size: 0.75rem;
+    font-weight: 800;
+    color: var(--color-primary);
+    background: #e8f4f8;
+    display: inline-block;
+    padding: 0.25rem 0.65rem;
+    border-radius: 100px;
+    margin-bottom: 1.25rem;
+    letter-spacing: 1px;
+  }
+
+  &__icon {
+    width: 64px;
+    height: 64px;
+    background: linear-gradient(135deg, var(--color-primary), var(--color-primary-light));
+    color: #fff;
+    border-radius: var(--radius-md);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 1.625rem;
+    margin: 0 auto 1.5rem;
+    box-shadow: 0 8px 20px rgba(26, 107, 138, 0.3);
+  }
+
+  &__title {
+    font-size: 1.1rem;
+    font-weight: 700;
+    color: var(--color-text);
+    margin-bottom: 0.75rem;
+    line-height: 1.3;
+  }
+
+  &__desc {
+    font-size: 0.9rem;
+    color: var(--color-text-light);
+    line-height: 1.65;
+  }
+}
+
+@media (max-width: 768px) {
+  .how-it-works {
+    padding: 4rem 0;
+
+    &__steps {
+      grid-template-columns: 1fr;
+      max-width: 440px;
+      margin: 0 auto;
+    }
+  }
+}
