@@ -1,11 +1,12 @@
 ---
 deployment:
   tasks:
-    # Build del frontend
-    - export REACT_APP_API_URL=https://tu-dominio.com/api
+    # Variables de entorno para el build de React
+    - export REACT_APP_API_URL=https://saddlebrown-armadillo-164855.hostingersite.com/api
     - export REACT_APP_APP_NAME=GestSocial
     - export REACT_APP_ENV=production
     - export CI=false
+    # Build del frontend
     - cd $HOME/frontend && npm install && npm run build
     # Copiar resultado a public_html
     - cp -r $HOME/frontend/build/. $HOME/public_html/
