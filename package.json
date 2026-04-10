@@ -3,8 +3,8 @@
   "version": "1.0.0",
   "private": true,
   "scripts": {
-    "build": "cd frontend && npm install && npm run build && cd ../backend && npm install",
-    "start": "node backend/src/index.js"
+    "postinstall": "cd backend && npm install && node scripts/build.js",
+    "start": "node backend/dist/src/index.js"
   },
   "engines": {
     "node": ">=16.0.0"
