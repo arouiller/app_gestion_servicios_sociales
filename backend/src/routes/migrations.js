@@ -1,8 +1,10 @@
 /**
  * Rutas de migraciones — solo accesibles para admin.
- * GET  /api/migrations        Lista todas las migraciones y su estado
- * POST /api/migrations/up     Aplica la siguiente migración pendiente
- * POST /api/migrations/down   Revierte la última migración aplicada
+ * GET  /api/migrations          Lista todas las migraciones y su estado
+ * GET  /api/migrations/stats    Versión actual + conteo de registros por tabla
+ * GET  /api/migrations/history  Historial completo de eventos
+ * POST /api/migrations/up       Aplica la siguiente migración pendiente
+ * POST /api/migrations/down     Revierte la última migración aplicada
  */
 
 const express = require('express');
@@ -19,13 +21,25 @@ router.get('/', async (req, res) => {
   res.json({ success: true, data: migrations });
 });
 
+// GET /api/migrations/stats
+router.get('/stats', async (req, res) => {
+  const stats = await manager.getDbStats();
+  res.json({ success: true, data: stats });
+});
+
+// GET /api/migrations/history
+router.get('/history', async (req, res) => {
+  const history = await manager.getHistory();
+  res.json({ success: true, data: history });
+});
+
 // POST /api/migrations/up
 router.post('/up', async (req, res) => {
   const result = await manager.upgrade();
   if (!result) {
     return res.json({ success: true, message: 'No hay migraciones pendientes.', data: null });
   }
-  res.json({ success: true, message: `Migración aplicada: ${result.version}`, data: result });
+  res.json({ success: true, message: `Migración ${result.version} aplicada correctamente.`, data: result });
 });
 
 // POST /api/migrations/down
@@ -34,13 +48,7 @@ router.post('/down', async (req, res) => {
   if (!result) {
     return res.json({ success: true, message: 'No hay migraciones para revertir.', data: null });
   }
-  res.json({ success: true, message: `Migración revertida: ${result.version}`, data: result });
-});
-
-// GET /api/migrations/stats
-router.get('/stats', async (req, res) => {
-  const stats = await manager.getDbStats();
-  res.json({ success: true, data: stats });
+  res.json({ success: true, message: `Migración ${result.version} revertida correctamente.`, data: result });
 });
 
 module.exports = router;

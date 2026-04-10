@@ -76,49 +76,66 @@
     opacity: 0.85;
   }
 
-  // ── Tablas ─────────────────────────────────────────────────────────────────
+  // ── Tabla de datos (tablas BD + historial) ─────────────────────────────────
 
-  &__tables-grid {
-    display: grid;
-    grid-template-columns: repeat(auto-fill, minmax(160px, 1fr));
-    gap: 0.75rem;
-  }
-
-  &__table-card {
-    background: var(--color-bg-soft);
+  &__table-wrapper {
     border: 1px solid var(--color-border);
     border-radius: var(--radius-sm);
-    padding: 1rem;
-    display: flex;
-    flex-direction: column;
-    gap: 0.2rem;
-    transition: border-color var(--transition);
+    overflow: hidden;
+    overflow-x: auto;
+  }
 
-    &:hover {
-      border-color: var(--color-primary-light);
+  &__data-table {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: 0.875rem;
+
+    thead tr {
+      background: var(--color-bg-soft);
+      border-bottom: 1px solid var(--color-border);
+    }
+
+    th {
+      padding: 0.625rem 1rem;
+      text-align: left;
+      font-size: 0.75rem;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 0.4px;
+      color: var(--color-text-muted);
+      white-space: nowrap;
+    }
+
+    td {
+      padding: 0.625rem 1rem;
+      border-bottom: 1px solid var(--color-border);
+      color: var(--color-text);
+      vertical-align: middle;
+    }
+
+    tbody tr:last-child td { border-bottom: none; }
+    tbody tr:hover td { background: var(--color-bg-soft); }
+
+    &--history {
+      th, td { white-space: nowrap; }
     }
   }
 
-  &__table-name {
-    font-size: 0.8rem;
-    font-weight: 700;
-    color: var(--color-text-light);
-    white-space: nowrap;
-    overflow: hidden;
-    text-overflow: ellipsis;
+  &__data-table-name {
+    font-weight: 600;
+    font-family: 'Courier New', monospace;
+    font-size: 0.82rem;
   }
 
-  &__table-count {
-    font-size: 1.35rem;
-    font-weight: 800;
-    color: var(--color-text);
-    line-height: 1.1;
+  &__data-table-num {
+    text-align: right !important;
+    font-variant-numeric: tabular-nums;
+    font-weight: 600;
   }
 
-  &__table-label {
-    font-size: 0.72rem;
+  &__fecha {
     color: var(--color-text-muted);
-    font-weight: 500;
+    font-size: 0.82rem;
   }
 
   // ── Tabla de versiones ─────────────────────────────────────────────────────
@@ -178,6 +195,31 @@
 
     &--aplicada  { background: #dcfce7; color: #15803d; }
     &--pendiente { background: #fef9c3; color: #854d0e; }
+  }
+
+  // ── Badges tipo e historial ────────────────────────────────────────────────
+
+  &__tipo {
+    font-size: 0.72rem;
+    font-weight: 700;
+    padding: 0.2rem 0.6rem;
+    border-radius: 100px;
+    text-transform: uppercase;
+    letter-spacing: 0.3px;
+
+    &--upgrade   { background: #dbeafe; color: #1d4ed8; }
+    &--downgrade { background: #fce7f3; color: #9d174d; }
+  }
+
+  &__estado-hist {
+    font-size: 0.72rem;
+    font-weight: 700;
+    padding: 0.2rem 0.6rem;
+    border-radius: 100px;
+    text-transform: capitalize;
+
+    &--exitosa { background: #dcfce7; color: #15803d; }
+    &--fallida { background: #fee2e2; color: #b91c1c; }
   }
 
   // ── Acciones ───────────────────────────────────────────────────────────────

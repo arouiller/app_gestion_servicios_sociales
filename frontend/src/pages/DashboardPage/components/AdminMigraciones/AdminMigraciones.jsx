@@ -2,9 +2,18 @@ import React, { useCallback, useEffect, useState } from 'react';
 import migracionesService from '../../../../services/migracionesService';
 import './AdminMigraciones.scss';
 
+function formatDate(ts) {
+  if (!ts) return '—';
+  return new Date(ts).toLocaleString('es-AR', {
+    year: 'numeric', month: '2-digit', day: '2-digit',
+    hour: '2-digit', minute: '2-digit',
+  });
+}
+
 function AdminMigraciones() {
   const [stats, setStats] = useState(null);
   const [migrations, setMigrations] = useState([]);
+  const [history, setHistory] = useState([]);
   const [loading, setLoading] = useState(true);
   const [actionLoading, setActionLoading] = useState(false);
   const [error, setError] = useState(null);
@@ -13,12 +22,14 @@ function AdminMigraciones() {
   const fetchData = useCallback(async () => {
     setError(null);
     try {
-      const [statsData, migrationsData] = await Promise.all([
+      const [statsData, migrationsData, historyData] = await Promise.all([
         migracionesService.getStats(),
         migracionesService.list(),
+        migracionesService.getHistory(),
       ]);
       setStats(statsData);
       setMigrations(migrationsData);
+      setHistory(historyData);
     } catch (err) {
       setError(err.response?.data?.message || 'Error al cargar datos de la base de datos.');
     } finally {
@@ -93,17 +104,26 @@ function AdminMigraciones() {
       {/* Tablas y registros */}
       <section className="admin-migraciones__section">
         <h3 className="admin-migraciones__section-title">Tablas de la base de datos</h3>
-        {stats?.tables?.length === 0 ? (
+        {!stats?.tables?.length ? (
           <p className="admin-migraciones__empty">No hay tablas en la base de datos.</p>
         ) : (
-          <div className="admin-migraciones__tables-grid">
-            {stats?.tables?.map(({ tabla, registros }) => (
-              <div key={tabla} className="admin-migraciones__table-card">
-                <span className="admin-migraciones__table-name">{tabla}</span>
-                <span className="admin-migraciones__table-count">{registros.toLocaleString()}</span>
-                <span className="admin-migraciones__table-label">registros</span>
-              </div>
-            ))}
+          <div className="admin-migraciones__table-wrapper">
+            <table className="admin-migraciones__data-table">
+              <thead>
+                <tr>
+                  <th>Tabla</th>
+                  <th className="admin-migraciones__data-table-num">Registros</th>
+                </tr>
+              </thead>
+              <tbody>
+                {stats.tables.map(({ tabla, registros }) => (
+                  <tr key={tabla}>
+                    <td className="admin-migraciones__data-table-name">{tabla}</td>
+                    <td className="admin-migraciones__data-table-num">{registros.toLocaleString('es-AR')}</td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
           </div>
         )}
       </section>
@@ -157,6 +177,47 @@ function AdminMigraciones() {
         <p className="admin-migraciones__actions-hint">
           Upgrade aplica la siguiente versión pendiente. Downgrade revierte únicamente la última versión aplicada.
         </p>
+      </section>
+
+      {/* Historial */}
+      <section className="admin-migraciones__section">
+        <h3 className="admin-migraciones__section-title">Historial de ejecuciones</h3>
+        {history.length === 0 ? (
+          <p className="admin-migraciones__empty">No hay eventos registrados aún.</p>
+        ) : (
+          <div className="admin-migraciones__table-wrapper">
+            <table className="admin-migraciones__data-table admin-migraciones__data-table--history">
+              <thead>
+                <tr>
+                  <th>Versión</th>
+                  <th>Descripción</th>
+                  <th>Operación</th>
+                  <th>Estado</th>
+                  <th>Fecha</th>
+                </tr>
+              </thead>
+              <tbody>
+                {history.map((h) => (
+                  <tr key={h.id}>
+                    <td className="admin-migraciones__migration-version">{h.version}</td>
+                    <td className="admin-migraciones__migration-desc">{h.descripcion}</td>
+                    <td>
+                      <span className={`admin-migraciones__tipo admin-migraciones__tipo--${h.tipo}`}>
+                        {h.tipo}
+                      </span>
+                    </td>
+                    <td>
+                      <span className={`admin-migraciones__estado-hist admin-migraciones__estado-hist--${h.estado}`}>
+                        {h.estado}
+                      </span>
+                    </td>
+                    <td className="admin-migraciones__fecha">{formatDate(h.fecha_ejecucion)}</td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        )}
       </section>
     </div>
   );

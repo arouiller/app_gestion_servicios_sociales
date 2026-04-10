@@ -65,12 +65,8 @@ async function startServer() {
     await sequelize.authenticate();
     console.log('✅ Base de datos conectada');
 
-    const applied = await migrationManager.upgradeAll();
-    if (applied.length > 0) {
-      applied.forEach((m) => console.log(`🔄 Migración aplicada: ${m.version} — ${m.descripcion}`));
-    } else {
-      console.log('✅ Base de datos actualizada (sin migraciones pendientes)');
-    }
+    await migrationManager.ensureTable();
+    console.log('✅ Tablas de control de migraciones verificadas');
 
     app.listen(PORT, () => {
       console.log(`🚀 Backend corriendo en http://localhost:${PORT} [${process.env.NODE_ENV || 'development'}]`);

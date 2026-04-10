@@ -18,6 +18,14 @@ const migracionesService = {
   },
 
   /**
+   * Retorna el historial completo de eventos de migración.
+   */
+  getHistory: async () => {
+    const { data } = await api.get('/migrations/history');
+    return data.data;
+  },
+
+  /**
    * Aplica la siguiente migración pendiente.
    */
   upgrade: async () => {

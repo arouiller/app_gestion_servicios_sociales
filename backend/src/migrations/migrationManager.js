@@ -2,7 +2,8 @@
  * Migration Manager
  * Gestiona las migraciones de base de datos usando archivos SQL en src/migrations/.
  * Cada versión es una carpeta con upgrade.sql y downgrade.sql.
- * El estado se persiste en la tabla migraciones_bd.
+ * El estado actual se persiste en `migraciones_bd` (un registro por versión).
+ * El historial completo se persiste en `historial_migraciones` (append-only).
  */
 
 const fs = require('fs');
@@ -13,9 +14,6 @@ const MIGRATIONS_DIR = path.join(__dirname, 'versions');
 
 // ── Utilidades ────────────────────────────────────────────────────────────────
 
-/**
- * Lee las carpetas de migración ordenadas por nombre (orden alfabético = orden de versión).
- */
 function getMigrationFolders() {
   return fs
     .readdirSync(MIGRATIONS_DIR, { withFileTypes: true })
@@ -24,35 +22,38 @@ function getMigrationFolders() {
     .sort();
 }
 
-/**
- * Extrae la versión del nombre de la carpeta (ej: "v001_initial_schema" → "v001").
- */
 function getVersion(folder) {
   return folder.split('_')[0];
 }
 
-/**
- * Extrae la descripción del nombre de la carpeta (ej: "v001_initial_schema" → "initial schema").
- */
 function getDescription(folder) {
   return folder.split('_').slice(1).join(' ');
 }
 
 /**
- * Lee un archivo SQL y lo divide en sentencias individuales (separadas por ';').
+ * Lee un archivo SQL y lo divide en sentencias individuales.
+ * Primero elimina líneas de comentario (--) para que no contaminen
+ * la sentencia siguiente al hacer split por ';'.
  */
 function readSQL(folder, type) {
   const filePath = path.join(MIGRATIONS_DIR, folder, `${type}.sql`);
   const content = fs.readFileSync(filePath, 'utf8');
-  return content
+
+  const withoutComments = content
+    .split('\n')
+    .filter((line) => !line.trim().startsWith('--'))
+    .join('\n');
+
+  return withoutComments
     .split(';')
     .map((s) => s.trim())
-    .filter((s) => s.length > 0 && !s.startsWith('--'));
+    .filter((s) => s.length > 0);
 }
 
-// ── Operaciones sobre migraciones_bd ─────────────────────────────────────────
+// ── Tablas de control ─────────────────────────────────────────────────────────
 
 async function ensureTable() {
+  // Estado actual por versión (un registro por versión, se actualiza in-place)
   await sequelize.query(`
     CREATE TABLE IF NOT EXISTS migraciones_bd (
       id INT AUTO_INCREMENT PRIMARY KEY,
@@ -63,7 +64,21 @@ async function ensureTable() {
       estado ENUM('exitosa','fallida','revertida') NOT NULL DEFAULT 'exitosa'
     ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci
   `);
+
+  // Historial completo (append-only, una fila por evento)
+  await sequelize.query(`
+    CREATE TABLE IF NOT EXISTS historial_migraciones (
+      id INT AUTO_INCREMENT PRIMARY KEY,
+      version VARCHAR(50) NOT NULL,
+      descripcion VARCHAR(255) NOT NULL,
+      tipo ENUM('upgrade','downgrade') NOT NULL,
+      estado ENUM('exitosa','fallida') NOT NULL,
+      fecha_ejecucion TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+    ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci
+  `);
 }
+
+// ── Operaciones sobre migraciones_bd ─────────────────────────────────────────
 
 async function getAppliedMigrations() {
   const [rows] = await sequelize.query(
@@ -77,6 +92,13 @@ async function recordMigration(version, descripcion, tipo, estado = 'exitosa') {
     `INSERT INTO migraciones_bd (version, descripcion, tipo, estado)
      VALUES (?, ?, ?, ?)
      ON DUPLICATE KEY UPDATE tipo = VALUES(tipo), estado = VALUES(estado), fecha_ejecucion = CURRENT_TIMESTAMP`,
+    { replacements: [version, descripcion, tipo, estado] }
+  );
+}
+
+async function appendHistory(version, descripcion, tipo, estado) {
+  await sequelize.query(
+    `INSERT INTO historial_migraciones (version, descripcion, tipo, estado) VALUES (?, ?, ?, ?)`,
     { replacements: [version, descripcion, tipo, estado] }
   );
 }
@@ -125,10 +147,12 @@ async function upgrade() {
     }
     await recordMigration(version, descripcion, 'upgrade', 'exitosa');
     await transaction.commit();
+    await appendHistory(version, descripcion, 'upgrade', 'exitosa');
     return { version, descripcion };
   } catch (err) {
     await transaction.rollback();
     await recordMigration(version, descripcion, 'upgrade', 'fallida').catch(() => {});
+    await appendHistory(version, descripcion, 'upgrade', 'fallida').catch(() => {});
     throw err;
   }
 }
@@ -160,31 +184,34 @@ async function downgrade() {
       { replacements: [lastVersion], transaction }
     );
     await transaction.commit();
+    await appendHistory(lastVersion, descripcion, 'downgrade', 'exitosa');
     return { version: lastVersion, descripcion };
   } catch (err) {
     await transaction.rollback();
+    await appendHistory(lastVersion, descripcion, 'downgrade', 'fallida').catch(() => {});
     throw err;
   }
 }
 
 /**
- * Ejecuta todas las migraciones pendientes en orden.
+ * Retorna el historial completo de eventos de migración (más reciente primero).
  */
-async function upgradeAll() {
-  const results = [];
-  let migrated;
-  do {
-    migrated = await upgrade();
-    if (migrated) results.push(migrated);
-  } while (migrated);
-  return results;
+async function getHistory() {
+  await ensureTable();
+  const [rows] = await sequelize.query(
+    `SELECT id, version, descripcion, tipo, estado, fecha_ejecucion
+     FROM historial_migraciones
+     ORDER BY fecha_ejecucion DESC`
+  );
+  return rows;
 }
 
 /**
- * Retorna la versión actual (última migración aplicada) y el conteo exacto
- * de registros por tabla en la base de datos activa.
+ * Retorna la versión actual y el conteo de registros por tabla.
  */
 async function getDbStats() {
+  await ensureTable();
+
   const [tableRows] = await sequelize.query(
     `SELECT TABLE_NAME FROM information_schema.TABLES
      WHERE TABLE_SCHEMA = DATABASE()
@@ -200,11 +227,10 @@ async function getDbStats() {
     })
   );
 
-  await ensureTable();
   const applied = await getAppliedMigrations();
   const currentVersion = applied.length > 0 ? applied[applied.length - 1] : null;
 
   return { currentVersion, tables };
 }
 
-module.exports = { list, upgrade, downgrade, upgradeAll, ensureTable, getDbStats };
+module.exports = { list, upgrade, downgrade, ensureTable, getDbStats, getHistory };
