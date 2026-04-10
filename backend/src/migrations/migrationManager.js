@@ -9,7 +9,7 @@ const fs = require('fs');
 const path = require('path');
 const sequelize = require('../config/database');
 
-const MIGRATIONS_DIR = path.join(__dirname);
+const MIGRATIONS_DIR = path.join(__dirname, 'versions');
 
 // ── Utilidades ────────────────────────────────────────────────────────────────
 
