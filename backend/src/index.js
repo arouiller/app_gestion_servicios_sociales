@@ -34,7 +34,7 @@ app.get('/api/health', (req, res) => {
 app.use('/api/auth', require('./routes/auth'));
 
 // ── Frontend estático ─────────────────────────────────────────────────────────
-const frontendBuild = path.join(__dirname, '../../frontend/build');
+const frontendBuild = path.join(__dirname, '../frontend/build');
 app.use(express.static(frontendBuild));
 app.get('*', (req, res) => {
   res.sendFile(path.join(frontendBuild, 'index.html'));
