@@ -14,7 +14,11 @@ function linesToArray(text) {
 
 function arrayToLines(arr) {
   if (!arr) return '';
-  return Array.isArray(arr) ? arr.join('\n') : '';
+  if (Array.isArray(arr)) return arr.join('\n');
+  if (typeof arr === 'string') {
+    try { return JSON.parse(arr).join('\n'); } catch { return arr; }
+  }
+  return '';
 }
 
 const FORM_VACIO = {
@@ -61,7 +65,7 @@ function TarjetaPlan({ plan, onEditar, onEliminar, isAdmin }) {
         <span>Dependientes: <strong>hasta {plan.limite_dependientes}</strong></span>
       </div>
 
-      {plan.cobertura?.length > 0 && (
+      {Array.isArray(plan.cobertura) && plan.cobertura.length > 0 && (
         <div className="gestion-planes__card-lista">
           <span className="gestion-planes__card-lista-titulo">Cobertura</span>
           <ul>
@@ -72,7 +76,7 @@ function TarjetaPlan({ plan, onEditar, onEliminar, isAdmin }) {
         </div>
       )}
 
-      {plan.beneficios?.length > 0 && (
+      {Array.isArray(plan.beneficios) && plan.beneficios.length > 0 && (
         <div className="gestion-planes__card-lista">
           <span className="gestion-planes__card-lista-titulo">Beneficios</span>
           <ul>

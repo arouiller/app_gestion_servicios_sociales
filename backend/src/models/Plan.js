@@ -22,10 +22,24 @@ const Plan = sequelize.define('planes', {
   cobertura: {
     type: DataTypes.JSON,
     allowNull: true,
+    get() {
+      const val = this.getDataValue('cobertura');
+      if (typeof val === 'string') {
+        try { return JSON.parse(val); } catch { return null; }
+      }
+      return val;
+    },
   },
   beneficios: {
     type: DataTypes.JSON,
     allowNull: true,
+    get() {
+      const val = this.getDataValue('beneficios');
+      if (typeof val === 'string') {
+        try { return JSON.parse(val); } catch { return null; }
+      }
+      return val;
+    },
   },
   duracion_meses: {
     type: DataTypes.INTEGER,
