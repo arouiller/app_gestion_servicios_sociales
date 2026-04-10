@@ -37,4 +37,10 @@ router.post('/down', async (req, res) => {
   res.json({ success: true, message: `Migración revertida: ${result.version}`, data: result });
 });
 
+// GET /api/migrations/stats
+router.get('/stats', async (req, res) => {
+  const stats = await manager.getDbStats();
+  res.json({ success: true, data: stats });
+});
+
 module.exports = router;

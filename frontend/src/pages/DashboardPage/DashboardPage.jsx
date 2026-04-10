@@ -1,5 +1,6 @@
 import React from 'react';
 import { useAuth } from '../../context/AuthContext';
+import AdminMigraciones from './components/AdminMigraciones/AdminMigraciones';
 import './DashboardPage.scss';
 
 function DashboardPage() {
@@ -78,6 +79,8 @@ function DashboardPage() {
             </p>
           </div>
         </div>
+
+        {user?.rol === 'admin' && <AdminMigraciones />}
       </main>
     </div>
   );

@@ -180,4 +180,31 @@ async function upgradeAll() {
   return results;
 }
 
-module.exports = { list, upgrade, downgrade, upgradeAll, ensureTable };
+/**
+ * Retorna la versión actual (última migración aplicada) y el conteo exacto
+ * de registros por tabla en la base de datos activa.
+ */
+async function getDbStats() {
+  const [tableRows] = await sequelize.query(
+    `SELECT TABLE_NAME FROM information_schema.TABLES
+     WHERE TABLE_SCHEMA = DATABASE()
+     ORDER BY TABLE_NAME`
+  );
+
+  const tables = await Promise.all(
+    tableRows.map(async ({ TABLE_NAME }) => {
+      const [[{ total }]] = await sequelize.query(
+        `SELECT COUNT(*) AS total FROM \`${TABLE_NAME}\``
+      );
+      return { tabla: TABLE_NAME, registros: parseInt(total, 10) };
+    })
+  );
+
+  await ensureTable();
+  const applied = await getAppliedMigrations();
+  const currentVersion = applied.length > 0 ? applied[applied.length - 1] : null;
+
+  return { currentVersion, tables };
+}
+
+module.exports = { list, upgrade, downgrade, upgradeAll, ensureTable, getDbStats };
