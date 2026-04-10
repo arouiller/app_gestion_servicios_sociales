@@ -1,9 +1,0 @@
----
-deployment:
-  tasks:
-    - export REACT_APP_API_URL=https://saddlebrown-armadillo-164855.hostingersite.com/api
-    - export REACT_APP_APP_NAME=GestSocial
-    - export REACT_APP_ENV=production
-    - export CI=false
-    - cd $HOME/public_html/frontend && npm install && npm run build
-    - cp -r $HOME/public_html/frontend/build/. $HOME/public_html/

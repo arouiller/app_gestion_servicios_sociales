@@ -5,6 +5,7 @@ const express = require('express');
 const cors = require('cors');
 const helmet = require('helmet');
 const morgan = require('morgan');
+const path = require('path');
 const sequelize = require('./config/database');
 
 const app = express();
@@ -32,9 +33,11 @@ app.get('/api/health', (req, res) => {
 // ── Rutas públicas ────────────────────────────────────────────────────────────
 app.use('/api/auth', require('./routes/auth'));
 
-// ── 404 ───────────────────────────────────────────────────────────────────────
-app.use((req, res) => {
-  res.status(404).json({ success: false, message: 'Ruta no encontrada', path: req.path });
+// ── Frontend estático ─────────────────────────────────────────────────────────
+const frontendBuild = path.join(__dirname, '../../frontend/build');
+app.use(express.static(frontendBuild));
+app.get('*', (req, res) => {
+  res.sendFile(path.join(frontendBuild, 'index.html'));
 });
 
 // ── Error handler global ──────────────────────────────────────────────────────
