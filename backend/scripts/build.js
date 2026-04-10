@@ -61,7 +61,7 @@ if (fs.existsSync(envPath)) {
 // Build frontend y copiar a dist/frontend/build
 const frontendDir = path.join(ROOT, '..', 'frontend');
 console.log('🔨 Compilando frontend...');
-execSync('npm install', { cwd: frontendDir, stdio: 'inherit' });
+execSync('npm install --include=dev', { cwd: frontendDir, stdio: 'inherit' });
 execSync('npm run build', {
   cwd: frontendDir,
   stdio: 'inherit',
