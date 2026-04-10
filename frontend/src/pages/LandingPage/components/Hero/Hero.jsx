@@ -1,4 +1,5 @@
 import React from 'react';
+import { Link } from 'react-router-dom';
 import {
   FiUsers,
   FiCheckCircle,
@@ -38,9 +39,9 @@ function Hero() {
           </p>
 
           <div className="hero__actions">
-            <a href="/login" className="btn btn--white btn--lg">
+            <Link to="/login" className="btn btn--white btn--lg">
               Ingresar al sistema
-            </a>
+            </Link>
             <a href="#how-it-works" className="btn btn--white-outline btn--lg">
               Ver cómo funciona
             </a>

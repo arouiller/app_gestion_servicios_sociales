@@ -1,4 +1,5 @@
 import React, { useState } from 'react';
+import { Link } from 'react-router-dom';
 import { FiMenu, FiX } from 'react-icons/fi';
 import './Navbar.scss';
 
@@ -35,9 +36,9 @@ function Navbar({ scrolled }) {
             ))}
           </ul>
 
-          <a href="/login" className="btn btn--primary navbar__cta">
+          <Link to="/login" className="btn btn--primary navbar__cta">
             Ingresar al sistema
-          </a>
+          </Link>
         </nav>
 
         <button

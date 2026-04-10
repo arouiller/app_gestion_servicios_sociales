@@ -1,4 +1,5 @@
 import React from 'react';
+import { Link } from 'react-router-dom';
 import { FiArrowRight } from 'react-icons/fi';
 import './CtaBanner.scss';
 
@@ -17,10 +18,10 @@ function CtaBanner() {
             a gestionar afiliados, planes y pagos hoy mismo.
           </p>
           <div className="cta-banner__actions">
-            <a href="/login" className="btn btn--white btn--lg">
+            <Link to="/login" className="btn btn--white btn--lg">
               Ingresar ahora
               <FiArrowRight />
-            </a>
+            </Link>
           </div>
         </div>
         <div className="cta-banner__decoration">
