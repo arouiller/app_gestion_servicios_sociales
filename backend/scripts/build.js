@@ -6,6 +6,7 @@
 
 const fs = require('fs');
 const path = require('path');
+const { execSync } = require('child_process');
 
 const ROOT = path.join(__dirname, '..');
 const DIST = path.join(ROOT, 'dist');
@@ -56,6 +57,25 @@ if (fs.existsSync(envPath)) {
   copyFile(envPath, path.join(DIST, '.env'));
   console.log('  ✅ .env copiado');
 }
+
+// Build frontend y copiar a dist/frontend/build
+const frontendDir = path.join(ROOT, '..', 'frontend');
+console.log('🔨 Compilando frontend...');
+execSync('npm install', { cwd: frontendDir, stdio: 'inherit' });
+execSync('npm run build', {
+  cwd: frontendDir,
+  stdio: 'inherit',
+  env: {
+    ...process.env,
+    REACT_APP_API_URL: '/api',
+    REACT_APP_APP_NAME: 'GestSocial',
+    REACT_APP_ENV: 'production',
+    CI: 'false',
+    NODE_ENV: 'production',
+  },
+});
+copyDir(path.join(frontendDir, 'build'), path.join(DIST, 'frontend', 'build'));
+console.log('  ✅ frontend/build copiado');
 
 console.log('✅ Build completado → dist/');
 console.log('   Entry point: dist/src/index.js');
