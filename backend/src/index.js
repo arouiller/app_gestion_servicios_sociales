@@ -7,6 +7,7 @@ const helmet = require('helmet');
 const morgan = require('morgan');
 const path = require('path');
 const sequelize = require('./config/database');
+const migrationManager = require('./migrations/migrationManager');
 
 const app = express();
 
@@ -32,6 +33,9 @@ app.get('/api/health', (req, res) => {
 
 // ── Rutas públicas ────────────────────────────────────────────────────────────
 app.use('/api/auth', require('./routes/auth'));
+
+// ── Rutas protegidas ──────────────────────────────────────────────────────────
+app.use('/api/migrations', require('./routes/migrations'));
 
 // ── Frontend estático ─────────────────────────────────────────────────────────
 const frontendBuild = path.join(__dirname, '../frontend/build');
@@ -59,6 +63,14 @@ async function startServer() {
   try {
     await sequelize.authenticate();
     console.log('✅ Base de datos conectada');
+
+    const applied = await migrationManager.upgradeAll();
+    if (applied.length > 0) {
+      applied.forEach((m) => console.log(`🔄 Migración aplicada: ${m.version} — ${m.descripcion}`));
+    } else {
+      console.log('✅ Base de datos actualizada (sin migraciones pendientes)');
+    }
+
     app.listen(PORT, () => {
       console.log(`🚀 Backend corriendo en http://localhost:${PORT} [${process.env.NODE_ENV || 'development'}]`);
     });

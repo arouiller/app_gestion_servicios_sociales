@@ -8,7 +8,11 @@
     "start": "node src/index.js",
     "dev": "nodemon src/index.js",
     "test": "jest --detectOpenHandles",
-    "lint": "eslint src/"
+    "lint": "eslint src/",
+    "db:migrate:list": "node scripts/migrate.js list",
+    "db:migrate:up": "node scripts/migrate.js up",
+    "db:migrate:up:all": "node scripts/migrate.js up:all",
+    "db:migrate:down": "node scripts/migrate.js down"
   },
   "license": "PRIVATE",
   "dependencies": {
