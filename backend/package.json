@@ -4,6 +4,7 @@
   "description": "Backend para aplicación de gestión de servicios sociales",
   "main": "src/index.js",
   "scripts": {
+    "build": "echo 'No build step required for Node.js backend'",
     "start": "node src/index.js",
     "dev": "nodemon src/index.js",
     "test": "jest --detectOpenHandles",
