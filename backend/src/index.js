@@ -37,6 +37,7 @@ app.use('/api/auth', require('./routes/auth'));
 // ── Rutas protegidas ──────────────────────────────────────────────────────────
 app.use('/api/migrations', require('./routes/migrations'));
 app.use('/api/afiliados', require('./routes/afiliados'));
+app.use('/api/planes', require('./routes/planes'));
 
 // ── Frontend estático ─────────────────────────────────────────────────────────
 const frontendBuild = path.join(__dirname, '../frontend/build');

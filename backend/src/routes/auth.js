@@ -120,8 +120,99 @@ router.get('/me', verifyToken, async (req, res) => {
 // ── POST /api/auth/logout ───────────────────────────────────────────────────
 
 router.post('/logout', verifyToken, (req, res) => {
-  // JWT es stateless: el cliente elimina el token
   return res.json({ success: true, message: 'Sesión cerrada correctamente' });
+});
+
+// ── PUT /api/auth/perfil ────────────────────────────────────────────────────
+
+const perfilSchema = {
+  nombre: [rules.required('El nombre'), rules.minLength(2, 'El nombre'), rules.maxLength(100, 'El nombre')],
+  apellido: [rules.required('El apellido'), rules.minLength(2, 'El apellido'), rules.maxLength(100, 'El apellido')],
+  email: [rules.required('El email'), rules.email()],
+};
+
+router.put('/perfil', verifyToken, validate(perfilSchema), async (req, res) => {
+  const { nombre, apellido, email, password_actual, password_nueva, confirmar_password } = req.body;
+
+  const usuario = await Usuario.findByPk(req.userId);
+  if (!usuario) {
+    return res.status(404).json({ success: false, message: 'Usuario no encontrado' });
+  }
+
+  // Verificar email único si cambió
+  const emailNormalizado = email.toLowerCase().trim();
+  if (emailNormalizado !== usuario.email) {
+    const existente = await Usuario.findOne({ where: { email: emailNormalizado } });
+    if (existente) {
+      return res.status(409).json({
+        success: false,
+        message: 'Ya existe una cuenta con ese email',
+        errors: { email: 'Ya existe una cuenta con ese email' },
+      });
+    }
+  }
+
+  // Cambio de contraseña (opcional)
+  let password_hash = usuario.password_hash;
+  if (password_nueva) {
+    if (!password_actual) {
+      return res.status(422).json({
+        success: false,
+        message: 'Datos inválidos',
+        errors: { password_actual: 'Ingresá tu contraseña actual para cambiarla' },
+      });
+    }
+    const valida = await usuario.verificarPassword(password_actual);
+    if (!valida) {
+      return res.status(422).json({
+        success: false,
+        message: 'Datos inválidos',
+        errors: { password_actual: 'La contraseña actual es incorrecta' },
+      });
+    }
+    if (password_nueva.length < 8) {
+      return res.status(422).json({
+        success: false,
+        message: 'Datos inválidos',
+        errors: { password_nueva: 'La nueva contraseña debe tener al menos 8 caracteres' },
+      });
+    }
+    if (!/[A-Z]/.test(password_nueva)) {
+      return res.status(422).json({
+        success: false,
+        message: 'Datos inválidos',
+        errors: { password_nueva: 'La nueva contraseña debe contener al menos una mayúscula' },
+      });
+    }
+    if (!/[0-9]/.test(password_nueva)) {
+      return res.status(422).json({
+        success: false,
+        message: 'Datos inválidos',
+        errors: { password_nueva: 'La nueva contraseña debe contener al menos un número' },
+      });
+    }
+    if (confirmar_password !== password_nueva) {
+      return res.status(422).json({
+        success: false,
+        message: 'Datos inválidos',
+        errors: { confirmar_password: 'Las contraseñas no coinciden' },
+      });
+    }
+    password_hash = await Usuario.hashPassword(password_nueva);
+  }
+
+  await usuario.update({
+    nombre: nombre.trim(),
+    apellido: apellido.trim(),
+    email: emailNormalizado,
+    password_hash,
+  });
+
+  return res.json({
+    success: true,
+    message: 'Perfil actualizado correctamente',
+    user: usuario.toSafeJSON(),
+  });
 });
 
 module.exports = router;

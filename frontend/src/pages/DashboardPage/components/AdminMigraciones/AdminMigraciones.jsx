@@ -101,34 +101,7 @@ function AdminMigraciones() {
         </div>
       </section>
 
-      {/* Tablas y registros */}
-      <section className="admin-migraciones__section">
-        <h3 className="admin-migraciones__section-title">Tablas de la base de datos</h3>
-        {!stats?.tables?.length ? (
-          <p className="admin-migraciones__empty">No hay tablas en la base de datos.</p>
-        ) : (
-          <div className="admin-migraciones__table-wrapper">
-            <table className="admin-migraciones__data-table">
-              <thead>
-                <tr>
-                  <th>Tabla</th>
-                  <th className="admin-migraciones__data-table-num">Registros</th>
-                </tr>
-              </thead>
-              <tbody>
-                {stats.tables.map(({ tabla, registros }) => (
-                  <tr key={tabla}>
-                    <td className="admin-migraciones__data-table-name">{tabla}</td>
-                    <td className="admin-migraciones__data-table-num">{registros.toLocaleString('es-AR')}</td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
-          </div>
-        )}
-      </section>
-
-      {/* Versiones disponibles */}
+      {/* 6.1 Versiones disponibles */}
       <section className="admin-migraciones__section">
         <h3 className="admin-migraciones__section-title">Versiones disponibles</h3>
         <div className="admin-migraciones__migrations-table">
@@ -153,7 +126,7 @@ function AdminMigraciones() {
         </div>
       </section>
 
-      {/* Acciones */}
+      {/* 6.2 Acciones */}
       <section className="admin-migraciones__section">
         <h3 className="admin-migraciones__section-title">Acciones</h3>
         <div className="admin-migraciones__actions">
@@ -179,7 +152,7 @@ function AdminMigraciones() {
         </p>
       </section>
 
-      {/* Historial */}
+      {/* 6.3 Historial de ejecuciones */}
       <section className="admin-migraciones__section">
         <h3 className="admin-migraciones__section-title">Historial de ejecuciones</h3>
         {history.length === 0 ? (
@@ -212,6 +185,33 @@ function AdminMigraciones() {
                       </span>
                     </td>
                     <td className="admin-migraciones__fecha">{formatDate(h.fecha_ejecucion)}</td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        )}
+      </section>
+
+      {/* 6.4 Tablas de la base de datos */}
+      <section className="admin-migraciones__section">
+        <h3 className="admin-migraciones__section-title">Tablas de la base de datos</h3>
+        {!stats?.tables?.length ? (
+          <p className="admin-migraciones__empty">No hay tablas en la base de datos.</p>
+        ) : (
+          <div className="admin-migraciones__table-wrapper">
+            <table className="admin-migraciones__data-table">
+              <thead>
+                <tr>
+                  <th>Tabla</th>
+                  <th className="admin-migraciones__data-table-num">Registros</th>
+                </tr>
+              </thead>
+              <tbody>
+                {stats.tables.map(({ tabla, registros }) => (
+                  <tr key={tabla}>
+                    <td className="admin-migraciones__data-table-name">{tabla}</td>
+                    <td className="admin-migraciones__data-table-num">{registros.toLocaleString('es-AR')}</td>
                   </tr>
                 ))}
               </tbody>

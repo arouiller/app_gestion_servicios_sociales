@@ -35,6 +35,14 @@ const authService = {
     return response.data;
   },
 
+  updatePerfil: async (payload) => {
+    const response = await api.put('/auth/perfil', payload);
+    if (response.data.success) {
+      localStorage.setItem('user', JSON.stringify(response.data.user));
+    }
+    return response.data;
+  },
+
   getCurrentUser: () => {
     const user = localStorage.getItem('user');
     return user ? JSON.parse(user) : null;
