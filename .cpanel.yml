@@ -6,7 +6,19 @@ deployment:
     - export REACT_APP_APP_NAME=GestSocial
     - export REACT_APP_ENV=production
     - export CI=false
-    # Build del frontend
-    - cd $HOME/frontend && npm install && npm run build
-    # Copiar resultado a public_html
-    - cp -r $HOME/frontend/build/. $HOME/public_html/
+    # Determinar la carpeta del frontend (repo clonado en public_html/frontend o directamente)
+    - |
+      if [ -f "$HOME/public_html/frontend/package.json" ]; then
+        FRONTEND_DIR="$HOME/public_html/frontend"
+      elif [ -f "$HOME/public_html/package.json" ]; then
+        FRONTEND_DIR="$HOME/public_html"
+      elif [ -f "$HOME/frontend/frontend/package.json" ]; then
+        FRONTEND_DIR="$HOME/frontend/frontend"
+      else
+        FRONTEND_DIR="$HOME/frontend"
+      fi
+      echo "Frontend detectado en: $FRONTEND_DIR"
+      cd "$FRONTEND_DIR"
+      npm install
+      npm run build
+      cp -r "$FRONTEND_DIR/build/." "$HOME/public_html/"
