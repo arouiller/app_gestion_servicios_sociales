@@ -1,0 +1,426 @@
+.gestion-afiliados {
+  background: #fff;
+  border-radius: 12px;
+  border: 1px solid #e5e7eb;
+  padding: 2rem;
+  margin-top: 1.5rem;
+
+  // ── Header ──────────────────────────────────────────────────────────────
+  &__header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: 1.5rem;
+  }
+
+  &__title {
+    font-size: 1.25rem;
+    font-weight: 700;
+    color: #111827;
+    margin: 0;
+  }
+
+  // ── Alertas ─────────────────────────────────────────────────────────────
+  &__alert {
+    padding: 0.75rem 1rem;
+    border-radius: 8px;
+    margin-bottom: 1rem;
+    font-size: 0.9rem;
+
+    &--error {
+      background: #fef2f2;
+      color: #b91c1c;
+      border: 1px solid #fecaca;
+    }
+
+    &--success {
+      background: #f0fdf4;
+      color: #166534;
+      border: 1px solid #bbf7d0;
+    }
+
+    &--warning {
+      background: #fffbeb;
+      color: #92400e;
+      border: 1px solid #fde68a;
+    }
+  }
+
+  // ── Loading / empty / aviso ──────────────────────────────────────────────
+  &__loading,
+  &__empty {
+    text-align: center;
+    color: #6b7280;
+    padding: 2rem;
+    font-size: 0.95rem;
+  }
+
+  &__aviso {
+    background: #f0f9ff;
+    border: 1px solid #bae6fd;
+    border-radius: 8px;
+    padding: 1.5rem;
+    color: #0c4a6e;
+    font-size: 0.95rem;
+  }
+
+  // ── Botones principales ──────────────────────────────────────────────────
+  &__btn {
+    padding: 0.5rem 1.25rem;
+    border-radius: 8px;
+    font-size: 0.9rem;
+    font-weight: 600;
+    cursor: pointer;
+    border: none;
+    transition: background 0.15s, opacity 0.15s;
+
+    &:disabled {
+      opacity: 0.5;
+      cursor: not-allowed;
+    }
+
+    &--primary {
+      background: #2563eb;
+      color: #fff;
+
+      &:hover:not(:disabled) { background: #1d4ed8; }
+    }
+
+    &--secondary {
+      background: #f3f4f6;
+      color: #374151;
+      border: 1px solid #d1d5db;
+
+      &:hover:not(:disabled) { background: #e5e7eb; }
+    }
+
+    &--danger {
+      background: #dc2626;
+      color: #fff;
+
+      &:hover:not(:disabled) { background: #b91c1c; }
+    }
+  }
+
+  // ── Botones de fila ──────────────────────────────────────────────────────
+  &__btn-icon {
+    padding: 0.3rem 0.75rem;
+    border-radius: 6px;
+    font-size: 0.8rem;
+    font-weight: 600;
+    cursor: pointer;
+    border: none;
+    margin-right: 0.4rem;
+
+    &--edit {
+      background: #dbeafe;
+      color: #1d4ed8;
+
+      &:hover { background: #bfdbfe; }
+    }
+
+    &--delete {
+      background: #fee2e2;
+      color: #b91c1c;
+
+      &:hover { background: #fecaca; }
+    }
+  }
+
+  // ── Estado badge ────────────────────────────────────────────────────────
+  &__estado {
+    display: inline-block;
+    padding: 0.2rem 0.6rem;
+    border-radius: 999px;
+    font-size: 0.78rem;
+    font-weight: 600;
+    text-transform: capitalize;
+
+    &--activo    { background: #dcfce7; color: #166534; }
+    &--inactivo  { background: #f3f4f6; color: #6b7280; }
+    &--suspendido { background: #fef3c7; color: #92400e; }
+  }
+
+  // ── Filtros ──────────────────────────────────────────────────────────────
+  &__filtros {
+    display: flex;
+    gap: 0.75rem;
+    margin-bottom: 1rem;
+    flex-wrap: wrap;
+  }
+
+  &__filtro-input {
+    flex: 1;
+    min-width: 200px;
+    padding: 0.5rem 0.75rem;
+    border: 1px solid #d1d5db;
+    border-radius: 8px;
+    font-size: 0.9rem;
+
+    &:focus {
+      outline: none;
+      border-color: #2563eb;
+      box-shadow: 0 0 0 2px rgba(37, 99, 235, 0.2);
+    }
+  }
+
+  &__filtro-select {
+    padding: 0.5rem 0.75rem;
+    border: 1px solid #d1d5db;
+    border-radius: 8px;
+    font-size: 0.9rem;
+    background: #fff;
+    cursor: pointer;
+
+    &:focus {
+      outline: none;
+      border-color: #2563eb;
+    }
+  }
+
+  // ── Tabla ────────────────────────────────────────────────────────────────
+  &__tabla-wrapper {
+    overflow-x: auto;
+  }
+
+  &__tabla {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: 0.9rem;
+
+    th {
+      text-align: left;
+      padding: 0.75rem 1rem;
+      background: #f9fafb;
+      color: #374151;
+      font-weight: 600;
+      border-bottom: 1px solid #e5e7eb;
+      white-space: nowrap;
+    }
+
+    td {
+      padding: 0.75rem 1rem;
+      border-bottom: 1px solid #f3f4f6;
+      color: #111827;
+      vertical-align: middle;
+    }
+
+    tr:last-child td { border-bottom: none; }
+    tr:hover td { background: #f9fafb; }
+  }
+
+  &__tabla-acciones {
+    white-space: nowrap;
+  }
+
+  // ── Paginación ───────────────────────────────────────────────────────────
+  &__paginacion {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-top: 1rem;
+    padding-top: 1rem;
+    border-top: 1px solid #f3f4f6;
+    flex-wrap: wrap;
+    gap: 0.5rem;
+  }
+
+  &__paginacion-info {
+    font-size: 0.85rem;
+    color: #6b7280;
+  }
+
+  &__paginacion-btns {
+    display: flex;
+    gap: 0.5rem;
+  }
+
+  // ── Formulario ───────────────────────────────────────────────────────────
+  &__form {
+    &-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(260px, 1fr));
+      gap: 1rem;
+      margin-bottom: 1.5rem;
+    }
+
+    &-actions {
+      display: flex;
+      gap: 0.75rem;
+    }
+  }
+
+  &__field {
+    display: flex;
+    flex-direction: column;
+    gap: 0.35rem;
+
+    &--full {
+      grid-column: 1 / -1;
+    }
+
+    label {
+      font-size: 0.85rem;
+      font-weight: 600;
+      color: #374151;
+    }
+
+    input,
+    select,
+    textarea {
+      padding: 0.5rem 0.75rem;
+      border: 1px solid #d1d5db;
+      border-radius: 8px;
+      font-size: 0.9rem;
+      font-family: inherit;
+      background: #fff;
+      color: #111827;
+      transition: border-color 0.15s;
+
+      &:focus {
+        outline: none;
+        border-color: #2563eb;
+        box-shadow: 0 0 0 2px rgba(37, 99, 235, 0.2);
+      }
+    }
+
+    textarea {
+      resize: vertical;
+    }
+  }
+
+  &__field-error {
+    font-size: 0.8rem;
+    color: #dc2626;
+  }
+
+  &__field-hint {
+    font-weight: 400;
+    color: #9ca3af;
+    font-size: 0.78rem;
+  }
+
+  // ── Perfil de usuario ────────────────────────────────────────────────────
+  &__perfil {
+    &-header {
+      display: flex;
+      align-items: center;
+      gap: 1rem;
+      margin-bottom: 1.5rem;
+    }
+
+    &-avatar {
+      width: 56px;
+      height: 56px;
+      border-radius: 50%;
+      background: #2563eb;
+      color: #fff;
+      font-weight: 700;
+      font-size: 1.25rem;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      text-transform: uppercase;
+      flex-shrink: 0;
+    }
+
+    &-nombre {
+      font-size: 1.1rem;
+      font-weight: 700;
+      color: #111827;
+      margin: 0 0 0.3rem;
+    }
+
+    &-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
+      gap: 0.75rem 1.5rem;
+      margin-bottom: 1.5rem;
+    }
+
+    &-field {
+      display: flex;
+      flex-direction: column;
+      gap: 0.2rem;
+    }
+
+    &-label {
+      font-size: 0.78rem;
+      font-weight: 600;
+      color: #9ca3af;
+      text-transform: uppercase;
+      letter-spacing: 0.04em;
+    }
+
+    &-valor {
+      font-size: 0.95rem;
+      color: #111827;
+    }
+
+    &-actions {
+      margin-top: 1.5rem;
+      padding-top: 1rem;
+      border-top: 1px solid #f3f4f6;
+    }
+  }
+
+  // ── Teléfonos ────────────────────────────────────────────────────────────
+  &__telefonos {
+    margin-bottom: 1rem;
+
+    &-lista {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 0.5rem;
+      margin-top: 0.3rem;
+    }
+  }
+
+  &__telefono-badge {
+    background: #eff6ff;
+    color: #1d4ed8;
+    border: 1px solid #bfdbfe;
+    border-radius: 999px;
+    padding: 0.2rem 0.75rem;
+    font-size: 0.82rem;
+    font-weight: 500;
+  }
+
+  // ── Modal ────────────────────────────────────────────────────────────────
+  &__modal-overlay {
+    position: fixed;
+    inset: 0;
+    background: rgba(0, 0, 0, 0.4);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    z-index: 1000;
+  }
+
+  &__modal {
+    background: #fff;
+    border-radius: 12px;
+    padding: 2rem;
+    max-width: 440px;
+    width: 90%;
+    box-shadow: 0 20px 60px rgba(0, 0, 0, 0.15);
+
+    &-title {
+      font-size: 1.1rem;
+      font-weight: 700;
+      color: #111827;
+      margin: 0 0 0.75rem;
+    }
+
+    p {
+      font-size: 0.95rem;
+      color: #374151;
+      margin-bottom: 1.5rem;
+    }
+
+    &-actions {
+      display: flex;
+      gap: 0.75rem;
+    }
+  }
+}

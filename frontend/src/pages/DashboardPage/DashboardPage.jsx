@@ -1,6 +1,7 @@
 import React from 'react';
 import { useAuth } from '../../context/AuthContext';
 import AdminMigraciones from './components/AdminMigraciones/AdminMigraciones';
+import GestionAfiliados from './components/GestionAfiliados/GestionAfiliados';
 import './DashboardPage.scss';
 
 function DashboardPage() {
@@ -69,16 +70,7 @@ function DashboardPage() {
           </div>
         </div>
 
-        <div className="dashboard__notice">
-          <div className="dashboard__notice-icon">🚧</div>
-          <div>
-            <strong>Panel en construcción</strong>
-            <p>
-              El módulo completo de gestión (afiliados, planes, cuotas y pagos)
-              está siendo desarrollado. La autenticación está funcionando correctamente.
-            </p>
-          </div>
-        </div>
+        <GestionAfiliados />
 
         {user?.rol === 'admin' && <AdminMigraciones />}
       </main>
