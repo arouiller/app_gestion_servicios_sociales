@@ -1,5 +1,5 @@
 const express = require('express');
-const { verifyToken, requireAdmin } = require('../middleware/auth');
+const { verifyToken } = require('../middleware/auth');
 const { validate, rules } = require('../middleware/validate');
 const controller = require('../controllers/afiliadosController');
 
@@ -42,7 +42,7 @@ router.post('/', verifyToken, validate(crearSchema), controller.crear);
 // PUT /api/afiliados/:id — actualizar (cualquier empleado)
 router.put('/:id', verifyToken, controller.actualizar);
 
-// DELETE /api/afiliados/:id — eliminar (solo admin)
-router.delete('/:id', verifyToken, requireAdmin, controller.eliminar);
+// DELETE /api/afiliados/:id — eliminar (cualquier empleado)
+router.delete('/:id', verifyToken, controller.eliminar);
 
 module.exports = router;
