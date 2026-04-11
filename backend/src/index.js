@@ -7,7 +7,6 @@ const helmet = require('helmet');
 const morgan = require('morgan');
 const path = require('path');
 const sequelize = require('./config/database');
-const migrationManager = require('./migrations/migrationManager');
 
 const app = express();
 
@@ -31,14 +30,8 @@ app.get('/api/health', (req, res) => {
   res.json({ status: 'ok', timestamp: new Date(), env: process.env.NODE_ENV });
 });
 
-// ── Rutas públicas ────────────────────────────────────────────────────────────
+// ── Rutas ─────────────────────────────────────────────────────────────────────
 app.use('/api/auth', require('./routes/auth'));
-
-// ── Rutas protegidas ──────────────────────────────────────────────────────────
-app.use('/api/migrations', require('./routes/migrations'));
-app.use('/api/afiliados', require('./routes/afiliados'));
-app.use('/api/grupos-familiares', require('./routes/grupos'));
-app.use('/api/planes', require('./routes/planes'));
 
 // ── Frontend estático ─────────────────────────────────────────────────────────
 const frontendBuild = path.join(__dirname, '../frontend/build');
@@ -66,9 +59,6 @@ async function startServer() {
   try {
     await sequelize.authenticate();
     console.log('✅ Base de datos conectada');
-
-    await migrationManager.ensureTable();
-    console.log('✅ Tablas de control de migraciones verificadas');
 
     app.listen(PORT, () => {
       console.log(`🚀 Backend corriendo en http://localhost:${PORT} [${process.env.NODE_ENV || 'development'}]`);

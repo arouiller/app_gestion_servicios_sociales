@@ -1,57 +1,28 @@
 import React, { useState } from 'react';
 import { useAuth } from '../../context/AuthContext';
 import DatosPersonales from './components/DatosPersonales/DatosPersonales';
-import GestionAfiliados from './components/GestionAfiliados/GestionAfiliados';
-import GestionGruposFamiliares from './components/GestionGruposFamiliares/GestionGruposFamiliares';
-import GestionPlanes from './components/GestionPlanes/GestionPlanes';
-import AdminMigraciones from './components/AdminMigraciones/AdminMigraciones';
 import './DashboardPage.scss';
-
-// ── Definición del menú según rol ────────────────────────────────────────────
-
-function buildMenu(isAdmin) {
-  const menu = [
-    {
-      key: 'mi-cuenta',
-      label: 'Mi Cuenta',
-      children: [
-        { key: 'datos-personales', label: 'Datos Personales' },
-      ],
-    },
-    { key: 'afiliados', label: 'Afiliados' },
-    { key: 'grupos-familiares', label: 'Grupos Familiares' },
-    { key: 'planes', label: 'Planes' },
-  ];
-
-  if (isAdmin) {
-    menu.push({
-      key: 'administracion',
-      label: 'Administración',
-      children: [{ key: 'base-datos', label: 'Base de Datos' }],
-    });
-  }
-
-  return menu;
-}
 
 // ── Iconos simples (SVG inline) ──────────────────────────────────────────────
 
 const ICONS = {
-  'mi-cuenta':      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><circle cx="12" cy="8" r="4"/><path d="M4 20c0-4 3.6-7 8-7s8 3 8 7"/></svg>,
-  'afiliados':           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>,
-  'grupos-familiares':   <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg>,
-  'planes':         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/><path d="M14 17h7M17.5 14v7"/></svg>,
-  'administracion': <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><circle cx="12" cy="12" r="3"/><path d="M19.07 4.93a10 10 0 0 1 0 14.14M4.93 4.93a10 10 0 0 0 0 14.14"/></svg>,
+  'mi-cuenta': <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><circle cx="12" cy="8" r="4"/><path d="M4 20c0-4 3.6-7 8-7s8 3 8 7"/></svg>,
 };
 
 // ── Sidebar ──────────────────────────────────────────────────────────────────
 
-function Sidebar({ menu, activeModule, onSelect, sidebarOpen, setSidebarOpen }) {
-  const [expanded, setExpanded] = useState(() => {
-    const init = {};
-    menu.forEach((item) => { if (item.children) init[item.key] = true; });
-    return init;
-  });
+const MENU = [
+  {
+    key: 'mi-cuenta',
+    label: 'Mi Cuenta',
+    children: [
+      { key: 'datos-personales', label: 'Datos Personales' },
+    ],
+  },
+];
+
+function Sidebar({ activeModule, onSelect, sidebarOpen, setSidebarOpen }) {
+  const [expanded, setExpanded] = useState({ 'mi-cuenta': true });
 
   const toggleExpand = (key) => {
     setExpanded((prev) => ({ ...prev, [key]: !prev[key] }));
@@ -69,7 +40,7 @@ function Sidebar({ menu, activeModule, onSelect, sidebarOpen, setSidebarOpen }) 
       )}
       <aside className={`dashboard__sidebar${sidebarOpen ? ' dashboard__sidebar--open' : ''}`}>
         <nav className="dashboard__nav">
-          {menu.map((item) => (
+          {MENU.map((item) => (
             <div key={item.key} className="dashboard__nav-group">
               {item.children ? (
                 <>
@@ -131,27 +102,13 @@ function Bienvenida({ user }) {
   );
 }
 
-// ── Render del módulo activo ─────────────────────────────────────────────────
-
-function ModuleContent({ activeModule }) {
-  switch (activeModule) {
-    case 'datos-personales':   return <DatosPersonales />;
-    case 'afiliados':          return <GestionAfiliados />;
-    case 'grupos-familiares':  return <GestionGruposFamiliares />;
-    case 'planes':             return <GestionPlanes />;
-    case 'base-datos':         return <AdminMigraciones />;
-    default:                   return null;
-  }
-}
-
 // ── Página principal ─────────────────────────────────────────────────────────
 
 function DashboardPage() {
-  const { user, logout, isAdmin } = useAuth();
+  const { user, logout } = useAuth();
   const [activeModule, setActiveModule] = useState(null);
   const [sidebarOpen, setSidebarOpen] = useState(false);
 
-  const menu = buildMenu(isAdmin);
   const initials = `${user?.nombre?.[0] ?? ''}${user?.apellido?.[0] ?? ''}`.toUpperCase();
 
   return (
@@ -195,7 +152,6 @@ function DashboardPage() {
       {/* Body: sidebar + contenido */}
       <div className="dashboard__body">
         <Sidebar
-          menu={menu}
           activeModule={activeModule}
           onSelect={setActiveModule}
           sidebarOpen={sidebarOpen}
@@ -203,8 +159,8 @@ function DashboardPage() {
         />
 
         <main className="dashboard__content">
-          {activeModule
-            ? <ModuleContent activeModule={activeModule} />
+          {activeModule === 'datos-personales'
+            ? <DatosPersonales />
             : <Bienvenida user={user} />
           }
         </main>
