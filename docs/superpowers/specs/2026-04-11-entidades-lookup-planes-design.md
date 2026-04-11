@@ -61,14 +61,12 @@ CREATE TABLE tipos_de_grupo (
   fecha_actualizacion     DATETIME     NOT NULL DEFAULT NOW(),
   PRIMARY KEY (tipo_de_grupo_numero)
 );
-```
 
-**Seed en `upgrade.sql`:**
-```sql
 INSERT INTO tipos_de_grupo (tipo_de_grupo_numero, tipo_de_grupo_nombre) VALUES
   (1, 'Individual'),
   (2, 'Grupo familiar'),
   (3, 'Titular y adherente');
+  
 ```
 
 **`downgrade.sql`:** DROP TABLE en este orden (dependencias primero):
@@ -90,6 +88,8 @@ CREATE TABLE personas (
   id                      INT          NOT NULL AUTO_INCREMENT,
   apellido                VARCHAR(100) NOT NULL,
   nombre                  VARCHAR(100) NOT NULL,
+  tipo_documento          ENUM('DNI','LC','LE','PASAPORTE') NOT NULL,
+  numero_documento        VARCHAR(20)  NOT NULL,
   fecha_nacimiento        DATE         NOT NULL,
   fecha_cobertura         DATE         NOT NULL,
   fecha_creacion          DATETIME     NOT NULL DEFAULT NOW(),
@@ -234,9 +234,10 @@ const ENTIDADES = {
 ### `personasController.js`
 
 **`GET /api/personas?search=texto`**
-- Busca por `apellido` o `nombre` (LIKE `%texto%`), máximo 10 resultados.
-- Devuelve: `id`, `apellido`, `nombre`, `fecha_nacimiento`, `fecha_cobertura`.
-- Usado exclusivamente desde el formulario de Plan (autocomplete).
+- Busca por `apellido`, `nombre` o `numero_documento` (LIKE `%texto%`), máximo 10 resultados.
+- Devuelve: `id`, `apellido`, `nombre`, `tipo_documento`, `numero_documento`, `fecha_nacimiento`, `fecha_cobertura`.
+- Usado exclusivamente desde el formulario de Plan (autocomplete de búsqueda de integrante).
+- **Comportamiento de edición compartida:** si se editan los datos personales de una persona existente, el cambio se aplica globalmente (afecta a todos los planes donde esté vinculada esa persona).
 
 No se exponen endpoints de creación/edición/eliminación directa de personas.
 
@@ -343,47 +344,73 @@ Planes
 
 ## 5. Frontend — Planes
 
-*(Pantalla a implementar en iteración posterior — spec de interfaz incluida para referencia)*
-
 ### Pantalla principal
 
 Lista paginada de planes con:
 - Filtros: estado, cobrador, obra social
 - Columnas: número, número afiliado, cobrador, obra social, tipo grupo, valor cuota, estado
 - Botón "+ Nuevo plan"
-- Acciones por fila: Ver/Editar, Eliminar
+- Acciones por fila: botón "Editar" (abre modal), botón "Eliminar" (modal de confirmación)
 
 ### Formulario de Plan (modal, 2 pestañas)
 
 **Pestaña 1 — Datos del plan:**
 
-| Campo | Tipo |
-|-------|------|
-| Número de afiliado | Texto + botón "Sugerir" (llama a `/planes/siguiente-numero-afiliado`) |
-| Tipo de plan | Dropdown (cargado desde `/lookup/tipos-de-plan`) |
-| Cobrador | Dropdown (cargado desde `/lookup/cobradores`) |
-| Tipo de grupo | Dropdown (cargado desde `/lookup/tipos-de-grupo`) |
-| Obra social | Dropdown (cargado desde `/lookup/obras-sociales`) |
+| Campo | Tipo UI |
+|-------|---------|
+| Número de afiliado | Texto + botón "Sugerir" (llama a `GET /api/planes/siguiente-numero-afiliado`) |
+| Tipo de plan | Dropdown (cargado desde `GET /api/lookup/tipos-de-plan`) |
+| Cobrador | Dropdown (cargado desde `GET /api/lookup/cobradores`) |
+| Tipo de grupo | Dropdown (cargado desde `GET /api/lookup/tipos-de-grupo`) |
+| Obra social | Dropdown (cargado desde `GET /api/lookup/obras-sociales`) |
 | Teléfono 1 | Texto |
 | Teléfono 2 | Texto |
 | Domicilio | Texto |
 | Localidad | Texto |
-| Valor cuota | Numérico decimal |
-| Estado | ACTIVO / SUSPENDIDO |
+| Valor cuota | Numérico decimal (ARS) |
+| Estado | Radio o select: ACTIVO / SUSPENDIDO |
 
 **Pestaña 2 — Integrantes:**
 
-- Tabla de integrantes con: apellido, nombre, credencial, rol, servicios contratados. Acciones: editar, eliminar.
-- Botón "+ Agregar integrante" → sub-modal con:
-  - Autocomplete de búsqueda de personas (llama a `/api/personas?search=...`)
-  - Si no existe: formulario inline con apellido, nombre, fecha nacimiento, fecha cobertura
-  - Campo credencial (1 caracter, requerido)
-  - Checkboxes de servicios adicionales
-  - Selector de rol (titular / integrante) con aviso si ya hay un titular
+Tabla de integrantes ya vinculados al plan. Columnas: apellido, nombre, tipo doc, nro doc, credencial, rol, servicios. Acciones por fila: "Editar", "Eliminar".
 
-**Validación al guardar:**
+Botón **"+ Agregar integrante"** → abre **sub-modal de búsqueda**:
+
+- Input de búsqueda libre (apellido, nombre, número de documento).
+- Llama a `GET /api/personas?search=...` en tiempo real (debounce 300ms).
+- Resultados muestran: apellido, nombre, tipo doc, nro doc, fecha nacimiento.
+- El usuario puede:
+  - **Seleccionar una persona existente** → cierra búsqueda y abre el **popup de vinculación [A]** con datos personales pre-cargados.
+  - **"Nueva persona"** → cierra búsqueda y abre el **popup de vinculación [A]** con datos personales vacíos.
+
+**Popup de vinculación [A]** (usado tanto para agregar como para editar un integrante):
+
+Dos secciones dentro del mismo popup:
+
+*Sección 1 — Datos personales* (campos de la entidad `personas`):
+| Campo | Tipo |
+|-------|------|
+| Apellido | Texto, requerido |
+| Nombre | Texto, requerido |
+| Tipo de documento | Select: DNI / LC / LE / PASAPORTE, requerido |
+| Número de documento | Texto, requerido |
+| Fecha de nacimiento | Date, requerido |
+| Fecha de cobertura | Date, requerido |
+
+*Sección 2 — Datos de vinculación* (campos de `plan_integrantes`):
+| Campo | Tipo |
+|-------|------|
+| Credencial | Texto, 1 caracter, requerido |
+| Rol | Select: titular / integrante. Aviso si ya existe un titular en el plan. |
+| Servicios adicionales | Checkboxes (cargados desde `GET /api/lookup/servicios-adicionales`) |
+
+Al guardar el popup [A]:
+- Si es persona nueva: crea `persona` + `plan_integrante` + `integrante_servicios`.
+- Si es persona existente: actualiza datos personales de la persona (aplica a todos sus planes) + crea o actualiza `plan_integrante` + `integrante_servicios`.
+
+**Validación al guardar el plan:**
 - Al menos 1 integrante
-- Exactamente 1 integrante con rol `titular`
+- Exactamente 1 integrante con `rol = 'titular'`
 - `numero_afiliado` no vacío
 
 ---
