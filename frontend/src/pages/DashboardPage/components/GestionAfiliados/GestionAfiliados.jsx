@@ -1,5 +1,4 @@
 import React, { useCallback, useEffect, useState } from 'react';
-import { useAuth } from '../../../../context/AuthContext';
 import afiliadosService from '../../../../services/afiliadosService';
 import './GestionAfiliados.scss';
 
@@ -190,159 +189,6 @@ function FormAfiliado({ inicial, preset, grupos, onGuardar, onCancelar, cargando
         </button>
       </div>
     </form>
-  );
-}
-
-// ── Vista de perfil propio (usuario no-admin) ────────────────────────────────
-
-function PerfilAfiliado({ afiliado, onEditar }) {
-  const [mostrarHistorial, setMostrarHistorial] = useState(false);
-  const [historial, setHistorial] = useState([]);
-  const [historialLoading, setHistorialLoading] = useState(false);
-  const [historialError, setHistorialError] = useState(null);
-
-  const cargarHistorial = async () => {
-    if (historial.length > 0) { setMostrarHistorial(true); return; }
-    setHistorialLoading(true);
-    setHistorialError(null);
-    try {
-      const data = await afiliadosService.obtenerHistorialGrupo(afiliado.grupo_familiar_id);
-      setHistorial(data);
-      setMostrarHistorial(true);
-    } catch {
-      setHistorialError('Error al cargar el historial del grupo.');
-    } finally {
-      setHistorialLoading(false);
-    }
-  };
-
-  const campos = [
-    { label: 'Nombre completo', valor: `${afiliado.nombre} ${afiliado.apellido}` },
-    { label: 'Documento', valor: `${afiliado.tipo_documento} ${afiliado.numero_documento}` },
-    { label: 'Rol', valor: afiliado.rol === 'titular' ? 'Titular' : 'Beneficiario' },
-    { label: 'Fecha de nacimiento', valor: afiliado.fecha_nacimiento ?? '—' },
-    { label: 'Género', valor: afiliado.genero ?? '—' },
-    { label: 'Dirección', valor: afiliado.direccion ?? '—' },
-    { label: 'Ciudad', valor: afiliado.ciudad ?? '—' },
-    { label: 'Provincia', valor: afiliado.provincia ?? '—' },
-    { label: 'Código postal', valor: afiliado.codigo_postal ?? '—' },
-    { label: 'Email de contacto', valor: afiliado.email_contacto ?? '—' },
-  ];
-
-  const grupo = afiliado.grupo;
-
-  return (
-    <div className="gestion-afiliados__perfil">
-      <div className="gestion-afiliados__perfil-header">
-        <div className="gestion-afiliados__perfil-avatar">
-          {afiliado.nombre[0]}{afiliado.apellido[0]}
-        </div>
-        <div>
-          <h3 className="gestion-afiliados__perfil-nombre">{afiliado.nombre} {afiliado.apellido}</h3>
-          <span className={`gestion-afiliados__estado gestion-afiliados__estado--${afiliado.estado}`}>
-            {afiliado.estado}
-          </span>
-          {' '}
-          <span className={`gestion-afiliados__rol-badge gestion-afiliados__rol-badge--${afiliado.rol}`}>
-            {afiliado.rol === 'titular' ? 'Titular' : 'Beneficiario'}
-          </span>
-        </div>
-      </div>
-
-      <div className="gestion-afiliados__perfil-grid">
-        {campos.map(({ label, valor }) => (
-          <div key={label} className="gestion-afiliados__perfil-field">
-            <span className="gestion-afiliados__perfil-label">{label}</span>
-            <span className="gestion-afiliados__perfil-valor">{valor}</span>
-          </div>
-        ))}
-      </div>
-
-      {afiliado.telefonos && (
-        <div className="gestion-afiliados__telefonos">
-          <span className="gestion-afiliados__perfil-label">Teléfonos</span>
-          <div className="gestion-afiliados__telefonos-lista">
-            {afiliado.telefonos.map((t, i) => (
-              <span key={i} className="gestion-afiliados__telefono-badge">
-                {t.tipo}: {t.numero}
-              </span>
-            ))}
-          </div>
-        </div>
-      )}
-
-      {grupo && (
-        <div className="gestion-afiliados__grupo-info">
-          <span className="gestion-afiliados__perfil-label">Grupo familiar</span>
-          <div className="gestion-afiliados__grupo-nombre">{grupo.nombre}</div>
-          {grupo.miembros && grupo.miembros.length > 1 && (
-            <div className="gestion-afiliados__grupo-miembros">
-              {grupo.miembros
-                .filter((m) => m.id !== afiliado.id)
-                .map((m) => (
-                  <span key={m.id} className={`gestion-afiliados__rol-badge gestion-afiliados__rol-badge--${m.rol}`}>
-                    {m.nombre} {m.apellido}
-                  </span>
-                ))}
-            </div>
-          )}
-
-          {afiliado.grupo_familiar_id && (
-            <div className="gestion-afiliados__historial-seccion">
-              <button
-                className="gestion-afiliados__historial-toggle"
-                onClick={() => mostrarHistorial ? setMostrarHistorial(false) : cargarHistorial()}
-              >
-                {mostrarHistorial ? '▲ Ocultar historial' : '▼ Ver historial del grupo'}
-              </button>
-
-              {historialError && (
-                <div className="gestion-afiliados__alert gestion-afiliados__alert--error">{historialError}</div>
-              )}
-
-              {mostrarHistorial && (
-                historialLoading ? (
-                  <div className="gestion-afiliados__loading">Cargando historial...</div>
-                ) : historial.length === 0 ? (
-                  <p className="gestion-afiliados__empty">Sin historial registrado.</p>
-                ) : (
-                  <div className="gestion-afiliados__tabla-wrapper">
-                    <table className="gestion-afiliados__tabla">
-                      <thead>
-                        <tr>
-                          <th>Fecha</th>
-                          <th>Afiliado</th>
-                          <th>Acción</th>
-                        </tr>
-                      </thead>
-                      <tbody>
-                        {historial.map((h) => (
-                          <tr key={h.id}>
-                            <td>{new Date(h.fecha).toLocaleString('es-AR')}</td>
-                            <td>{h.afiliado ? `${h.afiliado.nombre} ${h.afiliado.apellido}` : '—'}</td>
-                            <td>
-                              <span className={`gestion-afiliados__accion-badge gestion-afiliados__accion-badge--${h.accion}`}>
-                                {h.accion === 'ingreso' ? 'Ingreso' : 'Baja'}
-                              </span>
-                            </td>
-                          </tr>
-                        ))}
-                      </tbody>
-                    </table>
-                  </div>
-                )
-              )}
-            </div>
-          )}
-        </div>
-      )}
-
-      <div className="gestion-afiliados__perfil-actions">
-        <button className="gestion-afiliados__btn gestion-afiliados__btn--primary" onClick={onEditar}>
-          Editar datos
-        </button>
-      </div>
-    </div>
   );
 }
 
@@ -920,31 +766,20 @@ function ModalConfirmar({ afiliado, onConfirmar, onCancelar, cargando }) {
 // ── Componente principal ─────────────────────────────────────────────────────
 
 function GestionAfiliados() {
-  const { user } = useAuth();
-  const isAdmin = user?.rol === 'admin';
-
   const [loading, setLoading] = useState(true);
   const [actionLoading, setActionLoading] = useState(false);
   const [error, setError] = useState(null);
   const [mensaje, setMensaje] = useState(null);
 
-  // Estado usuario no-admin
-  const [miPerfil, setMiPerfil] = useState(null);
-  const [tienePerfil, setTienePerfil] = useState(false);
-
-  // Estado admin
   const [afiliados, setAfiliados] = useState([]);
   const [grupos, setGrupos] = useState([]);
   const [pagination, setPagination] = useState({ page: 1, limit: 10, total: 0, pages: 1 });
   const [filtros, setFiltros] = useState({ search: '', estado: '', rol: '' });
 
-  // Vistas
   const [vista, setVista] = useState('lista');
   const [afiliadoEditando, setAfiliadoEditando] = useState(null);
   const [afiliadoBorrando, setAfiliadoBorrando] = useState(null);
   const [formPreset, setFormPreset] = useState(null);
-
-  // Modal grupo
   const [grupoModalId, setGrupoModalId] = useState(null);
 
   // ── Carga ──────────────────────────────────────────────────────────────────
@@ -971,34 +806,12 @@ function GestionAfiliados() {
     }
   }, []);
 
-  const cargarMiPerfil = useCallback(async () => {
-    setError(null);
-    try {
-      const perfil = await afiliadosService.me();
-      setMiPerfil(perfil);
-      setTienePerfil(true);
-    } catch (err) {
-      if (err.response?.status === 404) {
-        setTienePerfil(false);
-      } else {
-        setError(err.response?.data?.message || 'Error al cargar tu perfil.');
-      }
-    } finally {
-      setLoading(false);
-    }
-  }, []);
+  useEffect(() => {
+    Promise.all([cargarAfiliados(), cargarGrupos()]);
+  }, [cargarAfiliados, cargarGrupos]);
 
   useEffect(() => {
-    if (isAdmin) {
-      Promise.all([cargarAfiliados(), cargarGrupos()]);
-    } else {
-      cargarMiPerfil();
-    }
-  }, [isAdmin, cargarAfiliados, cargarGrupos, cargarMiPerfil]);
-
-  // Recarga al cambiar filtros (admin)
-  useEffect(() => {
-    if (isAdmin && !loading) {
+    if (!loading) {
       cargarAfiliados(1);
     }
   // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -1025,12 +838,8 @@ function GestionAfiliados() {
       setVista('lista');
       setAfiliadoEditando(null);
       setFormPreset(null);
-      if (isAdmin) {
-        await cargarAfiliados(pagination.page);
-        await cargarGrupos();
-      } else {
-        cargarMiPerfil();
-      }
+      await cargarAfiliados(pagination.page);
+      await cargarGrupos();
     } catch (err) {
       setError(err.response?.data?.message || 'Error al guardar los datos.');
     } finally {
@@ -1095,15 +904,13 @@ function GestionAfiliados() {
   return (
     <div className="gestion-afiliados">
       <div className="gestion-afiliados__header">
-        <h2 className="gestion-afiliados__title">
-          {isAdmin ? 'Gestión de Afiliados' : 'Mi Perfil de Afiliado'}
-        </h2>
-        {vista === 'lista' && (isAdmin || !tienePerfil) && (
+        <h2 className="gestion-afiliados__title">Gestión de Afiliados</h2>
+        {vista === 'lista' && (
           <button
             className="gestion-afiliados__btn gestion-afiliados__btn--primary"
             onClick={() => { setFormPreset(null); setVista('crear'); setError(null); setMensaje(null); }}
           >
-            {isAdmin ? '+ Nuevo afiliado' : 'Completar mi perfil'}
+            + Nuevo afiliado
           </button>
         )}
       </div>
@@ -1116,29 +923,17 @@ function GestionAfiliados() {
       )}
 
       {vista === 'lista' && (
-        <>
-          {isAdmin ? (
-            <TablaAfiliados
-              afiliados={afiliados}
-              grupos={grupos}
-              pagination={pagination}
-              filtros={filtros}
-              onFiltroChange={handleFiltroChange}
-              onEditar={handleEditar}
-              onEliminar={(a) => setAfiliadoBorrando(a)}
-              onVerGrupo={(id) => setGrupoModalId(id)}
-              onPaginar={(p) => cargarAfiliados(p)}
-            />
-          ) : (
-            tienePerfil
-              ? <PerfilAfiliado afiliado={miPerfil} onEditar={() => handleEditar(miPerfil)} />
-              : (
-                <div className="gestion-afiliados__aviso">
-                  <p>Todavía no completaste tu perfil de afiliado. Hacé clic en <strong>Completar mi perfil</strong> para empezar.</p>
-                </div>
-              )
-          )}
-        </>
+        <TablaAfiliados
+          afiliados={afiliados}
+          grupos={grupos}
+          pagination={pagination}
+          filtros={filtros}
+          onFiltroChange={handleFiltroChange}
+          onEditar={handleEditar}
+          onEliminar={(a) => setAfiliadoBorrando(a)}
+          onVerGrupo={(id) => setGrupoModalId(id)}
+          onPaginar={(p) => cargarAfiliados(p)}
+        />
       )}
 
       {(vista === 'crear' || vista === 'editar') && (
