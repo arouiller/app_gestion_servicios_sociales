@@ -4,8 +4,7 @@ const HistorialGrupoFamiliar = require('../models/HistorialGrupoFamiliar');
 const Usuario = require('../models/Usuario');
 
 // ── GET /api/grupos-familiares/:id/historial ────────────────────────────────
-// Accesible a cualquier usuario autenticado.
-// No-admin: solo puede ver el historial de su propio grupo.
+// Accesible a cualquier empleado autenticado.
 
 const listarHistorial = async (req, res) => {
   const grupoId = parseInt(req.params.id, 10);
@@ -13,17 +12,6 @@ const listarHistorial = async (req, res) => {
   const grupo = await GrupoFamiliar.findByPk(grupoId);
   if (!grupo) {
     return res.status(404).json({ success: false, message: 'Grupo familiar no encontrado' });
-  }
-
-  // Verificar acceso para no-admin
-  if (req.userRole !== 'admin') {
-    const miAfiliado = await Afiliado.findOne({ where: { usuario_id: req.userId } });
-    if (!miAfiliado || miAfiliado.grupo_familiar_id !== grupoId) {
-      return res.status(403).json({
-        success: false,
-        message: 'No tenés acceso al historial de este grupo',
-      });
-    }
   }
 
   const entradas = await HistorialGrupoFamiliar.findAll({
@@ -35,7 +23,6 @@ const listarHistorial = async (req, res) => {
     return res.json({ success: true, data: [] });
   }
 
-  // Cargar afiliados y usuarios referenciados
   const afiliadoIds = [...new Set(entradas.map((e) => e.afiliado_id))];
   const usuarioIds  = [...new Set(entradas.map((e) => e.usuario_id))];
 
