@@ -1,7 +1,7 @@
 # Entidades Lookup + Planes — Design Spec
 
 **Fecha:** 2026-04-11  
-**Alcance:** Migraciones, CRUD de entidades lookup (1-5), modelo de Planes y Personas, interfaz de Planes  
+**Alcance:** Migraciones, CRUD de entidades lookup (1-5), modelo de Planes y Personas, interfaz de Planes, Historial/Recibos, Listados, UI  
 **Estado:** Aprobado por usuario — pendiente de implementación
 
 ---
@@ -709,3 +709,108 @@ Click en una fila → abre el formulario completo del plan.
 | `frontend/src/pages/DashboardPage/components/ListadoPlanes/ListadoPlanes.jsx` | Crear |
 | `frontend/src/pages/DashboardPage/components/PlanesPorCobrador/PlanesPorCobrador.jsx` | Crear |
 | `frontend/src/pages/DashboardPage/DashboardPage.jsx` | Modificar (menú + módulos) |
+| `frontend/src/styles/themes.scss` | Crear |
+| `frontend/src/styles/variables.scss` | Crear |
+| `frontend/src/components/ThemeSwitcher/ThemeSwitcher.jsx` | Crear |
+
+---
+
+## 9. Especificaciones de Interfaz
+
+### Sistema de temas
+
+Cuatro temas seleccionables: **Claro**, **Oscuro**, **Azul corporativo**, **Verde**.
+
+Implementados como variables CSS en clases aplicadas al `<body>`:
+
+```css
+/* Ejemplo de estructura */
+body.theme-claro   { --color-bg: #f5f5f5; --color-surface: #ffffff; --color-primary: #4a90d9; --color-text: #1a1a1a; ... }
+body.theme-oscuro  { --color-bg: #1a1a2e; --color-surface: #16213e; --color-primary: #4a90d9; --color-text: #e0e0e0; ... }
+body.theme-azul    { --color-bg: #e8f0fe; --color-surface: #ffffff; --color-primary: #1a73e8; --color-text: #1a1a1a; ... }
+body.theme-verde   { --color-bg: #e8f5e9; --color-surface: #ffffff; --color-primary: #2e7d32; --color-text: #1a1a1a; ... }
+```
+
+Variables mínimas requeridas: `--color-bg`, `--color-surface`, `--color-surface-alt`, `--color-primary`, `--color-primary-hover`, `--color-text`, `--color-text-muted`, `--color-border`, `--color-danger`, `--color-row-alt`.
+
+El tema seleccionado se persiste en `localStorage` (carga inmediata sin flash) y también en el perfil del usuario en backend (campo `tema_preferido` en tabla `usuarios`).
+
+**Puntos de acceso al selector:**
+- **Topbar:** componente `ThemeSwitcher` con 4 círculos de color clickeables, siempre visible
+- **Mi Cuenta → Datos Personales:** dropdown con los 4 temas
+
+---
+
+### Layout — Desktop
+
+```
+┌─────────────────────────────────────────────────────┐
+│ TOPBAR (fijo)  [☰ toggle] GestSocial    [temas][👤] │
+├──────────┬──────────────────────────────────────────┤
+│ SIDEBAR  │                                          │
+│ (220px   │         CONTENIDO PRINCIPAL              │
+│  o 60px  │         (sin margen excesivo)            │
+│ colaps.) │                                          │
+└──────────┴──────────────────────────────────────────┘
+```
+
+- Sidebar colapsable: expandido (~220px, íconos + texto) ↔ colapsado (~60px, solo íconos)
+- Toggle con botón `«` / `»` en el borde del sidebar
+- Estado persistido en `localStorage`
+- Contenido principal: padding interno `16px`, sin margen adicional
+
+---
+
+### Layout — Móvil
+
+```
+┌─────────────────────┐
+│ TOPBAR (fijo)       │
+├─────────────────────┤
+│                     │
+│  CONTENIDO          │
+│  (scroll vertical)  │
+│                     │
+├─────────────────────┤
+│ BOTTOM NAV (fijo)   │
+│ [Cuenta][Maest][Pla][List] │
+└─────────────────────┘
+```
+
+- Sin sidebar
+- Bottom navigation bar fija: Mi Cuenta, Maestros, Planes, Listados (íconos + etiqueta corta)
+- "Maestros" abre un menú secundario (sheet o drawer) con las 5 sub-pantallas
+- Breakpoint mobile: `≤ 768px`
+
+---
+
+### Tablas
+
+| Propiedad | Desktop | Móvil |
+|-----------|---------|-------|
+| Altura de fila | ~36px | ~48px |
+| Tipografía | 13–14px | 14–15px |
+| Columnas | Todas | Solo esenciales (resto en detalle) |
+| Cebrado | Filas pares con `--color-row-alt` | Igual |
+| Header | Fijo con scroll vertical | Fijo |
+
+En móvil, columnas no esenciales se ocultan con `display: none` en el breakpoint. El botón de acciones abre un menú contextual o navega al detalle.
+
+---
+
+### Formularios
+
+Layout mixto:
+- **Desktop:** campos cortos (número, fecha, credencial, tipo doc, valor) en grilla de 2–3 columnas; campos largos (domicilio, localidad, nombre completo) en ancho completo
+- **Móvil:** siempre una columna, sin grilla
+
+Implementación: CSS Grid con `grid-template-columns: repeat(auto-fit, minmax(180px, 1fr))` para campos cortos; clase `.field--full` para forzar ancho completo.
+
+---
+
+### Tipografía
+
+- Fuente: `Inter` (Google Fonts — `weights: 400, 500, 600`)
+- Tamaño base: `14px` desktop, `15px` móvil
+- Headings de sección: `16px`, `font-weight: 600`
+- Labels de formulario: `12px`, `font-weight: 500`, `text-transform: uppercase`, `letter-spacing: 0.05em`
