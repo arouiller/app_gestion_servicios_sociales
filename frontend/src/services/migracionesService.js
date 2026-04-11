@@ -40,6 +40,14 @@ const migracionesService = {
     const { data } = await api.post('/migrations/down');
     return data;
   },
+
+  /**
+   * Re-ejecuta la migración de la versión actual (downgrade + upgrade en una transacción).
+   */
+  reapply: async () => {
+    const { data } = await api.post('/migrations/reapply');
+    return data;
+  },
 };
 
 export default migracionesService;

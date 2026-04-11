@@ -21,6 +21,14 @@ function arrayToLines(arr) {
   return '';
 }
 
+function formatPrecio(valor) {
+  return parseFloat(valor).toLocaleString('es-AR', {
+    style: 'currency',
+    currency: 'ARS',
+    minimumFractionDigits: 2,
+  });
+}
+
 const FORM_VACIO = {
   nombre: '',
   descripcion: '',
@@ -32,75 +40,91 @@ const FORM_VACIO = {
   estado: 'activo',
 };
 
-// ── Tarjeta de plan (vista usuario) ─────────────────────────────────────────
+// ── Tabla de planes ──────────────────────────────────────────────────────────
 
-function TarjetaPlan({ plan, onEditar, onEliminar, isAdmin }) {
-  const precio = parseFloat(plan.precio_mensual).toLocaleString('es-AR', {
-    style: 'currency',
-    currency: 'ARS',
-    minimumFractionDigits: 2,
-  });
-
+function TablaPlanes({ planes, isAdmin, onEditar, onEliminar, filtros, onFiltroChange }) {
   return (
-    <div className={`gestion-planes__card gestion-planes__card--${plan.estado}`}>
-      <div className="gestion-planes__card-header">
-        <div>
-          <h3 className="gestion-planes__card-nombre">{plan.nombre}</h3>
-          <span className={`gestion-planes__estado gestion-planes__estado--${plan.estado}`}>
-            {plan.estado}
-          </span>
-        </div>
-        <div className="gestion-planes__card-precio">
-          <span className="gestion-planes__card-precio-monto">{precio}</span>
-          <span className="gestion-planes__card-precio-label">/ mes</span>
-        </div>
+    <div>
+      <div className="gestion-planes__filtros">
+        <input
+          className="gestion-planes__filtro-input"
+          placeholder="Buscar por nombre..."
+          value={filtros.search}
+          onChange={(e) => onFiltroChange('search', e.target.value)}
+        />
+        {isAdmin && (
+          <select
+            className="gestion-planes__filtro-select"
+            value={filtros.estado}
+            onChange={(e) => onFiltroChange('estado', e.target.value)}
+          >
+            <option value="">Todos los estados</option>
+            <option value="activo">Activo</option>
+            <option value="inactivo">Inactivo</option>
+            <option value="descontinuado">Descontinuado</option>
+          </select>
+        )}
       </div>
 
-      {plan.descripcion && (
-        <p className="gestion-planes__card-desc">{plan.descripcion}</p>
-      )}
-
-      <div className="gestion-planes__card-meta">
-        <span>Duración: <strong>{plan.duracion_meses} meses</strong></span>
-        <span>Dependientes: <strong>hasta {plan.limite_dependientes}</strong></span>
-      </div>
-
-      {Array.isArray(plan.cobertura) && plan.cobertura.length > 0 && (
-        <div className="gestion-planes__card-lista">
-          <span className="gestion-planes__card-lista-titulo">Cobertura</span>
-          <ul>
-            {plan.cobertura.map((item, i) => (
-              <li key={i}>{item}</li>
-            ))}
-          </ul>
-        </div>
-      )}
-
-      {Array.isArray(plan.beneficios) && plan.beneficios.length > 0 && (
-        <div className="gestion-planes__card-lista">
-          <span className="gestion-planes__card-lista-titulo">Beneficios</span>
-          <ul>
-            {plan.beneficios.map((item, i) => (
-              <li key={i}>{item}</li>
-            ))}
-          </ul>
-        </div>
-      )}
-
-      {isAdmin && (
-        <div className="gestion-planes__card-actions">
-          <button
-            className="gestion-planes__btn-icon gestion-planes__btn-icon--edit"
-            onClick={() => onEditar(plan)}
-          >
-            Editar
-          </button>
-          <button
-            className="gestion-planes__btn-icon gestion-planes__btn-icon--delete"
-            onClick={() => onEliminar(plan)}
-          >
-            Eliminar
-          </button>
+      {planes.length === 0 ? (
+        <p className="gestion-planes__empty">
+          {isAdmin ? 'No hay planes. Creá el primero.' : 'No hay planes disponibles.'}
+        </p>
+      ) : (
+        <div className="gestion-planes__tabla-wrapper">
+          <table className="gestion-planes__tabla">
+            <thead>
+              <tr>
+                <th>Nombre</th>
+                <th>Descripción</th>
+                <th>Precio/mes</th>
+                <th>Duración</th>
+                <th>Dep. máx</th>
+                <th>Estado</th>
+                {isAdmin && <th>Acciones</th>}
+              </tr>
+            </thead>
+            <tbody>
+              {planes.map((plan) => (
+                <tr key={plan.id}>
+                  <td className="gestion-planes__tabla-nombre">{plan.nombre}</td>
+                  <td className="gestion-planes__tabla-desc">
+                    {plan.descripcion
+                      ? plan.descripcion.length > 70
+                        ? plan.descripcion.substring(0, 70) + '…'
+                        : plan.descripcion
+                      : '—'}
+                  </td>
+                  <td className="gestion-planes__tabla-precio">{formatPrecio(plan.precio_mensual)}</td>
+                  <td>{plan.duracion_meses} meses</td>
+                  <td>{plan.limite_dependientes}</td>
+                  <td>
+                    <span className={`gestion-planes__estado gestion-planes__estado--${plan.estado}`}>
+                      {plan.estado}
+                    </span>
+                  </td>
+                  {isAdmin && (
+                    <td className="gestion-planes__tabla-acciones">
+                      <button
+                        className="gestion-planes__btn-icon gestion-planes__btn-icon--edit"
+                        onClick={() => onEditar(plan)}
+                        title="Editar"
+                      >
+                        Editar
+                      </button>
+                      <button
+                        className="gestion-planes__btn-icon gestion-planes__btn-icon--delete"
+                        onClick={() => onEliminar(plan)}
+                        title="Eliminar"
+                      >
+                        Eliminar
+                      </button>
+                    </td>
+                  )}
+                </tr>
+              ))}
+            </tbody>
+          </table>
         </div>
       )}
     </div>
@@ -109,7 +133,7 @@ function TarjetaPlan({ plan, onEditar, onEliminar, isAdmin }) {
 
 // ── Formulario ────────────────────────────────────────────────────────────────
 
-function FormPlan({ inicial, onGuardar, onCancelar, cargando, isAdmin }) {
+function FormPlan({ inicial, onGuardar, onCancelar, cargando }) {
   const [form, setForm] = useState({
     ...FORM_VACIO,
     ...inicial,
@@ -308,8 +332,8 @@ function GestionPlanes() {
   const [error, setError] = useState(null);
   const [mensaje, setMensaje] = useState(null);
 
-  const [filtroEstado, setFiltroEstado] = useState('');
-  const [vista, setVista] = useState('lista'); // 'lista' | 'crear' | 'editar'
+  const [filtros, setFiltros] = useState({ search: '', estado: '' });
+  const [vista, setVista] = useState('lista');
   const [planEditando, setPlanEditando] = useState(null);
   const [planBorrando, setPlanBorrando] = useState(null);
 
@@ -317,7 +341,7 @@ function GestionPlanes() {
     setError(null);
     try {
       const params = {};
-      if (filtroEstado) params.estado = filtroEstado;
+      if (filtros.estado) params.estado = filtros.estado;
       const data = await planesService.listar(params);
       setPlanes(data);
     } catch (err) {
@@ -325,7 +349,7 @@ function GestionPlanes() {
     } finally {
       setLoading(false);
     }
-  }, [filtroEstado]);
+  }, [filtros.estado]);
 
   useEffect(() => {
     cargar();
@@ -385,6 +409,16 @@ function GestionPlanes() {
     setError(null);
   };
 
+  const handleFiltroChange = (campo, valor) => {
+    setFiltros((prev) => ({ ...prev, [campo]: valor }));
+  };
+
+  // Filtrado local por nombre (sin paginación, planes suelen ser pocos)
+  const planesFiltrados = planes.filter((p) => {
+    if (!filtros.search) return true;
+    return p.nombre.toLowerCase().includes(filtros.search.toLowerCase());
+  });
+
   if (loading) {
     return (
       <div className="gestion-planes">
@@ -417,40 +451,14 @@ function GestionPlanes() {
       )}
 
       {vista === 'lista' && (
-        <>
-          {isAdmin && (
-            <div className="gestion-planes__filtros">
-              <select
-                className="gestion-planes__filtro-select"
-                value={filtroEstado}
-                onChange={(e) => setFiltroEstado(e.target.value)}
-              >
-                <option value="">Todos los estados</option>
-                <option value="activo">Activo</option>
-                <option value="inactivo">Inactivo</option>
-                <option value="descontinuado">Descontinuado</option>
-              </select>
-            </div>
-          )}
-
-          {planes.length === 0 ? (
-            <p className="gestion-planes__empty">
-              {isAdmin ? 'No hay planes. Creá el primero.' : 'No hay planes disponibles.'}
-            </p>
-          ) : (
-            <div className="gestion-planes__grid">
-              {planes.map((plan) => (
-                <TarjetaPlan
-                  key={plan.id}
-                  plan={plan}
-                  isAdmin={isAdmin}
-                  onEditar={handleEditar}
-                  onEliminar={(p) => setPlanBorrando(p)}
-                />
-              ))}
-            </div>
-          )}
-        </>
+        <TablaPlanes
+          planes={planesFiltrados}
+          isAdmin={isAdmin}
+          filtros={filtros}
+          onFiltroChange={handleFiltroChange}
+          onEditar={handleEditar}
+          onEliminar={(p) => setPlanBorrando(p)}
+        />
       )}
 
       {(vista === 'crear' || vista === 'editar') && (
@@ -463,7 +471,6 @@ function GestionPlanes() {
             onGuardar={handleGuardar}
             onCancelar={handleCancelar}
             cargando={actionLoading}
-            isAdmin={isAdmin}
           />
         </>
       )}

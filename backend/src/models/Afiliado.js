@@ -64,6 +64,15 @@ const Afiliado = sequelize.define('afiliados', {
     type: DataTypes.ENUM('activo', 'inactivo', 'suspendido'),
     defaultValue: 'activo',
   },
+  rol: {
+    type: DataTypes.ENUM('titular', 'beneficiario'),
+    defaultValue: 'titular',
+    allowNull: false,
+  },
+  grupo_familiar_id: {
+    type: DataTypes.INTEGER,
+    allowNull: true,
+  },
   fecha_creacion: {
     type: DataTypes.DATE,
     defaultValue: DataTypes.NOW,

@@ -1,4 +1,5 @@
--- Migración 1.0.1: Tabla de afiliados
+-- Migración 1.0.1: Tabla de afiliados y grupos familiares
+
 CREATE TABLE IF NOT EXISTS afiliados (
   id INT AUTO_INCREMENT PRIMARY KEY,
   usuario_id INT NOT NULL,
@@ -22,3 +23,18 @@ CREATE TABLE IF NOT EXISTS afiliados (
   INDEX idx_usuario_id (usuario_id),
   INDEX idx_estado (estado)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+CREATE TABLE IF NOT EXISTS grupos_familiares (
+  id INT AUTO_INCREMENT PRIMARY KEY,
+  nombre VARCHAR(150) NOT NULL,
+  estado ENUM('activo','inactivo') NOT NULL DEFAULT 'activo',
+  fecha_creacion TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+  fecha_actualizacion TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+  INDEX idx_estado (estado)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+ALTER TABLE afiliados
+  ADD COLUMN rol ENUM('titular','beneficiario') NOT NULL DEFAULT 'titular' AFTER estado,
+  ADD COLUMN grupo_familiar_id INT NULL AFTER rol,
+  ADD CONSTRAINT fk_afiliados_grupo FOREIGN KEY (grupo_familiar_id) REFERENCES grupos_familiares(id) ON DELETE SET NULL,
+  ADD INDEX idx_grupo_familiar_id (grupo_familiar_id);

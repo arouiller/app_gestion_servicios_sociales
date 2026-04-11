@@ -18,13 +18,17 @@ const FORM_VACIO = {
   codigo_postal: '',
   email_contacto: '',
   telefonos: '',
+  rol: 'titular',
+  grupo_familiar_id: '',
 };
 
-function FormAfiliado({ inicial, onGuardar, onCancelar, cargando }) {
+function FormAfiliado({ inicial, preset, grupos, onGuardar, onCancelar, cargando }) {
   const [form, setForm] = useState({
     ...FORM_VACIO,
     ...inicial,
     telefonos: inicial?.telefonos ? JSON.stringify(inicial.telefonos) : '',
+    rol: preset?.rol || inicial?.rol || 'titular',
+    grupo_familiar_id: preset?.grupo_familiar_id || inicial?.grupo_familiar_id || '',
   });
   const [errores, setErrores] = useState({});
 
@@ -41,7 +45,9 @@ function FormAfiliado({ inicial, onGuardar, onCancelar, cargando }) {
     if (!form.tipo_documento) e.tipo_documento = 'El tipo de documento es requerido';
     if (!form.numero_documento.trim()) e.numero_documento = 'El número de documento es requerido';
     else if (form.numero_documento.trim().length < 6) e.numero_documento = 'Debe tener al menos 6 caracteres';
-
+    if (form.rol === 'beneficiario' && !form.grupo_familiar_id) {
+      e.grupo_familiar_id = 'El grupo familiar es requerido para un beneficiario';
+    }
     if (form.telefonos.trim()) {
       try {
         const parsed = JSON.parse(form.telefonos);
@@ -56,20 +62,20 @@ function FormAfiliado({ inicial, onGuardar, onCancelar, cargando }) {
   const handleSubmit = (e) => {
     e.preventDefault();
     const e2 = validar();
-    if (Object.keys(e2).length > 0) {
-      setErrores(e2);
-      return;
-    }
+    if (Object.keys(e2).length > 0) { setErrores(e2); return; }
     const payload = { ...form };
     payload.telefonos = form.telefonos.trim() ? JSON.parse(form.telefonos) : null;
     if (!payload.fecha_nacimiento) payload.fecha_nacimiento = null;
     if (!payload.genero) payload.genero = null;
+    if (payload.rol === 'titular') payload.grupo_familiar_id = null;
+    else payload.grupo_familiar_id = parseInt(payload.grupo_familiar_id, 10) || null;
     onGuardar(payload);
   };
 
   return (
     <form className="gestion-afiliados__form" onSubmit={handleSubmit} noValidate>
       <div className="gestion-afiliados__form-grid">
+
         <div className="gestion-afiliados__field">
           <label>Nombre *</label>
           <input name="nombre" value={form.nombre} onChange={handleChange} maxLength={100} />
@@ -97,6 +103,29 @@ function FormAfiliado({ inicial, onGuardar, onCancelar, cargando }) {
           <input name="numero_documento" value={form.numero_documento} onChange={handleChange} maxLength={20} />
           {errores.numero_documento && <span className="gestion-afiliados__field-error">{errores.numero_documento}</span>}
         </div>
+
+        <div className="gestion-afiliados__field">
+          <label>Rol</label>
+          <select name="rol" value={form.rol} onChange={handleChange} disabled={!!inicial}>
+            <option value="titular">Titular</option>
+            <option value="beneficiario">Beneficiario</option>
+          </select>
+        </div>
+
+        {form.rol === 'beneficiario' && (
+          <div className="gestion-afiliados__field">
+            <label>Grupo familiar *</label>
+            <select name="grupo_familiar_id" value={form.grupo_familiar_id} onChange={handleChange}>
+              <option value="">— Seleccionar grupo —</option>
+              {grupos.map((g) => (
+                <option key={g.id} value={g.id}>
+                  {g.nombre} {g.titular ? `(${g.titular.apellido}, ${g.titular.nombre})` : ''}
+                </option>
+              ))}
+            </select>
+            {errores.grupo_familiar_id && <span className="gestion-afiliados__field-error">{errores.grupo_familiar_id}</span>}
+          </div>
+        )}
 
         <div className="gestion-afiliados__field">
           <label>Fecha de nacimiento</label>
@@ -168,6 +197,7 @@ function PerfilAfiliado({ afiliado, onEditar }) {
   const campos = [
     { label: 'Nombre completo', valor: `${afiliado.nombre} ${afiliado.apellido}` },
     { label: 'Documento', valor: `${afiliado.tipo_documento} ${afiliado.numero_documento}` },
+    { label: 'Rol', valor: afiliado.rol === 'titular' ? 'Titular' : 'Beneficiario' },
     { label: 'Fecha de nacimiento', valor: afiliado.fecha_nacimiento ?? '—' },
     { label: 'Género', valor: afiliado.genero ?? '—' },
     { label: 'Dirección', valor: afiliado.direccion ?? '—' },
@@ -176,6 +206,8 @@ function PerfilAfiliado({ afiliado, onEditar }) {
     { label: 'Código postal', valor: afiliado.codigo_postal ?? '—' },
     { label: 'Email de contacto', valor: afiliado.email_contacto ?? '—' },
   ];
+
+  const grupo = afiliado.grupo;
 
   return (
     <div className="gestion-afiliados__perfil">
@@ -187,6 +219,10 @@ function PerfilAfiliado({ afiliado, onEditar }) {
           <h3 className="gestion-afiliados__perfil-nombre">{afiliado.nombre} {afiliado.apellido}</h3>
           <span className={`gestion-afiliados__estado gestion-afiliados__estado--${afiliado.estado}`}>
             {afiliado.estado}
+          </span>
+          {' '}
+          <span className={`gestion-afiliados__rol-badge gestion-afiliados__rol-badge--${afiliado.rol}`}>
+            {afiliado.rol === 'titular' ? 'Titular' : 'Beneficiario'}
           </span>
         </div>
       </div>
@@ -213,6 +249,24 @@ function PerfilAfiliado({ afiliado, onEditar }) {
         </div>
       )}
 
+      {grupo && (
+        <div className="gestion-afiliados__grupo-info">
+          <span className="gestion-afiliados__perfil-label">Grupo familiar</span>
+          <div className="gestion-afiliados__grupo-nombre">{grupo.nombre}</div>
+          {grupo.miembros && grupo.miembros.length > 1 && (
+            <div className="gestion-afiliados__grupo-miembros">
+              {grupo.miembros
+                .filter((m) => m.id !== afiliado.id)
+                .map((m) => (
+                  <span key={m.id} className={`gestion-afiliados__rol-badge gestion-afiliados__rol-badge--${m.rol}`}>
+                    {m.nombre} {m.apellido}
+                  </span>
+                ))}
+            </div>
+          )}
+        </div>
+      )}
+
       <div className="gestion-afiliados__perfil-actions">
         <button className="gestion-afiliados__btn gestion-afiliados__btn--primary" onClick={onEditar}>
           Editar datos
@@ -224,10 +278,11 @@ function PerfilAfiliado({ afiliado, onEditar }) {
 
 // ── Tabla admin ──────────────────────────────────────────────────────────────
 
-function TablaAfiliados({ afiliados, pagination, onEditar, onEliminar, onPaginar, filtros, onFiltroChange }) {
+function TablaAfiliados({ afiliados, grupos, pagination, onEditar, onEliminar, onVerGrupo, onPaginar, filtros, onFiltroChange }) {
+  const grupoMap = Object.fromEntries((grupos || []).map((g) => [g.id, g]));
+
   return (
     <div>
-      {/* Filtros */}
       <div className="gestion-afiliados__filtros">
         <input
           className="gestion-afiliados__filtro-input"
@@ -257,45 +312,65 @@ function TablaAfiliados({ afiliados, pagination, onEditar, onEliminar, onPaginar
                 <tr>
                   <th>Nombre</th>
                   <th>Documento</th>
+                  <th>Rol</th>
+                  <th>Grupo familiar</th>
                   <th>Email</th>
                   <th>Estado</th>
                   <th>Acciones</th>
                 </tr>
               </thead>
               <tbody>
-                {afiliados.map((a) => (
-                  <tr key={a.id}>
-                    <td>{a.nombre} {a.apellido}</td>
-                    <td>{a.tipo_documento} {a.numero_documento}</td>
-                    <td>{a.email_contacto ?? '—'}</td>
-                    <td>
-                      <span className={`gestion-afiliados__estado gestion-afiliados__estado--${a.estado}`}>
-                        {a.estado}
-                      </span>
-                    </td>
-                    <td className="gestion-afiliados__tabla-acciones">
-                      <button
-                        className="gestion-afiliados__btn-icon gestion-afiliados__btn-icon--edit"
-                        onClick={() => onEditar(a)}
-                        title="Editar"
-                      >
-                        Editar
-                      </button>
-                      <button
-                        className="gestion-afiliados__btn-icon gestion-afiliados__btn-icon--delete"
-                        onClick={() => onEliminar(a)}
-                        title="Eliminar"
-                      >
-                        Eliminar
-                      </button>
-                    </td>
-                  </tr>
-                ))}
+                {afiliados.map((a) => {
+                  const grupo = a.grupo || (a.grupo_familiar_id ? grupoMap[a.grupo_familiar_id] : null);
+                  return (
+                    <tr key={a.id}>
+                      <td>{a.nombre} {a.apellido}</td>
+                      <td>{a.tipo_documento} {a.numero_documento}</td>
+                      <td>
+                        <span className={`gestion-afiliados__rol-badge gestion-afiliados__rol-badge--${a.rol}`}>
+                          {a.rol === 'titular' ? 'Titular' : 'Beneficiario'}
+                        </span>
+                      </td>
+                      <td>
+                        {grupo ? (
+                          <button
+                            className="gestion-afiliados__btn-grupo"
+                            onClick={() => onVerGrupo(a.grupo_familiar_id)}
+                            title="Ver grupo familiar"
+                          >
+                            {grupo.nombre}
+                          </button>
+                        ) : '—'}
+                      </td>
+                      <td>{a.email_contacto ?? '—'}</td>
+                      <td>
+                        <span className={`gestion-afiliados__estado gestion-afiliados__estado--${a.estado}`}>
+                          {a.estado}
+                        </span>
+                      </td>
+                      <td className="gestion-afiliados__tabla-acciones">
+                        <button
+                          className="gestion-afiliados__btn-icon gestion-afiliados__btn-icon--edit"
+                          onClick={() => onEditar(a)}
+                          title="Editar"
+                        >
+                          Editar
+                        </button>
+                        <button
+                          className="gestion-afiliados__btn-icon gestion-afiliados__btn-icon--delete"
+                          onClick={() => onEliminar(a)}
+                          title="Eliminar"
+                        >
+                          Eliminar
+                        </button>
+                      </td>
+                    </tr>
+                  );
+                })}
               </tbody>
             </table>
           </div>
 
-          {/* Paginación */}
           <div className="gestion-afiliados__paginacion">
             <span className="gestion-afiliados__paginacion-info">
               {pagination.total} afiliados — Página {pagination.page} de {pagination.pages}
@@ -319,6 +394,166 @@ function TablaAfiliados({ afiliados, pagination, onEditar, onEliminar, onPaginar
           </div>
         </>
       )}
+    </div>
+  );
+}
+
+// ── Modal de grupo familiar ──────────────────────────────────────────────────
+
+function GrupoModal({ grupoId, onClose, onAgregarBeneficiario, onRefresh }) {
+  const [grupo, setGrupo] = useState(null);
+  const [loading, setLoading] = useState(true);
+  const [removingId, setRemovingId] = useState(null);
+  const [editando, setEditando] = useState(false);
+  const [nombreEdit, setNombreEdit] = useState('');
+  const [error, setError] = useState(null);
+
+  const cargar = useCallback(async () => {
+    setLoading(true);
+    setError(null);
+    try {
+      const data = await afiliadosService.obtenerGrupo(grupoId);
+      setGrupo(data);
+      setNombreEdit(data.nombre);
+    } catch {
+      setError('Error al cargar el grupo familiar.');
+    } finally {
+      setLoading(false);
+    }
+  }, [grupoId]);
+
+  useEffect(() => { cargar(); }, [cargar]);
+
+  const handleRemove = async (afiliadoId) => {
+    setRemovingId(afiliadoId);
+    setError(null);
+    try {
+      await afiliadosService.actualizar(afiliadoId, { rol: 'titular', grupo_familiar_id: null });
+      await cargar();
+      onRefresh();
+    } catch {
+      setError('Error al quitar el beneficiario del grupo.');
+    } finally {
+      setRemovingId(null);
+    }
+  };
+
+  const handleGuardarNombre = async () => {
+    if (!nombreEdit.trim()) return;
+    setError(null);
+    try {
+      await afiliadosService.actualizarGrupo(grupoId, { nombre: nombreEdit.trim() });
+      setEditando(false);
+      await cargar();
+      onRefresh();
+    } catch {
+      setError('Error al actualizar el nombre del grupo.');
+    }
+  };
+
+  return (
+    <div className="gestion-afiliados__modal-overlay" onClick={(e) => e.target === e.currentTarget && onClose()}>
+      <div className="gestion-afiliados__modal gestion-afiliados__modal--grupo">
+        <div className="gestion-afiliados__modal-header">
+          {editando ? (
+            <div className="gestion-afiliados__modal-nombre-edit">
+              <input
+                value={nombreEdit}
+                onChange={(e) => setNombreEdit(e.target.value)}
+                className="gestion-afiliados__modal-nombre-input"
+                autoFocus
+              />
+              <button className="gestion-afiliados__btn gestion-afiliados__btn--primary" onClick={handleGuardarNombre}>
+                Guardar
+              </button>
+              <button className="gestion-afiliados__btn gestion-afiliados__btn--secondary" onClick={() => setEditando(false)}>
+                Cancelar
+              </button>
+            </div>
+          ) : (
+            <div className="gestion-afiliados__modal-titulo-row">
+              <h3 className="gestion-afiliados__modal-title">{loading ? '...' : grupo?.nombre}</h3>
+              {!loading && (
+                <button
+                  className="gestion-afiliados__btn-icon gestion-afiliados__btn-icon--edit"
+                  onClick={() => setEditando(true)}
+                  title="Renombrar grupo"
+                >
+                  Renombrar
+                </button>
+              )}
+            </div>
+          )}
+          <button className="gestion-afiliados__modal-close" onClick={onClose} title="Cerrar">✕</button>
+        </div>
+
+        {error && <div className="gestion-afiliados__alert gestion-afiliados__alert--error">{error}</div>}
+
+        {loading ? (
+          <div className="gestion-afiliados__loading">Cargando grupo...</div>
+        ) : (
+          <>
+            <div className="gestion-afiliados__tabla-wrapper">
+              <table className="gestion-afiliados__tabla">
+                <thead>
+                  <tr>
+                    <th>Nombre</th>
+                    <th>Documento</th>
+                    <th>Rol</th>
+                    <th>Estado</th>
+                    <th></th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {grupo?.miembros?.length === 0 && (
+                    <tr><td colSpan={5} className="gestion-afiliados__empty">Sin miembros registrados.</td></tr>
+                  )}
+                  {grupo?.miembros?.map((m) => (
+                    <tr key={m.id}>
+                      <td>{m.nombre} {m.apellido}</td>
+                      <td>{m.tipo_documento} {m.numero_documento}</td>
+                      <td>
+                        <span className={`gestion-afiliados__rol-badge gestion-afiliados__rol-badge--${m.rol}`}>
+                          {m.rol === 'titular' ? 'Titular' : 'Beneficiario'}
+                        </span>
+                      </td>
+                      <td>
+                        <span className={`gestion-afiliados__estado gestion-afiliados__estado--${m.estado}`}>
+                          {m.estado}
+                        </span>
+                      </td>
+                      <td>
+                        {m.rol === 'beneficiario' && (
+                          <button
+                            className="gestion-afiliados__btn-icon gestion-afiliados__btn-icon--delete"
+                            onClick={() => handleRemove(m.id)}
+                            disabled={removingId === m.id}
+                            title="Quitar del grupo"
+                          >
+                            {removingId === m.id ? '...' : 'Quitar'}
+                          </button>
+                        )}
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+
+            <div className="gestion-afiliados__modal-actions">
+              <button
+                className="gestion-afiliados__btn gestion-afiliados__btn--primary"
+                onClick={() => onAgregarBeneficiario(grupoId)}
+              >
+                + Agregar beneficiario
+              </button>
+              <button className="gestion-afiliados__btn gestion-afiliados__btn--secondary" onClick={onClose}>
+                Cerrar
+              </button>
+            </div>
+          </>
+        )}
+      </div>
     </div>
   );
 }
@@ -361,7 +596,6 @@ function GestionAfiliados() {
   const { user } = useAuth();
   const isAdmin = user?.rol === 'admin';
 
-  // Estado compartido
   const [loading, setLoading] = useState(true);
   const [actionLoading, setActionLoading] = useState(false);
   const [error, setError] = useState(null);
@@ -373,15 +607,20 @@ function GestionAfiliados() {
 
   // Estado admin
   const [afiliados, setAfiliados] = useState([]);
+  const [grupos, setGrupos] = useState([]);
   const [pagination, setPagination] = useState({ page: 1, limit: 10, total: 0, pages: 1 });
   const [filtros, setFiltros] = useState({ search: '', estado: '' });
 
-  // Vista activa: 'lista' | 'crear' | 'editar'
+  // Vistas
   const [vista, setVista] = useState('lista');
   const [afiliadoEditando, setAfiliadoEditando] = useState(null);
   const [afiliadoBorrando, setAfiliadoBorrando] = useState(null);
+  const [formPreset, setFormPreset] = useState(null);
 
-  // ── Carga inicial ──────────────────────────────────────────────────────────
+  // Modal grupo
+  const [grupoModalId, setGrupoModalId] = useState(null);
+
+  // ── Carga ──────────────────────────────────────────────────────────────────
 
   const cargarAfiliados = useCallback(async (page = 1) => {
     setError(null);
@@ -395,6 +634,15 @@ function GestionAfiliados() {
       setLoading(false);
     }
   }, [filtros]);
+
+  const cargarGrupos = useCallback(async () => {
+    try {
+      const data = await afiliadosService.listarGrupos();
+      setGrupos(data);
+    } catch {
+      // no-op: grupos no críticos para mostrar la tabla
+    }
+  }, []);
 
   const cargarMiPerfil = useCallback(async () => {
     setError(null);
@@ -415,11 +663,11 @@ function GestionAfiliados() {
 
   useEffect(() => {
     if (isAdmin) {
-      cargarAfiliados();
+      Promise.all([cargarAfiliados(), cargarGrupos()]);
     } else {
       cargarMiPerfil();
     }
-  }, [isAdmin, cargarAfiliados, cargarMiPerfil]);
+  }, [isAdmin, cargarAfiliados, cargarGrupos, cargarMiPerfil]);
 
   // Recarga al cambiar filtros (admin)
   useEffect(() => {
@@ -449,8 +697,10 @@ function GestionAfiliados() {
       }
       setVista('lista');
       setAfiliadoEditando(null);
+      setFormPreset(null);
       if (isAdmin) {
-        cargarAfiliados(pagination.page);
+        await cargarAfiliados(pagination.page);
+        await cargarGrupos();
       } else {
         cargarMiPerfil();
       }
@@ -463,6 +713,7 @@ function GestionAfiliados() {
 
   const handleEditar = (afiliado) => {
     setAfiliadoEditando(afiliado);
+    setFormPreset(null);
     setVista('editar');
     setError(null);
     setMensaje(null);
@@ -474,7 +725,8 @@ function GestionAfiliados() {
       await afiliadosService.eliminar(afiliadoBorrando.id);
       mostrarMensaje('Afiliado eliminado correctamente.');
       setAfiliadoBorrando(null);
-      cargarAfiliados(pagination.page);
+      await cargarAfiliados(pagination.page);
+      await cargarGrupos();
     } catch (err) {
       setError(err.response?.data?.message || 'Error al eliminar el afiliado.');
       setAfiliadoBorrando(null);
@@ -486,11 +738,21 @@ function GestionAfiliados() {
   const handleCancelar = () => {
     setVista('lista');
     setAfiliadoEditando(null);
+    setFormPreset(null);
     setError(null);
   };
 
   const handleFiltroChange = (campo, valor) => {
     setFiltros((prev) => ({ ...prev, [campo]: valor }));
+  };
+
+  const handleAgregarBeneficiario = (grupoId) => {
+    setGrupoModalId(null);
+    setFormPreset({ rol: 'beneficiario', grupo_familiar_id: grupoId });
+    setAfiliadoEditando(null);
+    setVista('crear');
+    setError(null);
+    setMensaje(null);
   };
 
   // ── Render ─────────────────────────────────────────────────────────────────
@@ -512,7 +774,7 @@ function GestionAfiliados() {
         {vista === 'lista' && (isAdmin || !tienePerfil) && (
           <button
             className="gestion-afiliados__btn gestion-afiliados__btn--primary"
-            onClick={() => { setVista('crear'); setError(null); setMensaje(null); }}
+            onClick={() => { setFormPreset(null); setVista('crear'); setError(null); setMensaje(null); }}
           >
             {isAdmin ? '+ Nuevo afiliado' : 'Completar mi perfil'}
           </button>
@@ -526,17 +788,18 @@ function GestionAfiliados() {
         </div>
       )}
 
-      {/* Vista lista / perfil */}
       {vista === 'lista' && (
         <>
           {isAdmin ? (
             <TablaAfiliados
               afiliados={afiliados}
+              grupos={grupos}
               pagination={pagination}
               filtros={filtros}
               onFiltroChange={handleFiltroChange}
               onEditar={handleEditar}
               onEliminar={(a) => setAfiliadoBorrando(a)}
+              onVerGrupo={(id) => setGrupoModalId(id)}
               onPaginar={(p) => cargarAfiliados(p)}
             />
           ) : (
@@ -551,23 +814,32 @@ function GestionAfiliados() {
         </>
       )}
 
-      {/* Formulario crear / editar */}
       {(vista === 'crear' || vista === 'editar') && (
         <FormAfiliado
           inicial={afiliadoEditando}
+          preset={formPreset}
+          grupos={grupos}
           onGuardar={handleGuardar}
           onCancelar={handleCancelar}
           cargando={actionLoading}
         />
       )}
 
-      {/* Modal confirmación borrado */}
       {afiliadoBorrando && (
         <ModalConfirmar
           afiliado={afiliadoBorrando}
           onConfirmar={handleEliminar}
           onCancelar={() => setAfiliadoBorrando(null)}
           cargando={actionLoading}
+        />
+      )}
+
+      {grupoModalId && (
+        <GrupoModal
+          grupoId={grupoModalId}
+          onClose={() => setGrupoModalId(null)}
+          onAgregarBeneficiario={handleAgregarBeneficiario}
+          onRefresh={() => { cargarAfiliados(pagination.page); cargarGrupos(); }}
         />
       )}
     </div>

@@ -258,6 +258,14 @@
 
       &:not(:disabled):hover { background: #fef2f2; border-color: #dc2626; }
     }
+
+    &--reapply {
+      background: #fff;
+      color: #d97706;
+      border: 1.5px solid #fcd34d;
+
+      &:not(:disabled):hover { background: #fffbeb; border-color: #d97706; }
+    }
   }
 
   &__actions-hint {

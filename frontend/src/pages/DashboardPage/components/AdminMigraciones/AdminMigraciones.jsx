@@ -71,6 +71,21 @@ function AdminMigraciones() {
     }
   };
 
+  const handleReapply = async () => {
+    setActionLoading(true);
+    setMessage(null);
+    setError(null);
+    try {
+      const result = await migracionesService.reapply();
+      setMessage({ type: 'success', text: result.message });
+      await fetchData();
+    } catch (err) {
+      setError(err.response?.data?.message || 'Error al reaplicar migración.');
+    } finally {
+      setActionLoading(false);
+    }
+  };
+
   const hasPending = migrations.some((m) => m.estado === 'pendiente');
   const hasApplied = migrations.some((m) => m.estado === 'aplicada');
 
@@ -146,9 +161,17 @@ function AdminMigraciones() {
           >
             {actionLoading ? 'Procesando...' : 'Downgrade'}
           </button>
+          <button
+            className="admin-migraciones__btn admin-migraciones__btn--reapply"
+            onClick={handleReapply}
+            disabled={actionLoading || !hasApplied}
+            title={!hasApplied ? 'No hay versión aplicada para reaplicar' : 'Re-ejecutar los scripts de la versión actual'}
+          >
+            {actionLoading ? 'Procesando...' : 'Re-apply'}
+          </button>
         </div>
         <p className="admin-migraciones__actions-hint">
-          Upgrade aplica la siguiente versión pendiente. Downgrade revierte únicamente la última versión aplicada.
+          Upgrade aplica la siguiente versión pendiente. Downgrade revierte la última versión aplicada. Re-apply re-ejecuta los scripts de la versión actual (downgrade + upgrade en una sola transacción).
         </p>
       </section>
 

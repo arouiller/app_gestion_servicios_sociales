@@ -51,4 +51,13 @@ router.post('/down', async (req, res) => {
   res.json({ success: true, message: `Migración ${result.version} revertida correctamente.`, data: result });
 });
 
+// POST /api/migrations/reapply
+router.post('/reapply', async (req, res) => {
+  const result = await manager.reapply();
+  if (!result) {
+    return res.json({ success: true, message: 'No hay migraciones aplicadas para reejecutar.', data: null });
+  }
+  res.json({ success: true, message: `Migración ${result.version} reaplicada correctamente.`, data: result });
+});
+
 module.exports = router;

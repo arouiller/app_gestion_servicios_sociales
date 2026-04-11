@@ -49,6 +49,30 @@ const afiliadosService = {
     const { data } = await api.delete(`/afiliados/${id}`);
     return data;
   },
+
+  /**
+   * Lista todos los grupos familiares con su titular (admin).
+   */
+  listarGrupos: async () => {
+    const { data } = await api.get('/grupos-familiares');
+    return data.data;
+  },
+
+  /**
+   * Detalle de un grupo familiar con todos sus miembros (admin).
+   */
+  obtenerGrupo: async (id) => {
+    const { data } = await api.get(`/grupos-familiares/${id}`);
+    return data.data;
+  },
+
+  /**
+   * Actualiza nombre o estado de un grupo familiar (admin).
+   */
+  actualizarGrupo: async (id, payload) => {
+    const { data } = await api.put(`/grupos-familiares/${id}`, payload);
+    return data;
+  },
 };
 
 export default afiliadosService;

@@ -233,4 +233,45 @@ async function getDbStats() {
   return { currentVersion, tables };
 }
 
-module.exports = { list, upgrade, downgrade, ensureTable, getDbStats, getHistory };
+/**
+ * Re-ejecuta la migración de la versión actual:
+ * corre el downgrade y luego el upgrade de la misma versión en una sola transacción.
+ * Retorna la versión reaplicada o null si no hay ninguna aplicada.
+ */
+async function reapply() {
+  await ensureTable();
+  const applied = await getAppliedMigrations();
+  if (applied.length === 0) return null;
+
+  const currentVersion = applied[applied.length - 1];
+  const folders = getMigrationFolders();
+  const folder = folders.find((f) => getVersion(f) === currentVersion);
+  if (!folder) throw new Error(`Carpeta para versión ${currentVersion} no encontrada`);
+
+  const descripcion = getDescription(folder);
+  const downStatements = readSQL(folder, 'downgrade');
+  const upStatements = readSQL(folder, 'upgrade');
+
+  const transaction = await sequelize.transaction();
+  try {
+    for (const sql of downStatements) {
+      await sequelize.query(sql, { transaction });
+    }
+    for (const sql of upStatements) {
+      await sequelize.query(sql, { transaction });
+    }
+    await sequelize.query(
+      `UPDATE migraciones_bd SET fecha_ejecucion = CURRENT_TIMESTAMP WHERE version = ?`,
+      { replacements: [currentVersion], transaction }
+    );
+    await transaction.commit();
+    await appendHistory(currentVersion, descripcion, 'upgrade', 'exitosa');
+    return { version: currentVersion, descripcion };
+  } catch (err) {
+    await transaction.rollback();
+    await appendHistory(currentVersion, descripcion, 'upgrade', 'fallida').catch(() => {});
+    throw err;
+  }
+}
+
+module.exports = { list, upgrade, downgrade, reapply, ensureTable, getDbStats, getHistory };

@@ -1,5 +1,6 @@
 const { Op } = require('sequelize');
 const Afiliado = require('../models/Afiliado');
+const GrupoFamiliar = require('../models/GrupoFamiliar');
 
 // ── GET /api/afiliados  (admin) ─────────────────────────────────────────────
 
@@ -25,9 +26,18 @@ const listar = async (req, res) => {
     order: [['fecha_creacion', 'DESC']],
   });
 
+  // Attach group names
+  const grupos = await GrupoFamiliar.findAll({ attributes: ['id', 'nombre', 'estado'] });
+  const grupoMap = Object.fromEntries(grupos.map((g) => [g.id, g]));
+
+  const data = rows.map((a) => ({
+    ...a.toJSON(),
+    grupo: a.grupo_familiar_id ? grupoMap[a.grupo_familiar_id] || null : null,
+  }));
+
   return res.json({
     success: true,
-    data: rows,
+    data,
     pagination: {
       page: parseInt(page, 10),
       limit: parseInt(limit, 10),
@@ -47,7 +57,21 @@ const me = async (req, res) => {
       message: 'No tenés un perfil de afiliado registrado',
     });
   }
-  return res.json({ success: true, data: afiliado });
+
+  let grupo = null;
+  if (afiliado.grupo_familiar_id) {
+    const grupoData = await GrupoFamiliar.findByPk(afiliado.grupo_familiar_id);
+    if (grupoData) {
+      const miembros = await Afiliado.findAll({
+        where: { grupo_familiar_id: grupoData.id },
+        attributes: ['id', 'nombre', 'apellido', 'tipo_documento', 'numero_documento', 'rol', 'estado'],
+        order: [['rol', 'ASC'], ['apellido', 'ASC']],
+      });
+      grupo = { ...grupoData.toJSON(), miembros };
+    }
+  }
+
+  return res.json({ success: true, data: { ...afiliado.toJSON(), grupo } });
 };
 
 // ── GET /api/afiliados/:id  (admin) ────────────────────────────────────────
@@ -57,7 +81,13 @@ const obtener = async (req, res) => {
   if (!afiliado) {
     return res.status(404).json({ success: false, message: 'Afiliado no encontrado' });
   }
-  return res.json({ success: true, data: afiliado });
+
+  let grupo = null;
+  if (afiliado.grupo_familiar_id) {
+    grupo = await GrupoFamiliar.findByPk(afiliado.grupo_familiar_id);
+  }
+
+  return res.json({ success: true, data: { ...afiliado.toJSON(), grupo } });
 };
 
 // ── POST /api/afiliados ─────────────────────────────────────────────────────
@@ -67,6 +97,8 @@ const crear = async (req, res) => {
     nombre, apellido, fecha_nacimiento, tipo_documento, numero_documento,
     genero, direccion, ciudad, provincia, codigo_postal, telefonos, email_contacto,
   } = req.body;
+
+  const rol = req.body.rol || 'titular';
 
   // Verificar documento único
   const existente = await Afiliado.findOne({ where: { numero_documento } });
@@ -93,6 +125,29 @@ const crear = async (req, res) => {
     }
   }
 
+  // Resolver grupo_familiar_id
+  let grupo_familiar_id = req.body.grupo_familiar_id || null;
+
+  if (rol === 'beneficiario') {
+    if (!grupo_familiar_id) {
+      return res.status(400).json({
+        success: false,
+        message: 'Un beneficiario debe pertenecer a un grupo familiar',
+        errors: { grupo_familiar_id: 'El grupo familiar es requerido para un beneficiario' },
+      });
+    }
+    const grupoExiste = await GrupoFamiliar.findByPk(grupo_familiar_id);
+    if (!grupoExiste) {
+      return res.status(404).json({ success: false, message: 'Grupo familiar no encontrado' });
+    }
+  } else if (rol === 'titular' && !grupo_familiar_id) {
+    // Auto-crear un grupo familiar para el nuevo titular
+    const nuevoGrupo = await GrupoFamiliar.create({
+      nombre: `Familia ${apellido.trim()}`,
+    });
+    grupo_familiar_id = nuevoGrupo.id;
+  }
+
   const afiliado = await Afiliado.create({
     usuario_id,
     nombre: nombre.trim(),
@@ -108,6 +163,8 @@ const crear = async (req, res) => {
     telefonos: telefonos || null,
     email_contacto: email_contacto || null,
     estado: 'activo',
+    rol,
+    grupo_familiar_id,
   });
 
   return res.status(201).json({
@@ -149,7 +206,9 @@ const actualizar = async (req, res) => {
     'nombre', 'apellido', 'fecha_nacimiento', 'tipo_documento', 'numero_documento',
     'genero', 'direccion', 'ciudad', 'provincia', 'codigo_postal', 'telefonos', 'email_contacto',
   ];
-  if (req.userRole === 'admin') camposPermitidos.push('estado', 'usuario_id');
+  if (req.userRole === 'admin') {
+    camposPermitidos.push('estado', 'usuario_id', 'rol', 'grupo_familiar_id');
+  }
 
   const actualizaciones = {};
   camposPermitidos.forEach((campo) => {
