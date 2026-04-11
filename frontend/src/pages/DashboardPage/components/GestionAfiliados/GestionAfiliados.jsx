@@ -167,10 +167,12 @@ function FormAfiliado({ inicial, preset, grupos, onGuardar, onCancelar, cargando
               onBlur={() => setTimeout(() => setGrupoAbierto(false), 150)}
             />
             {grupoAbierto && gruposFiltrados.length > 0 && (
-              <ul className="gestion-afiliados__autocomplete-list">
+              <ul className="gestion-afiliados__autocomplete-list" role="listbox">
                 {gruposFiltrados.map((g) => (
                   <li
                     key={g.id}
+                    role="option"
+                    aria-selected={false}
                     className="gestion-afiliados__autocomplete-item"
                     onMouseDown={() => handleSeleccionarGrupo(g)}
                   >
