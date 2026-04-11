@@ -369,7 +369,7 @@ function GestionAfiliados() {
   const [pagination, setPagination] = useState({ page: 1, limit: 10, total: 0, pages: 1 });
   const [filtros, setFiltros] = useState({ search: '', estado: '', rol: '' });
 
-  const [vista, setVista] = useState('lista');
+  const [modalAfiliado, setModalAfiliado] = useState(null); // null | 'crear' | 'editar'
   const [afiliadoEditando, setAfiliadoEditando] = useState(null);
   const [afiliadoBorrando, setAfiliadoBorrando] = useState(null);
   const [formPreset, setFormPreset] = useState(null);
@@ -426,7 +426,7 @@ function GestionAfiliados() {
       if (afiliadoEditando) {
         await afiliadosService.actualizar(afiliadoEditando.id, payload);
         mostrarMensaje('Afiliado actualizado correctamente.');
-        setVista('lista');
+        setModalAfiliado(null);
         setAfiliadoEditando(null);
         setFormPreset(null);
         await cargarAfiliados(pagination.page);
@@ -435,7 +435,7 @@ function GestionAfiliados() {
         const response = await afiliadosService.crear(payload);
         const grupoId = response.data?.grupo_familiar_id;
         mostrarMensaje('Afiliado creado exitosamente.');
-        setVista('lista');
+        setModalAfiliado(null);
         setAfiliadoEditando(null);
         setFormPreset(null);
         await cargarAfiliados(pagination.page);
@@ -452,7 +452,7 @@ function GestionAfiliados() {
   const handleEditar = (afiliado) => {
     setAfiliadoEditando(afiliado);
     setFormPreset(null);
-    setVista('editar');
+    setModalAfiliado('editar');
     setError(null);
     setMensaje(null);
   };
@@ -474,7 +474,7 @@ function GestionAfiliados() {
   };
 
   const handleCancelar = () => {
-    setVista('lista');
+    setModalAfiliado(null);
     setAfiliadoEditando(null);
     setFormPreset(null);
     setError(null);
@@ -539,14 +539,12 @@ function GestionAfiliados() {
     <div className="gestion-afiliados">
       <div className="gestion-afiliados__header">
         <h2 className="gestion-afiliados__title">Gestión de Afiliados</h2>
-        {vista === 'lista' && (
-          <button
-            className="gestion-afiliados__btn gestion-afiliados__btn--primary"
-            onClick={() => { setFormPreset(null); setVista('crear'); setError(null); setMensaje(null); }}
-          >
-            + Nuevo afiliado
-          </button>
-        )}
+        <button
+          className="gestion-afiliados__btn gestion-afiliados__btn--primary"
+          onClick={() => { setFormPreset(null); setModalAfiliado('crear'); setError(null); setMensaje(null); }}
+        >
+          + Nuevo afiliado
+        </button>
       </div>
 
       {error && <div className="gestion-afiliados__alert gestion-afiliados__alert--error">{error}</div>}
@@ -556,29 +554,40 @@ function GestionAfiliados() {
         </div>
       )}
 
-      {vista === 'lista' && (
-        <TablaAfiliados
-          afiliados={afiliados}
-          grupos={grupos}
-          pagination={pagination}
-          filtros={filtros}
-          onFiltroChange={handleFiltroChange}
-          onEditar={handleEditar}
-          onEliminar={handleSolicitarEliminar}
-          onVerGrupo={(id) => setGrupoModalId(id)}
-          onPaginar={(p) => cargarAfiliados(p)}
-        />
-      )}
+      <TablaAfiliados
+        afiliados={afiliados}
+        grupos={grupos}
+        pagination={pagination}
+        filtros={filtros}
+        onFiltroChange={handleFiltroChange}
+        onEditar={handleEditar}
+        onEliminar={handleSolicitarEliminar}
+        onVerGrupo={(id) => setGrupoModalId(id)}
+        onPaginar={(p) => cargarAfiliados(p)}
+      />
 
-      {(vista === 'crear' || vista === 'editar') && (
-        <FormAfiliado
-          inicial={afiliadoEditando}
-          preset={formPreset}
-          grupos={grupos}
-          onGuardar={handleGuardar}
-          onCancelar={handleCancelar}
-          cargando={actionLoading}
-        />
+      {modalAfiliado && (
+        <div
+          className="gestion-afiliados__modal-overlay"
+          onClick={(e) => e.target === e.currentTarget && handleCancelar()}
+        >
+          <div className="gestion-afiliados__modal gestion-afiliados__modal--form">
+            <div className="gestion-afiliados__modal-header">
+              <h3 className="gestion-afiliados__modal-title">
+                {modalAfiliado === 'crear' ? 'Nuevo afiliado' : 'Editar afiliado'}
+              </h3>
+              <button className="gestion-afiliados__modal-close" onClick={handleCancelar}>✕</button>
+            </div>
+            <FormAfiliado
+              inicial={afiliadoEditando}
+              preset={formPreset}
+              grupos={grupos}
+              onGuardar={handleGuardar}
+              onCancelar={handleCancelar}
+              cargando={actionLoading}
+            />
+          </div>
+        </div>
       )}
 
       {afiliadoBorrando && (
