@@ -436,6 +436,35 @@
     margin-top: 0.4rem;
   }
 
+  // ── Sección beneficiarios (edición de titular) ────────────────────────────
+  &__beneficiarios-seccion {
+    margin-top: 2rem;
+    padding-top: 1.5rem;
+    border-top: 2px solid #e5e7eb;
+  }
+
+  &__beneficiarios-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: 1rem;
+  }
+
+  &__beneficiarios-titulo {
+    font-size: 1rem;
+    font-weight: 700;
+    color: #111827;
+    margin: 0;
+  }
+
+  // ── Modal form (más ancho que el de confirmación) ─────────────────────────
+  &__modal--form {
+    max-width: 760px;
+    width: 95%;
+    max-height: 90vh;
+    overflow-y: auto;
+  }
+
   // ── Modal grupo (ancho mayor) ────────────────────────────────────────────
   &__modal--grupo {
     max-width: 680px;

@@ -22,7 +22,7 @@ const FORM_VACIO = {
   grupo_familiar_id: '',
 };
 
-function FormAfiliado({ inicial, preset, grupos, onGuardar, onCancelar, cargando }) {
+function FormAfiliado({ inicial, preset, grupos, onGuardar, onCancelar, cargando, rolFijo = false }) {
   const [form, setForm] = useState({
     ...FORM_VACIO,
     ...inicial,
@@ -104,13 +104,15 @@ function FormAfiliado({ inicial, preset, grupos, onGuardar, onCancelar, cargando
           {errores.numero_documento && <span className="gestion-afiliados__field-error">{errores.numero_documento}</span>}
         </div>
 
-        <div className="gestion-afiliados__field">
-          <label>Rol</label>
-          <select name="rol" value={form.rol} onChange={handleChange} disabled={!!inicial}>
-            <option value="titular">Titular</option>
-            <option value="beneficiario">Beneficiario</option>
-          </select>
-        </div>
+        {!rolFijo && (
+          <div className="gestion-afiliados__field">
+            <label>Rol</label>
+            <select name="rol" value={form.rol} onChange={handleChange} disabled={!!inicial}>
+              <option value="titular">Titular</option>
+              <option value="beneficiario">Beneficiario</option>
+            </select>
+          </div>
+        )}
 
         {form.rol === 'beneficiario' && (
           <div className="gestion-afiliados__field">
@@ -407,12 +409,190 @@ function TablaAfiliados({ afiliados, grupos, pagination, onEditar, onEliminar, o
   );
 }
 
+// ── Modal de confirmación de desvinculación ──────────────────────────────────
+
+function ModalConfirmarDesvinculacion({ afiliado, onConfirmar, onCancelar, cargando }) {
+  return (
+    <div className="gestion-afiliados__modal-overlay">
+      <div className="gestion-afiliados__modal">
+        <h3 className="gestion-afiliados__modal-title">Confirmar desvinculación</h3>
+        <p>
+          ¿Confirmás que querés desvincular a{' '}
+          <strong>{afiliado.nombre} {afiliado.apellido}</strong> del grupo?
+          Pasará a ser titular de su propio grupo{' '}
+          <strong>"Familia {afiliado.apellido} {afiliado.nombre}"</strong>.
+        </p>
+        <div className="gestion-afiliados__modal-actions">
+          <button
+            className="gestion-afiliados__btn gestion-afiliados__btn--danger"
+            onClick={onConfirmar}
+            disabled={cargando}
+          >
+            {cargando ? 'Desvinculando...' : 'Confirmar desvinculación'}
+          </button>
+          <button
+            className="gestion-afiliados__btn gestion-afiliados__btn--secondary"
+            onClick={onCancelar}
+            disabled={cargando}
+          >
+            Cancelar
+          </button>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+// ── Sección de beneficiarios (visible al editar un titular) ──────────────────
+
+function SeccionBeneficiarios({ grupoId, onRefresh }) {
+  const [miembros, setMiembros] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(null);
+  const [desvinculando, setDesvinculando] = useState(null);
+  const [actionLoading, setActionLoading] = useState(false);
+  const [mostrarFormBeneficiario, setMostrarFormBeneficiario] = useState(false);
+  const [formCargando, setFormCargando] = useState(false);
+
+  const cargar = useCallback(async () => {
+    setLoading(true);
+    setError(null);
+    try {
+      const grupo = await afiliadosService.obtenerGrupo(grupoId);
+      setMiembros((grupo.miembros || []).filter((m) => m.rol === 'beneficiario'));
+    } catch {
+      setError('Error al cargar los beneficiarios del grupo.');
+    } finally {
+      setLoading(false);
+    }
+  }, [grupoId]);
+
+  useEffect(() => { cargar(); }, [cargar]);
+
+  const handleDesvincular = async () => {
+    setActionLoading(true);
+    setError(null);
+    try {
+      await afiliadosService.desvincularBeneficiario(grupoId, desvinculando.id);
+      setDesvinculando(null);
+      await cargar();
+      onRefresh();
+    } catch {
+      setError('Error al desvincular el beneficiario.');
+    } finally {
+      setActionLoading(false);
+    }
+  };
+
+  const handleGuardarBeneficiario = async (payload) => {
+    setFormCargando(true);
+    setError(null);
+    try {
+      await afiliadosService.crear({ ...payload, rol: 'beneficiario', grupo_familiar_id: grupoId });
+      setMostrarFormBeneficiario(false);
+      await cargar();
+      onRefresh();
+    } catch (err) {
+      setError(err.response?.data?.message || 'Error al guardar el beneficiario.');
+    } finally {
+      setFormCargando(false);
+    }
+  };
+
+  return (
+    <div className="gestion-afiliados__beneficiarios-seccion">
+      <div className="gestion-afiliados__beneficiarios-header">
+        <h4 className="gestion-afiliados__beneficiarios-titulo">Beneficiarios del grupo</h4>
+        <button
+          className="gestion-afiliados__btn gestion-afiliados__btn--primary"
+          onClick={() => setMostrarFormBeneficiario(true)}
+        >
+          + Agregar beneficiario
+        </button>
+      </div>
+
+      {error && <div className="gestion-afiliados__alert gestion-afiliados__alert--error">{error}</div>}
+
+      {loading ? (
+        <div className="gestion-afiliados__loading">Cargando beneficiarios...</div>
+      ) : miembros.length === 0 ? (
+        <p className="gestion-afiliados__empty">Este grupo no tiene beneficiarios.</p>
+      ) : (
+        <div className="gestion-afiliados__tabla-wrapper">
+          <table className="gestion-afiliados__tabla">
+            <thead>
+              <tr>
+                <th>Nombre</th>
+                <th>Documento</th>
+                <th>Estado</th>
+                <th></th>
+              </tr>
+            </thead>
+            <tbody>
+              {miembros.map((m) => (
+                <tr key={m.id}>
+                  <td>{m.nombre} {m.apellido}</td>
+                  <td>{m.tipo_documento} {m.numero_documento}</td>
+                  <td>
+                    <span className={`gestion-afiliados__estado gestion-afiliados__estado--${m.estado}`}>
+                      {m.estado}
+                    </span>
+                  </td>
+                  <td>
+                    <button
+                      className="gestion-afiliados__btn-icon gestion-afiliados__btn-icon--delete"
+                      onClick={() => setDesvinculando(m)}
+                      title="Desvincular del grupo"
+                    >
+                      Desvincular
+                    </button>
+                  </td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
+      )}
+
+      {desvinculando && (
+        <ModalConfirmarDesvinculacion
+          afiliado={desvinculando}
+          onConfirmar={handleDesvincular}
+          onCancelar={() => setDesvinculando(null)}
+          cargando={actionLoading}
+        />
+      )}
+
+      {mostrarFormBeneficiario && (
+        <div className="gestion-afiliados__modal-overlay" onClick={(e) => e.target === e.currentTarget && setMostrarFormBeneficiario(false)}>
+          <div className="gestion-afiliados__modal gestion-afiliados__modal--form">
+            <div className="gestion-afiliados__modal-header">
+              <h3 className="gestion-afiliados__modal-title">Nuevo beneficiario</h3>
+              <button className="gestion-afiliados__modal-close" onClick={() => setMostrarFormBeneficiario(false)}>✕</button>
+            </div>
+            <FormAfiliado
+              inicial={null}
+              preset={{ rol: 'beneficiario', grupo_familiar_id: grupoId }}
+              grupos={[]}
+              onGuardar={handleGuardarBeneficiario}
+              onCancelar={() => setMostrarFormBeneficiario(false)}
+              cargando={formCargando}
+              rolFijo
+            />
+          </div>
+        </div>
+      )}
+    </div>
+  );
+}
+
 // ── Modal de grupo familiar ──────────────────────────────────────────────────
 
 function GrupoModal({ grupoId, onClose, onAgregarBeneficiario, onRefresh }) {
   const [grupo, setGrupo] = useState(null);
   const [loading, setLoading] = useState(true);
-  const [removingId, setRemovingId] = useState(null);
+  const [desvinculando, setDesvinculando] = useState(null);
+  const [desvinculandoCargando, setDesvinculandoCargando] = useState(false);
   const [editando, setEditando] = useState(false);
   const [nombreEdit, setNombreEdit] = useState('');
   const [error, setError] = useState(null);
@@ -433,17 +613,18 @@ function GrupoModal({ grupoId, onClose, onAgregarBeneficiario, onRefresh }) {
 
   useEffect(() => { cargar(); }, [cargar]);
 
-  const handleRemove = async (afiliadoId) => {
-    setRemovingId(afiliadoId);
+  const handleDesvincular = async () => {
+    setDesvinculandoCargando(true);
     setError(null);
     try {
-      await afiliadosService.actualizar(afiliadoId, { rol: 'titular', grupo_familiar_id: null });
+      await afiliadosService.desvincularBeneficiario(grupoId, desvinculando.id);
+      setDesvinculando(null);
       await cargar();
       onRefresh();
     } catch {
-      setError('Error al quitar el beneficiario del grupo.');
+      setError('Error al desvincular el beneficiario.');
     } finally {
-      setRemovingId(null);
+      setDesvinculandoCargando(false);
     }
   };
 
@@ -535,11 +716,10 @@ function GrupoModal({ grupoId, onClose, onAgregarBeneficiario, onRefresh }) {
                         {m.rol === 'beneficiario' && (
                           <button
                             className="gestion-afiliados__btn-icon gestion-afiliados__btn-icon--delete"
-                            onClick={() => handleRemove(m.id)}
-                            disabled={removingId === m.id}
-                            title="Quitar del grupo"
+                            onClick={() => setDesvinculando(m)}
+                            title="Desvincular del grupo"
                           >
-                            {removingId === m.id ? '...' : 'Quitar'}
+                            Desvincular
                           </button>
                         )}
                       </td>
@@ -563,6 +743,15 @@ function GrupoModal({ grupoId, onClose, onAgregarBeneficiario, onRefresh }) {
           </>
         )}
       </div>
+
+      {desvinculando && (
+        <ModalConfirmarDesvinculacion
+          afiliado={desvinculando}
+          onConfirmar={handleDesvincular}
+          onCancelar={() => setDesvinculando(null)}
+          cargando={desvinculandoCargando}
+        />
+      )}
     </div>
   );
 }
@@ -824,14 +1013,22 @@ function GestionAfiliados() {
       )}
 
       {(vista === 'crear' || vista === 'editar') && (
-        <FormAfiliado
-          inicial={afiliadoEditando}
-          preset={formPreset}
-          grupos={grupos}
-          onGuardar={handleGuardar}
-          onCancelar={handleCancelar}
-          cargando={actionLoading}
-        />
+        <>
+          <FormAfiliado
+            inicial={afiliadoEditando}
+            preset={formPreset}
+            grupos={grupos}
+            onGuardar={handleGuardar}
+            onCancelar={handleCancelar}
+            cargando={actionLoading}
+          />
+          {vista === 'editar' && afiliadoEditando?.rol === 'titular' && afiliadoEditando?.grupo_familiar_id && (
+            <SeccionBeneficiarios
+              grupoId={afiliadoEditando.grupo_familiar_id}
+              onRefresh={() => { cargarAfiliados(pagination.page); cargarGrupos(); }}
+            />
+          )}
+        </>
       )}
 
       {afiliadoBorrando && (
