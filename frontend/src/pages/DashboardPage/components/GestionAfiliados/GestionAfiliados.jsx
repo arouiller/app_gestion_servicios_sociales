@@ -596,6 +596,9 @@ function GrupoModal({ grupoId, onClose, onAgregarBeneficiario, onRefresh }) {
   const [editando, setEditando] = useState(false);
   const [nombreEdit, setNombreEdit] = useState('');
   const [error, setError] = useState(null);
+  const [mostrarHistorial, setMostrarHistorial] = useState(false);
+  const [historial, setHistorial] = useState([]);
+  const [historialLoading, setHistorialLoading] = useState(false);
 
   const cargar = useCallback(async () => {
     setLoading(true);
@@ -625,6 +628,20 @@ function GrupoModal({ grupoId, onClose, onAgregarBeneficiario, onRefresh }) {
       setError('Error al desvincular el beneficiario.');
     } finally {
       setDesvinculandoCargando(false);
+    }
+  };
+
+  const cargarHistorial = async () => {
+    if (historial.length > 0) { setMostrarHistorial(true); return; }
+    setHistorialLoading(true);
+    try {
+      const data = await afiliadosService.obtenerHistorialGrupo(grupoId);
+      setHistorial(data);
+      setMostrarHistorial(true);
+    } catch {
+      setError('Error al cargar el historial del grupo.');
+    } finally {
+      setHistorialLoading(false);
     }
   };
 
@@ -727,6 +744,50 @@ function GrupoModal({ grupoId, onClose, onAgregarBeneficiario, onRefresh }) {
                   ))}
                 </tbody>
               </table>
+            </div>
+
+            <div className="gestion-afiliados__historial-seccion">
+              <button
+                className="gestion-afiliados__historial-toggle"
+                onClick={() => mostrarHistorial ? setMostrarHistorial(false) : cargarHistorial()}
+              >
+                {mostrarHistorial ? '▲ Ocultar historial' : '▼ Ver historial del grupo'}
+              </button>
+
+              {mostrarHistorial && (
+                historialLoading ? (
+                  <div className="gestion-afiliados__loading">Cargando historial...</div>
+                ) : historial.length === 0 ? (
+                  <p className="gestion-afiliados__empty">Sin historial registrado.</p>
+                ) : (
+                  <div className="gestion-afiliados__tabla-wrapper">
+                    <table className="gestion-afiliados__tabla">
+                      <thead>
+                        <tr>
+                          <th>Fecha</th>
+                          <th>Afiliado</th>
+                          <th>Acción</th>
+                          <th>Ejecutado por</th>
+                        </tr>
+                      </thead>
+                      <tbody>
+                        {historial.map((h) => (
+                          <tr key={h.id}>
+                            <td>{new Date(h.fecha).toLocaleString('es-AR')}</td>
+                            <td>{h.afiliado ? `${h.afiliado.nombre} ${h.afiliado.apellido}` : '—'}</td>
+                            <td>
+                              <span className={`gestion-afiliados__accion-badge gestion-afiliados__accion-badge--${h.accion}`}>
+                                {h.accion === 'ingreso' ? 'Ingreso' : 'Baja'}
+                              </span>
+                            </td>
+                            <td>{h.ejecutado_por ? `${h.ejecutado_por.nombre} ${h.ejecutado_por.apellido}` : '—'}</td>
+                          </tr>
+                        ))}
+                      </tbody>
+                    </table>
+                  </div>
+                )
+              )}
             </div>
 
             <div className="gestion-afiliados__modal-actions">
