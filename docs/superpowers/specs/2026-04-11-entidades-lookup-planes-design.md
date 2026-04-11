@@ -592,7 +592,67 @@ Los mensajes amigables se definen por operación y tipo de error:
 
 ---
 
-## 7. Archivos a crear/modificar
+## 7. Listados
+
+Tres pantallas de consulta/navegación agrupadas bajo "Listados" en el menú. Todas reutilizan el formulario completo de Plan (con todas sus funcionalidades) al hacer click en un plan.
+
+### Menú del dashboard
+
+```
+Mi Cuenta
+  └── Datos Personales
+Maestros
+  ├── Cobradores
+  ├── Tipos de Plan
+  ├── Obras Sociales
+  ├── Servicios Adicionales
+  └── Tipos de Grupo
+Planes
+Listados
+  ├── Búsqueda de Afiliados
+  ├── Listado de Planes
+  └── Planes por Cobrador
+```
+
+---
+
+### Pantalla: Búsqueda de Afiliados
+
+Input de búsqueda libre (apellido o nombre). Llama a `GET /api/personas?search=...` con debounce 300ms.
+
+Tabla de resultados: apellido, nombre, tipo doc, nro doc, fecha nacimiento.
+
+Click en una fila → **sub-modal** con los planes donde esa persona está activa. Llama a `GET /api/planes?persona_id=X`. Columnas: nro afiliado, tipo de plan, obra social, estado.
+
+Click en un plan del sub-modal → abre el formulario completo del plan (mismo componente que la pantalla Planes, con todas sus funcionalidades).
+
+---
+
+### Pantalla: Listado de Planes
+
+Lista de planes con filtros: estado, cobrador, obra social, número de afiliado. Usa `GET /api/planes` (endpoint existente).
+
+Sin herramientas de gestión masiva (sin checkboxes de aumento, sin generación de recibos — esas acciones quedan exclusivamente en la pantalla Planes).
+
+Click en una fila → abre el formulario completo del plan.
+
+---
+
+### Pantalla: Planes por Cobrador
+
+Dropdown para seleccionar cobrador (cargado desde `GET /api/lookup/cobradores`). Al seleccionar → tabla de planes de ese cobrador via `GET /api/planes?cobrador_numero=X`. Columnas: nro afiliado, tipo de plan, obra social, tipo de grupo, valor cuota, estado.
+
+Click en una fila → abre el formulario completo del plan.
+
+---
+
+### Backend — modificación al endpoint existente
+
+`GET /api/planes` suma el filtro opcional `persona_id`: hace join con `plan_integrantes` para devolver los planes donde esa persona es integrante. No se crean nuevos endpoints.
+
+---
+
+## 8. Archivos a crear/modificar
 
 ### Backend
 
@@ -645,4 +705,7 @@ Los mensajes amigables se definen por operación y tipo de error:
 | `frontend/src/pages/DashboardPage/components/TiposDeGrupo/TiposDeGrupo.jsx` | Crear |
 | `frontend/src/pages/DashboardPage/components/GestionPlanes/GestionPlanes.jsx` | Crear |
 | `frontend/src/pages/DashboardPage/components/GestionPlanes/GestionPlanes.scss` | Crear |
+| `frontend/src/pages/DashboardPage/components/BusquedaAfiliados/BusquedaAfiliados.jsx` | Crear |
+| `frontend/src/pages/DashboardPage/components/ListadoPlanes/ListadoPlanes.jsx` | Crear |
+| `frontend/src/pages/DashboardPage/components/PlanesPorCobrador/PlanesPorCobrador.jsx` | Crear |
 | `frontend/src/pages/DashboardPage/DashboardPage.jsx` | Modificar (menú + módulos) |
