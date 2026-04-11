@@ -116,7 +116,7 @@ function FormBeneficiario({ grupoId, onGuardar, onCancelar, cargando }) {
         <div className="grupo-detalle__field grupo-detalle__field--full">
           <label>
             Teléfonos{' '}
-            <span className="grupo-detalle__field-hint">(JSON, ej: [{"tipo":"celular","numero":"1123456789"}])</span>
+            <span className="grupo-detalle__field-hint">(JSON, ej: [{'"tipo":"celular","numero":"1123456789"'}])</span>
           </label>
           <textarea name="telefonos" value={form.telefonos} onChange={handleChange} rows={2} />
           {errores.telefonos && <span className="grupo-detalle__field-error">{errores.telefonos}</span>}
@@ -224,7 +224,7 @@ function FormMiembro({ miembro, onGuardar, onCancelar, cargando }) {
         <div className="grupo-detalle__field grupo-detalle__field--full">
           <label>
             Teléfonos{' '}
-            <span className="grupo-detalle__field-hint">(JSON, ej: [{"tipo":"celular","numero":"1123456789"}])</span>
+            <span className="grupo-detalle__field-hint">(JSON, ej: [{'"tipo":"celular","numero":"1123456789"'}])</span>
           </label>
           <textarea name="telefonos" value={form.telefonos || ''} onChange={handleChange} rows={2} />
           {errores.telefonos && <span className="grupo-detalle__field-error">{errores.telefonos}</span>}
