@@ -112,10 +112,13 @@ const crear = async (req, res) => {
     });
   }
 
-  // Un usuario no-admin solo puede crear su propio perfil (uno por usuario)
+  // Resolver usuario_id:
+  // - Admin con usuario_id explícito: usa el provisto
+  // - Admin sin usuario_id: null (beneficiarios/dependientes sin cuenta de sistema)
+  // - No-admin: usa su propio userId, bloqueando duplicados
   let usuario_id;
-  if (req.userRole === 'admin' && req.body.usuario_id) {
-    usuario_id = req.body.usuario_id;
+  if (req.userRole === 'admin') {
+    usuario_id = req.body.usuario_id || null;
   } else {
     usuario_id = req.userId;
     const yaExiste = await Afiliado.findOne({ where: { usuario_id } });
