@@ -10,6 +10,7 @@ const listar = async (req, res) => {
 
   const where = {};
   if (estado) where.estado = estado;
+  if (req.query.rol) where.rol = req.query.rol;
   if (search) {
     where[Op.or] = [
       { nombre: { [Op.like]: `%${search}%` } },
