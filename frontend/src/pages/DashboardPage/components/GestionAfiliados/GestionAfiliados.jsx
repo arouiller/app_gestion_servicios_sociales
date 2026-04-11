@@ -32,6 +32,46 @@ function FormAfiliado({ inicial, preset, grupos, onGuardar, onCancelar, cargando
   });
   const [errores, setErrores] = useState({});
 
+  // Inicializa el texto visible del autocomplete si se está editando un beneficiario
+  const initialGrupoInput = () => {
+    const id = preset?.grupo_familiar_id || inicial?.grupo_familiar_id;
+    if (id && grupos.length > 0) {
+      const g = grupos.find((gr) => gr.id === id || gr.id === Number(id));
+      if (g) return `${g.nombre}${g.titular ? ` (${g.titular.apellido}, ${g.titular.nombre})` : ''}`;
+    }
+    return '';
+  };
+
+  const [grupoInput, setGrupoInput] = useState(initialGrupoInput);
+  const [grupoAbierto, setGrupoAbierto] = useState(false);
+
+  const gruposFiltrados = grupos
+    .filter((g) => {
+      if (!grupoInput.trim()) return true;
+      const q = grupoInput.toLowerCase();
+      const nombre = g.nombre?.toLowerCase() || '';
+      const titular = g.titular
+        ? `${g.titular.nombre} ${g.titular.apellido}`.toLowerCase()
+        : '';
+      return nombre.includes(q) || titular.includes(q);
+    })
+    .slice(0, 8);
+
+  const handleGrupoInputChange = (e) => {
+    setGrupoInput(e.target.value);
+    setGrupoAbierto(true);
+    setForm((prev) => ({ ...prev, grupo_familiar_id: '' }));
+    if (errores.grupo_familiar_id) setErrores((prev) => ({ ...prev, grupo_familiar_id: null }));
+  };
+
+  const handleSeleccionarGrupo = (g) => {
+    setForm((prev) => ({ ...prev, grupo_familiar_id: g.id }));
+    setGrupoInput(
+      `${g.nombre}${g.titular ? ` (${g.titular.apellido}, ${g.titular.nombre})` : ''}`
+    );
+    setGrupoAbierto(false);
+  };
+
   const handleChange = (e) => {
     const { name, value } = e.target;
     setForm((prev) => ({ ...prev, [name]: value }));
@@ -115,17 +155,38 @@ function FormAfiliado({ inicial, preset, grupos, onGuardar, onCancelar, cargando
         )}
 
         {form.rol === 'beneficiario' && !rolFijo && (
-          <div className="gestion-afiliados__field">
+          <div className="gestion-afiliados__field gestion-afiliados__field--autocomplete">
             <label>Grupo familiar *</label>
-            <select name="grupo_familiar_id" value={form.grupo_familiar_id} onChange={handleChange}>
-              <option value="">— Seleccionar grupo —</option>
-              {grupos.map((g) => (
-                <option key={g.id} value={g.id}>
-                  {g.nombre} {g.titular ? `(${g.titular.apellido}, ${g.titular.nombre})` : ''}
-                </option>
-              ))}
-            </select>
-            {errores.grupo_familiar_id && <span className="gestion-afiliados__field-error">{errores.grupo_familiar_id}</span>}
+            <input
+              type="text"
+              autoComplete="off"
+              placeholder="Buscar grupo familiar..."
+              value={grupoInput}
+              onChange={handleGrupoInputChange}
+              onFocus={() => setGrupoAbierto(true)}
+              onBlur={() => setTimeout(() => setGrupoAbierto(false), 150)}
+            />
+            {grupoAbierto && gruposFiltrados.length > 0 && (
+              <ul className="gestion-afiliados__autocomplete-list">
+                {gruposFiltrados.map((g) => (
+                  <li
+                    key={g.id}
+                    className="gestion-afiliados__autocomplete-item"
+                    onMouseDown={() => handleSeleccionarGrupo(g)}
+                  >
+                    <span className="gestion-afiliados__autocomplete-nombre">{g.nombre}</span>
+                    {g.titular && (
+                      <span className="gestion-afiliados__autocomplete-titular">
+                        {g.titular.apellido}, {g.titular.nombre}
+                      </span>
+                    )}
+                  </li>
+                ))}
+              </ul>
+            )}
+            {errores.grupo_familiar_id && (
+              <span className="gestion-afiliados__field-error">{errores.grupo_familiar_id}</span>
+            )}
           </div>
         )}
 

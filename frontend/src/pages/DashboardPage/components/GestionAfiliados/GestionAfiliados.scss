@@ -415,4 +415,47 @@
     &--ingreso { background: #dcfce7; color: #166534; }
     &--baja    { background: #fee2e2; color: #b91c1c; }
   }
+
+  // ── Autocomplete de grupo familiar ────────────────────────────────────────────
+  &__field--autocomplete {
+    position: relative;
+  }
+
+  &__autocomplete-list {
+    position: absolute;
+    top: calc(100% + 2px);
+    left: 0;
+    right: 0;
+    background: #fff;
+    border: 1px solid #d1d5db;
+    border-radius: 8px;
+    box-shadow: 0 4px 16px rgba(0, 0, 0, 0.1);
+    list-style: none;
+    margin: 0;
+    padding: 0.25rem 0;
+    z-index: 20;
+    max-height: 220px;
+    overflow-y: auto;
+  }
+
+  &__autocomplete-item {
+    padding: 0.5rem 0.75rem;
+    cursor: pointer;
+    display: flex;
+    flex-direction: column;
+    gap: 0.1rem;
+
+    &:hover { background: #f3f4f6; }
+  }
+
+  &__autocomplete-nombre {
+    font-size: 0.9rem;
+    font-weight: 600;
+    color: #111827;
+  }
+
+  &__autocomplete-titular {
+    font-size: 0.78rem;
+    color: #6b7280;
+  }
 }
