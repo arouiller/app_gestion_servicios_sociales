@@ -16,17 +16,12 @@ function buildMenu(isAdmin) {
       label: 'Mi Cuenta',
       children: [
         { key: 'datos-personales', label: 'Datos Personales' },
-        ...(!isAdmin ? [{ key: 'mi-afiliado', label: 'Mi Afiliado' }] : []),
       ],
     },
+    { key: 'afiliados', label: 'Afiliados' },
+    { key: 'grupos-familiares', label: 'Grupos Familiares' },
+    { key: 'planes', label: 'Planes' },
   ];
-
-  if (isAdmin) {
-    menu.push({ key: 'afiliados', label: 'Afiliados' });
-    menu.push({ key: 'grupos-familiares', label: 'Grupos Familiares' });
-  }
-
-  menu.push({ key: 'planes', label: 'Planes' });
 
   if (isAdmin) {
     menu.push({
@@ -140,13 +135,12 @@ function Bienvenida({ user }) {
 
 function ModuleContent({ activeModule }) {
   switch (activeModule) {
-    case 'datos-personales': return <DatosPersonales />;
-    case 'mi-afiliado':     return <GestionAfiliados />;
-    case 'afiliados':           return <GestionAfiliados />;
-    case 'grupos-familiares':   return <GestionGruposFamiliares />;
-    case 'planes':              return <GestionPlanes />;
-    case 'base-datos':      return <AdminMigraciones />;
-    default:                return null;
+    case 'datos-personales':   return <DatosPersonales />;
+    case 'afiliados':          return <GestionAfiliados />;
+    case 'grupos-familiares':  return <GestionGruposFamiliares />;
+    case 'planes':             return <GestionPlanes />;
+    case 'base-datos':         return <AdminMigraciones />;
+    default:                   return null;
   }
 }
 
