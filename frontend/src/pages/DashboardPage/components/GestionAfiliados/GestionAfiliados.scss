@@ -334,13 +334,6 @@
     margin-bottom: 1rem;
   }
 
-  &__modal-titulo-row {
-    display: flex;
-    align-items: center;
-    gap: 0.75rem;
-    flex: 1;
-  }
-
   &__modal-close {
     background: none;
     border: none;
@@ -352,28 +345,6 @@
     flex-shrink: 0;
 
     &:hover { color: #111827; }
-  }
-
-  &__modal-nombre-edit {
-    display: flex;
-    align-items: center;
-    gap: 0.5rem;
-    flex: 1;
-  }
-
-  &__modal-nombre-input {
-    flex: 1;
-    padding: 0.4rem 0.75rem;
-    border: 1px solid #d1d5db;
-    border-radius: 8px;
-    font-size: 0.95rem;
-    font-family: inherit;
-
-    &:focus {
-      outline: none;
-      border-color: #2563eb;
-      box-shadow: 0 0 0 2px rgba(37, 99, 235, 0.2);
-    }
   }
 
   // ── Modal ────────────────────────────────────────────────────────────────

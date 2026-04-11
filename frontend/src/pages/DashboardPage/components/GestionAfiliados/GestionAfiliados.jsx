@@ -521,6 +521,13 @@ function GestionAfiliados() {
     }
   };
 
+  const handleNuevoAfiliado = () => {
+    setFormPreset(null);
+    setModalAfiliado('crear');
+    setError(null);
+    setMensaje(null);
+  };
+
   const handleFiltroChange = (campo, valor) => {
     setFiltros((prev) => ({ ...prev, [campo]: valor }));
   };
@@ -541,7 +548,7 @@ function GestionAfiliados() {
         <h2 className="gestion-afiliados__title">Gestión de Afiliados</h2>
         <button
           className="gestion-afiliados__btn gestion-afiliados__btn--primary"
-          onClick={() => { setFormPreset(null); setModalAfiliado('crear'); setError(null); setMensaje(null); }}
+          onClick={handleNuevoAfiliado}
         >
           + Nuevo afiliado
         </button>
