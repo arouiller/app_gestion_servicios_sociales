@@ -485,7 +485,7 @@ function GestionPlanes() {
         <ModalConfirmar
           plan={planBorrando}
           onConfirmar={handleEliminar}
-          onCancelar={() => setPlanBorrando(null)}
+          onCancelar={() => { setPlanBorrando(null); setError(null); }}
           cargando={actionLoading}
         />
       )}
