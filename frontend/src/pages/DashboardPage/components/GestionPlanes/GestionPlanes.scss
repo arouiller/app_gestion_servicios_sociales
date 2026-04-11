@@ -288,6 +288,41 @@
 
     &-actions { display: flex; gap: 0.75rem; }
   }
+
+  &__modal--form {
+    max-width: 960px;
+    width: 95%;
+    max-height: 90vh;
+    overflow-y: auto;
+  }
+
+  &__modal-header {
+    display: flex;
+    align-items: flex-start;
+    justify-content: space-between;
+    gap: 1rem;
+    margin-bottom: 1.25rem;
+  }
+
+  &__modal-title {
+    font-size: 1.1rem;
+    font-weight: 700;
+    color: var(--color-text);
+    margin: 0;
+  }
+
+  &__modal-close {
+    background: none;
+    border: none;
+    font-size: 1.1rem;
+    color: #6b7280;
+    cursor: pointer;
+    line-height: 1;
+    padding: 0.2rem;
+    flex-shrink: 0;
+
+    &:hover { color: #111827; }
+  }
 }
 
 @media (max-width: 640px) {

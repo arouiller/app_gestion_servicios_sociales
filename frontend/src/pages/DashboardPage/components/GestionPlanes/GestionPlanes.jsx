@@ -333,7 +333,7 @@ function GestionPlanes() {
   const [mensaje, setMensaje] = useState(null);
 
   const [filtros, setFiltros] = useState({ search: '', estado: '' });
-  const [vista, setVista] = useState('lista');
+  const [modalPlan, setModalPlan] = useState(null); // null | 'crear' | 'editar'
   const [planEditando, setPlanEditando] = useState(null);
   const [planBorrando, setPlanBorrando] = useState(null);
 
@@ -371,7 +371,7 @@ function GestionPlanes() {
         await planesService.crear(payload);
         mostrarMensaje('Plan creado exitosamente.');
       }
-      setVista('lista');
+      setModalPlan(null);
       setPlanEditando(null);
       cargar();
     } catch (err) {
@@ -398,13 +398,13 @@ function GestionPlanes() {
 
   const handleEditar = (plan) => {
     setPlanEditando(plan);
-    setVista('editar');
+    setModalPlan('editar');
     setError(null);
     setMensaje(null);
   };
 
   const handleCancelar = () => {
-    setVista('lista');
+    setModalPlan(null);
     setPlanEditando(null);
     setError(null);
   };
@@ -431,10 +431,10 @@ function GestionPlanes() {
     <div className="gestion-planes">
       <div className="gestion-planes__header">
         <h2 className="gestion-planes__title">Planes de Servicio</h2>
-        {vista === 'lista' && isAdmin && (
+        {isAdmin && (
           <button
             className="gestion-planes__btn gestion-planes__btn--primary"
-            onClick={() => { setVista('crear'); setError(null); setMensaje(null); }}
+            onClick={() => { setModalPlan('crear'); setError(null); setMensaje(null); }}
           >
             + Nuevo plan
           </button>
@@ -450,29 +450,35 @@ function GestionPlanes() {
         </div>
       )}
 
-      {vista === 'lista' && (
-        <TablaPlanes
-          planes={planesFiltrados}
-          isAdmin={isAdmin}
-          filtros={filtros}
-          onFiltroChange={handleFiltroChange}
-          onEditar={handleEditar}
-          onEliminar={(p) => setPlanBorrando(p)}
-        />
-      )}
+      <TablaPlanes
+        planes={planesFiltrados}
+        isAdmin={isAdmin}
+        filtros={filtros}
+        onFiltroChange={handleFiltroChange}
+        onEditar={handleEditar}
+        onEliminar={(p) => setPlanBorrando(p)}
+      />
 
-      {(vista === 'crear' || vista === 'editar') && (
-        <>
-          <h3 className="gestion-planes__form-title">
-            {vista === 'crear' ? 'Nuevo plan' : `Editando: ${planEditando?.nombre}`}
-          </h3>
-          <FormPlan
-            inicial={planEditando}
-            onGuardar={handleGuardar}
-            onCancelar={handleCancelar}
-            cargando={actionLoading}
-          />
-        </>
+      {modalPlan && (
+        <div
+          className="gestion-planes__modal-overlay"
+          onClick={(e) => e.target === e.currentTarget && handleCancelar()}
+        >
+          <div className="gestion-planes__modal gestion-planes__modal--form">
+            <div className="gestion-planes__modal-header">
+              <h3 className="gestion-planes__modal-title">
+                {modalPlan === 'crear' ? 'Nuevo plan' : `Editar plan: ${planEditando?.nombre}`}
+              </h3>
+              <button className="gestion-planes__modal-close" onClick={handleCancelar}>&#x2715;</button>
+            </div>
+            <FormPlan
+              inicial={planEditando}
+              onGuardar={handleGuardar}
+              onCancelar={handleCancelar}
+              cargando={actionLoading}
+            />
+          </div>
+        </div>
       )}
 
       {planBorrando && (
