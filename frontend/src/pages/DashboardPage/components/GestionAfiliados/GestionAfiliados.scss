@@ -46,21 +46,12 @@
     }
   }
 
-  // ── Loading / empty / aviso ──────────────────────────────────────────────
+  // ── Loading / empty ─────────────────────────────────────────────────────
   &__loading,
   &__empty {
     text-align: center;
     color: #6b7280;
     padding: 2rem;
-    font-size: 0.95rem;
-  }
-
-  &__aviso {
-    background: #f0f9ff;
-    border: 1px solid #bae6fd;
-    border-radius: 8px;
-    padding: 1.5rem;
-    color: #0c4a6e;
     font-size: 0.95rem;
   }
 
@@ -300,92 +291,6 @@
     font-size: 0.78rem;
   }
 
-  // ── Perfil de usuario ────────────────────────────────────────────────────
-  &__perfil {
-    &-header {
-      display: flex;
-      align-items: center;
-      gap: 1rem;
-      margin-bottom: 1.5rem;
-    }
-
-    &-avatar {
-      width: 56px;
-      height: 56px;
-      border-radius: 50%;
-      background: #2563eb;
-      color: #fff;
-      font-weight: 700;
-      font-size: 1.25rem;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      text-transform: uppercase;
-      flex-shrink: 0;
-    }
-
-    &-nombre {
-      font-size: 1.1rem;
-      font-weight: 700;
-      color: #111827;
-      margin: 0 0 0.3rem;
-    }
-
-    &-grid {
-      display: grid;
-      grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
-      gap: 0.75rem 1.5rem;
-      margin-bottom: 1.5rem;
-    }
-
-    &-field {
-      display: flex;
-      flex-direction: column;
-      gap: 0.2rem;
-    }
-
-    &-label {
-      font-size: 0.78rem;
-      font-weight: 600;
-      color: #9ca3af;
-      text-transform: uppercase;
-      letter-spacing: 0.04em;
-    }
-
-    &-valor {
-      font-size: 0.95rem;
-      color: #111827;
-    }
-
-    &-actions {
-      margin-top: 1.5rem;
-      padding-top: 1rem;
-      border-top: 1px solid #f3f4f6;
-    }
-  }
-
-  // ── Teléfonos ────────────────────────────────────────────────────────────
-  &__telefonos {
-    margin-bottom: 1rem;
-
-    &-lista {
-      display: flex;
-      flex-wrap: wrap;
-      gap: 0.5rem;
-      margin-top: 0.3rem;
-    }
-  }
-
-  &__telefono-badge {
-    background: #eff6ff;
-    color: #1d4ed8;
-    border: 1px solid #bfdbfe;
-    border-radius: 999px;
-    padding: 0.2rem 0.75rem;
-    font-size: 0.82rem;
-    font-weight: 500;
-  }
-
   // ── Rol badge ────────────────────────────────────────────────────────────
   &__rol-badge {
     display: inline-block;
@@ -411,29 +316,6 @@
     text-underline-offset: 2px;
 
     &:hover { color: #1d4ed8; }
-  }
-
-  // ── Info del grupo en perfil ─────────────────────────────────────────────
-  &__grupo-info {
-    margin-bottom: 1rem;
-    padding: 0.75rem 1rem;
-    background: #f8fafc;
-    border: 1px solid #e5e7eb;
-    border-radius: 8px;
-  }
-
-  &__grupo-nombre {
-    font-size: 0.95rem;
-    font-weight: 600;
-    color: #111827;
-    margin: 0.25rem 0 0.5rem;
-  }
-
-  &__grupo-miembros {
-    display: flex;
-    flex-wrap: wrap;
-    gap: 0.4rem;
-    margin-top: 0.4rem;
   }
 
   // ── Sección beneficiarios (edición de titular) ────────────────────────────
