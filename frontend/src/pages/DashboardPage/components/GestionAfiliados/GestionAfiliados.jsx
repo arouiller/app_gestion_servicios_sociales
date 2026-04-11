@@ -114,7 +114,7 @@ function FormAfiliado({ inicial, preset, grupos, onGuardar, onCancelar, cargando
           </div>
         )}
 
-        {form.rol === 'beneficiario' && (
+        {form.rol === 'beneficiario' && !rolFijo && (
           <div className="gestion-afiliados__field">
             <label>Grupo familiar *</label>
             <select name="grupo_familiar_id" value={form.grupo_familiar_id} onChange={handleChange}>
