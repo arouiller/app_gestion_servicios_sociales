@@ -467,8 +467,10 @@
 
   // ── Modal grupo (ancho mayor) ────────────────────────────────────────────
   &__modal--grupo {
-    max-width: 680px;
+    max-width: 960px;
     width: 95%;
+    max-height: 90vh;
+    overflow-y: auto;
   }
 
   &__modal-header {
