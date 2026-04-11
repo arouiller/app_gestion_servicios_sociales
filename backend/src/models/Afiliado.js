@@ -7,10 +7,6 @@ const Afiliado = sequelize.define('afiliados', {
     primaryKey: true,
     autoIncrement: true,
   },
-  usuario_id: {
-    type: DataTypes.INTEGER,
-    allowNull: true,
-  },
   nombre: {
     type: DataTypes.STRING(100),
     allowNull: false,
