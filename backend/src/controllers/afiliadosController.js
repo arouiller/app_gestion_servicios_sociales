@@ -1,6 +1,7 @@
 const { Op } = require('sequelize');
 const Afiliado = require('../models/Afiliado');
 const GrupoFamiliar = require('../models/GrupoFamiliar');
+const HistorialGrupoFamiliar = require('../models/HistorialGrupoFamiliar');
 
 // ── GET /api/afiliados  (admin) ─────────────────────────────────────────────
 
@@ -166,6 +167,14 @@ const crear = async (req, res) => {
     estado: 'activo',
     rol,
     grupo_familiar_id,
+  });
+
+  // Registrar ingreso en historial
+  await HistorialGrupoFamiliar.create({
+    grupo_id: grupo_familiar_id,
+    afiliado_id: afiliado.id,
+    accion: 'ingreso',
+    usuario_id: req.userId,
   });
 
   return res.status(201).json({
