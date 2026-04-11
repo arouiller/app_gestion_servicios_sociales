@@ -30,19 +30,16 @@ const crearSchema = {
 
 // ── Rutas ────────────────────────────────────────────────────────────────────
 
-// GET /api/afiliados/me — perfil propio del usuario autenticado
-router.get('/me', verifyToken, controller.me);
+// GET /api/afiliados — listado paginado (cualquier empleado)
+router.get('/', verifyToken, controller.listar);
 
-// GET /api/afiliados — listado paginado (solo admin)
-router.get('/', verifyToken, requireAdmin, controller.listar);
+// GET /api/afiliados/:id — detalle (cualquier empleado)
+router.get('/:id', verifyToken, controller.obtener);
 
-// GET /api/afiliados/:id — detalle (solo admin)
-router.get('/:id', verifyToken, requireAdmin, controller.obtener);
-
-// POST /api/afiliados — crear (cualquier usuario autenticado)
+// POST /api/afiliados — crear (cualquier empleado)
 router.post('/', verifyToken, validate(crearSchema), controller.crear);
 
-// PUT /api/afiliados/:id — actualizar (propio o admin)
+// PUT /api/afiliados/:id — actualizar (cualquier empleado)
 router.put('/:id', verifyToken, controller.actualizar);
 
 // DELETE /api/afiliados/:id — eliminar (solo admin)
