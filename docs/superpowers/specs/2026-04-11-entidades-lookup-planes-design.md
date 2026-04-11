@@ -154,6 +154,67 @@ DROP TABLE IF EXISTS personas;
 
 ---
 
+### Migración `1.0.3_historial_cuota_y_recibos`
+
+```sql
+CREATE TABLE historial_cuota (
+  id              INT            NOT NULL AUTO_INCREMENT,
+  plan_numero     INT            NOT NULL,
+  valor_anterior  DECIMAL(10,2)  NOT NULL,
+  valor_nuevo     DECIMAL(10,2)  NOT NULL,
+  fecha_cambio    DATETIME       NOT NULL DEFAULT NOW(),
+  usuario_id      INT            NOT NULL,
+  PRIMARY KEY (id),
+  FOREIGN KEY (plan_numero)  REFERENCES planes(plan_numero) ON DELETE CASCADE,
+  FOREIGN KEY (usuario_id)   REFERENCES usuarios(id)
+);
+
+CREATE TABLE recibos (
+  id                    INT          NOT NULL AUTO_INCREMENT,
+  plan_numero           INT          NOT NULL,
+  periodo               DATE         NOT NULL,   -- primer día del mes: 2026-04-01
+  numero_afiliado       VARCHAR(50)  NOT NULL,   -- snapshot
+  titular_apellido      VARCHAR(100) NOT NULL,   -- snapshot
+  titular_nombre        VARCHAR(100) NOT NULL,   -- snapshot
+  obra_social_nombre    VARCHAR(100) NOT NULL,   -- snapshot
+  tipo_plan_nombre      VARCHAR(100) NOT NULL,   -- snapshot
+  tipo_de_grupo_nombre  VARCHAR(100) NOT NULL,   -- snapshot
+  cobrador_apellido     VARCHAR(100) NOT NULL,   -- snapshot
+  cobrador_nombre       VARCHAR(100) NOT NULL,   -- snapshot
+  domicilio             VARCHAR(255),            -- snapshot
+  valor_cuota           DECIMAL(10,2) NOT NULL,  -- snapshot
+  fecha_emision         DATETIME     NOT NULL DEFAULT NOW(),
+  usuario_id            INT          NOT NULL,
+  PRIMARY KEY (id),
+  UNIQUE KEY uq_recibo_plan_periodo (plan_numero, periodo),
+  FOREIGN KEY (plan_numero)  REFERENCES planes(plan_numero),
+  FOREIGN KEY (usuario_id)   REFERENCES usuarios(id)
+);
+
+CREATE TABLE recibo_integrantes (
+  id                INT          NOT NULL AUTO_INCREMENT,
+  recibo_id         INT          NOT NULL,
+  apellido          VARCHAR(100) NOT NULL,   -- snapshot
+  nombre            VARCHAR(100) NOT NULL,   -- snapshot
+  tipo_documento    ENUM('DNI','LC','LE','PASAPORTE') NOT NULL,  -- snapshot
+  numero_documento  VARCHAR(20)  NOT NULL,   -- snapshot
+  fecha_nacimiento  DATE         NOT NULL,   -- snapshot
+  fecha_cobertura   DATE         NOT NULL,   -- snapshot
+  rol               ENUM('titular','integrante') NOT NULL,
+  PRIMARY KEY (id),
+  FOREIGN KEY (recibo_id) REFERENCES recibos(id) ON DELETE CASCADE
+);
+```
+
+**`downgrade.sql` para 1.0.3:**
+```sql
+DROP TABLE IF EXISTS recibo_integrantes;
+DROP TABLE IF EXISTS recibos;
+DROP TABLE IF EXISTS historial_cuota;
+```
+
+---
+
 ## 2. Backend — Entidades lookup
 
 ### Arquitectura
@@ -275,6 +336,43 @@ No se exponen endpoints de creación/edición/eliminación directa de personas.
 **`DELETE /api/planes/:id`**
 - Elimina plan + `plan_integrantes` + `integrante_servicios` en cascada (la FK CASCADE lo maneja).
 - Las personas no se eliminan (pueden pertenecer a otros planes).
+
+**`GET /api/planes/:id/historial-cuota`**
+- Devuelve todos los registros de `historial_cuota` para el plan, ordenados por `fecha_cambio DESC`.
+
+**`PATCH /api/planes/aumento-masivo`** *(registrar antes que `/:id`)*
+
+Body: `{ "planes": [1, 2, 3], "porcentaje": 10.5 }` — si `planes` es array vacío, aplica a **todos** los planes.
+
+Lógica (una transacción):
+1. Recupera `valor_cuota` actual de cada plan seleccionado.
+2. Calcula `valor_nuevo = ROUND(valor_actual * (1 + porcentaje / 100), 2)`.
+3. Actualiza `valor_cuota` en `planes`.
+4. Inserta registro en `historial_cuota` (valor anterior, valor nuevo, fecha, usuario).
+5. Rollback si cualquier paso falla.
+
+Devuelve 200 con lista de `{ plan_numero, valor_anterior, valor_nuevo }` por cada plan afectado.
+
+---
+
+### `recibosController.js`
+
+**`POST /api/recibos/generar`**
+
+Body: `{ "periodo": "2026-04-01", "planes": [1, 2, 3] }` — si `planes` vacío, usa todos los planes `ACTIVO`.
+
+Lógica (transacción):
+1. Para cada plan: si ya existe recibo con ese `(plan_numero, periodo)`, lo omite sin error.
+2. Resuelve snapshots mediante joins: cobrador, obra social, tipo de plan, tipo de grupo, domicilio, titular.
+3. Inserta en `recibos`.
+4. Para cada recibo: inserta todos los integrantes del plan en `recibo_integrantes` (snapshot completo).
+5. Devuelve los registros creados con sus integrantes (para previsualización inmediata).
+
+**`GET /api/recibos?periodo=YYYY-MM-DD`**
+- Lista todos los recibos del período con sus `recibo_integrantes`.
+
+**`GET /api/recibos/:id`**
+- Detalle de un recibo con sus `recibo_integrantes`.
 
 ---
 
@@ -413,6 +511,64 @@ Al guardar el popup [A]:
 - Exactamente 1 integrante con `rol = 'titular'`
 - `numero_afiliado` no vacío
 
+**Pestaña adicional — Historial de cuota** (solo en edición):
+
+Tabla con columnas: fecha del cambio, valor anterior, valor nuevo. Carga desde `GET /api/planes/:id/historial-cuota`.
+
+---
+
+### Aumentos masivos — dentro de la pantalla de Planes
+
+La tabla de planes suma una columna de **checkboxes**. El header de la lista agrega:
+
+- Input numérico "% de aumento"
+- Botón "Aplicar aumento" (habilitado si hay al menos 1 plan seleccionado o si se usa "todos")
+
+Flujo:
+1. Usuario selecciona planes individualmente o con "Seleccionar todos".
+2. Ingresa el porcentaje.
+3. Click "Aplicar aumento" → **modal de confirmación** con tabla: plan, valor actual → valor nuevo.
+4. Confirma → `PATCH /api/planes/aumento-masivo` → la lista se recarga con los nuevos valores.
+
+---
+
+### Generación de recibos — dentro de la pantalla de Planes
+
+Botón **"Generar recibos"** en el header de la lista (junto a "+ Nuevo plan").
+
+Flujo:
+1. Click "Generar recibos" → modal con:
+   - Selector de período (mes / año).
+   - Opción: todos los planes activos / solo los seleccionados.
+2. Click "Generar" → `POST /api/recibos/generar`.
+3. El modal muestra **previsualización** de los recibos generados (lista compacta).
+4. Botón **"Imprimir PDF"** → abre ventana nueva con todos los recibos en formato imprimible; dispara `window.print()`.
+
+**Formato de cada recibo en la vista de impresión:**
+
+```
+┌──────────────────────────────────────────┐
+│  Recibo N°: 00042                        │
+│  Período: Abril 2026                     │
+│                                          │
+│  N° Asociado:   00123                    │
+│  Plan:          Plan Familiar            │
+│  Tipo de Grupo: Grupo familiar           │
+│  Domicilio:     Av. Siempre Viva 742     │
+│  Monto cuota:   $ 15.000,00              │
+│                                          │
+│  Integrantes:                            │
+│  Rol      | Apellido | Nombre | Doc      │
+│  Titular  | García   | Juan   | DNI ...  │
+│  Adher.   | García   | María  | DNI ...  │
+│  (fecha nacimiento + fecha cobertura)    │
+│                                          │
+│  Fecha de emisión: 11/04/2026            │
+└──────────────────────────────────────────┘
+```
+
+Cada recibo ocupa su propia página (`page-break-after: always` en CSS de impresión).
+
 ---
 
 ## 6. Manejo de errores — regla general
@@ -446,6 +602,8 @@ Los mensajes amigables se definen por operación y tipo de error:
 | `backend/src/migrations/versions/1.0.1_tablas_lookup/downgrade.sql` | Crear |
 | `backend/src/migrations/versions/1.0.2_planes_y_personas/upgrade.sql` | Crear |
 | `backend/src/migrations/versions/1.0.2_planes_y_personas/downgrade.sql` | Crear |
+| `backend/src/migrations/versions/1.0.3_historial_cuota_y_recibos/upgrade.sql` | Crear |
+| `backend/src/migrations/versions/1.0.3_historial_cuota_y_recibos/downgrade.sql` | Crear |
 | `backend/src/models/Cobrador.js` | Crear |
 | `backend/src/models/TipoDePlan.js` | Crear |
 | `backend/src/models/ObraSocial.js` | Crear |
@@ -455,12 +613,17 @@ Los mensajes amigables se definen por operación y tipo de error:
 | `backend/src/models/Plan.js` | Crear |
 | `backend/src/models/PlanIntegrante.js` | Crear |
 | `backend/src/models/IntegranteServicio.js` | Crear |
+| `backend/src/models/HistorialCuota.js` | Crear |
+| `backend/src/models/Recibo.js` | Crear |
+| `backend/src/models/ReciboIntegrante.js` | Crear |
 | `backend/src/controllers/lookupController.js` | Crear |
 | `backend/src/controllers/personasController.js` | Crear |
 | `backend/src/controllers/planesController.js` | Crear |
+| `backend/src/controllers/recibosController.js` | Crear |
 | `backend/src/routes/lookup.js` | Crear |
 | `backend/src/routes/personas.js` | Crear |
 | `backend/src/routes/planes.js` | Crear |
+| `backend/src/routes/recibos.js` | Crear |
 | `backend/src/index.js` | Modificar (montar nuevas rutas) |
 
 ### Frontend
@@ -474,10 +637,12 @@ Los mensajes amigables se definen por operación y tipo de error:
 | `frontend/src/services/lookupService.js` | Crear |
 | `frontend/src/services/planesService.js` | Crear |
 | `frontend/src/services/personasService.js` | Crear |
+| `frontend/src/services/recibosService.js` | Crear |
 | `frontend/src/pages/DashboardPage/components/Cobradores/Cobradores.jsx` | Crear |
 | `frontend/src/pages/DashboardPage/components/TiposDePlan/TiposDePlan.jsx` | Crear |
 | `frontend/src/pages/DashboardPage/components/ObrasSociales/ObrasSociales.jsx` | Crear |
 | `frontend/src/pages/DashboardPage/components/ServiciosAdicionales/ServiciosAdicionales.jsx` | Crear |
 | `frontend/src/pages/DashboardPage/components/TiposDeGrupo/TiposDeGrupo.jsx` | Crear |
-| `frontend/src/pages/DashboardPage/components/GestionPlanes/GestionPlanes.jsx` | Crear (iteración posterior) |
+| `frontend/src/pages/DashboardPage/components/GestionPlanes/GestionPlanes.jsx` | Crear |
+| `frontend/src/pages/DashboardPage/components/GestionPlanes/GestionPlanes.scss` | Crear |
 | `frontend/src/pages/DashboardPage/DashboardPage.jsx` | Modificar (menú + módulos) |
