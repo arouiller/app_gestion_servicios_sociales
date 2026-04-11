@@ -300,6 +300,15 @@ function TablaAfiliados({ afiliados, grupos, pagination, onEditar, onEliminar, o
           <option value="inactivo">Inactivo</option>
           <option value="suspendido">Suspendido</option>
         </select>
+        <select
+          className="gestion-afiliados__filtro-select"
+          value={filtros.rol}
+          onChange={(e) => onFiltroChange('rol', e.target.value)}
+        >
+          <option value="">Todos los roles</option>
+          <option value="titular">Titular</option>
+          <option value="beneficiario">Beneficiario</option>
+        </select>
       </div>
 
       {afiliados.length === 0 ? (
@@ -609,7 +618,7 @@ function GestionAfiliados() {
   const [afiliados, setAfiliados] = useState([]);
   const [grupos, setGrupos] = useState([]);
   const [pagination, setPagination] = useState({ page: 1, limit: 10, total: 0, pages: 1 });
-  const [filtros, setFiltros] = useState({ search: '', estado: '' });
+  const [filtros, setFiltros] = useState({ search: '', estado: '', rol: '' });
 
   // Vistas
   const [vista, setVista] = useState('lista');
