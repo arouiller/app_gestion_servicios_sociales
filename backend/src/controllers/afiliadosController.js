@@ -3,7 +3,7 @@ const Afiliado = require('../models/Afiliado');
 const GrupoFamiliar = require('../models/GrupoFamiliar');
 const HistorialGrupoFamiliar = require('../models/HistorialGrupoFamiliar');
 
-// ── GET /api/afiliados  (admin) ─────────────────────────────────────────────
+// ── GET /api/afiliados ──────────────────────────────────────────────────────
 
 const listar = async (req, res) => {
   const { page = 1, limit = 10, estado, search } = req.query;
@@ -28,7 +28,6 @@ const listar = async (req, res) => {
     order: [['fecha_creacion', 'DESC']],
   });
 
-  // Attach group names
   const grupos = await GrupoFamiliar.findAll({ attributes: ['id', 'nombre', 'estado'] });
   const grupoMap = Object.fromEntries(grupos.map((g) => [g.id, g]));
 
@@ -49,34 +48,7 @@ const listar = async (req, res) => {
   });
 };
 
-// ── GET /api/afiliados/me  (cualquier usuario autenticado) ──────────────────
-
-const me = async (req, res) => {
-  const afiliado = await Afiliado.findOne({ where: { usuario_id: req.userId } });
-  if (!afiliado) {
-    return res.status(404).json({
-      success: false,
-      message: 'No tenés un perfil de afiliado registrado',
-    });
-  }
-
-  let grupo = null;
-  if (afiliado.grupo_familiar_id) {
-    const grupoData = await GrupoFamiliar.findByPk(afiliado.grupo_familiar_id);
-    if (grupoData) {
-      const miembros = await Afiliado.findAll({
-        where: { grupo_familiar_id: grupoData.id },
-        attributes: ['id', 'nombre', 'apellido', 'tipo_documento', 'numero_documento', 'rol', 'estado'],
-        order: [['rol', 'ASC'], ['apellido', 'ASC']],
-      });
-      grupo = { ...grupoData.toJSON(), miembros };
-    }
-  }
-
-  return res.json({ success: true, data: { ...afiliado.toJSON(), grupo } });
-};
-
-// ── GET /api/afiliados/:id  (admin) ────────────────────────────────────────
+// ── GET /api/afiliados/:id ──────────────────────────────────────────────────
 
 const obtener = async (req, res) => {
   const afiliado = await Afiliado.findByPk(req.params.id);
@@ -102,7 +74,6 @@ const crear = async (req, res) => {
 
   const rol = req.body.rol || 'titular';
 
-  // Verificar documento único
   const existente = await Afiliado.findOne({ where: { numero_documento } });
   if (existente) {
     return res.status(409).json({
@@ -112,25 +83,6 @@ const crear = async (req, res) => {
     });
   }
 
-  // Resolver usuario_id:
-  // - Admin con usuario_id explícito: usa el provisto
-  // - Admin sin usuario_id: null (beneficiarios/dependientes sin cuenta de sistema)
-  // - No-admin: usa su propio userId, bloqueando duplicados
-  let usuario_id;
-  if (req.userRole === 'admin') {
-    usuario_id = req.body.usuario_id || null;
-  } else {
-    usuario_id = req.userId;
-    const yaExiste = await Afiliado.findOne({ where: { usuario_id } });
-    if (yaExiste) {
-      return res.status(409).json({
-        success: false,
-        message: 'Ya tenés un perfil de afiliado registrado',
-      });
-    }
-  }
-
-  // Resolver grupo_familiar_id
   let grupo_familiar_id = req.body.grupo_familiar_id || null;
 
   if (rol === 'beneficiario') {
@@ -146,7 +98,6 @@ const crear = async (req, res) => {
       return res.status(404).json({ success: false, message: 'Grupo familiar no encontrado' });
     }
   } else if (rol === 'titular' && !grupo_familiar_id) {
-    // Auto-crear un grupo familiar para el nuevo titular
     const nuevoGrupo = await GrupoFamiliar.create({
       nombre: `Familia ${apellido.trim()}`,
     });
@@ -154,7 +105,6 @@ const crear = async (req, res) => {
   }
 
   const afiliado = await Afiliado.create({
-    usuario_id,
     nombre: nombre.trim(),
     apellido: apellido.trim(),
     fecha_nacimiento: fecha_nacimiento || null,
@@ -172,7 +122,6 @@ const crear = async (req, res) => {
     grupo_familiar_id,
   });
 
-  // Registrar ingreso en historial
   await HistorialGrupoFamiliar.create({
     grupo_id: grupo_familiar_id,
     afiliado_id: afiliado.id,
@@ -195,15 +144,6 @@ const actualizar = async (req, res) => {
     return res.status(404).json({ success: false, message: 'Afiliado no encontrado' });
   }
 
-  // Un usuario no-admin solo puede editar su propio perfil
-  if (req.userRole !== 'admin' && afiliado.usuario_id !== req.userId) {
-    return res.status(403).json({
-      success: false,
-      message: 'No tenés permiso para modificar este afiliado',
-    });
-  }
-
-  // Verificar unicidad de documento si cambió
   if (req.body.numero_documento && req.body.numero_documento !== afiliado.numero_documento) {
     const existente = await Afiliado.findOne({ where: { numero_documento: req.body.numero_documento } });
     if (existente) {
@@ -218,10 +158,8 @@ const actualizar = async (req, res) => {
   const camposPermitidos = [
     'nombre', 'apellido', 'fecha_nacimiento', 'tipo_documento', 'numero_documento',
     'genero', 'direccion', 'ciudad', 'provincia', 'codigo_postal', 'telefonos', 'email_contacto',
+    'estado', 'rol', 'grupo_familiar_id',
   ];
-  if (req.userRole === 'admin') {
-    camposPermitidos.push('estado', 'usuario_id', 'rol', 'grupo_familiar_id');
-  }
 
   const actualizaciones = {};
   camposPermitidos.forEach((campo) => {
@@ -237,7 +175,7 @@ const actualizar = async (req, res) => {
   });
 };
 
-// ── DELETE /api/afiliados/:id  (admin) ─────────────────────────────────────
+// ── DELETE /api/afiliados/:id ───────────────────────────────────────────────
 
 const eliminar = async (req, res) => {
   const afiliado = await Afiliado.findByPk(req.params.id);
@@ -248,4 +186,4 @@ const eliminar = async (req, res) => {
   return res.json({ success: true, message: 'Afiliado eliminado correctamente' });
 };
 
-module.exports = { listar, me, obtener, crear, actualizar, eliminar };
+module.exports = { listar, obtener, crear, actualizar, eliminar };
