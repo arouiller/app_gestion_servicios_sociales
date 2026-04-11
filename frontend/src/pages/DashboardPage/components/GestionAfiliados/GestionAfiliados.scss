@@ -318,37 +318,8 @@
     &:hover { color: #1d4ed8; }
   }
 
-  // ── Sección beneficiarios (edición de titular) ────────────────────────────
-  &__beneficiarios-seccion {
-    margin-top: 2rem;
-    padding-top: 1.5rem;
-    border-top: 2px solid #e5e7eb;
-  }
-
-  &__beneficiarios-header {
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-    margin-bottom: 1rem;
-  }
-
-  &__beneficiarios-titulo {
-    font-size: 1rem;
-    font-weight: 700;
-    color: #111827;
-    margin: 0;
-  }
-
-  // ── Modal form (más ancho que el de confirmación) ─────────────────────────
+  // ── Modal form ────────────────────────────────────────────────────────────
   &__modal--form {
-    max-width: 760px;
-    width: 95%;
-    max-height: 90vh;
-    overflow-y: auto;
-  }
-
-  // ── Modal grupo (ancho mayor) ────────────────────────────────────────────
-  &__modal--grupo {
     max-width: 960px;
     width: 95%;
     max-height: 90vh;
@@ -420,7 +391,7 @@
     background: #fff;
     border-radius: 12px;
     padding: 2rem;
-    max-width: 440px;
+    max-width: 540px;
     width: 90%;
     box-shadow: 0 20px 60px rgba(0, 0, 0, 0.15);
 
