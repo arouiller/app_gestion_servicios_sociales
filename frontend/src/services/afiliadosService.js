@@ -73,6 +73,24 @@ const afiliadosService = {
     const { data } = await api.put(`/grupos-familiares/${id}`, payload);
     return data;
   },
+
+  /**
+   * Desvincula un beneficiario de su grupo (admin).
+   * El beneficiario pasa a ser titular de un nuevo grupo creado automáticamente.
+   */
+  desvincularBeneficiario: async (grupoId, afiliadoId) => {
+    const { data } = await api.post(`/grupos-familiares/${grupoId}/desvincular/${afiliadoId}`);
+    return data;
+  },
+
+  /**
+   * Historial de membresía de un grupo familiar.
+   * Accesible a cualquier usuario autenticado.
+   */
+  obtenerHistorialGrupo: async (grupoId) => {
+    const { data } = await api.get(`/grupos-familiares/${grupoId}/historial`);
+    return data.data;
+  },
 };
 
 export default afiliadosService;
