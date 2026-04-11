@@ -196,6 +196,26 @@ function FormAfiliado({ inicial, preset, grupos, onGuardar, onCancelar, cargando
 // ── Vista de perfil propio (usuario no-admin) ────────────────────────────────
 
 function PerfilAfiliado({ afiliado, onEditar }) {
+  const [mostrarHistorial, setMostrarHistorial] = useState(false);
+  const [historial, setHistorial] = useState([]);
+  const [historialLoading, setHistorialLoading] = useState(false);
+  const [historialError, setHistorialError] = useState(null);
+
+  const cargarHistorial = async () => {
+    if (historial.length > 0) { setMostrarHistorial(true); return; }
+    setHistorialLoading(true);
+    setHistorialError(null);
+    try {
+      const data = await afiliadosService.obtenerHistorialGrupo(afiliado.grupo_familiar_id);
+      setHistorial(data);
+      setMostrarHistorial(true);
+    } catch {
+      setHistorialError('Error al cargar el historial del grupo.');
+    } finally {
+      setHistorialLoading(false);
+    }
+  };
+
   const campos = [
     { label: 'Nombre completo', valor: `${afiliado.nombre} ${afiliado.apellido}` },
     { label: 'Documento', valor: `${afiliado.tipo_documento} ${afiliado.numero_documento}` },
@@ -264,6 +284,54 @@ function PerfilAfiliado({ afiliado, onEditar }) {
                     {m.nombre} {m.apellido}
                   </span>
                 ))}
+            </div>
+          )}
+
+          {afiliado.grupo_familiar_id && (
+            <div className="gestion-afiliados__historial-seccion">
+              <button
+                className="gestion-afiliados__historial-toggle"
+                onClick={() => mostrarHistorial ? setMostrarHistorial(false) : cargarHistorial()}
+              >
+                {mostrarHistorial ? '▲ Ocultar historial' : '▼ Ver historial del grupo'}
+              </button>
+
+              {historialError && (
+                <div className="gestion-afiliados__alert gestion-afiliados__alert--error">{historialError}</div>
+              )}
+
+              {mostrarHistorial && (
+                historialLoading ? (
+                  <div className="gestion-afiliados__loading">Cargando historial...</div>
+                ) : historial.length === 0 ? (
+                  <p className="gestion-afiliados__empty">Sin historial registrado.</p>
+                ) : (
+                  <div className="gestion-afiliados__tabla-wrapper">
+                    <table className="gestion-afiliados__tabla">
+                      <thead>
+                        <tr>
+                          <th>Fecha</th>
+                          <th>Afiliado</th>
+                          <th>Acción</th>
+                        </tr>
+                      </thead>
+                      <tbody>
+                        {historial.map((h) => (
+                          <tr key={h.id}>
+                            <td>{new Date(h.fecha).toLocaleString('es-AR')}</td>
+                            <td>{h.afiliado ? `${h.afiliado.nombre} ${h.afiliado.apellido}` : '—'}</td>
+                            <td>
+                              <span className={`gestion-afiliados__accion-badge gestion-afiliados__accion-badge--${h.accion}`}>
+                                {h.accion === 'ingreso' ? 'Ingreso' : 'Baja'}
+                              </span>
+                            </td>
+                          </tr>
+                        ))}
+                      </tbody>
+                    </table>
+                  </div>
+                )
+              )}
             </div>
           )}
         </div>
