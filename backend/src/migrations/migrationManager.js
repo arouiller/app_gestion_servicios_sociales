@@ -200,7 +200,7 @@ async function downgrade() {
 async function getHistory() {
   await ensureTable();
   const [rows] = await sequelize.query(
-    `SELECT id, version, descripcion, tipo, estado, fecha_ejecucion
+    `SELECT id, version, descripcion, tipo, estado, duracion_ms, fecha_ejecucion
      FROM historial_migraciones
      ORDER BY fecha_ejecucion DESC`
   );
