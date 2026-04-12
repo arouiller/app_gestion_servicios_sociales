@@ -338,8 +338,11 @@ async function execute(direction) {
 
     await sequelize.query(
       `UPDATE historial_migraciones SET duracion_ms = ?
-       WHERE version = ? AND tipo = ?
-       ORDER BY fecha_ejecucion DESC LIMIT 1`,
+       WHERE id = (
+         SELECT id FROM historial_migraciones
+         WHERE version = ? AND tipo = ?
+         ORDER BY fecha_ejecucion DESC LIMIT 1
+       )`,
       { replacements: [durationMs, result.version, direction] }
     );
 
