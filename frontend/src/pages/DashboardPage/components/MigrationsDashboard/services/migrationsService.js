@@ -1,6 +1,6 @@
 import api from '../../../../../services/api';
 
-const BASE_URL = '/api/migrations';
+const BASE_URL = '/migrations';
 
 export const migrationsAPI = {
   /**
