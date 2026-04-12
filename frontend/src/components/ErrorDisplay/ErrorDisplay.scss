@@ -1,0 +1,44 @@
+.error-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: rgba(0, 0, 0, 0.5);
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  z-index: 1000;
+}
+
+.error-modal {
+  background: var(--color-surface);
+  padding: 24px;
+  border-radius: 8px;
+  max-width: 400px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15);
+
+  h3 {
+    margin-top: 0;
+    margin-bottom: 16px;
+    color: var(--color-danger);
+  }
+
+  p {
+    margin: 0 0 16px 0;
+    color: var(--color-text);
+  }
+
+  button {
+    padding: 8px 16px;
+    background: var(--color-danger);
+    color: white;
+    border: none;
+    border-radius: 4px;
+    cursor: pointer;
+
+    &:hover {
+      opacity: 0.9;
+    }
+  }
+}
