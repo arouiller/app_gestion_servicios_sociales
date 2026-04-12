@@ -2,6 +2,14 @@ import React, { useState } from 'react';
 import { useAuth } from '../../context/AuthContext';
 import DatosPersonales from './components/DatosPersonales/DatosPersonales';
 import MigrationsDashboard from './components/MigrationsDashboard/MigrationsDashboard';
+import GestionAfiliados from './components/GestionAfiliados/GestionAfiliados';
+import GestionGruposFamiliares from './components/GestionGruposFamiliares/GestionGruposFamiliares';
+import GestionPlanes from './components/GestionPlanes/GestionPlanes';
+import Cobradores from './components/Cobradores/Cobradores';
+import ObrasSociales from './components/ObrasSociales/ObrasSociales';
+import ServiciosAdicionales from './components/ServiciosAdicionales/ServiciosAdicionales';
+import TiposDeGrupo from './components/TiposDeGrupo/TiposDeGrupo';
+import TiposDePlan from './components/TiposDePlan/TiposDePlan';
 import './DashboardPage.scss';
 
 // ── Iconos simples (SVG inline) ──────────────────────────────────────────────
@@ -9,6 +17,7 @@ import './DashboardPage.scss';
 const ICONS = {
   'mi-cuenta': <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><circle cx="12" cy="8" r="4"/><path d="M4 20c0-4 3.6-7 8-7s8 3 8 7"/></svg>,
   'administracion': <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm0 18c-4.42 0-8-3.58-8-8s3.58-8 8-8 8 3.58 8 8-3.58 8-8 8z"/><path d="M12.5 7H11v6l5.25 3.15.75-1.23-4.5-2.67z"/></svg>,
+  'gestion': <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg>,
 };
 
 // ── Sidebar ──────────────────────────────────────────────────────────────────
@@ -22,6 +31,15 @@ function buildMenu(isAdmin) {
         { key: 'datos-personales', label: 'Datos Personales' },
       ],
     },
+    {
+      key: 'gestion',
+      label: 'Gestión',
+      children: [
+        { key: 'afiliados', label: 'Afiliados' },
+        { key: 'grupos-familiares', label: 'Grupos Familiares' },
+        { key: 'planes', label: 'Planes' },
+      ],
+    },
   ];
 
   if (isAdmin) {
@@ -30,6 +48,11 @@ function buildMenu(isAdmin) {
       label: 'Administración',
       children: [
         { key: 'migraciones-bd', label: 'Migraciones BD' },
+        { key: 'cobradores', label: 'Cobradores' },
+        { key: 'obras-sociales', label: 'Obras Sociales' },
+        { key: 'servicios-adicionales', label: 'Servicios Adicionales' },
+        { key: 'tipos-de-grupo', label: 'Tipos de Grupo' },
+        { key: 'tipos-de-plan', label: 'Tipos de Plan' },
       ],
     });
   }
@@ -178,7 +201,15 @@ function DashboardPage() {
 
         <main className="dashboard__content">
           {activeModule === 'datos-personales' && <DatosPersonales />}
+          {activeModule === 'afiliados' && <GestionAfiliados />}
+          {activeModule === 'grupos-familiares' && <GestionGruposFamiliares />}
+          {activeModule === 'planes' && <GestionPlanes />}
           {activeModule === 'migraciones-bd' && <MigrationsDashboard />}
+          {activeModule === 'cobradores' && <Cobradores />}
+          {activeModule === 'obras-sociales' && <ObrasSociales />}
+          {activeModule === 'servicios-adicionales' && <ServiciosAdicionales />}
+          {activeModule === 'tipos-de-grupo' && <TiposDeGrupo />}
+          {activeModule === 'tipos-de-plan' && <TiposDePlan />}
           {!activeModule && <Bienvenida user={user} />}
         </main>
       </div>
