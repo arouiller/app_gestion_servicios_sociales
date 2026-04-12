@@ -3,7 +3,17 @@
     "allow": [
       "WebFetch(domain:github.com)",
       "Read(//c/Program Files/**)",
-      "Read(//c/Users/alejandro.rouiller/AppData/Roaming/**)"
+      "Read(//c/Users/alejandro.rouiller/AppData/Roaming/**)",
+      "Bash(where wkhtmltopdf:*)",
+      "Bash(where chromium:*)",
+      "Bash(where google-chrome:*)",
+      "Read(//c/Program Files \\(x86\\)/Microsoft/Edge/Application/**)",
+      "Bash(node -e \"require\\('puppeteer'\\)\")",
+      "Bash(\"/c/Program Files/Google/Chrome/Application/chrome.exe\" --headless --disable-gpu --print-to-pdf=\"c:/Users/alejandro.rouiller/Documents/proyectos/App_gestion_servicios_sociales/presupuesto.pdf\" --print-to-pdf-no-header \"file:///c:/Users/alejandro.rouiller/Documents/proyectos/App_gestion_servicios_sociales/presupuesto.html\")",
+      "Bash(\"/c/Program Files/Google/Chrome/Application/chrome.exe\" --headless=new --disable-gpu --print-to-pdf=\"c:/Users/alejandro.rouiller/Documents/proyectos/App_gestion_servicios_sociales/presupuesto.pdf\" --print-to-pdf-no-header --no-pdf-header-footer \"file:///c:/Users/alejandro.rouiller/Documents/proyectos/App_gestion_servicios_sociales/presupuesto.html\")",
+      "Bash(git add:*)",
+      "Bash(git commit:*)",
+      "find"
     ]
   }
 }

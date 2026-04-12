@@ -1,0 +1,1398 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Presupuesto de Desarrollo — Entidades Lookup + Planes</title>
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    body {
+      font-family: 'Helvetica Neue', Helvetica, Arial, sans-serif;
+      font-size: 13px;
+      color: #1a1a1a;
+      background: #f4f4f4;
+      line-height: 1.5;
+    }
+
+    .page {
+      max-width: 960px;
+      margin: 40px auto;
+      background: #fff;
+      padding: 48px 56px;
+      border-top: 4px solid #1a3a5c;
+    }
+
+    /* Header */
+    .doc-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: flex-start;
+      padding-bottom: 28px;
+      border-bottom: 1px solid #d8d8d8;
+      margin-bottom: 36px;
+    }
+    .doc-header h1 {
+      font-size: 20px;
+      font-weight: 600;
+      color: #1a3a5c;
+      letter-spacing: -0.3px;
+    }
+    .doc-header .meta {
+      text-align: right;
+      color: #666;
+      font-size: 12px;
+      line-height: 1.8;
+    }
+    .doc-header .meta strong {
+      color: #1a1a1a;
+    }
+
+    /* Section */
+    .section {
+      margin-bottom: 40px;
+    }
+    .section-title {
+      font-size: 11px;
+      font-weight: 600;
+      text-transform: uppercase;
+      letter-spacing: 0.1em;
+      color: #1a3a5c;
+      border-bottom: 1px solid #d8d8d8;
+      padding-bottom: 6px;
+      margin-bottom: 16px;
+    }
+
+    /* Tables */
+    table {
+      width: 100%;
+      border-collapse: collapse;
+    }
+    th {
+      background: #f0f4f8;
+      font-size: 11px;
+      font-weight: 600;
+      text-transform: uppercase;
+      letter-spacing: 0.06em;
+      color: #444;
+      padding: 8px 12px;
+      text-align: left;
+      border-bottom: 2px solid #d0d8e0;
+    }
+    th.right { text-align: right; }
+    td {
+      padding: 8px 12px;
+      border-bottom: 1px solid #eaeaea;
+      vertical-align: top;
+      color: #1a1a1a;
+    }
+    td.right { text-align: right; font-variant-numeric: tabular-nums; }
+    tr:last-child td { border-bottom: none; }
+    tr:nth-child(even) td { background: #fafafa; }
+
+    .fp-badge {
+      display: inline-block;
+      background: #e8f0fe;
+      color: #1a3a5c;
+      font-size: 11px;
+      font-weight: 600;
+      padding: 2px 7px;
+      border-radius: 3px;
+    }
+    .complexity {
+      font-size: 11px;
+      color: #888;
+    }
+    .complexity.alta  { color: #c0392b; font-weight: 500; }
+    .complexity.media { color: #e67e22; font-weight: 500; }
+    .complexity.baja  { color: #27ae60; font-weight: 500; }
+
+    /* Subtotal rows */
+    tr.subtotal td {
+      background: #f0f4f8;
+      font-weight: 600;
+      border-top: 1px solid #c8d4e0;
+      color: #1a3a5c;
+    }
+
+    /* Summary section */
+    .summary-grid {
+      display: grid;
+      grid-template-columns: repeat(2, 1fr);
+      gap: 12px;
+      margin-bottom: 24px;
+    }
+    .summary-card {
+      border: 1px solid #d8d8d8;
+      padding: 14px 18px;
+    }
+    .summary-card .label {
+      font-size: 11px;
+      text-transform: uppercase;
+      letter-spacing: 0.07em;
+      color: #888;
+      margin-bottom: 4px;
+    }
+    .summary-card .value {
+      font-size: 22px;
+      font-weight: 600;
+      color: #1a3a5c;
+      font-variant-numeric: tabular-nums;
+    }
+    .summary-card .sub {
+      font-size: 11px;
+      color: #999;
+      margin-top: 2px;
+    }
+
+    /* Total box */
+    .total-box {
+      background: #1a3a5c;
+      color: #fff;
+      padding: 22px 28px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+    .total-box .total-label {
+      font-size: 13px;
+      font-weight: 600;
+      text-transform: uppercase;
+      letter-spacing: 0.1em;
+      opacity: 0.85;
+    }
+    .total-box .total-value {
+      font-size: 32px;
+      font-weight: 700;
+      font-variant-numeric: tabular-nums;
+    }
+    .total-box .total-sub {
+      font-size: 12px;
+      opacity: 0.65;
+      margin-top: 4px;
+    }
+
+    /* Assumptions */
+    .note-list {
+      list-style: none;
+      padding: 0;
+    }
+    .note-list li {
+      padding: 5px 0 5px 14px;
+      border-bottom: 1px solid #f0f0f0;
+      position: relative;
+      color: #444;
+    }
+    .note-list li::before {
+      content: '·';
+      position: absolute;
+      left: 0;
+      color: #1a3a5c;
+      font-weight: 700;
+    }
+    .note-list li:last-child { border-bottom: none; }
+
+    /* Architecture diagram */
+    .arch-diagram {
+      display: flex;
+      flex-direction: column;
+      gap: 0;
+    }
+    .arch-tier {
+      border: 1px solid #c8d4e0;
+      background: #fff;
+    }
+    .arch-tier-header {
+      background: #1a3a5c;
+      color: #fff;
+      font-size: 11px;
+      font-weight: 600;
+      text-transform: uppercase;
+      letter-spacing: 0.08em;
+      padding: 6px 14px;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+    .arch-tier-header .tech-tag {
+      font-size: 10px;
+      font-weight: 400;
+      opacity: 0.65;
+      letter-spacing: 0;
+      text-transform: none;
+    }
+    .arch-tier-body {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 0;
+    }
+    .arch-layer {
+      padding: 12px 16px;
+      border-right: 1px solid #e0e8f0;
+    }
+    .arch-layer:last-child { border-right: none; }
+    .arch-layer-title {
+      font-size: 10px;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 0.07em;
+      color: #1a3a5c;
+      margin-bottom: 7px;
+      padding-bottom: 5px;
+      border-bottom: 1px solid #e0e8f0;
+    }
+    .arch-layer ul {
+      list-style: none;
+      padding: 0;
+      margin: 0;
+    }
+    .arch-layer ul li {
+      font-size: 11px;
+      color: #444;
+      padding: 2px 0 2px 10px;
+      position: relative;
+    }
+    .arch-layer ul li::before {
+      content: '·';
+      position: absolute;
+      left: 0;
+      color: #1a3a5c;
+      font-weight: 700;
+    }
+    .arch-arrow {
+      text-align: center;
+      padding: 5px 0;
+      color: #8aabcc;
+      font-size: 11px;
+      letter-spacing: 0.05em;
+      border-left: 1px solid #c8d4e0;
+      border-right: 1px solid #c8d4e0;
+      background: #f7fafd;
+    }
+
+    /* Glossary */
+    .glossary-grid {
+      display: grid;
+      grid-template-columns: repeat(, 1fr);
+      gap: 0;
+      border: 1px solid #d8d8d8;
+    }
+    .glossary-item {
+      padding: 10px 14px;
+      border-bottom: 1px solid #e8e8e8;
+      border-right: 1px solid #e8e8e8;
+    }
+    .glossary-item:nth-child(3n) { border-right: none; }
+    .glossary-item:nth-last-child(-n+3) { border-bottom: none; }
+    .glossary-item .sigla {
+      font-size: 12px;
+      font-weight: 700;
+      color: #1a3a5c;
+      letter-spacing: 0.03em;
+    }
+    .glossary-item .expansion {
+      font-size: 11px;
+      color: #555;
+      margin-top: 1px;
+    }
+    .glossary-item .explicacion {
+      font-size: 11px;
+      color: #888;
+      margin-top: 3px;
+      line-height: 1.4;
+    }
+
+    /* Pricing */
+    .pricing-table {
+      width: 100%;
+      border-collapse: collapse;
+      margin-bottom: 16px;
+    }
+    .pricing-table td {
+      padding: 10px 16px;
+      border-bottom: 1px solid #eaeaea;
+      font-size: 13px;
+    }
+    .pricing-table tr:nth-child(even) td { background: #fafafa; }
+    .pricing-table tr:last-child td { border-bottom: none; }
+    .pricing-table .label-col { color: #444; }
+    .pricing-table .amount-col {
+      text-align: right;
+      font-variant-numeric: tabular-nums;
+      font-weight: 500;
+      color: #1a1a1a;
+    }
+    .pricing-table tr.discount td { color: #c0392b; }
+    .pricing-table tr.discount .amount-col { color: #c0392b; }
+    .pricing-final {
+      background: #1a3a5c;
+      color: #fff;
+      padding: 20px 24px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+    .pricing-final .pf-label {
+      font-size: 13px;
+      font-weight: 600;
+      text-transform: uppercase;
+      letter-spacing: 0.08em;
+      opacity: 0.85;
+    }
+    .pricing-final .pf-sub {
+      font-size: 11px;
+      opacity: 0.55;
+      margin-top: 3px;
+    }
+    .pricing-final .pf-amount {
+      font-size: 28px;
+      font-weight: 700;
+      font-variant-numeric: tabular-nums;
+      text-align: right;
+    }
+
+    @media print {
+      body { background: #fff; }
+      .page { margin: 0; padding: 32px 40px; border-top: 4px solid #1a3a5c; }
+    }
+  </style>
+</head>
+<body>
+<div class="page">
+
+  <!-- Header -->
+  <div class="doc-header">
+    <div>
+      <h1>Presupuesto de Desarrollo</h1>
+      <div style="font-size:13px; color:#555; margin-top:4px;">Entidades Lookup + Planes — Spec 2026-04-11</div>
+    </div>
+    <div class="meta">
+      <div><strong>Fecha</strong> 11 de abril de 2026</div>
+      <div><strong>Perfil</strong> Desarrollador Experto Full-Stack</div>
+      <div><strong>Metodología</strong> Puntos de Función (IFPUG simplificado)</div>
+    </div>
+  </div>
+
+  <!-- ────────────────────────────────────────────────────── -->
+  <!-- GLOSARIO DE SIGLAS                                    -->
+  <!-- ────────────────────────────────────────────────────── -->
+  <div class="section">
+    <div class="section-title">Glosario de siglas y términos técnicos</div>
+    <p style="font-size:12px; color:#555; margin-bottom:14px;">Las siglas que aparecen en este documento corresponden a estándares internacionales de estimación de software y a terminología habitual del desarrollo web. Se listan a continuación para facilitar la lectura.</p>
+    <div class="glossary-grid">
+
+      <div class="glossary-item">
+        <div class="sigla">PF: Punto de Función</div>
+        <div class="explicacion">Unidad de medida del tamaño funcional de un sistema de software. Cuantifica cuánto "hace" el sistema desde el punto de vista del usuario, independientemente de la tecnología utilizada.</div>
+      </div>
+
+      <div class="glossary-item">
+        <div class="sigla">IFPUG: International Function Point Users Group</div>
+        <div class="explicacion">Organismo internacional que define y mantiene el estándar de conteo de Puntos de Función. La metodología se usa mundialmente para estimar esfuerzo de desarrollo.</div>
+      </div>
+
+      <div class="glossary-item">
+        <div class="sigla">ILF: Internal Logical File (Archivo Lógico Interno)</div>
+        <div class="explicacion">En la metodología IFPUG, representa un conjunto de datos que el propio sistema crea y gestiona; en la práctica equivale a una tabla en la base de datos del proyecto.</div>
+      </div>
+
+      <div class="glossary-item">
+        <div class="sigla">EI: External Input (Entrada Externa)</div>
+        <div class="explicacion">Operación que recibe datos del usuario y los guarda o procesa: crear un registro, editarlo o eliminarlo. Cada formulario de alta o modificación es típicamente un EI.</div>
+      </div>
+
+      <div class="glossary-item">
+        <div class="sigla">EO: External Output (Salida Externa)</div>
+        <div class="explicacion">Pantalla o reporte que muestra información procesada o calculada, como un listado con totales, un recibo generado o una vista de impresión.</div>
+      </div>
+
+      <div class="glossary-item">
+        <div class="sigla">EQ: External Inquiry (Consulta Externa)</div>
+        <div class="explicacion">Operación de búsqueda o lectura de datos sin modificarlos, como un buscador de afiliados o la visualización del detalle de un plan.</div>
+      </div>
+
+      <div class="glossary-item">
+        <div class="sigla">API: Application Programming Interface</div>
+        <div class="explicacion">Conjunto de servicios que el servidor pone a disposición de la aplicación web. El frontend "habla" con el servidor exclusivamente a través de la API, usando los métodos HTTP (GET, POST, etc.).</div>
+      </div>
+
+      <div class="glossary-item">
+        <div class="sigla">CRUD: Create, Read, Update, Delete</div>
+        <div class="explicacion">Las cuatro operaciones básicas sobre cualquier conjunto de datos: Crear, Leer, Actualizar y Eliminar. Toda entidad del sistema (cobradores, planes, etc.) tiene su propio CRUD.</div>
+      </div>
+
+      <div class="glossary-item">
+        <div class="sigla">SQL: Structured Query Language</div>
+        <div class="explicacion">Lenguaje estándar para crear y consultar bases de datos relacionales (MySQL, PostgreSQL, etc.). Las migraciones del proyecto se escriben en SQL.</div>
+      </div>
+
+      <div class="glossary-item">
+        <div class="sigla">PK: Primary Key (Clave Primaria)</div>
+        <div class="explicacion">Campo que identifica de forma única cada registro en una tabla. Por ejemplo, el número de afiliado es la clave primaria de un plan.</div>
+      </div>
+
+      <div class="glossary-item">
+        <div class="sigla">FK: Foreign Key (Clave Foránea)</div>
+        <div class="explicacion">Campo en una tabla que referencia la clave primaria de otra tabla, estableciendo una relación entre ambas. Garantiza integridad: no se puede asociar un cobrador inexistente a un plan.</div>
+      </div>
+
+      <div class="glossary-item">
+        <div class="sigla">JWT: JSON Web Token</div>
+        <div class="explicacion">Token de seguridad cifrado que el servidor entrega al usuario al iniciar sesión. El navegador lo envía en cada petición para demostrar que el usuario está autenticado, sin necesidad de guardar contraseñas en el servidor.</div>
+      </div>
+
+      <div class="glossary-item">
+        <div class="sigla">HTTP: HyperText Transfer Protocol</div>
+        <div class="explicacion">Protocolo de comunicación entre el navegador y el servidor. Define métodos como GET (leer), POST (crear), PUT (reemplazar), PATCH (modificar parcialmente) y DELETE (eliminar).</div>
+      </div>
+
+      <div class="glossary-item">
+        <div class="sigla">CSS / SCSS: Cascading Style Sheets / Sassy CSS</div>
+        <div class="explicacion">CSS es el lenguaje que define el aspecto visual de las páginas web (colores, fuentes, espaciados). SCSS es una extensión de CSS que facilita su escritura mediante variables y anidamiento.</div>
+      </div>
+
+      <div class="glossary-item">
+        <div class="sigla">UI: User Interface (Interfaz de Usuario)</div>
+        <div class="explicacion">Todo lo que el usuario ve e interactúa en pantalla: botones, formularios, tablas, menús. El desarrollo de UI abarca tanto la lógica de interacción como los estilos visuales.</div>
+      </div>
+
+      <div class="glossary-item">
+        <div class="sigla">ENUM: Enumeration (Enumeración)</div>
+        <div class="explicacion">Tipo de campo cuyo valor solo puede ser uno de una lista cerrada de opciones predefinidas. Por ejemplo, el estado de un plan solo puede ser ACTIVO o SUSPENDIDO.</div>
+      </div>
+
+      <div class="glossary-item">
+        <div class="sigla">PDF: Portable Document Format</div>
+        <div class="explicacion">Formato de documento digital desarrollado por Adobe, ampliamente utilizado para impresión. Los recibos del sistema se generan en este formato para garantizar una presentación uniforme en cualquier dispositivo.</div>
+      </div>
+
+    </div>
+  </div>
+
+  <!-- ────────────────────────────────────────────────────── -->
+  <!-- REQUERIMIENTOS FUNCIONALES                            -->
+  <!-- ────────────────────────────────────────────────────── -->
+  <div class="section">
+    <div class="section-title">Requerimientos funcionales cubiertos</div>
+    <p style="font-size:12px; color:#555; margin-bottom:14px;">El presente presupuesto cubre el desarrollo de las siguientes funcionalidades, descriptas en términos del negocio.</p>
+
+    <table>
+      <thead>
+        <tr>
+          <th style="width:32px">#</th>
+          <th style="width:38%">Requerimiento</th>
+          <th>Descripción</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td>1</td>
+          <td>Gestión de Cobradores</td>
+          <td>Registrar, modificar y eliminar los cobradores que pueden ser asignados a los planes. El sistema impide eliminar un cobrador que tenga planes asociados.</td>
+        </tr>
+        <tr>
+          <td>2</td>
+          <td>Gestión de Tipos de Plan</td>
+          <td>Registrar, modificar y eliminar los tipos de plan disponibles en el sistema (ej. plan básico, plan familiar). El sistema impide eliminar un tipo en uso.</td>
+        </tr>
+        <tr>
+          <td>3</td>
+          <td>Gestión de Obras Sociales</td>
+          <td>Registrar, modificar y eliminar las obras sociales que pueden vincularse a los planes. El sistema impide eliminar una obra social que ya esté asignada.</td>
+        </tr>
+        <tr>
+          <td>4</td>
+          <td>Gestión de Servicios Adicionales</td>
+          <td>Registrar, modificar y eliminar los servicios opcionales que los integrantes de un plan pueden contratar. El sistema impide eliminar un servicio que esté en uso.</td>
+        </tr>
+        <tr>
+          <td>5</td>
+          <td>Gestión de Tipos de Grupo</td>
+          <td>Registrar, modificar y eliminar los tipos de grupo disponibles (ej. Individual, Grupo familiar, Titular y adherente).</td>
+        </tr>
+        <tr>
+          <td>6</td>
+          <td>Gestión de Planes</td>
+          <td>Registrar, editar y eliminar planes con todos sus datos: número de afiliado, cobrador, obra social, tipo de plan, tipo de grupo, domicilio, localidad, teléfonos, valor de cuota y estado (activo / suspendido).</td>
+        </tr>
+        <tr>
+          <td>7</td>
+          <td>Numeración automática de afiliado</td>
+          <td>Al crear un plan nuevo, el sistema puede sugerir automáticamente el próximo número de afiliado disponible, evitando errores de duplicación.</td>
+        </tr>
+        <tr>
+          <td>8</td>
+          <td>Gestión de Integrantes de un Plan</td>
+          <td>Agregar, editar y eliminar los integrantes de cada plan, con sus datos personales (apellido, nombre, documento, fecha de nacimiento, fecha de cobertura), su rol dentro del plan (titular o integrante) y los servicios adicionales que contrata.</td>
+        </tr>
+        <tr>
+          <td>9</td>
+          <td>Reutilización de personas existentes</td>
+          <td>Al agregar un integrante a un plan, el usuario puede buscar si esa persona ya está registrada en el sistema (por nombre o documento) y vincularla sin volver a cargar sus datos. Si no existe, se puede crear en el mismo paso.</td>
+        </tr>
+        <tr>
+          <td>10</td>
+          <td>Historial de cambios de cuota</td>
+          <td>Consultar, por plan, el registro completo de todas las modificaciones que tuvo el valor de la cuota a lo largo del tiempo, con fecha y valores anterior y nuevo.</td>
+        </tr>
+        <tr>
+          <td>11</td>
+          <td>Aumentos masivos de cuota</td>
+          <td>Aplicar un porcentaje de aumento a uno, varios o todos los planes al mismo tiempo. Antes de confirmar, el sistema muestra una previsualización con el valor actual y el nuevo valor de cada plan afectado.</td>
+        </tr>
+        <tr>
+          <td>12</td>
+          <td>Generación de recibos</td>
+          <td>Generar recibos para un período determinado (mes y año) para todos los planes activos o solo para los seleccionados. Si un recibo ya fue generado para ese período y plan, el sistema lo omite sin error.</td>
+        </tr>
+        <tr>
+          <td>13</td>
+          <td>Impresión de recibos</td>
+          <td>Imprimir los recibos generados en un formato estructurado y listo para entregar al afiliado, con los datos del plan, el titular, todos los integrantes y el monto de la cuota. Cada recibo ocupa una página individual.</td>
+        </tr>
+        <tr>
+          <td>14</td>
+          <td>Búsqueda de Afiliados</td>
+          <td>Buscar afiliados por nombre, apellido o número de documento. Al seleccionar uno, se consultan todos los planes en los que participa y se puede acceder al detalle completo de cada uno.</td>
+        </tr>
+        <tr>
+          <td>15</td>
+          <td>Listado general de Planes</td>
+          <td>Consultar y filtrar todos los planes del sistema por estado, cobrador, obra social o número de afiliado. Permite acceder al formulario completo de cualquier plan desde el listado.</td>
+        </tr>
+        <tr>
+          <td>16</td>
+          <td>Listado de Planes por Cobrador</td>
+          <td>Seleccionar un cobrador y ver todos los planes que tiene asignados, con sus datos principales. Permite acceder al formulario completo de cada plan.</td>
+        </tr>
+          <td>17</td>
+          <td>Interfaz adaptada a dispositivos móviles</td>
+          <td>La aplicación es completamente utilizable desde teléfonos y tabletas, con una navegación simplificada y formularios adaptados a pantallas pequeñas.</td>
+        </tr>
+        <tr>
+          <td>18</td>
+          <td>Mensajes de error comprensibles</td>
+          <td>Ante cualquier error (validación, registro duplicado, elemento en uso, falla de conexión), el sistema muestra un mensaje claro en lenguaje llano, con la opción de ver el detalle técnico para quien lo necesite.</td>
+        </tr>
+      </tbody>
+    </table>
+  </div>
+
+  <!-- ────────────────────────────────────────────────────── -->
+  <!-- DIAGRAMA DE ARQUITECTURA                              -->
+  <!-- ────────────────────────────────────────────────────── -->
+  <div class="section">
+    <div class="section-title">Arquitectura del sistema y ubicación de componentes</div>
+    <p style="font-size:12px; color:#555; margin-bottom:14px;">El sistema se divide en tres niveles independientes que se comunican en cascada. Cada nivel agrupa los componentes que serán desarrollados según el alcance de este presupuesto.</p>
+
+    <div class="arch-diagram">
+
+      <!-- Tier 1: Frontend -->
+      <div class="arch-tier">
+        <div class="arch-tier-header">
+          Navegador — Frontend
+          <span class="tech-tag">React · SCSS · Axios</span>
+        </div>
+        <div class="arch-tier-body">
+          <div class="arch-layer">
+            <div class="arch-layer-title">Páginas</div>
+            <ul>
+              <li>Mi Cuenta / Datos Personales</li>
+              <li>Maestros (5 sub-pantallas)</li>
+              <li>Planes / Gestión completa</li>
+              <li>Listados (3 sub-pantallas)</li>
+            </ul>
+          </div>
+          <div class="arch-layer">
+            <div class="arch-layer-title">Componentes compartidos</div>
+            <ul>
+              <li>LookupCRUD (tabla + modales)</li>
+              <li>ErrorDisplay</li>
+              <li>ThemeSwitcher</li>
+              <li>Popup de vinculación [A]</li>
+              <li>Vista de impresión (PDF)</li>
+            </ul>
+          </div>
+          <div class="arch-layer">
+            <div class="arch-layer-title">Servicios HTTP</div>
+            <ul>
+              <li>lookupService</li>
+              <li>planesService</li>
+              <li>personasService</li>
+              <li>recibosService</li>
+            </ul>
+          </div>
+        </div>
+      </div>
+
+      <div class="arch-arrow">↕ &nbsp; HTTP / API REST &nbsp; ↕</div>
+
+      <!-- Tier 2: Backend -->
+      <div class="arch-tier">
+        <div class="arch-tier-header">
+          Servidor — Backend
+          <span class="tech-tag">Node.js · Express · Sequelize</span>
+        </div>
+        <div class="arch-tier-body">
+          <div class="arch-layer">
+            <div class="arch-layer-title">Rutas</div>
+            <ul>
+              <li>/api/lookup/:entidad</li>
+              <li>/api/planes</li>
+              <li>/api/personas</li>
+              <li>/api/recibos</li>
+            </ul>
+          </div>
+          <div class="arch-layer">
+            <div class="arch-layer-title">Controladores</div>
+            <ul>
+              <li>lookupController (genérico)</li>
+              <li>planesController</li>
+              <li>personasController</li>
+              <li>recibosController</li>
+            </ul>
+          </div>
+          <div class="arch-layer">
+            <div class="arch-layer-title">Modelos</div>
+            <ul>
+              <li>5 modelos lookup</li>
+              <li>Persona · Plan</li>
+              <li>PlanIntegrante · IntegranteServicio</li>
+              <li>HistorialCuota</li>
+              <li>Recibo · ReciboIntegrante</li>
+            </ul>
+          </div>
+        </div>
+      </div>
+
+      <div class="arch-arrow">↕ &nbsp; Sequelize ORM &nbsp; ↕</div>
+
+      <!-- Tier 3: Database -->
+      <div class="arch-tier">
+        <div class="arch-tier-header">
+          Base de Datos
+          <span class="tech-tag">MySQL 8.0 · 12 tablas</span>
+        </div>
+        <div class="arch-tier-body">
+          <div class="arch-layer">
+            <div class="arch-layer-title">Lookup — 1.0.1</div>
+            <ul>
+              <li>cobradores</li>
+              <li>tipos_de_plan</li>
+              <li>obras_sociales</li>
+              <li>servicios_adicionales</li>
+              <li>tipos_de_grupo</li>
+            </ul>
+          </div>
+          <div class="arch-layer">
+            <div class="arch-layer-title">Planes — 1.0.2</div>
+            <ul>
+              <li>personas</li>
+              <li>planes</li>
+              <li>plan_integrantes</li>
+              <li>integrante_servicios</li>
+            </ul>
+          </div>
+          <div class="arch-layer">
+            <div class="arch-layer-title">Historial — 1.0.3</div>
+            <ul>
+              <li>historial_cuota</li>
+              <li>recibos</li>
+              <li>recibo_integrantes</li>
+            </ul>
+          </div>
+        </div>
+      </div>
+
+    </div><!-- /arch-diagram -->
+  </div>
+
+  <!-- ────────────────────────────────────────────────────── -->
+  <!-- SECCIÓN 1: MAPEO A PUNTOS DE FUNCIÓN                  -->
+  <!-- ────────────────────────────────────────────────────── -->
+  <div class="section">
+    <div class="section-title">1 · Mapeo de Componentes a Puntos de Función</div>
+
+    <!-- 1.1 Base de Datos -->
+    <p style="font-size:12px; font-weight:600; color:#444; margin-bottom:8px;">1.1 — Capa de Base de Datos</p>
+    <table style="margin-bottom:20px;">
+      <thead>
+        <tr>
+          <th style="width:36%">Componente</th>
+          <th>Descripción</th>
+          <th class="right" style="width:90px">Tipo ILF</th>
+          <th class="right" style="width:60px">PF</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td>Migración 1.0.1 — Tablas lookup</td>
+          <td>5 tablas simples (cobradores, tipos_de_plan, obras_sociales, servicios_adicionales, tipos_de_grupo) + seed de tipos_de_grupo<br><span class="complexity baja">Baja complejidad</span></td>
+          <td class="right">ILF × 5</td>
+          <td class="right">35</td>
+        </tr>
+        <tr>
+          <td>Migración 1.0.2 — Planes y personas</td>
+          <td>4 tablas con FKs, ENUMs, constraint de titular validado en backend, cascadas<br><span class="complexity media">Complejidad media-alta</span></td>
+          <td class="right">ILF × 4</td>
+          <td class="right">44</td>
+        </tr>
+        <tr>
+          <td>Migración 1.0.3 — Historial y recibos</td>
+          <td>3 tablas: historial_cuota (audit trail), recibos y recibo_integrantes (patrón snapshot con campos denormalizados)<br><span class="complexity media">Complejidad media</span></td>
+          <td class="right">ILF × 3</td>
+          <td class="right">30</td>
+        </tr>
+        <tr class="subtotal">
+          <td colspan="3">Subtotal — Base de Datos</td>
+          <td class="right">109</td>
+        </tr>
+      </tbody>
+    </table>
+
+    <!-- 1.2 Backend Models -->
+    <p style="font-size:12px; font-weight:600; color:#444; margin-bottom:8px;">1.2 — Backend: Modelos Sequelize</p>
+    <table style="margin-bottom:20px;">
+      <thead>
+        <tr>
+          <th>Componente</th>
+          <th>Descripción</th>
+          <th class="right" style="width:90px">Cantidad</th>
+          <th class="right" style="width:60px">PF</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td>Modelos lookup (×5)</td>
+          <td>Cobrador, TipoDePlan, ObraSocial, ServicioAdicional, TipoDeGrupo — sin asociaciones complejas<br><span class="complexity baja">Baja complejidad</span></td>
+          <td class="right">5</td>
+          <td class="right">15</td>
+        </tr>
+        <tr>
+          <td>Modelo Persona</td>
+          <td>Entidad con múltiples campos y tipos de documento ENUM<br><span class="complexity baja">Baja complejidad</span></td>
+          <td class="right">1</td>
+          <td class="right">4</td>
+        </tr>
+        <tr>
+          <td>Modelo Plan</td>
+          <td>Múltiples FKs a entidades lookup, asociaciones hasMany hacia integrantes e historial<br><span class="complexity media">Complejidad media</span></td>
+          <td class="right">1</td>
+          <td class="right">10</td>
+        </tr>
+        <tr>
+          <td>Modelo PlanIntegrante</td>
+          <td>Tabla de asociación con campos propios (credencial, rol ENUM)<br><span class="complexity baja">Baja complejidad</span></td>
+          <td class="right">1</td>
+          <td class="right">4</td>
+        </tr>
+        <tr>
+          <td>Modelos pivot/audit (×3)</td>
+          <td>IntegranteServicio, HistorialCuota, Recibo<br><span class="complexity baja">Baja complejidad</span></td>
+          <td class="right">3</td>
+          <td class="right">9</td>
+        </tr>
+        <tr>
+          <td>Modelo ReciboIntegrante</td>
+          <td>Snapshot de integrante en punto de emisión<br><span class="complexity baja">Baja complejidad</span></td>
+          <td class="right">1</td>
+          <td class="right">3</td>
+        </tr>
+        <tr class="subtotal">
+          <td colspan="3">Subtotal — Modelos</td>
+          <td class="right">45</td>
+        </tr>
+      </tbody>
+    </table>
+
+    <!-- 1.3 Backend API -->
+    <p style="font-size:12px; font-weight:600; color:#444; margin-bottom:8px;">1.3 — Backend: Capa API (Controllers + Routes)</p>
+    <table style="margin-bottom:20px;">
+      <thead>
+        <tr>
+          <th>Componente</th>
+          <th>Descripción</th>
+          <th class="right" style="width:90px">Tipo</th>
+          <th class="right" style="width:60px">PF</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td>lookupController — GET list (×5)</td>
+          <td>Listado ordenado por PK; routing dinámico por entidad<br><span class="complexity baja">Baja complejidad</span></td>
+          <td class="right">EQ × 5</td>
+          <td class="right">15</td>
+        </tr>
+        <tr>
+          <td>lookupController — POST create (×5)</td>
+          <td>Validación de campos, asignación automática de PK (MAX+1), control de unicidad<br><span class="complexity media">Complejidad media</span></td>
+          <td class="right">EI × 5</td>
+          <td class="right">20</td>
+        </tr>
+        <tr>
+          <td>lookupController — PUT update (×5)</td>
+          <td>Verificación de existencia, actualización de fecha<br><span class="complexity baja">Baja complejidad</span></td>
+          <td class="right">EI × 5</td>
+          <td class="right">15</td>
+        </tr>
+        <tr>
+          <td>lookupController — DELETE (×5)</td>
+          <td>Verificación de referencias (refsCheck) antes de eliminar; respuesta 409 si en uso<br><span class="complexity media">Complejidad media</span></td>
+          <td class="right">EI × 5</td>
+          <td class="right">20</td>
+        </tr>
+        <tr>
+          <td>personasController — GET search</td>
+          <td>Búsqueda LIKE en apellido, nombre y documento; máximo 10 resultados<br><span class="complexity baja">Baja complejidad</span></td>
+          <td class="right">EQ</td>
+          <td class="right">3</td>
+        </tr>
+        <tr>
+          <td>planesController — GET list</td>
+          <td>Filtros opcionales (estado, cobrador, os, persona_id), paginación, joins con lookup<br><span class="complexity media">Complejidad media</span></td>
+          <td class="right">EO</td>
+          <td class="right">7</td>
+        </tr>
+        <tr>
+          <td>planesController — GET by id</td>
+          <td>Detalle completo con integrantes, datos de persona, credencial, rol y servicios<br><span class="complexity media">Complejidad media</span></td>
+          <td class="right">EQ</td>
+          <td class="right">5</td>
+        </tr>
+        <tr>
+          <td>planesController — GET siguiente número</td>
+          <td>Cálculo MAX(CAST) + 1; requiere orden específico de registro de ruta<br><span class="complexity baja">Baja complejidad</span></td>
+          <td class="right">EQ</td>
+          <td class="right">3</td>
+        </tr>
+        <tr>
+          <td>planesController — POST create</td>
+          <td>Transacción: validación, creación condicional de personas, plan, integrantes y servicios; rollback completo<br><span class="complexity alta">Alta complejidad</span></td>
+          <td class="right">EI</td>
+          <td class="right">7</td>
+        </tr>
+        <tr>
+          <td>planesController — PUT update</td>
+          <td>Transacción: sync de integrantes (eliminar, actualizar, agregar), validación de titular único antes de commit<br><span class="complexity alta">Alta complejidad</span></td>
+          <td class="right">EI</td>
+          <td class="right">7</td>
+        </tr>
+        <tr>
+          <td>planesController — DELETE</td>
+          <td>Eliminación en cascada (gestionada por FK CASCADE)<br><span class="complexity baja">Baja complejidad</span></td>
+          <td class="right">EI</td>
+          <td class="right">3</td>
+        </tr>
+        <tr>
+          <td>planesController — GET historial</td>
+          <td>Listado de cambios de cuota para un plan<br><span class="complexity baja">Baja complejidad</span></td>
+          <td class="right">EQ</td>
+          <td class="right">3</td>
+        </tr>
+        <tr>
+          <td>planesController — PATCH aumento masivo</td>
+          <td>Transacción batch: cálculo de nuevos valores, actualización masiva, inserción de historial; acepta lista vacía = todos<br><span class="complexity alta">Alta complejidad</span></td>
+          <td class="right">EI</td>
+          <td class="right">7</td>
+        </tr>
+        <tr>
+          <td>recibosController — POST generar</td>
+          <td>Transacción: resolución de snapshots via joins, idempotencia por (plan, periodo), inserción de recibo + integrantes<br><span class="complexity alta">Alta complejidad</span></td>
+          <td class="right">EI</td>
+          <td class="right">7</td>
+        </tr>
+        <tr>
+          <td>recibosController — GET (lista + detalle)</td>
+          <td>Listado por período con integrantes; detalle por id<br><span class="complexity baja">Baja complejidad</span></td>
+          <td class="right">EQ × 2</td>
+          <td class="right">6</td>
+        </tr>
+        <tr>
+          <td>Routes + registro en index.js</td>
+          <td>4 archivos de rutas, montaje en express con orden crítico (rutas estáticas antes que parámetros)<br><span class="complexity baja">Baja complejidad</span></td>
+          <td class="right">—</td>
+          <td class="right">4</td>
+        </tr>
+        <tr class="subtotal">
+          <td colspan="3">Subtotal — API Backend</td>
+          <td class="right">132</td>
+        </tr>
+      </tbody>
+    </table>
+
+    <!-- 1.4 Frontend Services -->
+    <p style="font-size:12px; font-weight:600; color:#444; margin-bottom:8px;">1.4 — Frontend: Servicios HTTP</p>
+    <table style="margin-bottom:20px;">
+      <thead>
+        <tr>
+          <th>Componente</th>
+          <th>Descripción</th>
+          <th class="right" style="width:90px">Cantidad</th>
+          <th class="right" style="width:60px">PF</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td>lookupService.js</td>
+          <td>CRUD genérico parametrizado por endpoint<br><span class="complexity baja">Baja complejidad</span></td>
+          <td class="right">1</td>
+          <td class="right">3</td>
+        </tr>
+        <tr>
+          <td>planesService.js</td>
+          <td>Todos los endpoints de planes: list, get, create, update, delete, historial, siguiente número, aumento masivo<br><span class="complexity media">Complejidad media</span></td>
+          <td class="right">1</td>
+          <td class="right">5</td>
+        </tr>
+        <tr>
+          <td>personasService.js</td>
+          <td>Búsqueda de personas<br><span class="complexity baja">Baja complejidad</span></td>
+          <td class="right">1</td>
+          <td class="right">2</td>
+        </tr>
+        <tr>
+          <td>recibosService.js</td>
+          <td>Generación y consulta de recibos<br><span class="complexity baja">Baja complejidad</span></td>
+          <td class="right">1</td>
+          <td class="right">3</td>
+        </tr>
+        <tr class="subtotal">
+          <td colspan="3">Subtotal — Servicios</td>
+          <td class="right">13</td>
+        </tr>
+      </tbody>
+    </table>
+
+    <!-- 1.5 Frontend Componentes Compartidos -->
+    <p style="font-size:12px; font-weight:600; color:#444; margin-bottom:8px;">1.5 — Frontend: Componentes Compartidos</p>
+    <table style="margin-bottom:20px;">
+      <thead>
+        <tr>
+          <th>Componente</th>
+          <th>Descripción</th>
+          <th class="right" style="width:90px">Tipo</th>
+          <th class="right" style="width:60px">PF</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td>LookupCRUD</td>
+          <td>Componente genérico parametrizable: tabla con acciones, modal de creación/edición (campo PK especial, deshabilitado en edición), modal de confirmación de eliminación, manejo de error 409 + SCSS<br><span class="complexity media">Complejidad media</span></td>
+          <td class="right">EI + EQ</td>
+          <td class="right">15</td>
+        </tr>
+        <tr>
+          <td>ErrorDisplay</td>
+          <td>Componente de error con mensaje amigable + detalle colapsable + SCSS<br><span class="complexity baja">Baja complejidad</span></td>
+          <td class="right">EO</td>
+          <td class="right">4</td>
+        </tr>
+        <tr>
+          <td>ThemeSwitcher</td>
+          <td>Selector de 4 temas como círculos de color en topbar; aplica clase a body; persiste en localStorage y dispara actualización al backend<br><span class="complexity media">Complejidad media</span></td>
+          <td class="right">EI</td>
+          <td class="right">7</td>
+        </tr>
+        <tr class="subtotal">
+          <td colspan="3">Subtotal — Componentes Compartidos</td>
+          <td class="right">26</td>
+        </tr>
+      </tbody>
+    </table>
+
+    <!-- 1.6 Módulo Maestros -->
+    <p style="font-size:12px; font-weight:600; color:#444; margin-bottom:8px;">1.6 — Frontend: Módulo Maestros (5 wrappers)</p>
+    <table style="margin-bottom:20px;">
+      <thead>
+        <tr>
+          <th>Componente</th>
+          <th>Descripción</th>
+          <th class="right" style="width:90px">Cantidad</th>
+          <th class="right" style="width:60px">PF</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td>Cobradores, TiposDePlan, ObrasSociales, ServiciosAdicionales, TiposDeGrupo</td>
+          <td>Cada uno es un wrapper mínimo que instancia &lt;LookupCRUD&gt; con su configuración de campos y endpoint<br><span class="complexity baja">Baja complejidad</span></td>
+          <td class="right">5</td>
+          <td class="right">5</td>
+        </tr>
+        <tr class="subtotal">
+          <td colspan="3">Subtotal — Módulo Maestros</td>
+          <td class="right">5</td>
+        </tr>
+      </tbody>
+    </table>
+
+    <!-- 1.7 Módulo Planes -->
+    <p style="font-size:12px; font-weight:600; color:#444; margin-bottom:8px;">1.7 — Frontend: Módulo Planes (GestionPlanes)</p>
+    <table style="margin-bottom:20px;">
+      <thead>
+        <tr>
+          <th>Componente</th>
+          <th>Descripción</th>
+          <th class="right" style="width:90px">Tipo</th>
+          <th class="right" style="width:60px">PF</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td>Lista paginada con filtros</td>
+          <td>Tabla de planes con filtros (estado, cobrador, obra social), paginación, columna de checkboxes para selección masiva<br><span class="complexity media">Complejidad media</span></td>
+          <td class="right">EO</td>
+          <td class="right">7</td>
+        </tr>
+        <tr>
+          <td>Formulario modal — Tab 1: Datos del plan</td>
+          <td>Modal con 11 campos (dropdowns cargados desde lookup, botón "Sugerir" número, radio de estado)<br><span class="complexity media">Complejidad media</span></td>
+          <td class="right">EI</td>
+          <td class="right">7</td>
+        </tr>
+        <tr>
+          <td>Formulario modal — Tab 2: Integrantes</td>
+          <td>Tabla de integrantes con acciones (editar/eliminar por fila), validación de 1 titular exacto, botón "+ Agregar integrante"<br><span class="complexity media">Complejidad media</span></td>
+          <td class="right">EI</td>
+          <td class="right">7</td>
+        </tr>
+        <tr>
+          <td>Sub-modal: Búsqueda de personas</td>
+          <td>Input con debounce 300ms, resultados en tiempo real, bifurcación "Seleccionar existente" / "Nueva persona"<br><span class="complexity media">Complejidad media</span></td>
+          <td class="right">EQ</td>
+          <td class="right">7</td>
+        </tr>
+        <tr>
+          <td>Popup de vinculación [A]</td>
+          <td>Dos secciones: datos de persona (6 campos, edición global) + datos de vinculación (credencial, rol con aviso de titular, checkboxes de servicios adicionales)<br><span class="complexity alta">Alta complejidad</span></td>
+          <td class="right">EI</td>
+          <td class="right">10</td>
+        </tr>
+        <tr>
+          <td>Tab: Historial de cuota</td>
+          <td>Tabla de cambios de cuota (solo lectura); visible únicamente en modo edición<br><span class="complexity baja">Baja complejidad</span></td>
+          <td class="right">EQ</td>
+          <td class="right">3</td>
+        </tr>
+        <tr>
+          <td>Modal: Aumento masivo</td>
+          <td>Input de porcentaje, tabla de previsualización (plan, valor actual → valor nuevo), confirmación, llamada PATCH, recarga de lista<br><span class="complexity media">Complejidad media</span></td>
+          <td class="right">EI</td>
+          <td class="right">7</td>
+        </tr>
+        <tr>
+          <td>Modal: Generación de recibos</td>
+          <td>Selector período, opción todos/seleccionados, previsualización inline de recibos generados, botón Imprimir PDF<br><span class="complexity media">Complejidad media</span></td>
+          <td class="right">EI + EO</td>
+          <td class="right">7</td>
+        </tr>
+        <tr>
+          <td>Vista de impresión de recibos</td>
+          <td>Página separada con formato de recibo definido, page-break-after por recibo, estilos @media print<br><span class="complexity media">Complejidad media</span></td>
+          <td class="right">EO</td>
+          <td class="right">5</td>
+        </tr>
+        <tr class="subtotal">
+          <td colspan="3">Subtotal — Módulo Planes</td>
+          <td class="right">60</td>
+        </tr>
+      </tbody>
+    </table>
+
+    <!-- 1.8 Módulo Listados -->
+    <p style="font-size:12px; font-weight:600; color:#444; margin-bottom:8px;">1.8 — Frontend: Módulo Listados (3 pantallas)</p>
+    <table style="margin-bottom:20px;">
+      <thead>
+        <tr>
+          <th>Componente</th>
+          <th>Descripción</th>
+          <th class="right" style="width:90px">Tipo</th>
+          <th class="right" style="width:60px">PF</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td>Búsqueda de Afiliados</td>
+          <td>Búsqueda con debounce, tabla de personas, sub-modal de planes por persona, apertura del formulario completo de plan al seleccionar<br><span class="complexity media">Complejidad media</span></td>
+          <td class="right">EQ</td>
+          <td class="right">7</td>
+        </tr>
+        <tr>
+          <td>Listado de Planes</td>
+          <td>Filtros (estado, cobrador, obra social, número afiliado), lista read-only, apertura del formulario de plan<br><span class="complexity media">Complejidad media</span></td>
+          <td class="right">EQ</td>
+          <td class="right">5</td>
+        </tr>
+        <tr>
+          <td>Planes por Cobrador</td>
+          <td>Dropdown de cobrador, tabla de planes del cobrador seleccionado, apertura del formulario de plan<br><span class="complexity baja">Baja complejidad</span></td>
+          <td class="right">EQ</td>
+          <td class="right">4</td>
+        </tr>
+        <tr class="subtotal">
+          <td colspan="3">Subtotal — Módulo Listados</td>
+          <td class="right">16</td>
+        </tr>
+      </tbody>
+    </table>
+
+    <!-- 1.9 UI y Estilos -->
+    <p style="font-size:12px; font-weight:600; color:#444; margin-bottom:8px;">1.9 — UI / Estilos Globales y Layout</p>
+    <table style="margin-bottom:20px;">
+      <thead>
+        <tr>
+          <th>Componente</th>
+          <th>Descripción</th>
+          <th class="right" style="width:90px">Tipo</th>
+          <th class="right" style="width:60px">PF</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td>Sistema de temas (themes.scss)</td>
+          <td>4 temas con variables CSS (claro, oscuro, azul, verde); 10 variables mínimas por tema; carga sin flash desde localStorage<br><span class="complexity media">Complejidad media</span></td>
+          <td class="right">—</td>
+          <td class="right">7</td>
+        </tr>
+        <tr>
+          <td>variables.scss</td>
+          <td>Variables de diseño base (espaciados, tipografía, bordes)<br><span class="complexity baja">Baja complejidad</span></td>
+          <td class="right">—</td>
+          <td class="right">2</td>
+        </tr>
+        <tr>
+          <td>Layout Desktop — Sidebar + Topbar</td>
+          <td>Sidebar colapsable (220px ↔ 60px) con toggle «/», estado persistido en localStorage, topbar fija, modificación de DashboardPage con menú de 4 secciones<br><span class="complexity alta">Alta complejidad</span></td>
+          <td class="right">—</td>
+          <td class="right">10</td>
+        </tr>
+        <tr>
+          <td>Layout Móvil</td>
+          <td>Breakpoint ≤768px: bottom navigation bar fija (4 íconos), drawer/sheet para Maestros, tablas con columnas ocultas, formularios en una columna<br><span class="complexity alta">Alta complejidad</span></td>
+          <td class="right">—</td>
+          <td class="right">10</td>
+        </tr>
+        <tr>
+          <td>Estilos de Tablas y Formularios</td>
+          <td>Cebrado, scroll, grid auto-fit para formularios, clase .field--full, botones de acción responsivos<br><span class="complexity baja">Baja complejidad</span></td>
+          <td class="right">—</td>
+          <td class="right">4</td>
+        </tr>
+        <tr class="subtotal">
+          <td colspan="3">Subtotal — UI / Estilos</td>
+          <td class="right">33</td>
+        </tr>
+      </tbody>
+    </table>
+
+    <!-- Total PF -->
+    <table>
+      <tbody>
+        <tr style="background:#1a3a5c;">
+          <td style="color:#fff; font-weight:700; font-size:13px; padding:12px;">Total de Puntos de Función</td>
+          <td class="right" style="color:#fff; font-weight:700; font-size:18px; padding:12px; font-variant-numeric:tabular-nums;">439 PF</td>
+        </tr>
+      </tbody>
+    </table>
+  </div>
+
+  <!-- ────────────────────────────────────────────────────── -->
+  <!-- SECCIÓN 2: PF → HORAS                                -->
+  <!-- ────────────────────────────────────────────────────── -->
+  <div class="section">
+    <div class="section-title">2 · Conversión de Puntos de Función a Horas (Perfil Experto)</div>
+
+    <p style="font-size:12px; color:#555; margin-bottom:14px;">
+      Ratio base: <strong>1 PF = 0,20 h</strong> para desarrollador Experto Full-Stack (experiencia comprobada en Node.js/Express/Sequelize + React/SCSS).
+      El ratio incluye diseño, codificación y prueba unitaria básica de cada unidad. No incluye reuniones ni despliegue.
+    </p>
+
+    <table style="margin-bottom:20px;">
+      <thead>
+        <tr>
+          <th>Área</th>
+          <th class="right" style="width:80px">PF</th>
+          <th class="right" style="width:100px">Ratio h/PF</th>
+          <th class="right" style="width:80px">Horas</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td>Base de datos</td>
+          <td class="right">109</td>
+          <td class="right">0,12</td>
+          <td class="right">13</td>
+        </tr>
+        <tr>
+          <td>Backend — Modelos Sequelize</td>
+          <td class="right">45</td>
+          <td class="right">0,16</td>
+          <td class="right">7</td>
+        </tr>
+        <tr>
+          <td>Backend — API (controllers + routes)</td>
+          <td class="right">132</td>
+          <td class="right">0,17</td>
+          <td class="right">22</td>
+        </tr>
+        <tr>
+          <td>Frontend — Servicios HTTP</td>
+          <td class="right">13</td>
+          <td class="right">0,15</td>
+          <td class="right">2</td>
+        </tr>
+        <tr>
+          <td>Frontend — Componentes compartidos</td>
+          <td class="right">26</td>
+          <td class="right">0,31</td>
+          <td class="right">8</td>
+        </tr>
+        <tr>
+          <td>Frontend — Módulo Maestros (wrappers)</td>
+          <td class="right">5</td>
+          <td class="right">0,20</td>
+          <td class="right">1</td>
+        </tr>
+        <tr>
+          <td>Frontend — Módulo Planes</td>
+          <td class="right">60</td>
+          <td class="right">0,30</td>
+          <td class="right">18</td>
+        </tr>
+        <tr>
+          <td>Frontend — Módulo Listados</td>
+          <td class="right">16</td>
+          <td class="right">0,44</td>
+          <td class="right">7</td>
+        </tr>
+        <tr>
+          <td>UI / Estilos globales y layout</td>
+          <td class="right">33</td>
+          <td class="right">0,48</td>
+          <td class="right">16</td>
+        </tr>
+        <tr class="subtotal">
+          <td>Subtotal desarrollo</td>
+          <td class="right">439</td>
+          <td class="right">—</td>
+          <td class="right">94</td>
+        </tr>
+        <tr>
+          <td>Integración y pruebas funcionales</td>
+          <td class="right">—</td>
+          <td class="right">—</td>
+          <td class="right">9</td>
+        </tr>
+        <tr class="subtotal">
+          <td><strong>Total</strong></td>
+          <td class="right"><strong>439</strong></td>
+          <td class="right">—</td>
+          <td class="right"><strong>103</strong></td>
+        </tr>
+      </tbody>
+    </table>
+
+    <p style="font-size:11px; color:#888;">
+      <em>Nota sobre ratios:</em> Las migraciones SQL tienen el ratio más bajo (0,12 h/PF) por su naturaleza declarativa. Los componentes de frontend complejos con estado anidado (módulo Planes, layout responsive) tienen ratios superiores (0,30–0,48 h/PF) por la coordinación de estados, sub-modales y estilos responsivos.
+    </p>
+  </div>
+
+  <!-- ────────────────────────────────────────────────────── -->
+  <!-- SECCIÓN 3: RESUMEN EJECUTIVO                          -->
+  <!-- ────────────────────────────────────────────────────── -->
+  <div class="section">
+    <div class="section-title">3 · Resumen Ejecutivo</div>
+
+    <div class="summary-grid">
+      <div class="summary-card">
+        <div class="label">Horas de desarrollo</div>
+        <div class="value">94 h</div>
+        <div class="sub">Diseño · Codificación · Prueba unitaria</div>
+      </div>
+      <div class="summary-card">
+        <div class="label">Integración y pruebas funcionales</div>
+        <div class="value">9 h</div>
+        <div class="sub">Flujos end-to-end · Correcciones</div>
+      </div>
+      <div class="summary-card">
+        <div class="label">Total de Puntos de Función</div>
+        <div class="value">439 PF</div>
+        <div class="sub">IFPUG simplificado</div>
+      </div>
+      <div class="summary-card">
+        <div class="label">Ratio promedio</div>
+        <div class="value">0,24 h/PF</div>
+        <div class="sub">Perfil Experto Full-Stack</div>
+      </div>
+    </div>
+
+    <div class="total-box">
+      <div>
+        <div class="total-label">Total de horas estimadas</div>
+        <div class="total-sub">Perfil: Desarrollador Experto Full-Stack · Alcance completo del spec 2026-04-11</div>
+      </div>
+      <div style="text-align:right;">
+        <div class="total-value">103 h</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ────────────────────────────────────────────────────── -->
+  <!-- COTIZACIÓN                                            -->
+  <!-- ────────────────────────────────────────────────────── -->
+  <div class="section">
+    <div class="section-title">Cotización</div>
+
+    <table class="pricing-table">
+      <tbody>
+        <tr>
+          <td class="label-col">Total de horas estimadas</td>
+          <td class="amount-col">103 h</td>
+        </tr>
+        <tr>
+          <td class="label-col">Tarifa hora — Desarrollador Experto Full-Stack</td>
+          <td class="amount-col">$ 31.750</td>
+        </tr>
+        <tr>
+          <td class="label-col"><strong>Subtotal</strong></td>
+          <td class="amount-col"><strong>$ 3.270.250</strong></td>
+        </tr>
+        <!--<tr class="discount">
+          <td class="label-col">Descuento comercial (15 %)</td>
+          <td class="amount-col">− $ 502.125</td>
+        </tr>-->
+      </tbody>
+    </table>
+
+    <div class="pricing-final">
+      <div>
+        <div class="pf-label">Total a abonar</div>
+        <div class="pf-sub">IVA no incluido · Valores expresados en pesos argentinos (ARS)</div>
+      </div>
+      <div class="pf-amount">$ 3.270.250</div>
+    </div>
+  </div>
+
+  <!-- ────────────────────────────────────────────────────── -->
+  <!-- SUPUESTOS                                             -->
+  <!-- ────────────────────────────────────────────────────── -->
+  <div class="section">
+    <div class="section-title">El desarrollo ya incluye y no se contempla en el presupuesto</div>
+    <ul class="note-list">
+      <li>El scaffolding del proyecto (estructura de carpetas, configuración de Express, React y Sequelize base) ya existe y está operativo.</li>
+      <li>La autenticación JWT y el middleware <code>verifyToken</code> ya están implementados y no se incluyen en esta estimación.</li>
+      <li>Las tareas de despliegue en Hostinger, configuración de cPanel, y ajustes de producción están incluidas en esta estimación.</li>
+    </ul>
+  </div>
+
+  <div class="section">
+    <div class="section-title">El presupuesto no incluye</div>
+    <ul class="note-list">
+      <li>No se incluyen reuniones, revisiones de producto ni gestión de proyecto.</li>
+      <li>Las pruebas incluidas son pruebas funcionales manuales y correcciones menores; no se contempla una suite de tests automatizados completa.</li>
+      <li>El diseño visual (colores, fuentes, espaciados) sigue las especificaciones del documento; no se realizan iteraciones de diseño adicionales.</li>
+    </ul>
+  </div>
+
+</div>
+</body>
+</html>

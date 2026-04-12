@@ -32,6 +32,8 @@ app.get('/api/health', (req, res) => {
 
 // ── Rutas ─────────────────────────────────────────────────────────────────────
 app.use('/api/auth', require('./routes/auth'));
+app.use('/api/lookup', require('./routes/lookup'));
+app.use('/api/personas', require('./routes/personas'));
 app.use('/api/planes', require('./routes/planes'));
 
 // ── Frontend estático ─────────────────────────────────────────────────────────
