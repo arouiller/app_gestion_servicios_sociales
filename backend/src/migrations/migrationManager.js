@@ -73,6 +73,7 @@ async function ensureTable() {
       descripcion VARCHAR(255) NOT NULL,
       tipo ENUM('upgrade','downgrade') NOT NULL,
       estado ENUM('exitosa','fallida') NOT NULL,
+      duracion_ms INT DEFAULT NULL,
       fecha_ejecucion TIMESTAMP DEFAULT CURRENT_TIMESTAMP
     ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci
   `);
@@ -96,10 +97,10 @@ async function recordMigration(version, descripcion, tipo, estado = 'exitosa') {
   );
 }
 
-async function appendHistory(version, descripcion, tipo, estado) {
+async function appendHistory(version, descripcion, tipo, estado, durationMs = null) {
   await sequelize.query(
-    `INSERT INTO historial_migraciones (version, descripcion, tipo, estado) VALUES (?, ?, ?, ?)`,
-    { replacements: [version, descripcion, tipo, estado] }
+    `INSERT INTO historial_migraciones (version, descripcion, tipo, estado, duracion_ms) VALUES (?, ?, ?, ?, ?)`,
+    { replacements: [version, descripcion, tipo, estado, durationMs] }
   );
 }
 
@@ -234,6 +235,34 @@ async function getDbStats() {
 }
 
 /**
+ * Retorna una vista previa de la SQL que se ejecutará sin ejecutarla realmente.
+ */
+async function getPreview(version, direction) {
+  const folders = getMigrationFolders();
+  const folder = folders.find((f) => getVersion(f) === version);
+
+  if (!folder) {
+    throw new Error(`Versión ${version} no encontrada`);
+  }
+
+  const description = getDescription(folder);
+  const statements = readSQL(folder, direction);
+  const sql = statements.join(';\n') + ';';
+
+  const folderIndex = folders.indexOf(folder);
+  const nextFolder = direction === 'upgrade' ? folders[folderIndex + 1] : folders[folderIndex - 1];
+  const nextVersion = nextFolder ? getVersion(nextFolder) : null;
+
+  return {
+    version,
+    direction,
+    sql,
+    description,
+    nextVersion,
+  };
+}
+
+/**
  * Re-ejecuta la migración de la versión actual:
  * corre el downgrade y luego el upgrade de la misma versión en una sola transacción.
  * Retorna la versión reaplicada o null si no hay ninguna aplicada.
@@ -274,4 +303,65 @@ async function reapply() {
   }
 }
 
-module.exports = { list, upgrade, downgrade, reapply, ensureTable, getDbStats, getHistory };
+/**
+ * Ejecuta una migración (upgrade o downgrade) con tracking de duración.
+ */
+async function execute(direction) {
+  const startTime = Date.now();
+
+  try {
+    let result;
+    if (direction === 'upgrade') {
+      result = await upgrade();
+    } else if (direction === 'downgrade') {
+      result = await downgrade();
+    } else {
+      throw new Error(`Dirección inválida: ${direction}`);
+    }
+
+    if (!result) {
+      return {
+        success: false,
+        message:
+          direction === 'upgrade'
+            ? 'No hay migraciones pendientes'
+            : 'No hay migraciones aplicadas para revertir',
+      };
+    }
+
+    const durationMs = Date.now() - startTime;
+    const durationSec = (durationMs / 1000).toFixed(2);
+
+    const applied = await getAppliedMigrations();
+    const folders = getMigrationFolders();
+    const folder = folders.find((f) => getVersion(f) === result.version);
+
+    await sequelize.query(
+      `UPDATE historial_migraciones SET duracion_ms = ?
+       WHERE version = ? AND tipo = ?
+       ORDER BY fecha_ejecucion DESC LIMIT 1`,
+      { replacements: [durationMs, result.version, direction] }
+    );
+
+    return {
+      success: true,
+      version: result.version,
+      message: `${direction === 'upgrade' ? 'Upgrade' : 'Downgrade'} a ${result.version} exitoso`,
+      duration: parseFloat(durationSec),
+    };
+  } catch (err) {
+    throw err;
+  }
+}
+
+module.exports = {
+  list,
+  upgrade,
+  downgrade,
+  reapply,
+  ensureTable,
+  getDbStats,
+  getHistory,
+  getPreview,
+  execute,
+};
