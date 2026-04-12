@@ -35,7 +35,7 @@ app.use('/api/auth', require('./routes/auth'));
 app.use('/api/lookup', require('./routes/lookup'));
 app.use('/api/personas', require('./routes/personas'));
 app.use('/api/planes', require('./routes/planes'));
-app.use('/api/migrations', require('./routes/migrations'));
+// app.use('/api/migrations', require('./routes/migrations')); // TEMPORALMENTE DESHABILITADO PARA DIAGNOSTICAR
 
 // ── Frontend estático ─────────────────────────────────────────────────────────
 const frontendBuild = path.join(__dirname, '../frontend/build');
