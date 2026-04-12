@@ -1,0 +1,140 @@
+.versions-tab {
+  .versions-info {
+    background: #f9f9f9;
+    padding: 15px;
+    border-radius: 6px;
+    margin-bottom: 20px;
+
+    p {
+      margin: 8px 0;
+
+      .version-badge {
+        background: #007bff;
+        color: white;
+        padding: 4px 8px;
+        border-radius: 4px;
+        font-weight: bold;
+      }
+    }
+
+    .text-muted {
+      color: #666;
+      font-size: 0.9rem;
+    }
+  }
+
+  .versions-list {
+    display: grid;
+    gap: 15px;
+  }
+}
+
+.version-card {
+  border: 1px solid #ddd;
+  border-radius: 6px;
+  padding: 15px;
+  background: white;
+  transition: all 0.2s ease;
+
+  &.applied {
+    border-left: 4px solid #28a745;
+    background: #f8fff8;
+  }
+
+  &.pending {
+    border-left: 4px solid #ffc107;
+    background: #fffaf0;
+  }
+
+  &:hover {
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+  }
+
+  &__header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 10px;
+
+    .version-number {
+      font-weight: bold;
+      font-size: 1.1rem;
+      color: #333;
+    }
+
+    .status-badge {
+      padding: 4px 8px;
+      border-radius: 4px;
+      font-size: 0.85rem;
+      font-weight: 500;
+
+      &.applied {
+        background: #d4edda;
+        color: #155724;
+      }
+
+      &.pending {
+        background: #fff3cd;
+        color: #856404;
+      }
+    }
+  }
+}
+
+.version-description {
+  color: #555;
+  margin: 10px 0;
+  font-size: 0.95rem;
+}
+
+.version-actions {
+  display: flex;
+  gap: 10px;
+  margin-top: 12px;
+
+  .btn-sm {
+    padding: 6px 12px;
+    font-size: 0.85rem;
+  }
+
+  .text-sm {
+    font-size: 0.85rem;
+    color: #999;
+  }
+}
+
+.btn {
+  border: none;
+  border-radius: 4px;
+  cursor: pointer;
+  padding: 8px 16px;
+  font-weight: 500;
+  transition: all 0.2s ease;
+
+  &.btn-primary {
+    background: #007bff;
+    color: white;
+
+    &:hover:not(:disabled) {
+      background: #0056b3;
+    }
+  }
+
+  &.btn-warning {
+    background: #ffc107;
+    color: #333;
+
+    &:hover:not(:disabled) {
+      background: #e0a800;
+    }
+  }
+
+  &:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+  }
+}
+
+.text-muted {
+  color: #999;
+}
