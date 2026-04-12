@@ -56,7 +56,7 @@ function Sidebar({ activeModule, onSelect, sidebarOpen, setSidebarOpen, menu }) 
       )}
       <aside className={`dashboard__sidebar${sidebarOpen ? ' dashboard__sidebar--open' : ''}`}>
         <nav className="dashboard__nav">
-          {MENU.map((item) => (
+          {menu.map((item) => (
             <div key={item.key} className="dashboard__nav-group">
               {item.children ? (
                 <>
