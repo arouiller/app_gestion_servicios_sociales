@@ -73,6 +73,7 @@ async function ensureTable() {
       descripcion VARCHAR(255) NOT NULL,
       tipo ENUM('upgrade','downgrade') NOT NULL,
       estado ENUM('exitosa','fallida') NOT NULL,
+      duracion_ms INT DEFAULT NULL,
       fecha_ejecucion TIMESTAMP DEFAULT CURRENT_TIMESTAMP
     ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci
   `);
@@ -96,10 +97,10 @@ async function recordMigration(version, descripcion, tipo, estado = 'exitosa') {
   );
 }
 
-async function appendHistory(version, descripcion, tipo, estado) {
+async function appendHistory(version, descripcion, tipo, estado, durationMs = null) {
   await sequelize.query(
-    `INSERT INTO historial_migraciones (version, descripcion, tipo, estado) VALUES (?, ?, ?, ?)`,
-    { replacements: [version, descripcion, tipo, estado] }
+    `INSERT INTO historial_migraciones (version, descripcion, tipo, estado, duracion_ms) VALUES (?, ?, ?, ?, ?)`,
+    { replacements: [version, descripcion, tipo, estado, durationMs] }
   );
 }
 
@@ -274,4 +275,32 @@ async function reapply() {
   }
 }
 
-module.exports = { list, upgrade, downgrade, reapply, ensureTable, getDbStats, getHistory };
+/**
+ * Retorna una vista previa del SQL que se ejecutaría sin ejecutarla.
+ */
+async function getPreview(version, direction) {
+  const folders = getMigrationFolders();
+  const folder = folders.find((f) => getVersion(f) === version);
+
+  if (!folder) {
+    throw new Error(`Versión ${version} no encontrada`);
+  }
+
+  const description = getDescription(folder);
+  const statements = readSQL(folder, direction);
+  const sql = statements.join(';\n') + ';';
+
+  const folderIndex = folders.indexOf(folder);
+  const nextFolder = direction === 'upgrade' ? folders[folderIndex + 1] : folders[folderIndex - 1];
+  const nextVersion = nextFolder ? getVersion(nextFolder) : null;
+
+  return {
+    version,
+    direction,
+    sql,
+    description,
+    nextVersion,
+  };
+}
+
+module.exports = { list, upgrade, downgrade, reapply, ensureTable, getDbStats, getHistory, getPreview };
