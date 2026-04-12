@@ -7,6 +7,7 @@ import ObrasSociales from './components/ObrasSociales/ObrasSociales';
 import ServiciosAdicionales from './components/ServiciosAdicionales/ServiciosAdicionales';
 import TiposDeGrupo from './components/TiposDeGrupo/TiposDeGrupo';
 import GestionPlanes from './components/GestionPlanes/GestionPlanes';
+import MigrationsDashboard from './components/MigrationsDashboard/MigrationsDashboard';
 import './DashboardPage.scss';
 
 // ── Iconos simples (SVG inline) ──────────────────────────────────────────────
@@ -33,7 +34,7 @@ const MENU = [
   },
 ];
 
-function Sidebar({ activeModule, onSelect, sidebarOpen, setSidebarOpen }) {
+function Sidebar({ activeModule, onSelect, sidebarOpen, setSidebarOpen, user }) {
   const [expanded, setExpanded] = useState({ 'mi-cuenta': true });
 
   const toggleExpand = (key) => {
@@ -91,6 +92,19 @@ function Sidebar({ activeModule, onSelect, sidebarOpen, setSidebarOpen }) {
               )}
             </div>
           ))}
+          {user?.rol === 'admin' && (
+            <>
+              <div style={{ margin: '10px 0', height: '1px', background: '#ddd' }} />
+              <div className="dashboard__nav-group">
+                <button
+                  className={`dashboard__nav-section${activeModule === 'migraciones' ? ' dashboard__nav-section--active' : ''}`}
+                  onClick={() => handleSelect('migraciones')}
+                >
+                  <span className="dashboard__nav-label" style={{ paddingLeft: '8px' }}>⚙️ Migraciones BD</span>
+                </button>
+              </div>
+            </>
+          )}
         </nav>
       </aside>
     </>
@@ -129,10 +143,14 @@ function DashboardPage() {
     serviciosAdicionales: { label: 'Servicios Adicionales', component: ServiciosAdicionales },
     tiposGrupo: { label: 'Tipos de Grupo', component: TiposDeGrupo },
     planes: { label: 'Planes', component: GestionPlanes },
+    migraciones: { label: 'Migraciones BD', component: MigrationsDashboard },
   };
 
   const initials = `${user?.nombre?.[0] ?? ''}${user?.apellido?.[0] ?? ''}`.toUpperCase();
-  const ActiveComponent = modules[activeModule]?.component || DatosPersonales;
+
+  // Prevent non-admins from viewing migraciones
+  const safeActiveModule = (activeModule === 'migraciones' && user?.rol !== 'admin') ? 'datos-personales' : activeModule;
+  const ActiveComponent = modules[safeActiveModule]?.component || DatosPersonales;
 
   return (
     <div className="dashboard">
@@ -179,6 +197,7 @@ function DashboardPage() {
           onSelect={setActiveModule}
           sidebarOpen={sidebarOpen}
           setSidebarOpen={setSidebarOpen}
+          user={user}
         />
 
         <main className="dashboard__content">
