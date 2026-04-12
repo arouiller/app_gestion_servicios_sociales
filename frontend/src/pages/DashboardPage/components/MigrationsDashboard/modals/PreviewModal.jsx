@@ -67,8 +67,8 @@ function PreviewModal({
         </div>
       </div>
 
-      {isLoading && <div className="preview-modal__loading-overlay">
-        <div className="spinner"></div>
+      {isLoading && <div className="preview-modal__loading-overlay" role="status" aria-live="polite">
+        <div className="spinner" aria-hidden="true"></div>
         <p>Aplicando migración...</p>
       </div>}
     </div>

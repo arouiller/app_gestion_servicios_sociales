@@ -26,7 +26,6 @@ function VersionesTab({
           const isApplied = version.estado === 'aplicada';
           const isNext = idx === versions.findIndex(v => v.estado === 'pendiente');
           const appliedCount = versions.filter(v => v.estado === 'aplicada').length;
-          const lastAppliedIdx = versions.findIndex((v, i) => v.estado === 'aplicada' && i === versions.findIndex((x, j) => x.estado === 'aplicada' && j > (versions.findIndex((y) => y.estado === 'aplicada' && versions.slice(j + 1).every(z => z.estado !== 'aplicada')))));
           const canDowngrade = isApplied && idx === appliedCount - 1;
 
           return (
