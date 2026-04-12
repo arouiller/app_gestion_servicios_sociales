@@ -1,6 +1,12 @@
 import React, { useState } from 'react';
 import { useAuth } from '../../context/AuthContext';
 import DatosPersonales from './components/DatosPersonales/DatosPersonales';
+import Cobradores from './components/Cobradores/Cobradores';
+import TiposDePlan from './components/TiposDePlan/TiposDePlan';
+import ObrasSociales from './components/ObrasSociales/ObrasSociales';
+import ServiciosAdicionales from './components/ServiciosAdicionales/ServiciosAdicionales';
+import TiposDeGrupo from './components/TiposDeGrupo/TiposDeGrupo';
+import GestionPlanes from './components/GestionPlanes/GestionPlanes';
 import './DashboardPage.scss';
 
 // ── Iconos simples (SVG inline) ──────────────────────────────────────────────
@@ -17,6 +23,12 @@ const MENU = [
     label: 'Mi Cuenta',
     children: [
       { key: 'datos-personales', label: 'Datos Personales' },
+      { key: 'cobradores', label: 'Cobradores' },
+      { key: 'tiposPlan', label: 'Tipos de Plan' },
+      { key: 'obrasSociales', label: 'Obras Sociales' },
+      { key: 'serviciosAdicionales', label: 'Servicios Adicionales' },
+      { key: 'tiposGrupo', label: 'Tipos de Grupo' },
+      { key: 'planes', label: 'Planes' },
     ],
   },
 ];
@@ -106,10 +118,21 @@ function Bienvenida({ user }) {
 
 function DashboardPage() {
   const { user, logout } = useAuth();
-  const [activeModule, setActiveModule] = useState(null);
+  const [activeModule, setActiveModule] = useState('datos-personales');
   const [sidebarOpen, setSidebarOpen] = useState(false);
 
+  const modules = {
+    'datos-personales': { label: 'Datos Personales', component: DatosPersonales },
+    cobradores: { label: 'Cobradores', component: Cobradores },
+    tiposPlan: { label: 'Tipos de Plan', component: TiposDePlan },
+    obrasSociales: { label: 'Obras Sociales', component: ObrasSociales },
+    serviciosAdicionales: { label: 'Servicios Adicionales', component: ServiciosAdicionales },
+    tiposGrupo: { label: 'Tipos de Grupo', component: TiposDeGrupo },
+    planes: { label: 'Planes', component: GestionPlanes },
+  };
+
   const initials = `${user?.nombre?.[0] ?? ''}${user?.apellido?.[0] ?? ''}`.toUpperCase();
+  const ActiveComponent = modules[activeModule]?.component || DatosPersonales;
 
   return (
     <div className="dashboard">
@@ -159,10 +182,7 @@ function DashboardPage() {
         />
 
         <main className="dashboard__content">
-          {activeModule === 'datos-personales'
-            ? <DatosPersonales />
-            : <Bienvenida user={user} />
-          }
+          <ActiveComponent />
         </main>
       </div>
     </div>
