@@ -97,9 +97,43 @@ async function preview(req, res) {
   }
 }
 
+/**
+ * POST /api/migrations/execute/:version/:direction
+ * Ejecuta una migración específica (upgrade o downgrade)
+ * direction: "upgrade" | "downgrade"
+ */
+async function execute(req, res) {
+  try {
+    const { version, direction } = req.params;
+
+    // Validate direction
+    if (!['upgrade', 'downgrade'].includes(direction)) {
+      return res.status(400).json({
+        success: false,
+        message: 'Dirección inválida. Use "upgrade" o "downgrade"',
+      });
+    }
+
+    const result = await migrationManager.execute(version, direction);
+
+    res.json({
+      success: true,
+      message: `Migración ${direction} v${version} ejecutada exitosamente`,
+      data: result,
+    });
+  } catch (err) {
+    console.error('Error executing migration:', err);
+    res.status(400).json({
+      success: false,
+      message: err.message || 'Error al ejecutar migración',
+    });
+  }
+}
+
 module.exports = {
   list,
   history,
   stats,
   preview,
+  execute,
 };

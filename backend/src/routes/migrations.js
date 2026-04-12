@@ -13,4 +13,7 @@ router.get('/history', migrationsController.history);
 router.get('/stats', migrationsController.stats);
 router.get('/preview/:version/:direction', migrationsController.preview);
 
+// POST routes (write)
+router.post('/execute/:version/:direction', migrationsController.execute);
+
 module.exports = router;

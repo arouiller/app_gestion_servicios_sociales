@@ -303,4 +303,65 @@ async function getPreview(version, direction) {
   };
 }
 
-module.exports = { list, upgrade, downgrade, reapply, ensureTable, getDbStats, getHistory, getPreview };
+/**
+ * Ejecuta una migración específica en la dirección indicada.
+ * direction: "upgrade" | "downgrade"
+ */
+async function execute(version, direction) {
+  await ensureTable();
+
+  if (!['upgrade', 'downgrade'].includes(direction)) {
+    throw new Error('Dirección inválida. Use "upgrade" o "downgrade"');
+  }
+
+  const applied = await getAppliedMigrations();
+  const folders = getMigrationFolders();
+  const folder = folders.find((f) => getVersion(f) === version);
+
+  if (!folder) {
+    throw new Error(`Versión ${version} no encontrada`);
+  }
+
+  // Validation
+  if (direction === 'upgrade' && applied.includes(version)) {
+    throw new Error(`Versión ${version} ya está aplicada`);
+  }
+  if (direction === 'downgrade' && !applied.includes(version)) {
+    throw new Error(`Versión ${version} no está aplicada`);
+  }
+
+  const description = getDescription(folder);
+  const statements = readSQL(folder, direction);
+
+  const transaction = await sequelize.transaction();
+  const startTime = Date.now();
+
+  try {
+    for (const sql of statements) {
+      await sequelize.query(sql, { transaction });
+    }
+
+    if (direction === 'upgrade') {
+      await recordMigration(version, description, 'upgrade', 'exitosa');
+    } else {
+      await sequelize.query(
+        `UPDATE migraciones_bd SET estado = 'revertida', tipo = 'downgrade', fecha_ejecucion = CURRENT_TIMESTAMP WHERE version = ?`,
+        { replacements: [version], transaction }
+      );
+    }
+
+    await transaction.commit();
+
+    const durationMs = Date.now() - startTime;
+    await appendHistory(version, description, direction, 'exitosa', durationMs);
+
+    return { version, description, direction, durationMs };
+  } catch (err) {
+    await transaction.rollback();
+    const durationMs = Date.now() - startTime;
+    await appendHistory(version, description, direction, 'fallida', durationMs).catch(() => {});
+    throw err;
+  }
+}
+
+module.exports = { list, upgrade, downgrade, reapply, ensureTable, getDbStats, getHistory, getPreview, execute };
