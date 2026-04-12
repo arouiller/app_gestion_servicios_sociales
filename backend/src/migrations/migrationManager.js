@@ -15,23 +15,16 @@ const MIGRATIONS_DIR = path.join(__dirname, 'versions');
 // ── Utilidades ────────────────────────────────────────────────────────────────
 
 function getMigrationFolders() {
-  console.log('[Migrations] MIGRATIONS_DIR:', MIGRATIONS_DIR);
-  console.log('[Migrations] Directory exists:', fs.existsSync(MIGRATIONS_DIR));
-
   if (!fs.existsSync(MIGRATIONS_DIR)) {
-    console.warn('[Migrations] Creating migrations directory...');
     fs.mkdirSync(MIGRATIONS_DIR, { recursive: true });
     return [];
   }
 
-  const folders = fs
+  return fs
     .readdirSync(MIGRATIONS_DIR, { withFileTypes: true })
     .filter((e) => e.isDirectory() && e.name !== 'node_modules')
     .map((e) => e.name)
     .sort();
-
-  console.log('[Migrations] Found folders:', folders);
-  return folders;
 }
 
 function getVersion(folder) {
