@@ -6,7 +6,7 @@ function EstadisticasTab({ stats, onRefresh, isLoading }) {
     return <div className="tab-content">Cargando estadísticas...</div>;
   }
 
-  const { currentVersion, tables } = stats;
+  const { currentVersion, tables, timestamp } = stats;
 
   const totalRecords = tables.reduce((sum, table) => sum + table.registros, 0);
 
@@ -24,6 +24,11 @@ function EstadisticasTab({ stats, onRefresh, isLoading }) {
             {isLoading ? '⟳ Actualizando...' : '⟳ Refrescar'}
           </button>
         </div>
+        {timestamp && (
+          <p className="timestamp">
+            Última actualización: {new Date(timestamp).toLocaleString('es-AR')}
+          </p>
+        )}
       </div>
 
       <div className="tables-info">
