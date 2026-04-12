@@ -19,6 +19,14 @@ function MigrationsDashboard() {
     loadAllData();
   }, []);
 
+  // Auto-dismiss success message
+  useEffect(() => {
+    if (success) {
+      const timer = setTimeout(() => setSuccess(null), 4000);
+      return () => clearTimeout(timer);
+    }
+  }, [success]);
+
   const loadAllData = async () => {
     try {
       setError(null);
@@ -60,6 +68,31 @@ function MigrationsDashboard() {
     if (!isLoading) {
       setPreview(null);
       setError(null);
+    }
+  };
+
+  const handleConfirm = async (direction) => {
+    if (!preview) return;
+
+    try {
+      setError(null);
+      setIsLoading(true);
+
+      const result = await migrationsAPI.execute(preview.version, direction);
+
+      if (result.success) {
+        setSuccess(`Migración ${direction} v${preview.version} ejecutada exitosamente`);
+        setPreview(null);
+        // Reload data
+        await loadAllData();
+      } else {
+        setError(result.message || 'Error al ejecutar migración');
+      }
+    } catch (err) {
+      console.error('Error executing migration:', err);
+      setError(err.message || 'Error al ejecutar migración');
+    } finally {
+      setIsLoading(false);
     }
   };
 
@@ -183,7 +216,7 @@ function MigrationsDashboard() {
         <PreviewModal
           isOpen={preview.open !== false}
           preview={preview}
-          onConfirm={handleClosePreview}
+          onConfirm={handleConfirm}
           onCancel={handleClosePreview}
           isLoading={isLoading}
         />

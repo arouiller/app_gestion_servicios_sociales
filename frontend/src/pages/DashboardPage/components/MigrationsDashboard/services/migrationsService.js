@@ -39,6 +39,16 @@ export const migrationsAPI = {
     const response = await api.get(`${BASE_URL}/preview/${version}/${direction}`);
     return response.data;
   },
+
+  /**
+   * POST /api/migrations/execute/:version/:direction
+   * direction: "upgrade" | "downgrade"
+   * Returns: { success, message, data: { version, description, direction, durationMs } }
+   */
+  execute: async (version, direction) => {
+    const response = await api.post(`${BASE_URL}/execute/${version}/${direction}`);
+    return response.data;
+  },
 };
 
 export default migrationsAPI;
