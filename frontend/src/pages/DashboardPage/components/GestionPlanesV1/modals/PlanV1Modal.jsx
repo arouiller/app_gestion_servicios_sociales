@@ -1,6 +1,8 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import { usePlanV1Form } from '../hooks/usePlanV1Form';
 import planesV1Service from '../../../../../services/planesV1Service';
+import planesIntegrantesService from '../../../../../services/planesIntegrantesService';
+import lookupService from '../../../../../services/lookupService';
 import AfiladoSearchModal from './AfiladoSearchModal';
 import AfiladoEditModal from './AfiladoEditModal';
 import ReciboDetalleModal from './ReciboDetalleModal';
@@ -34,16 +36,16 @@ function PlanV1Modal({ mode, planData, onClose, onSave }) {
 
   const loadLookupData = async () => {
     try {
-      // TODO: Load from appropriate endpoints
-      // For now, this is a placeholder. Implement based on your lookup endpoints
+      const lookups = await lookupService.loadAllLookupsForPlans();
+      setLookupData(lookups);
+    } catch (err) {
+      console.error('Error loading lookups:', err);
       setLookupData({
         tiposDeplan: [],
         cobradores: [],
         obrasSociales: [],
         tiposDeGrupo: [],
       });
-    } catch (err) {
-      console.error('Error loading lookups:', err);
     }
   };
 
@@ -75,20 +77,53 @@ function PlanV1Modal({ mode, planData, onClose, onSave }) {
       };
 
       if (mode === 'crear') {
-        // Create plan + integrantes
+        // Create plan
         const response = await planesV1Service.crear(payload);
-        // TODO: Associate integrantes with new plan
-        // This might require a POST /integrantes endpoint or handled by plan creation
+
+        // Create integrantes for new plan
+        if (form.integrantes.length > 0) {
+          await planesIntegrantesService.crearMultiples(response.plan_numero, form.integrantes);
+        }
       } else {
         // Update plan
         await planesV1Service.actualizar(planData.plan_numero, payload);
-        // TODO: Update integrantes (add/remove/update roles)
+
+        // Sync integrantes (add/remove/update roles)
+        const existingIntegrantes = await planesIntegrantesService.obtenerPorPlan(planData.plan_numero);
+        const existingMap = new Map(existingIntegrantes.map((i) => [i.persona_id, i]));
+        const formMap = new Map(form.integrantes.map((i) => [i.persona_id, i]));
+
+        // Delete integrantes that were removed
+        for (const existing of existingIntegrantes) {
+          if (!formMap.has(existing.persona_id)) {
+            await planesIntegrantesService.eliminar(existing.id);
+          }
+        }
+
+        // Add new integrantes
+        for (const integrante of form.integrantes) {
+          if (!existingMap.has(integrante.persona_id)) {
+            await planesIntegrantesService.crear({
+              plan_numero: planData.plan_numero,
+              persona_id: integrante.persona_id,
+              rol: integrante.rol,
+            });
+          }
+        }
+
+        // Update roles for existing integrantes
+        for (const integrante of form.integrantes) {
+          const existing = existingMap.get(integrante.persona_id);
+          if (existing && existing.rol !== integrante.rol) {
+            await planesIntegrantesService.actualizar(existing.id, { rol: integrante.rol });
+          }
+        }
       }
 
       onSave();
     } catch (err) {
       console.error('Error saving plan:', err);
-      // TODO: Show error message
+      alert(`Error al guardar el plan: ${err.message}`);
     } finally {
       setLoading(false);
     }
