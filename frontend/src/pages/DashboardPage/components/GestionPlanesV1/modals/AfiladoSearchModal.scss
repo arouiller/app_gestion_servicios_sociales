@@ -52,15 +52,32 @@
 
   &__search {
     display: grid;
-    grid-template-columns: 1fr 1fr 1fr auto;
+    grid-template-columns: 1fr 1fr 1fr;
     gap: 0.5rem;
-    margin-bottom: 1rem;
+    margin-bottom: 1.5rem;
 
     input {
       padding: 0.5rem;
       border: 1px solid #ced4da;
       border-radius: 4px;
       font-size: 0.875rem;
+
+      &:focus {
+        outline: none;
+        border-color: #007bff;
+        box-shadow: 0 0 0 2px rgba(0, 123, 255, 0.25);
+      }
+    }
+  }
+
+  &__loading {
+    text-align: center;
+    padding: 2rem 1rem;
+    color: #6c757d;
+
+    p {
+      margin: 0;
+      font-style: italic;
     }
   }
 

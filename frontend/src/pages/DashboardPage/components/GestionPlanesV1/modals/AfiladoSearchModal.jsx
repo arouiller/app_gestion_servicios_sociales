@@ -1,11 +1,10 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import personasService from '../../../../../services/personasService';
 import './AfiladoSearchModal.scss';
 
 function AfiladoSearchModal({ onClose, onSelect }) {
   const [searchParams, setSearchParams] = useState({ nombre: '', apellido: '', numero_documento: '' });
   const [results, setResults] = useState([]);
-  const [searched, setSearched] = useState(false);
   const [loading, setLoading] = useState(false);
   const [showCreateForm, setShowCreateForm] = useState(false);
   const [newPersona, setNewPersona] = useState({
@@ -16,21 +15,41 @@ function AfiladoSearchModal({ onClose, onSelect }) {
     fecha_nacimiento: '',
     fecha_cobertura: '',
   });
+  const searchTimeoutRef = useRef(null);
 
-  const handleSearch = async () => {
-    setLoading(true);
-    try {
-      const data = await personasService.buscar(searchParams);
-      setResults(Array.isArray(data) ? data : []);
-      setSearched(true);
-    } catch (err) {
-      console.error('Error searching personas:', err);
-      setResults([]);
-      setSearched(true);
-    } finally {
-      setLoading(false);
+  // Búsqueda en vivo
+  useEffect(() => {
+    // Limpiar timeout anterior
+    if (searchTimeoutRef.current) {
+      clearTimeout(searchTimeoutRef.current);
     }
-  };
+
+    // Si no hay criterios de búsqueda, limpiar resultados
+    if (!searchParams.nombre && !searchParams.apellido && !searchParams.numero_documento) {
+      setResults([]);
+      return;
+    }
+
+    // Establecer timeout para debounce
+    setLoading(true);
+    searchTimeoutRef.current = setTimeout(async () => {
+      try {
+        const data = await personasService.buscar(searchParams);
+        setResults(Array.isArray(data) ? data : []);
+      } catch (err) {
+        console.error('Error searching personas:', err);
+        setResults([]);
+      } finally {
+        setLoading(false);
+      }
+    }, 300); // Debounce de 300ms
+
+    return () => {
+      if (searchTimeoutRef.current) {
+        clearTimeout(searchTimeoutRef.current);
+      }
+    };
+  }, [searchParams]);
 
   const handleSelect = (persona) => {
     onSelect(persona);
@@ -79,14 +98,16 @@ function AfiladoSearchModal({ onClose, onSelect }) {
                 value={searchParams.numero_documento}
                 onChange={(e) => setSearchParams({ ...searchParams, numero_documento: e.target.value })}
               />
-              <button className="afiliado-search-modal__btn" onClick={handleSearch} disabled={loading}>
-                {loading ? 'Buscando...' : 'Buscar'}
-              </button>
             </div>
 
-            {searched && (
+            {/* Mostrar resultados si hay criterios de búsqueda */}
+            {(searchParams.nombre || searchParams.apellido || searchParams.numero_documento) && (
               <>
-                {results.length === 0 ? (
+                {loading ? (
+                  <div className="afiliado-search-modal__loading">
+                    <p>Buscando...</p>
+                  </div>
+                ) : results.length === 0 ? (
                   <div className="afiliado-search-modal__empty">
                     <p>No encontramos resultados.</p>
                     <button
@@ -97,41 +118,41 @@ function AfiladoSearchModal({ onClose, onSelect }) {
                     </button>
                   </div>
                 ) : (
-                  <table className="afiliado-search-modal__resultados">
-                    <thead>
-                      <tr>
-                        <th>Nombre</th>
-                        <th>Apellido</th>
-                        <th>DNI</th>
-                        <th>Acción</th>
-                      </tr>
-                    </thead>
-                    <tbody>
-                      {results.map((p) => (
-                        <tr key={p.id}>
-                          <td>{p.nombre}</td>
-                          <td>{p.apellido}</td>
-                          <td>{p.numero_documento}</td>
-                          <td>
-                            <button
-                              className="afiliado-search-modal__btn-select"
-                              onClick={() => handleSelect(p)}
-                            >
-                              Seleccionar
-                            </button>
-                          </td>
+                  <>
+                    <table className="afiliado-search-modal__resultados">
+                      <thead>
+                        <tr>
+                          <th>Nombre</th>
+                          <th>Apellido</th>
+                          <th>DNI</th>
+                          <th>Acción</th>
                         </tr>
-                      ))}
-                    </tbody>
-                  </table>
-                )}
-                {results.length > 0 && (
-                  <button
-                    className="afiliado-search-modal__btn afiliado-search-modal__btn--secondary"
-                    onClick={() => setShowCreateForm(true)}
-                  >
-                    + Crear nuevo afiliado
-                  </button>
+                      </thead>
+                      <tbody>
+                        {results.map((p) => (
+                          <tr key={p.id}>
+                            <td>{p.nombre}</td>
+                            <td>{p.apellido}</td>
+                            <td>{p.numero_documento}</td>
+                            <td>
+                              <button
+                                className="afiliado-search-modal__btn-select"
+                                onClick={() => handleSelect(p)}
+                              >
+                                Seleccionar
+                              </button>
+                            </td>
+                          </tr>
+                        ))}
+                      </tbody>
+                    </table>
+                    <button
+                      className="afiliado-search-modal__btn afiliado-search-modal__btn--secondary"
+                      onClick={() => setShowCreateForm(true)}
+                    >
+                      + Crear nuevo afiliado
+                    </button>
+                  </>
                 )}
               </>
             )}
