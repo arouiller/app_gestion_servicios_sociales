@@ -58,6 +58,5 @@ CREATE TABLE IF NOT EXISTS historial_grupo_familiar (
   notas VARCHAR(255),
   fecha DATETIME DEFAULT CURRENT_TIMESTAMP,
   CONSTRAINT fk_historial_grupo FOREIGN KEY (grupo_id) REFERENCES grupos_familiares(id) ON DELETE CASCADE,
-  CONSTRAINT fk_historial_afiliado FOREIGN KEY (afiliado_id) REFERENCES afiliados(id) ON DELETE CASCADE,
-  CONSTRAINT fk_historial_usuario FOREIGN KEY (usuario_id) REFERENCES usuarios(id) ON DELETE SET NULL
+  CONSTRAINT fk_historial_afiliado FOREIGN KEY (afiliado_id) REFERENCES afiliados(id) ON DELETE CASCADE
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
