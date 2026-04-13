@@ -34,6 +34,9 @@ app.get('/api/health', (req, res) => {
 app.use('/api/auth', require('./routes/auth'));
 app.use('/api/migrations', require('./routes/migrations'));
 
+// Lookup (compartida por todas las versiones)
+app.use('/api/lookup', require('./routes/lookup'));
+
 // 1.0.x routes (refactor completado)
 app.use('/api/personas', require('./routes/personas'));
 app.use('/api/planes-v1', require('./routes/v1.0-planes'));
