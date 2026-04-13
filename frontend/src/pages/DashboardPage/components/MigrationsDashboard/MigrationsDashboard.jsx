@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import ActionButton from '../../../../components/ActionButton/ActionButton';
 import PreviewModal from './modals/PreviewModal';
 import migrationsAPI from './services/migrationsService';
 import './styles/MigrationsDashboard.scss';
@@ -138,37 +139,49 @@ function MigrationsDashboard() {
 
         <div className="tabs-content">
           {activeTab === 'versiones' && (
-            <div className="tab-content">
-              <div className="versions-list">
-                {versions.length === 0 ? (
-                  <p>No hay versiones disponibles</p>
-                ) : (
-                  versions.map((version) => (
-                    <div key={version.version} className="version-card">
-                      <div className="version-card__header">
-                        <span className="version-number">{version.version}</span>
-                        <span
-                          className={`status-badge ${
-                            version.estado === 'aplicada' ? 'applied' : 'pending'
-                          }`}
-                        >
-                          {version.estado === 'aplicada' ? '✓ Aplicada' : '○ Pendiente'}
-                        </span>
-                      </div>
-                      <p className="version-description">{version.descripcion}</p>
-                      {version.estado === 'pendiente' && (
-                        <button
-                          className="btn btn-primary btn-sm"
-                          onClick={() => handleUpgrade(version.version)}
-                          disabled={isLoading}
-                        >
-                          ↑ Upgrade
-                        </button>
-                      )}
-                    </div>
-                  ))
-                )}
-              </div>
+            <div className="migrations-dashboard__content">
+              <h3>Versiones Disponibles</h3>
+              {versions.length === 0 ? (
+                <p className="migrations-dashboard__empty">No hay versiones disponibles</p>
+              ) : (
+                <table className="migrations-dashboard__versions-table">
+                  <thead>
+                    <tr>
+                      <th>Versión</th>
+                      <th>Estado</th>
+                      <th>Acciones</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {versions.map((v) => (
+                      <tr key={v.version}>
+                        <td className="migrations-dashboard__version-number">v{v.version}</td>
+                        <td className="migrations-dashboard__version-status">
+                          {currentVersion === v.version ? (
+                            <span className="migrations-dashboard__current">Actual</span>
+                          ) : currentVersion > v.version ? (
+                            <span className="migrations-dashboard__previous">Anterior</span>
+                          ) : (
+                            <span className="migrations-dashboard__available">Disponible</span>
+                          )}
+                        </td>
+                        <td className="migrations-dashboard__version-action">
+                          {currentVersion < v.version && (
+                            <ActionButton
+                              variant="primary"
+                              size="small"
+                              onClick={() => handleUpgrade(v.version)}
+                              disabled={isLoading}
+                            >
+                              Actualizar
+                            </ActionButton>
+                          )}
+                        </td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              )}
             </div>
           )}
 
