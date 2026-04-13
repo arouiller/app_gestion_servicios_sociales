@@ -2,7 +2,12 @@ import React, { useCallback, useEffect, useState } from 'react';
 import { useAuth } from '../../../../context/AuthContext';
 import planesV1Service from '../../../../services/planesV1Service';
 import PlanV1Modal from './modals/PlanV1Modal';
+import SearchContainer from '../../../../components/SearchContainer/SearchContainer';
+import ActionButton from '../../../../components/ActionButton/ActionButton';
+import StatusBadge from '../../../../components/StatusBadge/StatusBadge';
 import './GestionPlanesV1.scss';
+
+const ITEMS_PER_PAGE = 20;
 
 function GestionPlanesV1() {
   console.log('[GestionPlanesV1] Mounting component');
@@ -107,25 +112,27 @@ function GestionPlanesV1() {
   console.log('[GestionPlanesV1] Rendering component. Planes count:', planes.length, 'Error:', error);
 
   // Filtrar planes por búsqueda
-  const planesFiltered = planes.filter(plan => {
-    const searchLower = searchText.toLowerCase();
-    return (
-      plan.numero_afiliado?.toLowerCase().includes(searchLower) ||
-      plan.TipoDePlan?.tipo_plan_nombre?.toLowerCase().includes(searchLower) ||
-      plan.Cobrador?.cobrador_apellido?.toLowerCase().includes(searchLower) ||
-      plan.Cobrador?.cobrador_nombre?.toLowerCase().includes(searchLower) ||
-      plan.ObraSocial?.os_nombre?.toLowerCase().includes(searchLower)
-    );
-  });
+  const planesFiltered = planes
+    .filter(plan => {
+      const searchLower = searchText.toLowerCase();
+      return (
+        plan.numero_afiliado?.toLowerCase().includes(searchLower) ||
+        plan.TipoDePlan?.tipo_plan_nombre?.toLowerCase().includes(searchLower) ||
+        plan.Cobrador?.cobrador_apellido?.toLowerCase().includes(searchLower) ||
+        plan.Cobrador?.cobrador_nombre?.toLowerCase().includes(searchLower) ||
+        plan.ObraSocial?.os_nombre?.toLowerCase().includes(searchLower)
+      );
+    })
+    .slice(0, ITEMS_PER_PAGE);
 
   return (
     <div className="gestion-planes-v1">
       <div className="gestion-planes-v1__header">
         <h2 className="gestion-planes-v1__title">Planes de Servicio v1.0</h2>
         {isAdmin && (
-          <button className="gestion-planes-v1__btn gestion-planes-v1__btn--primary" onClick={handleCrearPlan}>
-            + Nuevo Plan
-          </button>
+          <ActionButton variant="primary" icon="+" onClick={handleCrearPlan}>
+            Nuevo Plan
+          </ActionButton>
         )}
       </div>
 
@@ -133,14 +140,13 @@ function GestionPlanesV1() {
       {success && <div className="gestion-planes-v1__alert gestion-planes-v1__alert--success">{success}</div>}
 
       {planes.length > 0 && (
-        <div className="gestion-planes-v1__search">
-          <input
-            type="text"
-            placeholder="Buscar por número de afiliado, tipo de plan, cobrador u obra social..."
-            value={searchText}
-            onChange={(e) => setSearchText(e.target.value)}
-          />
-        </div>
+        <SearchContainer
+          placeholder="Buscar por número de afiliado, tipo de plan, cobrador u obra social..."
+          value={searchText}
+          onChange={setSearchText}
+          count={planesFiltered.length}
+          maxItems={ITEMS_PER_PAGE}
+        />
       )}
 
       {planes.length === 0 ? (
@@ -168,19 +174,24 @@ function GestionPlanesV1() {
                   <td>{plan.Cobrador?.cobrador_apellido}, {plan.Cobrador?.cobrador_nombre}</td>
                   <td>{plan.ObraSocial?.os_nombre || '—'}</td>
                   <td>
-                    <span className={`gestion-planes-v1__estado gestion-planes-v1__estado--${plan.estado.toLowerCase()}`}>
-                      {plan.estado}
-                    </span>
+                    <StatusBadge status={plan.estado} />
                   </td>
                   {isAdmin && (
                     <td className="gestion-planes-v1__tabla-acciones">
-                      <button className="gestion-planes-v1__btn-icon" onClick={() => handleEditarPlan(plan)}>
-                        Editar
-                      </button>
+                      <ActionButton
+                        variant="icon"
+                        icon="✎"
+                        onClick={() => handleEditarPlan(plan)}
+                        title="Editar"
+                      />
                       {plan.estado !== 'SUSPENDIDO' && (
-                        <button className="gestion-planes-v1__btn-icon gestion-planes-v1__btn-icon--danger" onClick={() => handleSuspenderPlan(plan)}>
-                          Suspender
-                        </button>
+                        <ActionButton
+                          variant="icon"
+                          icon="🗑"
+                          onClick={() => handleSuspenderPlan(plan)}
+                          title="Suspender"
+                          className="action-button--danger"
+                        />
                       )}
                     </td>
                   )}

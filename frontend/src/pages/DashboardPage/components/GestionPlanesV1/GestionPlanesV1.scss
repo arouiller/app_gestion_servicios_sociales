@@ -174,3 +174,7 @@
     }
   }
 }
+
+td:has(.status-badge--suspendido) {
+  background-color: #fff5f7;
+}
