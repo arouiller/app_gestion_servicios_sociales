@@ -22,7 +22,7 @@ function IntegranteServiciosModal({ planIntegranteId, onClose }) {
 
       // Load services for this integrante
       const asignados = await integranteServiciosService.obtenerServiciosIntegrante(planIntegranteId);
-      setSelectedServicios(asignados.map(s => s.servicio_numero) || []);
+      setSelectedServicios(asignados.map(s => s.servicio_adicional_numero) || []);
     } catch (err) {
       console.error('Error loading services:', err);
       setError('Error al cargar los servicios');
@@ -44,7 +44,7 @@ function IntegranteServiciosModal({ planIntegranteId, onClose }) {
     try {
       // Get current services
       const currentServicios = await integranteServiciosService.obtenerServiciosIntegrante(planIntegranteId);
-      const currentNumbers = currentServicios.map(s => s.servicio_numero);
+      const currentNumbers = currentServicios.map(s => s.servicio_adicional_numero);
 
       // Delete removed services
       for (const servicioNum of currentNumbers) {
@@ -88,14 +88,14 @@ function IntegranteServiciosModal({ planIntegranteId, onClose }) {
           ) : (
             <div className="integrante-servicios-modal__servicios-list">
               {servicios.map((servicio) => (
-                <label key={servicio.servicio_numero} className="integrante-servicios-modal__servicio-item">
+                <label key={servicio.servicio_adicional_numero} className="integrante-servicios-modal__servicio-item">
                   <input
                     type="checkbox"
-                    checked={selectedServicios.includes(servicio.servicio_numero)}
-                    onChange={(e) => handleServiceChange(servicio.servicio_numero, e.target.checked)}
+                    checked={selectedServicios.includes(servicio.servicio_adicional_numero)}
+                    onChange={(e) => handleServiceChange(servicio.servicio_adicional_numero, e.target.checked)}
                     disabled={saving}
                   />
-                  <span>{servicio.servicio_nombre}</span>
+                  <span>{servicio.servicio_adicional_nombre}</span>
                 </label>
               ))}
             </div>
