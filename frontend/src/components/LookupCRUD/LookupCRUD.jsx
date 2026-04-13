@@ -3,7 +3,7 @@ import lookupService from '../../services/lookupService';
 import ErrorDisplay from '../ErrorDisplay/ErrorDisplay';
 import './LookupCRUD.scss';
 
-const LookupCRUD = ({ titulo, endpoint, campos }) => {
+const LookupCRUD = ({ titulo, singularName, endpoint, campos }) => {
   const [registros, setRegistros] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
@@ -129,7 +129,7 @@ const LookupCRUD = ({ titulo, endpoint, campos }) => {
       {showForm && (
         <div className="modal-overlay" onClick={handleCloseForm}>
           <form className="modal-form" onClick={(e) => e.stopPropagation()} onSubmit={handleSave}>
-            <h3>{editingId ? 'Editar' : 'Crear'} {titulo.slice(0, -1)}</h3>
+            <h3>{editingId ? 'Editando' : 'Nuevo'} {singularName || titulo}</h3>
             {campos.map(campo => (
               <div key={campo.name} className="form-group">
                 <label>{campo.label}</label>

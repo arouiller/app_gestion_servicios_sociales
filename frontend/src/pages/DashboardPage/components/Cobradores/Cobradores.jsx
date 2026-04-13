@@ -5,6 +5,7 @@ const Cobradores = () => {
   return (
     <LookupCRUD
       titulo="Cobradores"
+      singularName="Cobrador"
       endpoint="/lookup/cobradores"
       campos={[
         { name: 'cobrador_numero', label: 'Número', tipo: 'numero_pk' },

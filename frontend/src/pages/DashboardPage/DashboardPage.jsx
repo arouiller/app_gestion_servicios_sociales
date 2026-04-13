@@ -38,6 +38,13 @@ function buildMenu(isAdmin) {
         { key: 'afiliados', label: 'Afiliados' },
         { key: 'grupos-familiares', label: 'Grupos Familiares' },
         { key: 'planes', label: 'Planes' },
+        ...(isAdmin ? [
+          { key: 'cobradores', label: 'Cobradores' },
+          { key: 'obras-sociales', label: 'Obras Sociales' },
+          { key: 'servicios-adicionales', label: 'Servicios Adicionales' },
+          { key: 'tipos-de-grupo', label: 'Tipos de Grupo' },
+          { key: 'tipos-de-plan', label: 'Tipos de Plan' },
+        ] : []),
       ],
     },
   ];
@@ -48,11 +55,6 @@ function buildMenu(isAdmin) {
       label: 'Administración',
       children: [
         { key: 'migraciones-bd', label: 'Migraciones BD' },
-        { key: 'cobradores', label: 'Cobradores' },
-        { key: 'obras-sociales', label: 'Obras Sociales' },
-        { key: 'servicios-adicionales', label: 'Servicios Adicionales' },
-        { key: 'tipos-de-grupo', label: 'Tipos de Grupo' },
-        { key: 'tipos-de-plan', label: 'Tipos de Plan' },
       ],
     });
   }

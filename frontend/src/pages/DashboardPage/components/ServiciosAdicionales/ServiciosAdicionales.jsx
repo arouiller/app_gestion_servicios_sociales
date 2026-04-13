@@ -5,6 +5,7 @@ const ServiciosAdicionales = () => {
   return (
     <LookupCRUD
       titulo="Servicios Adicionales"
+      singularName="Servicio Adicional"
       endpoint="/lookup/servicios-adicionales"
       campos={[
         { name: 'servicio_adicional_numero', label: 'Número', tipo: 'numero_pk' },

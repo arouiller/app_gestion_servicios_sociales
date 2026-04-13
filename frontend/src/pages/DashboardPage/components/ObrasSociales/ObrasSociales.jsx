@@ -5,6 +5,7 @@ const ObrasSociales = () => {
   return (
     <LookupCRUD
       titulo="Obras Sociales"
+      singularName="Obra Social"
       endpoint="/lookup/obras-sociales"
       campos={[
         { name: 'os_numero', label: 'Número', tipo: 'numero_pk' },

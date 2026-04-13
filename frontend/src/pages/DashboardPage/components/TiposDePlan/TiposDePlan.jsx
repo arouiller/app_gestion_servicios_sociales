@@ -5,6 +5,7 @@ const TiposDePlan = () => {
   return (
     <LookupCRUD
       titulo="Tipos de Plan"
+      singularName="Tipo de Plan"
       endpoint="/lookup/tipos-de-plan"
       campos={[
         { name: 'tipo_plan_numero', label: 'Número', tipo: 'numero_pk' },
