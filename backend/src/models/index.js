@@ -14,17 +14,17 @@ const Usuario = require('./Usuario');
 // Initialize all models
 const db = {
   sequelize,
-  Afiliado: Afiliado(sequelize),
-  GrupoFamiliar: GrupoFamiliar(sequelize),
-  HistorialGrupoFamiliar: HistorialGrupoFamiliar(sequelize),
-  Plan: Plan(sequelize),
-  IntegranteServicio: IntegranteServicio(sequelize),
-  Cobrador: Cobrador(sequelize),
-  TipoDePlan: TipoDePlan(sequelize),
-  ObraSocial: ObraSocial(sequelize),
-  ServicioAdicional: ServicioAdicional(sequelize),
-  TipoDeGrupo: TipoDeGrupo(sequelize),
-  Usuario: Usuario(sequelize),
+  Afiliado,
+  GrupoFamiliar,
+  HistorialGrupoFamiliar,
+  Plan,
+  IntegranteServicio,
+  Cobrador,
+  TipoDePlan,
+  ObraSocial,
+  ServicioAdicional,
+  TipoDeGrupo,
+  Usuario,
 };
 
 // Define associations
