@@ -5,7 +5,9 @@ import PlanV1Modal from './modals/PlanV1Modal';
 import './GestionPlanesV1.scss';
 
 function GestionPlanesV1() {
+  console.log('[GestionPlanesV1] Mounting component');
   const { isAdmin } = useAuth();
+  console.log('[GestionPlanesV1] isAdmin:', isAdmin);
   const [planes, setPlanes] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
@@ -97,8 +99,11 @@ function GestionPlanesV1() {
   };
 
   if (loading) {
+    console.log('[GestionPlanesV1] Loading state, showing loading message');
     return <div className="gestion-planes-v1__loading">Cargando planes...</div>;
   }
+
+  console.log('[GestionPlanesV1] Rendering component. Planes count:', planes.length, 'Error:', error);
 
   return (
     <div className="gestion-planes-v1">
