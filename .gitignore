@@ -1,3 +1,8 @@
 claude_.md
 CLAUDE.md
 docs/*
+# Allow documentation files
+!docs/*.md
+!docs/*.html
+!docs/DEPLOYMENT.md
+!docs/ARQUITECTURA.md
