@@ -1,5 +1,6 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import { usePlanV1Form } from '../hooks/usePlanV1Form';
+import ActionButton from '../../../../../components/ActionButton/ActionButton';
 import planesV1Service from '../../../../../services/planesV1Service';
 import planesIntegrantesService from '../../../../../services/planesIntegrantesService';
 import lookupService from '../../../../../services/lookupService';
@@ -411,33 +412,27 @@ function PlanV1Modal({ mode, planData, onClose, onSave }) {
                             </select>
                           </td>
                           <td>
-                            <button
-                              type="button"
-                              className="plan-v1-modal__btn-icon"
+                            <ActionButton
+                              variant="icon"
+                              icon="⚙️"
                               onClick={() => integrante.id && setServiciosModalOpen(integrante.id)}
-                              title="Servicios"
                               disabled={!integrante.id}
-                            >
-                              ⚙
-                            </button>
+                              title="Servicios"
+                            />
                           </td>
                           <td>
-                            <button
-                              type="button"
-                              className="plan-v1-modal__btn-icon"
+                            <ActionButton
+                              variant="icon"
+                              icon="✏️"
                               onClick={() => handleIntegranteEdit(integrante.persona_id)}
                               title="Editar"
-                            >
-                              ✎
-                            </button>
-                            <button
-                              type="button"
-                              className="plan-v1-modal__btn-icon plan-v1-modal__btn-icon--danger"
+                            />
+                            <ActionButton
+                              variant="icon"
+                              icon="🗑️"
                               onClick={() => handleIntegranteRemove(integrante.persona_id)}
                               title="Quitar"
-                            >
-                              🗑
-                            </button>
+                            />
                           </td>
                         </tr>
                       ))}
