@@ -6,6 +6,7 @@ import BusquedaAfiliados from './components/v1.0/BusquedaAfiliados';
 import ListadoPlanes from './components/v1.0/ListadoPlanes';
 import PlanesPorCobrador from './components/v1.0/PlanesPorCobrador';
 import GestionPlanesV1 from './components/GestionPlanesV1/GestionPlanesV1';
+import GestionPlanesV1ErrorBoundary from './components/GestionPlanesV1/GestionPlanesV1ErrorBoundary';
 import Cobradores from './components/Cobradores/Cobradores';
 import ObrasSociales from './components/ObrasSociales/ObrasSociales';
 import ServiciosAdicionales from './components/ServiciosAdicionales/ServiciosAdicionales';
@@ -208,7 +209,11 @@ function DashboardPage() {
         <main className="dashboard__content">
           {activeModule === 'datos-personales' && <DatosPersonales />}
           {activeModule === 'busqueda-afiliados' && <BusquedaAfiliados />}
-          {activeModule === 'gestion-planes-v1' && <GestionPlanesV1 />}
+          {activeModule === 'gestion-planes-v1' && (
+            <GestionPlanesV1ErrorBoundary>
+              <GestionPlanesV1 />
+            </GestionPlanesV1ErrorBoundary>
+          )}
           {activeModule === 'listado-planes' && <ListadoPlanes />}
           {activeModule === 'planes-por-cobrador' && <PlanesPorCobrador />}
           {activeModule === 'migraciones-bd' && <MigrationsDashboard />}
