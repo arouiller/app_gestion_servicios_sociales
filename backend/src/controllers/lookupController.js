@@ -1,0 +1,239 @@
+const db = require('../models');
+
+/**
+ * Mapeo de entidades lookup con su configuración (modelo, PK, campos, referencias)
+ */
+const ENTIDADES = {
+  cobradores: {
+    model: db.Cobrador,
+    pkField: 'cobrador_numero',
+    campos: ['cobrador_apellido', 'cobrador_nombre'],
+    refsCheck: [{ model: db.Plan, fk: 'cobrador_numero' }],
+  },
+  'tipos-de-plan': {
+    model: db.TipoDePlan,
+    pkField: 'tipo_plan_numero',
+    campos: ['tipo_plan_nombre'],
+    refsCheck: [{ model: db.Plan, fk: 'tipo_plan_numero' }],
+  },
+  'obras-sociales': {
+    model: db.ObraSocial,
+    pkField: 'os_numero',
+    campos: ['os_nombre'],
+    refsCheck: [{ model: db.Plan, fk: 'os_numero' }],
+  },
+  'servicios-adicionales': {
+    model: db.ServicioAdicional,
+    pkField: 'servicio_adicional_numero',
+    campos: ['servicio_adicional_nombre'],
+    refsCheck: [{ model: db.IntegranteServicio, fk: 'servicio_adicional_numero' }],
+  },
+  'tipos-de-grupo': {
+    model: db.TipoDeGrupo,
+    pkField: 'tipo_de_grupo_numero',
+    campos: ['tipo_de_grupo_nombre'],
+    refsCheck: [{ model: db.Plan, fk: 'tipo_de_grupo_numero' }],
+  },
+};
+
+/**
+ * GET /api/lookup/:entidad
+ * Devuelve todos los registros de la entidad ordenados por PK
+ */
+exports.list = async (req, res, next) => {
+  try {
+    const { entidad } = req.params;
+    const config = ENTIDADES[entidad];
+
+    if (!config) {
+      return res.status(404).json({
+        error: 'Entidad no encontrada',
+        entidad,
+      });
+    }
+
+    const registros = await config.model.findAll({
+      order: [[config.pkField, 'ASC']],
+    });
+
+    res.status(200).json(registros);
+  } catch (error) {
+    next(error);
+  }
+};
+
+/**
+ * POST /api/lookup/:entidad
+ * Crea un nuevo registro
+ * - Valida que TODOS los campos estén presentes
+ * - Si se provee PK: verifica unicidad
+ * - Si NO se provee: calcula siguiente PK con MAX(pkField) + 1
+ */
+exports.create = async (req, res, next) => {
+  try {
+    const { entidad } = req.params;
+    const config = ENTIDADES[entidad];
+
+    if (!config) {
+      return res.status(404).json({
+        error: 'Entidad no encontrada',
+        entidad,
+      });
+    }
+
+    const datos = req.body;
+
+    // Validar que TODOS los campos estén presentes
+    const camposRequeridos = [config.pkField, ...config.campos];
+    const camposFaltantes = camposRequeridos.filter(
+      (campo) => datos[campo] === undefined || datos[campo] === null || datos[campo] === ''
+    );
+
+    if (camposFaltantes.length > 0) {
+      return res.status(422).json({
+        error: 'Campos requeridos faltantes',
+        campos: camposFaltantes,
+      });
+    }
+
+    // Si se provee PK: verificar unicidad
+    if (datos[config.pkField] !== undefined && datos[config.pkField] !== null) {
+      const existe = await config.model.findByPk(datos[config.pkField]);
+      if (existe) {
+        return res.status(409).json({
+          error: `${config.pkField} ya existe`,
+          [config.pkField]: datos[config.pkField],
+        });
+      }
+    } else {
+      // Calcular siguiente PK con MAX(pkField) + 1
+      const maxRecord = await config.model.findOne({
+        attributes: [
+          [db.sequelize.fn('MAX', db.sequelize.col(config.pkField)), 'maxValue'],
+        ],
+        raw: true,
+      });
+
+      datos[config.pkField] = (maxRecord?.maxValue || 0) + 1;
+    }
+
+    // Asegurar timestamps
+    datos.fecha_creacion = new Date();
+    datos.fecha_actualizacion = new Date();
+
+    const nuevoRegistro = await config.model.create(datos);
+
+    res.status(201).json(nuevoRegistro);
+  } catch (error) {
+    next(error);
+  }
+};
+
+/**
+ * PUT /api/lookup/:entidad/:id
+ * Actualiza un registro existente
+ * - Verifica existencia → 404
+ * - Valida campos → 422
+ * - Actualiza fecha_actualizacion + campos
+ */
+exports.update = async (req, res, next) => {
+  try {
+    const { entidad, id } = req.params;
+    const config = ENTIDADES[entidad];
+
+    if (!config) {
+      return res.status(404).json({
+        error: 'Entidad no encontrada',
+        entidad,
+      });
+    }
+
+    // Verificar existencia
+    const registro = await config.model.findByPk(id);
+    if (!registro) {
+      return res.status(404).json({
+        error: 'Registro no encontrado',
+        [config.pkField]: id,
+      });
+    }
+
+    const datos = req.body;
+
+    // Validar que TODOS los campos estén presentes
+    const camposRequeridos = config.campos;
+    const camposFaltantes = camposRequeridos.filter(
+      (campo) => datos[campo] === undefined || datos[campo] === null || datos[campo] === ''
+    );
+
+    if (camposFaltantes.length > 0) {
+      return res.status(422).json({
+        error: 'Campos requeridos faltantes',
+        campos: camposFaltantes,
+      });
+    }
+
+    // Actualizar fecha_actualizacion y campos
+    datos.fecha_actualizacion = new Date();
+
+    await registro.update(datos);
+
+    res.status(200).json(registro);
+  } catch (error) {
+    next(error);
+  }
+};
+
+/**
+ * DELETE /api/lookup/:entidad/:id
+ * Elimina un registro
+ * - Verifica existencia → 404
+ * - Verifica referencias (FK) → 409 si está en uso
+ * - Elimina y devuelve 200
+ */
+exports.delete = async (req, res, next) => {
+  try {
+    const { entidad, id } = req.params;
+    const config = ENTIDADES[entidad];
+
+    if (!config) {
+      return res.status(404).json({
+        error: 'Entidad no encontrada',
+        entidad,
+      });
+    }
+
+    // Verificar existencia
+    const registro = await config.model.findByPk(id);
+    if (!registro) {
+      return res.status(404).json({
+        error: 'Registro no encontrado',
+        [config.pkField]: id,
+      });
+    }
+
+    // Verificar referencias en cada modelo de refsCheck
+    for (const ref of config.refsCheck) {
+      const count = await ref.model.count({
+        where: { [ref.fk]: id },
+      });
+
+      if (count > 0) {
+        return res.status(409).json({
+          error: 'No se puede eliminar, está en uso',
+          referencias: count,
+          referenciaEn: ref.model.tableName,
+        });
+      }
+    }
+
+    // Eliminar
+    await registro.destroy();
+
+    res.status(200).json({
+      mensaje: 'Registro eliminado correctamente',
+      [config.pkField]: id,
+    });
+  } catch (error) {
+    next(error);
+  }
+};
