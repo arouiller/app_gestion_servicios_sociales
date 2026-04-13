@@ -33,10 +33,18 @@ app.get('/api/health', (req, res) => {
 // ── Rutas ─────────────────────────────────────────────────────────────────────
 app.use('/api/auth', require('./routes/auth'));
 app.use('/api/migrations', require('./routes/migrations'));
+
+// 2.0.x routes (mantener durante refactor incremental)
 app.use('/api/afiliados', require('./routes/afiliados'));
 app.use('/api/grupos', require('./routes/grupos'));
 app.use('/api/planes', require('./routes/planes'));
+
+// Shared routes
 app.use('/api/lookup', require('./routes/lookup'));
+
+// 1.0.x routes (nuevas para refactor)
+app.use('/api/personas', require('./routes/personas'));
+app.use('/api/recibos', require('./routes/recibos'));
 
 // ── Frontend estático ─────────────────────────────────────────────────────────
 const frontendBuild = path.join(__dirname, '../frontend/build');
