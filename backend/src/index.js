@@ -41,6 +41,7 @@ app.use('/api/lookup', require('./routes/lookup'));
 app.use('/api/personas', require('./routes/personas'));
 app.use('/api/v1.0/planes', require('./routes/v1.0-planes'));
 app.use('/api/v1.0/plan-integrantes', require('./routes/v1.0-plan-integrantes'));
+app.use('/api/v1.0', require('./routes/v1.0/integrante-servicios'));
 app.use('/api/recibos', require('./routes/recibos'));
 
 // ── Frontend estático ─────────────────────────────────────────────────────────
