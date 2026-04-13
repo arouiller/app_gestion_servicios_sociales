@@ -2,9 +2,7 @@ import React, { useState, useEffect } from 'react';
 import personasService from '../../../../../services/personasService';
 import './AfiladoEditModal.scss';
 
-function AfiladoEditModal({ personaId, onClose, onSave }) {
-  const [persona, setPersona] = useState(null);
-  const [loading, setLoading] = useState(true);
+function AfiladoEditModal({ personaId, personaData, onClose, onSave }) {
   const [saving, setSaving] = useState(false);
   const [form, setForm] = useState({
     nombre: '',
@@ -16,10 +14,18 @@ function AfiladoEditModal({ personaId, onClose, onSave }) {
   });
 
   useEffect(() => {
-    // TODO: Load persona data (might need endpoint to GET by ID)
-    // For now, assuming persona data comes from parent via props
-    // This is a limitation - you may need to add a getById endpoint in personasController
-  }, [personaId]);
+    // Cargar datos de la persona si se proporcionan
+    if (personaData) {
+      setForm({
+        nombre: personaData.nombre || '',
+        apellido: personaData.apellido || '',
+        tipo_documento: personaData.tipo_documento || 'DNI',
+        numero_documento: personaData.numero_documento || '',
+        fecha_nacimiento: personaData.fecha_nacimiento ? personaData.fecha_nacimiento.split('T')[0] : '',
+        fecha_cobertura: personaData.fecha_cobertura ? personaData.fecha_cobertura.split('T')[0] : '',
+      });
+    }
+  }, [personaId, personaData]);
 
   const handleChange = (field, value) => {
     setForm((prev) => ({ ...prev, [field]: value }));

@@ -18,7 +18,7 @@ function PlanV1Modal({ mode, planData, onClose, onSave }) {
     tiposDeGrupo: [],
   });
 
-  const [activeTab, setActiveTab] = useState('afiliados'); // 'afiliados' | 'recibos'
+  const [activeTab, setActiveTab] = useState('datos'); // 'datos' | 'afiliados' | 'recibos'
   const [maxAfiliadoNumber, setMaxAfiliadoNumber] = useState(null);
 
   // Secondary modals
@@ -213,8 +213,37 @@ function PlanV1Modal({ mode, planData, onClose, onSave }) {
         </div>
 
         <div className="plan-v1-modal__body">
+          {/* Tabs */}
+          <div className="plan-v1-modal__tabs">
+            <button
+              type="button"
+              className={`plan-v1-modal__tab ${activeTab === 'datos' ? 'active' : ''}`}
+              onClick={() => setActiveTab('datos')}
+            >
+              Datos Generales
+            </button>
+            <button
+              type="button"
+              className={`plan-v1-modal__tab ${activeTab === 'afiliados' ? 'active' : ''}`}
+              onClick={() => setActiveTab('afiliados')}
+            >
+              Afiliados
+            </button>
+            {(mode === 'editar' && planData?.Recibos?.length > 0) && (
+              <button
+                type="button"
+                className={`plan-v1-modal__tab ${activeTab === 'recibos' ? 'active' : ''}`}
+                onClick={() => setActiveTab('recibos')}
+              >
+                Recibos
+              </button>
+            )}
+          </div>
+
           <form className="plan-v1-modal__form" onSubmit={(e) => { e.preventDefault(); handleGuardar(); }}>
-            {/* Form Fields Grid */}
+            {/* Tab: Datos Generales */}
+            {activeTab === 'datos' && (
+            <div className="plan-v1-modal__tab-content">
             <div className="plan-v1-modal__form-grid">
               <div className="plan-v1-modal__field">
                 <label>Número de Afiliado *</label>
@@ -330,31 +359,11 @@ function PlanV1Modal({ mode, planData, onClose, onSave }) {
                 />
               </div>
             </div>
-
-            {/* Tabs */}
-            {mode === 'editar' && (
-              <div className="plan-v1-modal__tabs">
-                <button
-                  type="button"
-                  className={`plan-v1-modal__tab ${activeTab === 'afiliados' ? 'active' : ''}`}
-                  onClick={() => setActiveTab('afiliados')}
-                >
-                  Afiliados
-                </button>
-                {planData?.Recibos?.length > 0 && (
-                  <button
-                    type="button"
-                    className={`plan-v1-modal__tab ${activeTab === 'recibos' ? 'active' : ''}`}
-                    onClick={() => setActiveTab('recibos')}
-                  >
-                    Recibos
-                  </button>
-                )}
-              </div>
+            </div>
             )}
 
-            {/* Tab Content: Afiliados */}
-            {(mode === 'crear' || activeTab === 'afiliados') && (
+            {/* Tab: Afiliados */}
+            {activeTab === 'afiliados' && (
               <div className="plan-v1-modal__tab-content">
                 <div className="plan-v1-modal__afiliados-header">
                   <h4>Afiliados</h4>
@@ -423,8 +432,8 @@ function PlanV1Modal({ mode, planData, onClose, onSave }) {
               </div>
             )}
 
-            {/* Tab Content: Recibos */}
-            {mode === 'editar' && activeTab === 'recibos' && (
+            {/* Tab: Recibos */}
+            {activeTab === 'recibos' && (
               <div className="plan-v1-modal__tab-content">
                 <h4>Recibos</h4>
                 {!planData?.Recibos || planData.Recibos.length === 0 ? (
@@ -470,7 +479,14 @@ function PlanV1Modal({ mode, planData, onClose, onSave }) {
 
       {/* Secondary modals */}
       {afiladoSearchOpen && <AfiladoSearchModal onClose={() => setAfiladoSearchOpen(false)} onSelect={handleAfiladoSearch} />}
-      {afiladoEditOpen && <AfiladoEditModal personaId={afiladoEditOpen} onClose={() => setAfiladoEditOpen(null)} onSave={handleIntegranteEditSave} />}
+      {afiladoEditOpen && (
+        <AfiladoEditModal
+          personaId={afiladoEditOpen}
+          personaData={form.integrantes.find(i => i.persona_id === afiladoEditOpen)?.persona}
+          onClose={() => setAfiladoEditOpen(null)}
+          onSave={handleIntegranteEditSave}
+        />
+      )}
       {reciboDetailOpen && <ReciboDetalleModal reciboId={reciboDetailOpen} onClose={() => setReciboDetailOpen(null)} />}
     </>
   );

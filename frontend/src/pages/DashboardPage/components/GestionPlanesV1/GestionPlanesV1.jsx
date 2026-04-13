@@ -16,6 +16,7 @@ function GestionPlanesV1() {
   const [modalMode, setModalMode] = useState(null); // null | 'crear' | 'editar'
   const [planEditando, setPlanEditando] = useState(null);
   const [filtros, setFiltros] = useState({ estado: '', cobrador: '', obraSocial: '' });
+  const [searchText, setSearchText] = useState('');
 
   // Cargar planes sin usar filtros como dependencia inicial
   useEffect(() => {
@@ -105,6 +106,18 @@ function GestionPlanesV1() {
 
   console.log('[GestionPlanesV1] Rendering component. Planes count:', planes.length, 'Error:', error);
 
+  // Filtrar planes por búsqueda
+  const planesFiltered = planes.filter(plan => {
+    const searchLower = searchText.toLowerCase();
+    return (
+      plan.numero_afiliado?.toLowerCase().includes(searchLower) ||
+      plan.TipoDePlan?.tipo_plan_nombre?.toLowerCase().includes(searchLower) ||
+      plan.Cobrador?.cobrador_apellido?.toLowerCase().includes(searchLower) ||
+      plan.Cobrador?.cobrador_nombre?.toLowerCase().includes(searchLower) ||
+      plan.ObraSocial?.os_nombre?.toLowerCase().includes(searchLower)
+    );
+  });
+
   return (
     <div className="gestion-planes-v1">
       <div className="gestion-planes-v1__header">
@@ -118,6 +131,17 @@ function GestionPlanesV1() {
 
       {error && <div className="gestion-planes-v1__alert gestion-planes-v1__alert--error">{error}</div>}
       {success && <div className="gestion-planes-v1__alert gestion-planes-v1__alert--success">{success}</div>}
+
+      {planes.length > 0 && (
+        <div className="gestion-planes-v1__search">
+          <input
+            type="text"
+            placeholder="Buscar por número de afiliado, tipo de plan, cobrador u obra social..."
+            value={searchText}
+            onChange={(e) => setSearchText(e.target.value)}
+          />
+        </div>
+      )}
 
       {planes.length === 0 ? (
         <p className="gestion-planes-v1__empty">
@@ -137,7 +161,7 @@ function GestionPlanesV1() {
               </tr>
             </thead>
             <tbody>
-              {planes.map((plan) => (
+              {planesFiltered.map((plan) => (
                 <tr key={plan.plan_numero}>
                   <td>{plan.numero_afiliado}</td>
                   <td>{plan.TipoDePlan?.tipo_plan_nombre || '—'}</td>
