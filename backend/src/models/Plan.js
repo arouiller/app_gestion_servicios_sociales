@@ -65,7 +65,7 @@ const Plan = sequelize.define('planes', {
   },
 }, {
   timestamps: false,
-  tableName: 'planes',
+  tableName: 'planes_v2_backup',
 });
 
 Plan.beforeSave((plan) => {
