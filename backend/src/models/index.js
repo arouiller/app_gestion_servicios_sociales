@@ -1,7 +1,8 @@
 const sequelize = require('../config/database');
-const Persona = require('./Persona');
+const Afiliado = require('./Afiliado');
+const GrupoFamiliar = require('./GrupoFamiliar');
+const HistorialGrupoFamiliar = require('./HistorialGrupoFamiliar');
 const Plan = require('./Plan');
-const PlanIntegrante = require('./PlanIntegrante');
 const IntegranteServicio = require('./IntegranteServicio');
 const Cobrador = require('./Cobrador');
 const TipoDePlan = require('./TipoDePlan');
@@ -13,9 +14,10 @@ const Usuario = require('./Usuario');
 // Initialize all models
 const db = {
   sequelize,
-  Persona: Persona(sequelize),
+  Afiliado: Afiliado(sequelize),
+  GrupoFamiliar: GrupoFamiliar(sequelize),
+  HistorialGrupoFamiliar: HistorialGrupoFamiliar(sequelize),
   Plan: Plan(sequelize),
-  PlanIntegrante: PlanIntegrante(sequelize),
   IntegranteServicio: IntegranteServicio(sequelize),
   Cobrador: Cobrador(sequelize),
   TipoDePlan: TipoDePlan(sequelize),
@@ -38,16 +40,9 @@ if (db.Plan && db.TipoDeGrupo) {
 if (db.Plan && db.ObraSocial) {
   db.Plan.belongsTo(db.ObraSocial, { foreignKey: 'os_numero' });
 }
-if (db.PlanIntegrante && db.Plan) {
-  db.PlanIntegrante.belongsTo(db.Plan, { foreignKey: 'plan_numero', onDelete: 'CASCADE' });
-  db.Plan.hasMany(db.PlanIntegrante, { foreignKey: 'plan_numero' });
-}
-if (db.PlanIntegrante && db.Persona) {
-  db.PlanIntegrante.belongsTo(db.Persona, { foreignKey: 'persona_id' });
-}
-if (db.IntegranteServicio && db.PlanIntegrante) {
-  db.IntegranteServicio.belongsTo(db.PlanIntegrante, { foreignKey: 'plan_integrante_id', onDelete: 'CASCADE' });
-  db.PlanIntegrante.hasMany(db.IntegranteServicio, { foreignKey: 'plan_integrante_id' });
+if (db.GrupoFamiliar && db.Plan) {
+  db.GrupoFamiliar.hasMany(db.Plan, { foreignKey: 'grupo_id', onDelete: 'CASCADE' });
+  db.Plan.belongsTo(db.GrupoFamiliar, { foreignKey: 'grupo_id' });
 }
 if (db.IntegranteServicio && db.ServicioAdicional) {
   db.IntegranteServicio.belongsTo(db.ServicioAdicional, { foreignKey: 'servicio_adicional_numero' });
