@@ -71,7 +71,16 @@ const LookupCRUD = ({ titulo, endpoint, campos }) => {
   };
 
   const handleDelete = async (id) => {
-    if (window.confirm('¿Estás seguro?')) {
+    const registro = registros.find(r => Object.values(r)[0] === id);
+    if (!registro) return;
+
+    // Encuentra el campo más relevante para mostrar (preferiblemente nombre o descripción)
+    const nombreCampo = campos.find(c => c.name.includes('nombre') || c.name.includes('nombre'))?.name || campos[1]?.name || campos[0]?.name;
+    const infoEntidad = nombreCampo ? registro[nombreCampo] : JSON.stringify(registro).substring(0, 50);
+
+    const confirmacion = `¿Estás seguro de que deseas eliminar este registro?\n\n${nombreCampo ? `${campos.find(c => c.name === nombreCampo)?.label || 'Registro'}: ${infoEntidad}` : ''}\n\nEsta acción no se puede deshacer.`;
+
+    if (window.confirm(confirmacion)) {
       try {
         await lookupService.delete(entidad, id);
         await loadRegistros();
@@ -110,7 +119,7 @@ const LookupCRUD = ({ titulo, endpoint, campos }) => {
               ))}
               <td className="acciones">
                 <button onClick={() => handleOpenForm(registro)} className="btn-edit" title="Editar">✏️</button>
-                <button onClick={() => handleDelete(Object.values(registro)[0])} className="btn-delete">Eliminar</button>
+                <button onClick={() => handleDelete(Object.values(registro)[0])} className="btn-delete" title="Eliminar">🗑️</button>
               </td>
             </tr>
           ))}

@@ -88,12 +88,15 @@
         }
 
         &.btn-delete {
-          padding: 4px 8px;
-          background: var(--color-danger);
-          color: white;
+          padding: 6px 8px;
+          background: transparent;
+          color: var(--color-danger);
+          font-size: 18px;
+          border: 1px solid transparent;
 
           &:hover {
-            opacity: 0.9;
+            background: rgba(231, 76, 60, 0.1);
+            border-color: var(--color-danger);
           }
         }
       }
