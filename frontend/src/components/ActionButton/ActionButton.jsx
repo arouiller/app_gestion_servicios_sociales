@@ -14,7 +14,9 @@ function ActionButton({
   const baseClass = 'action-button';
   const variantClass = `${baseClass}--${variant}`;
   const sizeClass = `${baseClass}--${size}`;
-  const classes = `${baseClass} ${variantClass} ${sizeClass} ${className}`.trim();
+  const classes = variant === 'icon'
+    ? `${baseClass} ${variantClass} ${className}`.trim()
+    : `${baseClass} ${variantClass} ${sizeClass} ${className}`.trim();
 
   return (
     <button
