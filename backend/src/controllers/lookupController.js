@@ -8,19 +8,19 @@ const ENTIDADES = {
     model: db.Cobrador,
     pkField: 'cobrador_numero',
     campos: ['cobrador_apellido', 'cobrador_nombre'],
-    refsCheck: [{ model: db.Plan, fk: 'cobrador_numero' }],
+    refsCheck: [{ model: db.PlanV1, fk: 'cobrador_numero' }],
   },
   'tipos-de-plan': {
     model: db.TipoDePlan,
     pkField: 'tipo_plan_numero',
     campos: ['tipo_plan_nombre'],
-    refsCheck: [{ model: db.Plan, fk: 'tipo_plan_numero' }],
+    refsCheck: [{ model: db.PlanV1, fk: 'tipo_plan_numero' }],
   },
   'obras-sociales': {
     model: db.ObraSocial,
     pkField: 'os_numero',
     campos: ['os_nombre'],
-    refsCheck: [{ model: db.Plan, fk: 'os_numero' }],
+    refsCheck: [{ model: db.PlanV1, fk: 'os_numero' }],
   },
   'servicios-adicionales': {
     model: db.ServicioAdicional,
@@ -32,7 +32,7 @@ const ENTIDADES = {
     model: db.TipoDeGrupo,
     pkField: 'tipo_de_grupo_numero',
     campos: ['tipo_de_grupo_nombre'],
-    refsCheck: [{ model: db.Plan, fk: 'tipo_de_grupo_numero' }],
+    refsCheck: [{ model: db.PlanV1, fk: 'tipo_de_grupo_numero' }],
   },
 };
 

@@ -11,6 +11,14 @@ const lookupService = {
   },
 
   /**
+   * Alias para list() - mismo comportamiento
+   */
+  getByEntity: async (entidad) => {
+    const response = await api.get(`/lookup/${entidad}`);
+    return response.data;
+  },
+
+  /**
    * POST /api/lookup/:entidad
    * Crea un nuevo registro de lookup
    */
