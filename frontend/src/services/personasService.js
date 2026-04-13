@@ -23,7 +23,7 @@ const personasService = {
         }
       }
 
-      const { data } = await api.get('/personas/buscar', { params: queryParams });
+      const { data } = await api.get('/personas', { params: queryParams });
       return data;
     } catch (error) {
       console.error('Error en buscar personas:', error);

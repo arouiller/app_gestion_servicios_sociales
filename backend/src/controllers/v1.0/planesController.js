@@ -67,13 +67,23 @@ const obtener = async (req, res) => {
       { model: db.Cobrador, attributes: ['cobrador_numero', 'cobrador_apellido', 'cobrador_nombre'] },
       { model: db.TipoDeGrupo, attributes: ['tipo_de_grupo_numero', 'tipo_de_grupo_nombre'] },
       { model: db.ObraSocial, attributes: ['os_numero', 'os_nombre'] },
-      {
-        model: db.Recibo,
-        attributes: ['id', 'periodo', 'valor_cuota', 'fecha_emision'],
-        order: [['fecha_emision', 'DESC']],
-      },
     ],
   });
+
+  // Cargar Recibos por separado para evitar problemas de schema
+  if (plan) {
+    try {
+      const recibos = await db.Recibo.findAll({
+        where: { plan_numero: planNumero },
+        attributes: ['id', 'periodo', 'valor_cuota', 'fecha_emision'],
+        order: [['fecha_emision', 'DESC']],
+      });
+      plan.Recibos = recibos;
+    } catch (err) {
+      console.warn('Error loading Recibos:', err.message);
+      plan.Recibos = [];
+    }
+  }
 
   if (!plan) {
     return res.status(404).json({ success: false, message: 'Plan no encontrado' });
