@@ -1,4 +1,5 @@
 const { Op } = require('sequelize');
+const sequelize = require('../../config/database');
 const db = require('../../models');
 
 // ── GET /api/v1.0/planes ───────────────────────────────────────────────────────
@@ -66,6 +67,11 @@ const obtener = async (req, res) => {
       { model: db.Cobrador, attributes: ['cobrador_numero', 'cobrador_apellido', 'cobrador_nombre'] },
       { model: db.TipoDeGrupo, attributes: ['tipo_de_grupo_numero', 'tipo_de_grupo_nombre'] },
       { model: db.ObraSocial, attributes: ['os_numero', 'os_nombre'] },
+      {
+        model: db.Recibo,
+        attributes: ['id', 'periodo', 'valor_cuota', 'fecha_emision'],
+        order: [['fecha_emision', 'DESC']],
+      },
     ],
   });
 
@@ -192,6 +198,22 @@ const eliminar = async (req, res) => {
   return res.json({ success: true, message: 'Plan eliminado correctamente' });
 };
 
+// ── GET /api/v1.0/planes/numero-afiliado/max ────────────────────────────────────
+// Get the max affiliate number to suggest the next one
+
+const getMaxAfiliadoNumber = async (req, res) => {
+  try {
+    const result = await db.PlanV1.findOne({
+      attributes: [[sequelize.fn('MAX', sequelize.col('numero_afiliado')), 'maxNumber']],
+      raw: true,
+    });
+    const maxNumber = result?.maxNumber ? parseInt(result.maxNumber, 10) : 0;
+    return res.json({ success: true, data: { maxNumber, suggestedNumber: maxNumber + 1 } });
+  } catch (error) {
+    return res.status(500).json({ success: false, message: 'Error fetching max affiliate number' });
+  }
+};
+
 module.exports = {
   listar,
   getByPersona,
@@ -199,4 +221,5 @@ module.exports = {
   crear,
   actualizar,
   eliminar,
+  getMaxAfiliadoNumber,
 };

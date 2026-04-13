@@ -71,6 +71,10 @@ if (db.HistorialCuota && db.Usuario) {
   db.HistorialCuota.belongsTo(db.Usuario, { foreignKey: 'usuario_id' });
 }
 // Recibo associations
+if (db.PlanV1 && db.Recibo) {
+  db.PlanV1.hasMany(db.Recibo, { foreignKey: 'plan_numero', sourceKey: 'plan_numero', onDelete: 'CASCADE' });
+  db.Recibo.belongsTo(db.PlanV1, { foreignKey: 'plan_numero', targetKey: 'plan_numero' });
+}
 if (db.Recibo && db.Usuario) {
   db.Recibo.belongsTo(db.Usuario, { foreignKey: 'usuario_id' });
 }
