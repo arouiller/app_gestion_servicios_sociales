@@ -10,6 +10,8 @@
   --color-primary: #1a6b8a;
   --color-primary-light: #2389ad;
   --color-primary-dark: #125070;
+  --color-primary-hover: #2389ad;
+  --color-primary-rgb: 26, 107, 138;
   --color-secondary: #27ae60;
   --color-secondary-light: #2ecc71;
   --color-accent: #f39c12;
@@ -19,7 +21,11 @@
   --color-bg: #ffffff;
   --color-bg-soft: #f7fafc;
   --color-bg-card: #ffffff;
+  --color-surface: #ffffff;
+  --color-surface-alt: #f7fafc;
+  --color-row-alt: #f7fafc;
   --color-border: #e2e8f0;
+  --color-danger: #e74c3c;
   --shadow-sm: 0 1px 3px rgba(0, 0, 0, 0.08);
   --shadow-md: 0 4px 16px rgba(0, 0, 0, 0.10);
   --shadow-lg: 0 10px 40px rgba(0, 0, 0, 0.12);
