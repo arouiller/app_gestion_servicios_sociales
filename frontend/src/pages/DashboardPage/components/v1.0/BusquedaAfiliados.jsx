@@ -1,6 +1,6 @@
 import React, { useState, useCallback } from 'react';
 import personasService from '../../../../services/v1.0/personasService';
-import planesService from '../../../../services/planesService';
+import planesService from '../../../../services/v1.0/planesService';
 import './BusquedaAfiliados.scss';
 
 const BusquedaAfiliados = () => {
@@ -135,10 +135,10 @@ const BusquedaAfiliados = () => {
                 {planesPersona.map((plan) => (
                   <tr key={plan.plan_numero}>
                     <td>{plan.numero_afiliado}</td>
-                    <td>{plan.tipo_plan_nombre}</td>
-                    <td>{plan.obra_social_nombre}</td>
+                    <td>{plan.TipoDePlan?.tipo_plan_nombre || 'N/A'}</td>
+                    <td>{plan.ObraSocial?.os_nombre || 'N/A'}</td>
                     <td>{plan.estado}</td>
-                    <td>${plan.valor_cuota}</td>
+                    <td>${plan.valor_cuota || '0.00'}</td>
                   </tr>
                 ))}
               </tbody>

@@ -19,6 +19,7 @@ const Usuario = require('./Usuario');
 
 // 1.0.x Models (nuevos para refactor)
 const Persona = require('./Persona');
+const PlanV1 = require('./PlanV1');
 const PlanIntegrante = require('./PlanIntegrante');
 const HistorialCuota = require('./HistorialCuota');
 const Recibo = require('./Recibo');
@@ -42,6 +43,7 @@ const db = {
   Usuario,
   // 1.0.x
   Persona,
+  PlanV1,
   PlanIntegrante,
   HistorialCuota,
   Recibo,
@@ -71,8 +73,21 @@ if (db.IntegranteServicio && db.ServicioAdicional) {
 
 // Define associations for 1.0.x
 // Plan 1.0.x associations (reuse lookup models)
-if (db.Plan && db.TipoDePlan) {
-  // Already defined above for 2.0.x, but also applies to 1.0.x Plan if using same table
+if (db.PlanV1 && db.TipoDePlan) {
+  db.PlanV1.belongsTo(db.TipoDePlan, { foreignKey: 'tipo_plan_numero' });
+}
+if (db.PlanV1 && db.Cobrador) {
+  db.PlanV1.belongsTo(db.Cobrador, { foreignKey: 'cobrador_numero' });
+}
+if (db.PlanV1 && db.TipoDeGrupo) {
+  db.PlanV1.belongsTo(db.TipoDeGrupo, { foreignKey: 'tipo_de_grupo_numero' });
+}
+if (db.PlanV1 && db.ObraSocial) {
+  db.PlanV1.belongsTo(db.ObraSocial, { foreignKey: 'os_numero' });
+}
+if (db.PlanV1 && db.PlanIntegrante) {
+  db.PlanV1.hasMany(db.PlanIntegrante, { foreignKey: 'plan_numero', sourceKey: 'plan_numero', onDelete: 'CASCADE' });
+  db.PlanIntegrante.belongsTo(db.PlanV1, { foreignKey: 'plan_numero', targetKey: 'plan_numero' });
 }
 // PlanIntegrante associations
 if (db.PlanIntegrante && db.Persona) {

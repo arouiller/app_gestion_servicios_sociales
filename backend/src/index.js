@@ -44,6 +44,7 @@ app.use('/api/lookup', require('./routes/lookup'));
 
 // 1.0.x routes (nuevas para refactor)
 app.use('/api/personas', require('./routes/personas'));
+app.use('/api/planes-v1', require('./routes/v1.0-planes'));
 app.use('/api/recibos', require('./routes/recibos'));
 
 // ── Frontend estático ─────────────────────────────────────────────────────────
