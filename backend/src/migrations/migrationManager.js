@@ -82,6 +82,18 @@ async function ensureTable() {
       fecha_ejecucion TIMESTAMP DEFAULT CURRENT_TIMESTAMP
     ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci
   `);
+
+  // Ensure duracion_ms column exists (for backward compatibility)
+  try {
+    await sequelize.query(`
+      ALTER TABLE historial_migraciones ADD COLUMN duracion_ms INT DEFAULT NULL
+    `);
+  } catch (err) {
+    // Column already exists, ignore error
+    if (!err.message.includes('Duplicate column')) {
+      throw err;
+    }
+  }
 }
 
 // ── Operaciones sobre migraciones_bd ─────────────────────────────────────────
