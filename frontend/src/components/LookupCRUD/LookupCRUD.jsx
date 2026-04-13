@@ -1,6 +1,8 @@
 import React, { useEffect, useState } from 'react';
 import lookupService from '../../services/lookupService';
 import ErrorDisplay from '../ErrorDisplay/ErrorDisplay';
+import SearchContainer from '../SearchContainer/SearchContainer';
+import ActionButton from '../ActionButton/ActionButton';
 import './LookupCRUD.scss';
 
 const LookupCRUD = ({ titulo, singularName, endpoint, campos }) => {
@@ -10,6 +12,8 @@ const LookupCRUD = ({ titulo, singularName, endpoint, campos }) => {
   const [showForm, setShowForm] = useState(false);
   const [editingId, setEditingId] = useState(null);
   const [formData, setFormData] = useState({});
+  const [searchText, setSearchText] = useState('');
+  const ITEMS_PER_PAGE = 20;
 
   const entidad = endpoint.split('/').pop();
 
@@ -93,16 +97,35 @@ const LookupCRUD = ({ titulo, singularName, endpoint, campos }) => {
 
   if (loading) return <div className="lookup-crud loading">Cargando...</div>;
 
+  const registrosFiltered = registros
+    .filter(registro => {
+      const searchLower = searchText.toLowerCase();
+      return Object.values(registro).some(val =>
+        String(val).toLowerCase().includes(searchLower)
+      );
+    })
+    .slice(0, ITEMS_PER_PAGE);
+
   const sinResultados = registros.length === 0;
 
   return (
     <div className="lookup-crud">
       <div className="header">
         <h2>{titulo}</h2>
-        <button onClick={() => handleOpenForm()} className="btn-primary">
-          + Nuevo
-        </button>
+        <ActionButton variant="primary" icon="+" onClick={() => handleOpenForm()}>
+          Nuevo {singularName || 'Registro'}
+        </ActionButton>
       </div>
+
+      {registros.length > 0 && (
+        <SearchContainer
+          placeholder={`Buscar ${titulo.toLowerCase()}...`}
+          value={searchText}
+          onChange={setSearchText}
+          count={registrosFiltered.length}
+          maxItems={ITEMS_PER_PAGE}
+        />
+      )}
 
       {sinResultados ? (
         <div className="lookup-crud__empty">
@@ -119,14 +142,25 @@ const LookupCRUD = ({ titulo, singularName, endpoint, campos }) => {
             </tr>
           </thead>
           <tbody>
-            {registros.map(registro => (
+            {registrosFiltered.map(registro => (
               <tr key={Object.values(registro)[0]}>
                 {campos.map(campo => (
                   <td key={campo.name}>{registro[campo.name]}</td>
                 ))}
                 <td className="acciones">
-                  <button onClick={() => handleOpenForm(registro)} className="btn-edit" title="Editar">✏️</button>
-                  <button onClick={() => handleDelete(Object.values(registro)[0])} className="btn-delete" title="Eliminar">🗑️</button>
+                  <ActionButton
+                    variant="icon"
+                    icon="✎"
+                    onClick={() => handleOpenForm(registro)}
+                    title="Editar"
+                  />
+                  <ActionButton
+                    variant="icon"
+                    icon="🗑"
+                    onClick={() => handleDelete(Object.values(registro)[0])}
+                    title="Eliminar"
+                    className="action-button--danger"
+                  />
                 </td>
               </tr>
             ))}
