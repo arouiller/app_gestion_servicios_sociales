@@ -1,5 +1,6 @@
 import React, { useCallback, useEffect, useState } from 'react';
 import afiliadosService from '../../../../services/afiliadosService';
+import SearchContainer from '../../../../components/SearchContainer/SearchContainer';
 import GrupoDetalleModal, { ModalSeleccionNuevoTitular } from '../GrupoDetalleModal/GrupoDetalleModal';
 import './GestionAfiliados.scss';
 
@@ -264,11 +265,10 @@ function TablaAfiliados({ afiliados, grupos, pagination, onEditar, onEliminar, o
   return (
     <div>
       <div className="gestion-afiliados__filtros">
-        <input
-          className="gestion-afiliados__filtro-input"
-          placeholder="Buscar por nombre, documento o email..."
+        <SearchContainer
           value={filtros.search}
           onChange={(e) => onFiltroChange('search', e.target.value)}
+          placeholder="Buscar por nombre, documento o email..."
         />
         <select
           className="gestion-afiliados__filtro-select"
