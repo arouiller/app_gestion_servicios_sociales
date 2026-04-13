@@ -5,9 +5,9 @@ const db = require('../../models');
 
 const listarServicios = async (req, res, next) => {
   try {
-    const servicios = await db.Servicio.findAll({
-      attributes: ['servicio_numero', 'servicio_nombre'],
-      order: [['servicio_nombre', 'ASC']],
+    const servicios = await db.ServicioAdicional.findAll({
+      attributes: ['servicio_adicional_numero', 'servicio_adicional_nombre'],
+      order: [['servicio_adicional_nombre', 'ASC']],
     });
 
     return res.json({ success: true, data: servicios });
@@ -33,9 +33,9 @@ const obtenerServiciosIntegrante = async (req, res, next) => {
     const servicios = await db.IntegranteServicio.findAll({
       where: { plan_integrante_id: id },
       include: [
-        { model: db.Servicio, attributes: ['servicio_numero', 'servicio_nombre'] },
+        { model: db.ServicioAdicional, attributes: ['servicio_adicional_numero', 'servicio_adicional_nombre'] },
       ],
-      attributes: ['id', 'plan_integrante_id', 'servicio_numero', 'fecha_asignacion'],
+      attributes: ['plan_integrante_id', 'servicio_adicional_numero'],
     });
 
     return res.json({ success: true, data: servicios });
@@ -65,14 +65,14 @@ const agregarServicio = async (req, res, next) => {
     }
 
     // Verificar que el servicio existe
-    const servicio = await db.Servicio.findByPk(servicio_numero);
+    const servicio = await db.ServicioAdicional.findByPk(servicio_numero);
     if (!servicio) {
       return res.status(404).json({ success: false, message: 'Servicio no encontrado' });
     }
 
     // Verificar que el servicio no esté ya asignado
     const existente = await db.IntegranteServicio.findOne({
-      where: { plan_integrante_id: id, servicio_numero },
+      where: { plan_integrante_id: id, servicio_adicional_numero: servicio_numero },
     });
     if (existente) {
       return res.status(409).json({
@@ -84,8 +84,7 @@ const agregarServicio = async (req, res, next) => {
     // Crear el servicio para el integrante
     const integranteServicio = await db.IntegranteServicio.create({
       plan_integrante_id: id,
-      servicio_numero,
-      fecha_asignacion: new Date(),
+      servicio_adicional_numero: servicio_numero,
     });
 
     return res.status(201).json({
@@ -115,7 +114,7 @@ const eliminarServicio = async (req, res, next) => {
 
     // Buscar y eliminar el servicio
     const integranteServicio = await db.IntegranteServicio.findOne({
-      where: { plan_integrante_id: integranteId, servicio_numero: servicio },
+      where: { plan_integrante_id: integranteId, servicio_adicional_numero: servicio },
     });
 
     if (!integranteServicio) {
