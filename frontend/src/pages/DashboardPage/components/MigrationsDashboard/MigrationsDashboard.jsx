@@ -157,13 +157,13 @@ function MigrationsDashboard() {
                     </tr>
                   </thead>
                   <tbody>
-                    {versions.map((v) => (
+                    {[...versions].sort((a, b) => Number(b.version) - Number(a.version)).map((v) => (
                       <tr key={v.version}>
                         <td className="migrations-dashboard__version-number">v{v.version}</td>
                         <td className="migrations-dashboard__version-status">
-                          {currentVersion === v.version ? (
+                          {Number(currentVersion) === Number(v.version) ? (
                             <span className="migrations-dashboard__current">Actual</span>
-                          ) : currentVersion > v.version ? (
+                          ) : Number(currentVersion) > Number(v.version) ? (
                             <span className="migrations-dashboard__previous">Anterior</span>
                           ) : (
                             <span className="migrations-dashboard__available">Disponible</span>
@@ -176,8 +176,8 @@ function MigrationsDashboard() {
                               variant="icon"
                               icon="⬇️"
                               onClick={() => handleDowngrade(v.version)}
-                              disabled={currentVersion - 1 !== v.version || isLoading}
-                              title={currentVersion - 1 === v.version ? 'Revertir a esta versión' : 'Downgrade no disponible'}
+                              disabled={Number(currentVersion) - 1 !== Number(v.version) || isLoading}
+                              title={Number(currentVersion) - 1 === Number(v.version) ? 'Revertir a esta versión' : 'Downgrade no disponible'}
                             />
 
                             {/* Re-apply button - enabled only on current version */}
@@ -185,8 +185,8 @@ function MigrationsDashboard() {
                               variant="icon"
                               icon="🔄"
                               onClick={() => handleReapply(v.version)}
-                              disabled={currentVersion !== v.version || isLoading}
-                              title={currentVersion === v.version ? 'Re-ejecutar esta versión' : 'Re-apply no disponible'}
+                              disabled={Number(currentVersion) !== Number(v.version) || isLoading}
+                              title={Number(currentVersion) === Number(v.version) ? 'Re-ejecutar esta versión' : 'Re-apply no disponible'}
                             />
 
                             {/* Upgrade button - enabled only on next version */}
@@ -194,8 +194,8 @@ function MigrationsDashboard() {
                               variant="icon"
                               icon="⬆️"
                               onClick={() => handleUpgrade(v.version)}
-                              disabled={currentVersion + 1 !== v.version || isLoading}
-                              title={currentVersion + 1 === v.version ? 'Actualizar a esta versión' : 'Upgrade no disponible'}
+                              disabled={Number(currentVersion) + 1 !== Number(v.version) || isLoading}
+                              title={Number(currentVersion) + 1 === Number(v.version) ? 'Actualizar a esta versión' : 'Upgrade no disponible'}
                             />
                           </div>
                         </td>
