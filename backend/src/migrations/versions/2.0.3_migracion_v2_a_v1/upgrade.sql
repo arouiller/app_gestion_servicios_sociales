@@ -2,6 +2,13 @@
 -- Crea las tablas v1.0.x y migra datos de v2.0.x preservando integridad referencial
 
 -- ─────────────────────────────────────────────────────────────────────────────
+-- PASO 0: Renombrar tabla planes v2.0.x (CRÍTICO - evita conflicto de schema)
+-- ─────────────────────────────────────────────────────────────────────────────
+
+-- Renombrar plans v2.0.x a planes_v2_backup para no conflictar con v1.0.x
+ALTER TABLE planes RENAME TO planes_v2_backup;
+
+-- ─────────────────────────────────────────────────────────────────────────────
 -- PASO 1: Crear tablas lookup (ya deberían existir de 1.0.1)
 -- ─────────────────────────────────────────────────────────────────────────────
 
@@ -65,7 +72,24 @@ INSERT IGNORE INTO obras_sociales (os_numero, os_nombre) VALUES
   (1, 'Obra Social Default');
 
 -- ─────────────────────────────────────────────────────────────────────────────
--- PASO 2: Crear tabla personas desde afiliados
+-- PASO 2: Migrar planes v2.0.x → tipos_de_plan
+-- ─────────────────────────────────────────────────────────────────────────────
+
+-- Crear tipos_de_plan basados en planes_v2_backup
+INSERT IGNORE INTO tipos_de_plan (tipo_plan_numero, tipo_plan_nombre)
+SELECT
+  id AS tipo_plan_numero,
+  CONCAT(nombre, COALESCE(CONCAT(' - ', descripcion), '')) AS tipo_plan_nombre
+FROM planes_v2_backup
+WHERE id IS NOT NULL
+LIMIT 999;
+
+-- Si no hay datos en planes_v2_backup, crear un tipo_de_plan default
+INSERT IGNORE INTO tipos_de_plan (tipo_plan_numero, tipo_plan_nombre) VALUES
+  (999, 'Plan Default');
+
+-- ─────────────────────────────────────────────────────────────────────────────
+-- PASO 3: Crear tabla personas desde afiliados
 -- ─────────────────────────────────────────────────────────────────────────────
 
 CREATE TABLE IF NOT EXISTS personas (
@@ -107,23 +131,6 @@ ON DUPLICATE KEY UPDATE
   fecha_actualizacion = VALUES(fecha_actualizacion);
 
 -- ─────────────────────────────────────────────────────────────────────────────
--- PASO 3: Migrar planes v2.0.x → tipos_de_plan
--- ─────────────────────────────────────────────────────────────────────────────
-
--- Crear tipos_de_plan basados en planes v2.0.x
-INSERT IGNORE INTO tipos_de_plan (tipo_plan_numero, tipo_plan_nombre)
-SELECT
-  id AS tipo_plan_numero,
-  CONCAT(nombre, COALESCE(CONCAT(' - ', descripcion), '')) AS tipo_plan_nombre
-FROM planes
-WHERE id IS NOT NULL
-LIMIT 999;
-
--- Si no hay datos en planes v2.0.x, crear un tipo_de_plan default
-INSERT IGNORE INTO tipos_de_plan (tipo_plan_numero, tipo_plan_nombre) VALUES
-  (999, 'Plan Default');
-
--- ─────────────────────────────────────────────────────────────────────────────
 -- PASO 4: Crear tabla planes v1.0.x desde grupos_familiares
 -- ─────────────────────────────────────────────────────────────────────────────
 
@@ -153,7 +160,7 @@ CREATE TABLE IF NOT EXISTS planes (
 -- Migrar cada grupo_familiar a un plan
 INSERT INTO planes (tipo_plan_numero, cobrador_numero, tipo_de_grupo_numero, os_numero, numero_afiliado, estado, fecha_creacion, fecha_actualizacion)
 SELECT
-  COALESCE((SELECT id FROM planes LIMIT 1), 999) AS tipo_plan_numero,
+  COALESCE((SELECT MIN(id) FROM planes_v2_backup), 999) AS tipo_plan_numero,
   1 AS cobrador_numero,
   2 AS tipo_de_grupo_numero,
   1 AS os_numero,
