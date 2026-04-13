@@ -93,12 +93,12 @@ async function getAppliedMigrations() {
   return rows.map((r) => r.version);
 }
 
-async function recordMigration(version, descripcion, tipo, estado = 'exitosa') {
+async function recordMigration(version, descripcion, tipo, estado = 'exitosa', transaction = null) {
   await sequelize.query(
     `INSERT INTO migraciones_bd (version, descripcion, tipo, estado)
      VALUES (?, ?, ?, ?)
      ON DUPLICATE KEY UPDATE tipo = VALUES(tipo), estado = VALUES(estado), fecha_ejecucion = CURRENT_TIMESTAMP`,
-    { replacements: [version, descripcion, tipo, estado] }
+    { replacements: [version, descripcion, tipo, estado], transaction }
   );
 }
 
@@ -340,6 +340,7 @@ async function execute(version, direction) {
 
   const transaction = await sequelize.transaction();
   const startTime = Date.now();
+  let committed = false;
 
   try {
     for (const sql of statements) {
@@ -347,7 +348,7 @@ async function execute(version, direction) {
     }
 
     if (direction === 'upgrade') {
-      await recordMigration(version, description, 'upgrade', 'exitosa');
+      await recordMigration(version, description, 'upgrade', 'exitosa', transaction);
     } else {
       await sequelize.query(
         `UPDATE migraciones_bd SET estado = 'revertida', tipo = 'downgrade', fecha_ejecucion = CURRENT_TIMESTAMP WHERE version = ?`,
@@ -356,13 +357,16 @@ async function execute(version, direction) {
     }
 
     await transaction.commit();
+    committed = true;
 
     const durationMs = Date.now() - startTime;
     await appendHistory(version, description, direction, 'exitosa', durationMs);
 
     return { version, description, direction, durationMs };
   } catch (err) {
-    await transaction.rollback();
+    if (!committed) {
+      await transaction.rollback().catch(() => {});
+    }
     const durationMs = Date.now() - startTime;
     await appendHistory(version, description, direction, 'fallida', durationMs).catch(() => {});
     throw err;
