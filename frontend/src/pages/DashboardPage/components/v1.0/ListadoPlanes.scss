@@ -1,0 +1,88 @@
+.listado-planes {
+  padding: 20px;
+
+  h2 {
+    margin-bottom: 20px;
+    font-size: 1.5em;
+    font-weight: 600;
+  }
+
+  .filtros {
+    margin-bottom: 20px;
+    display: flex;
+    gap: 10px;
+
+    select {
+      padding: 8px 12px;
+      border: 1px solid var(--color-border);
+      border-radius: 4px;
+      background-color: var(--color-surface);
+      color: var(--color-text);
+      cursor: pointer;
+
+      &:focus {
+        outline: none;
+        border-color: var(--color-primary);
+      }
+    }
+  }
+
+  .planes-table {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: 14px;
+
+    thead {
+      background-color: var(--color-surface-alt);
+      border-bottom: 2px solid var(--color-border);
+    }
+
+    th {
+      padding: 12px;
+      text-align: left;
+      font-weight: 600;
+      color: var(--color-text);
+    }
+
+    tbody tr {
+      border-bottom: 1px solid var(--color-border);
+      height: 36px;
+
+      &:nth-child(even) {
+        background-color: var(--color-row-alt);
+      }
+
+      &:hover {
+        background-color: rgba(74, 144, 217, 0.05);
+      }
+    }
+
+    td {
+      padding: 8px 12px;
+      color: var(--color-text);
+    }
+
+    .estado {
+      font-weight: 600;
+      padding: 4px 8px;
+      border-radius: 3px;
+      font-size: 12px;
+
+      &.estado-activo {
+        background-color: rgba(76, 175, 80, 0.1);
+        color: #4caf50;
+      }
+
+      &.estado-suspendido {
+        background-color: rgba(255, 193, 7, 0.1);
+        color: #ffc107;
+      }
+    }
+  }
+
+  p {
+    text-align: center;
+    color: var(--color-text-muted);
+    padding: 20px;
+  }
+}
