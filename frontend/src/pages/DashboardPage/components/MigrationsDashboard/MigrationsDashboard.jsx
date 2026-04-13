@@ -50,12 +50,12 @@ function MigrationsDashboard() {
     }
   };
 
-  const handleUpgrade = async (version) => {
+  const handleMigration = async (version, direction) => {
     try {
       setError(null);
-      const previewRes = await migrationsAPI.preview(version, 'upgrade');
+      const previewRes = await migrationsAPI.preview(version, direction);
       if (previewRes.success) {
-        setPreview({ ...previewRes.data, open: true });
+        setPreview({ ...previewRes.data, open: true, direction });
       } else {
         setError(previewRes.message || 'Error al obtener preview');
       }
@@ -64,6 +64,10 @@ function MigrationsDashboard() {
       setError(err.message || 'Error al obtener preview');
     }
   };
+
+  const handleUpgrade = (version) => handleMigration(version, 'upgrade');
+  const handleDowngrade = (version) => handleMigration(version, 'downgrade');
+  const handleReapply = (version) => handleMigration(version, 'reapply');
 
   const handleClosePreview = () => {
     if (!isLoading) {
@@ -166,16 +170,34 @@ function MigrationsDashboard() {
                           )}
                         </td>
                         <td className="migrations-dashboard__version-action">
-                          {currentVersion < v.version && (
+                          <div className="migrations-dashboard__action-buttons">
+                            {/* Downgrade button - enabled only on previous version */}
                             <ActionButton
-                              variant="primary"
-                              size="small"
+                              variant="icon"
+                              icon="⬇️"
+                              onClick={() => handleDowngrade(v.version)}
+                              disabled={currentVersion - 1 !== v.version || isLoading}
+                              title={currentVersion - 1 === v.version ? 'Revertir a esta versión' : 'Downgrade no disponible'}
+                            />
+
+                            {/* Re-apply button - enabled only on current version */}
+                            <ActionButton
+                              variant="icon"
+                              icon="🔄"
+                              onClick={() => handleReapply(v.version)}
+                              disabled={currentVersion !== v.version || isLoading}
+                              title={currentVersion === v.version ? 'Re-ejecutar esta versión' : 'Re-apply no disponible'}
+                            />
+
+                            {/* Upgrade button - enabled only on next version */}
+                            <ActionButton
+                              variant="icon"
+                              icon="⬆️"
                               onClick={() => handleUpgrade(v.version)}
-                              disabled={isLoading}
-                            >
-                              Actualizar
-                            </ActionButton>
-                          )}
+                              disabled={currentVersion + 1 !== v.version || isLoading}
+                              title={currentVersion + 1 === v.version ? 'Actualizar a esta versión' : 'Upgrade no disponible'}
+                            />
+                          </div>
                         </td>
                       </tr>
                     ))}

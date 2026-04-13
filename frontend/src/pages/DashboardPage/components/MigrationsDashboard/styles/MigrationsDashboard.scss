@@ -296,6 +296,23 @@
   font-weight: 600;
 }
 
+.migrations-dashboard__action-buttons {
+  display: flex;
+  gap: 8px;
+  align-items: center;
+
+  .action-button {
+    &[disabled] {
+      opacity: 0.4;
+      cursor: not-allowed;
+    }
+
+    &:not([disabled]) {
+      cursor: pointer;
+    }
+  }
+}
+
 @keyframes slideDown {
   from {
     transform: translateY(-10px);
