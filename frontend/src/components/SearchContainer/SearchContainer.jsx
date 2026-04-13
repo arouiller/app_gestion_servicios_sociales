@@ -4,9 +4,7 @@ import './SearchContainer.scss';
 function SearchContainer({
   placeholder = 'Buscar...',
   value,
-  onChange,
-  count = 0,
-  maxItems = 20
+  onChange
 }) {
   return (
     <div className="search-container">
@@ -21,11 +19,6 @@ function SearchContainer({
         />
         <span className="search-container__icon">🔍</span>
       </div>
-      {count > 0 && (
-        <div className="search-container__info">
-          {count} de {maxItems} resultados
-        </div>
-      )}
     </div>
   );
 }
