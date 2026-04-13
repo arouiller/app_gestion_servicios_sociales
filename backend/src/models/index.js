@@ -10,10 +10,11 @@ const TipoDeGrupo = require('./TipoDeGrupo');
 // Users
 const Usuario = require('./Usuario');
 
-// 1.0.x Models (nuevos para refactor)
+// 1.0.x Models
 const Persona = require('./Persona');
 const PlanV1 = require('./PlanV1');
 const PlanIntegrante = require('./PlanIntegrante');
+const IntegranteServicio = require('./IntegranteServicio');
 const HistorialCuota = require('./HistorialCuota');
 const Recibo = require('./Recibo');
 const ReciboIntegrante = require('./ReciboIntegrante');
@@ -32,6 +33,7 @@ const db = {
   Persona,
   PlanV1,
   PlanIntegrante,
+  IntegranteServicio,
   HistorialCuota,
   Recibo,
   ReciboIntegrante,
