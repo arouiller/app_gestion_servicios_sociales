@@ -52,8 +52,8 @@ const lookupService = {
    */
   getTiposDePlan: async () => {
     try {
-      const { data } = await api.get('/lookup/tipo_plan');
-      return data.data || [];
+      const { data } = await api.get('/lookup/tipos-de-plan');
+      return data || [];
     } catch (error) {
       console.error('Error loading tipos de plan:', error);
       return [];
@@ -65,8 +65,8 @@ const lookupService = {
    */
   getCobradores: async () => {
     try {
-      const { data } = await api.get('/lookup/cobrador');
-      return data.data || [];
+      const { data } = await api.get('/lookup/cobradores');
+      return data || [];
     } catch (error) {
       console.error('Error loading cobradores:', error);
       return [];
@@ -78,8 +78,8 @@ const lookupService = {
    */
   getObrasSociales: async () => {
     try {
-      const { data } = await api.get('/lookup/obra_social');
-      return data.data || [];
+      const { data } = await api.get('/lookup/obras-sociales');
+      return data || [];
     } catch (error) {
       console.error('Error loading obras sociales:', error);
       return [];
@@ -91,8 +91,8 @@ const lookupService = {
    */
   getTiposDeGrupo: async () => {
     try {
-      const { data } = await api.get('/lookup/tipo_grupo');
-      return data.data || [];
+      const { data } = await api.get('/lookup/tipos-de-grupo');
+      return data || [];
     } catch (error) {
       console.error('Error loading tipos de grupo:', error);
       return [];
