@@ -7,6 +7,10 @@ const personasController = require('../controllers/v1.0/personasController');
 // Búsqueda de personas
 router.get('/', verifyToken, personasController.search);
 
+// GET /api/personas/listar?page=1&limit=10&search=texto
+// Listar personas con paginación
+router.get('/listar', verifyToken, personasController.listar);
+
 // POST /api/personas
 // Crear nueva persona (admin only)
 router.post('/', verifyToken, requireAdmin, personasController.crear);
