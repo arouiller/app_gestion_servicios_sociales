@@ -15,21 +15,39 @@ function GestionPlanesV1() {
   const [planEditando, setPlanEditando] = useState(null);
   const [filtros, setFiltros] = useState({ estado: '', cobrador: '', obraSocial: '' });
 
+  // Cargar planes sin usar filtros como dependencia inicial
+  useEffect(() => {
+    const cargar = async () => {
+      setError(null);
+      setLoading(true);
+      try {
+        const data = await planesV1Service.listar(filtros);
+        setPlanes(Array.isArray(data) ? data : []);
+      } catch (err) {
+        console.error('Error al cargar planes:', err);
+        setError(err.response?.data?.message || err.message || 'Error al cargar planes');
+        setPlanes([]);
+      } finally {
+        setLoading(false);
+      }
+    };
+    cargar();
+  }, []);
+
   const cargar = useCallback(async () => {
     setError(null);
+    setLoading(true);
     try {
       const data = await planesV1Service.listar(filtros);
-      setPlanes(data);
+      setPlanes(Array.isArray(data) ? data : []);
     } catch (err) {
-      setError(err.response?.data?.message || 'Error al cargar planes');
+      console.error('Error al cargar planes:', err);
+      setError(err.response?.data?.message || err.message || 'Error al cargar planes');
+      setPlanes([]);
     } finally {
       setLoading(false);
     }
   }, [filtros]);
-
-  useEffect(() => {
-    cargar();
-  }, [cargar]);
 
   const mostrarMensaje = (texto, tipo = 'success') => {
     if (tipo === 'success') {
