@@ -6,6 +6,7 @@ import lookupService from '../../../../../services/lookupService';
 import AfiladoSearchModal from './AfiladoSearchModal';
 import AfiladoEditModal from './AfiladoEditModal';
 import ReciboDetalleModal from './ReciboDetalleModal';
+import IntegranteServiciosModal from './IntegranteServiciosModal';
 import './PlanV1Modal.scss';
 
 function PlanV1Modal({ mode, planData, onClose, onSave }) {
@@ -25,6 +26,7 @@ function PlanV1Modal({ mode, planData, onClose, onSave }) {
   const [afiladoSearchOpen, setAfiladoSearchOpen] = useState(false);
   const [afiladoEditOpen, setAfiladoEditOpen] = useState(null); // null or persona_id
   const [reciboDetailOpen, setReciboDetailOpen] = useState(null); // null or recibo id
+  const [serviciosModalOpen, setServiciosModalOpen] = useState(null); // null or integrante.id
 
   // Load lookups and max affiliate number on mount
   useEffect(() => {
@@ -75,6 +77,7 @@ function PlanV1Modal({ mode, planData, onClose, onSave }) {
       if (fullPlan && fullPlan.PlanIntegrantes) {
         // Convertir PlanIntegrantes al formato esperado por el form
         const integrantes = fullPlan.PlanIntegrantes.map(pi => ({
+          id: pi.id,
           persona_id: pi.persona_id,
           persona: pi.Persona,
           rol: pi.rol,
@@ -388,6 +391,7 @@ function PlanV1Modal({ mode, planData, onClose, onSave }) {
                         <th>Apellido</th>
                         <th>DNI</th>
                         <th>Rol</th>
+                        <th>Servicios</th>
                         <th>Acciones</th>
                       </tr>
                     </thead>
@@ -405,6 +409,17 @@ function PlanV1Modal({ mode, planData, onClose, onSave }) {
                               <option value="titular">Titular</option>
                               <option value="adherente">Adherente</option>
                             </select>
+                          </td>
+                          <td>
+                            <button
+                              type="button"
+                              className="plan-v1-modal__btn-icon"
+                              onClick={() => integrante.id && setServiciosModalOpen(integrante.id)}
+                              title="Servicios"
+                              disabled={!integrante.id}
+                            >
+                              ⚙
+                            </button>
                           </td>
                           <td>
                             <button
@@ -488,6 +503,12 @@ function PlanV1Modal({ mode, planData, onClose, onSave }) {
         />
       )}
       {reciboDetailOpen && <ReciboDetalleModal reciboId={reciboDetailOpen} onClose={() => setReciboDetailOpen(null)} />}
+      {serviciosModalOpen && (
+        <IntegranteServiciosModal
+          planIntegranteId={serviciosModalOpen}
+          onClose={() => setServiciosModalOpen(null)}
+        />
+      )}
     </>
   );
 }

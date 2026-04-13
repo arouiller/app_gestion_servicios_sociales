@@ -46,6 +46,7 @@ export const usePlanV1Form = (initialData = null) => {
       integrantes: [
         ...prev.integrantes,
         {
+          id: null,
           persona_id: persona.id,
           persona,
           rol,
