@@ -109,7 +109,7 @@ const LookupCRUD = ({ titulo, endpoint, campos }) => {
                 <td key={campo.name}>{registro[campo.name]}</td>
               ))}
               <td className="acciones">
-                <button onClick={() => handleOpenForm(registro)} className="btn-edit">Editar</button>
+                <button onClick={() => handleOpenForm(registro)} className="btn-edit" title="Editar">✏️</button>
                 <button onClick={() => handleDelete(Object.values(registro)[0])} className="btn-delete">Eliminar</button>
               </td>
             </tr>
