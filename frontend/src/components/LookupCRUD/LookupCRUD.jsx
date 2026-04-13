@@ -93,6 +93,8 @@ const LookupCRUD = ({ titulo, singularName, endpoint, campos }) => {
 
   if (loading) return <div className="lookup-crud loading">Cargando...</div>;
 
+  const sinResultados = registros.length === 0;
+
   return (
     <div className="lookup-crud">
       <div className="header">
@@ -102,29 +104,35 @@ const LookupCRUD = ({ titulo, singularName, endpoint, campos }) => {
         </button>
       </div>
 
-      <table className="lookup-table">
-        <thead>
-          <tr>
-            {campos.map(campo => (
-              <th key={campo.name}>{campo.label}</th>
-            ))}
-            <th>Acciones</th>
-          </tr>
-        </thead>
-        <tbody>
-          {registros.map(registro => (
-            <tr key={Object.values(registro)[0]}>
+      {sinResultados ? (
+        <div className="lookup-crud__empty">
+          <p>No hay {titulo.toLowerCase()}. Creá el primero.</p>
+        </div>
+      ) : (
+        <table className="lookup-table">
+          <thead>
+            <tr>
               {campos.map(campo => (
-                <td key={campo.name}>{registro[campo.name]}</td>
+                <th key={campo.name}>{campo.label}</th>
               ))}
-              <td className="acciones">
-                <button onClick={() => handleOpenForm(registro)} className="btn-edit" title="Editar">✏️</button>
-                <button onClick={() => handleDelete(Object.values(registro)[0])} className="btn-delete" title="Eliminar">🗑️</button>
-              </td>
+              <th>Acciones</th>
             </tr>
-          ))}
-        </tbody>
-      </table>
+          </thead>
+          <tbody>
+            {registros.map(registro => (
+              <tr key={Object.values(registro)[0]}>
+                {campos.map(campo => (
+                  <td key={campo.name}>{registro[campo.name]}</td>
+                ))}
+                <td className="acciones">
+                  <button onClick={() => handleOpenForm(registro)} className="btn-edit" title="Editar">✏️</button>
+                  <button onClick={() => handleDelete(Object.values(registro)[0])} className="btn-delete" title="Eliminar">🗑️</button>
+                </td>
+              </tr>
+            ))}
+          </tbody>
+        </table>
+      )}
 
       {showForm && (
         <div className="modal-overlay" onClick={handleCloseForm}>
