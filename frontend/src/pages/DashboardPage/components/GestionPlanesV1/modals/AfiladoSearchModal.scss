@@ -6,9 +6,9 @@
   background: white;
   border-radius: 8px;
   box-shadow: 0 4px 20px rgba(0, 0, 0, 0.15);
-  max-width: 600px;
-  width: 90vw;
-  max-height: 80vh;
+  max-width: 900px;
+  width: 95vw;
+  max-height: 90vh;
   overflow-y: auto;
   z-index: 1100;
 
@@ -157,6 +157,19 @@
     text-align: center;
     padding: 1rem;
     color: #6c757d;
+  }
+
+  &__error {
+    background-color: #f8d7da;
+    border: 1px solid #f5c6cb;
+    border-radius: 4px;
+    padding: 0.75rem 1rem;
+    margin-bottom: 1rem;
+    color: #721c24;
+
+    p {
+      margin: 0;
+    }
   }
 
   &__form {

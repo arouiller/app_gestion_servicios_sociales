@@ -31,8 +31,11 @@ function PlanV1Modal({ mode, planData, onClose, onSave }) {
     loadLookupData();
     if (mode === 'crear') {
       loadMaxAfiliadoNumber();
+    } else if (mode === 'editar' && planData?.plan_numero) {
+      // Load full plan data with integrantes
+      loadFullPlanData();
     }
-  }, [mode]);
+  }, [mode, planData?.plan_numero]);
 
   const loadLookupData = async () => {
     try {
@@ -60,6 +63,27 @@ function PlanV1Modal({ mode, planData, onClose, onSave }) {
       }
     } catch (err) {
       console.error('Error loading max affiliate number:', err);
+    }
+  };
+
+  const loadFullPlanData = async () => {
+    try {
+      const fullPlan = await planesV1Service.obtener(planData.plan_numero);
+      console.log('[PlanV1Modal] Loaded full plan data:', fullPlan);
+
+      // Actualizar el form con los datos completos incluyendo integrantes
+      if (fullPlan && fullPlan.PlanIntegrantes) {
+        // Convertir PlanIntegrantes al formato esperado por el form
+        const integrantes = fullPlan.PlanIntegrantes.map(pi => ({
+          persona_id: pi.persona_id,
+          persona: pi.Persona,
+          rol: pi.rol,
+        }));
+        console.log('[PlanV1Modal] Integrantes encontrados:', integrantes);
+        handleFieldChange('integrantes', integrantes);
+      }
+    } catch (err) {
+      console.error('Error loading full plan data:', err);
     }
   };
 

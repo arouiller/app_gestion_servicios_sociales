@@ -15,6 +15,7 @@ function AfiladoSearchModal({ onClose, onSelect }) {
     fecha_nacimiento: '',
     fecha_cobertura: '',
   });
+  const [errorMessage, setErrorMessage] = useState(null);
   const searchTimeoutRef = useRef(null);
 
   // Búsqueda en vivo
@@ -56,13 +57,48 @@ function AfiladoSearchModal({ onClose, onSelect }) {
   };
 
   const handleCreatePersona = async () => {
+    // Validar campos
+    if (!newPersona.nombre.trim()) {
+      setErrorMessage('El nombre es requerido');
+      return;
+    }
+    if (!newPersona.apellido.trim()) {
+      setErrorMessage('El apellido es requerido');
+      return;
+    }
+    if (!newPersona.numero_documento.trim()) {
+      setErrorMessage('El número de documento es requerido');
+      return;
+    }
+    if (!newPersona.fecha_nacimiento) {
+      setErrorMessage('La fecha de nacimiento es requerida');
+      return;
+    }
+    if (!newPersona.fecha_cobertura) {
+      setErrorMessage('La fecha de cobertura es requerida');
+      return;
+    }
+
     setLoading(true);
+    setErrorMessage(null);
     try {
       const persona = await personasService.crear(newPersona);
       onSelect(persona);
     } catch (err) {
       console.error('Error creating persona:', err);
-      alert('Error al crear afiliado');
+
+      // Mensajes de error más descriptivos
+      let errorMsg = 'Error al crear afiliado';
+
+      if (err.response?.status === 409) {
+        errorMsg = 'Ya existe una persona con ese número de documento';
+      } else if (err.response?.data?.message) {
+        errorMsg = err.response.data.message;
+      } else if (err.message) {
+        errorMsg = err.message;
+      }
+
+      setErrorMessage(errorMsg);
     } finally {
       setLoading(false);
     }
@@ -159,6 +195,11 @@ function AfiladoSearchModal({ onClose, onSelect }) {
           </div>
         ) : (
           <div className="afiliado-search-modal__body">
+            {errorMessage && (
+              <div className="afiliado-search-modal__error">
+                <p>{errorMessage}</p>
+              </div>
+            )}
             <div className="afiliado-search-modal__form">
               <div className="afiliado-search-modal__field">
                 <label>Nombre *</label>

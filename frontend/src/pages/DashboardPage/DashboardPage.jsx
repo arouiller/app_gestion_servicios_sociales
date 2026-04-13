@@ -3,8 +3,6 @@ import { useAuth } from '../../context/AuthContext';
 import DatosPersonales from './components/DatosPersonales/DatosPersonales';
 import MigrationsDashboard from './components/MigrationsDashboard/MigrationsDashboard';
 import BusquedaAfiliados from './components/v1.0/BusquedaAfiliados';
-import ListadoPlanes from './components/v1.0/ListadoPlanes';
-import PlanesPorCobrador from './components/v1.0/PlanesPorCobrador';
 import GestionPlanesV1 from './components/GestionPlanesV1/GestionPlanesV1';
 import GestionPlanesV1ErrorBoundary from './components/GestionPlanesV1/GestionPlanesV1ErrorBoundary';
 import Cobradores from './components/Cobradores/Cobradores';
@@ -41,8 +39,6 @@ function buildMenu(isAdmin) {
         ...(isAdmin ? [
           { key: 'gestion-planes-v1', label: 'Gestión de Planes' },
         ] : []),
-        { key: 'listado-planes', label: 'Listado de Planes' },
-        { key: 'planes-por-cobrador', label: 'Planes por Cobrador' },
         ...(isAdmin ? [
           { key: 'cobradores', label: 'Cobradores' },
           { key: 'obras-sociales', label: 'Obras Sociales' },
@@ -214,8 +210,6 @@ function DashboardPage() {
               <GestionPlanesV1 />
             </GestionPlanesV1ErrorBoundary>
           )}
-          {activeModule === 'listado-planes' && <ListadoPlanes />}
-          {activeModule === 'planes-por-cobrador' && <PlanesPorCobrador />}
           {activeModule === 'migraciones-bd' && <MigrationsDashboard />}
           {activeModule === 'cobradores' && <Cobradores />}
           {activeModule === 'obras-sociales' && <ObrasSociales />}
