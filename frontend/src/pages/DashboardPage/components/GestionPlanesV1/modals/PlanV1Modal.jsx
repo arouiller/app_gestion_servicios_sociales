@@ -52,8 +52,12 @@ function PlanV1Modal({ mode, planData, onClose, onSave }) {
   const loadMaxAfiliadoNumber = async () => {
     try {
       const data = await planesV1Service.getMaxAfiliadoNumber();
-      setMaxAfiliadoNumber(data.suggestedNumber);
-      handleFieldChange('numero_afiliado', String(data.suggestedNumber));
+      console.log('[PlanV1Modal] Max affiliate number data:', data);
+      if (data && data.suggestedNumber) {
+        setMaxAfiliadoNumber(data.suggestedNumber);
+        handleFieldChange('numero_afiliado', String(data.suggestedNumber));
+        console.log('[PlanV1Modal] Set suggested number:', data.suggestedNumber);
+      }
     } catch (err) {
       console.error('Error loading max affiliate number:', err);
     }

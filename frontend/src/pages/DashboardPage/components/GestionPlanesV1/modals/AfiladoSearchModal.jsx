@@ -21,11 +21,12 @@ function AfiladoSearchModal({ onClose, onSelect }) {
     setLoading(true);
     try {
       const data = await personasService.buscar(searchParams);
-      setResults(data);
+      setResults(Array.isArray(data) ? data : []);
       setSearched(true);
     } catch (err) {
       console.error('Error searching personas:', err);
       setResults([]);
+      setSearched(true);
     } finally {
       setLoading(false);
     }
