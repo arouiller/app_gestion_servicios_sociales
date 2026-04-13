@@ -8,8 +8,9 @@
   box-shadow: 0 4px 20px rgba(0, 0, 0, 0.15);
   max-width: 960px;
   width: 90vw;
-  max-height: 90vh;
-  overflow-y: auto;
+  height: 85vh;
+  display: flex;
+  flex-direction: column;
   z-index: 1000;
 
   &__overlay {
@@ -49,6 +50,10 @@
 
   &__body {
     padding: 1.5rem;
+    flex: 1;
+    overflow-y: auto;
+    display: flex;
+    flex-direction: column;
   }
 
   &__form {

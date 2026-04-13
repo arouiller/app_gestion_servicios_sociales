@@ -3,7 +3,7 @@ import personasService from '../../../../../services/personasService';
 import './AfiladoSearchModal.scss';
 
 function AfiladoSearchModal({ onClose, onSelect }) {
-  const [searchParams, setSearchParams] = useState({ nombre: '', apellido: '', numero_documento: '' });
+  const [searchText, setSearchText] = useState('');
   const [results, setResults] = useState([]);
   const [loading, setLoading] = useState(false);
   const [showCreateForm, setShowCreateForm] = useState(false);
@@ -26,7 +26,7 @@ function AfiladoSearchModal({ onClose, onSelect }) {
     }
 
     // Si no hay criterios de búsqueda, limpiar resultados
-    if (!searchParams.nombre && !searchParams.apellido && !searchParams.numero_documento) {
+    if (!searchText.trim()) {
       setResults([]);
       return;
     }
@@ -35,7 +35,7 @@ function AfiladoSearchModal({ onClose, onSelect }) {
     setLoading(true);
     searchTimeoutRef.current = setTimeout(async () => {
       try {
-        const data = await personasService.buscar(searchParams);
+        const data = await personasService.buscar(searchText);
         setResults(Array.isArray(data) ? data : []);
       } catch (err) {
         console.error('Error searching personas:', err);
@@ -50,7 +50,7 @@ function AfiladoSearchModal({ onClose, onSelect }) {
         clearTimeout(searchTimeoutRef.current);
       }
     };
-  }, [searchParams]);
+  }, [searchText]);
 
   const handleSelect = (persona) => {
     onSelect(persona);
@@ -118,26 +118,15 @@ function AfiladoSearchModal({ onClose, onSelect }) {
             <div className="afiliado-search-modal__search">
               <input
                 type="text"
-                placeholder="Nombre"
-                value={searchParams.nombre}
-                onChange={(e) => setSearchParams({ ...searchParams, nombre: e.target.value })}
-              />
-              <input
-                type="text"
-                placeholder="Apellido"
-                value={searchParams.apellido}
-                onChange={(e) => setSearchParams({ ...searchParams, apellido: e.target.value })}
-              />
-              <input
-                type="text"
-                placeholder="DNI"
-                value={searchParams.numero_documento}
-                onChange={(e) => setSearchParams({ ...searchParams, numero_documento: e.target.value })}
+                placeholder="Buscar por nombre, apellido o DNI..."
+                value={searchText}
+                onChange={(e) => setSearchText(e.target.value)}
+                autoFocus
               />
             </div>
 
             {/* Mostrar resultados si hay criterios de búsqueda */}
-            {(searchParams.nombre || searchParams.apellido || searchParams.numero_documento) && (
+            {searchText.trim() && (
               <>
                 {loading ? (
                   <div className="afiliado-search-modal__loading">

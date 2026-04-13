@@ -4,6 +4,7 @@ import './AfiladoEditModal.scss';
 
 function AfiladoEditModal({ personaId, personaData, onClose, onSave }) {
   const [saving, setSaving] = useState(false);
+  const [originalData, setOriginalData] = useState(null);
   const [form, setForm] = useState({
     nombre: '',
     apellido: '',
@@ -16,19 +17,48 @@ function AfiladoEditModal({ personaId, personaData, onClose, onSave }) {
   useEffect(() => {
     // Cargar datos de la persona si se proporcionan
     if (personaData) {
-      setForm({
+      console.log('[AfiladoEditModal] Loading persona data:', personaData);
+
+      const formatDate = (dateStr) => {
+        if (!dateStr) return '';
+        // Si es una fecha ISO, tomar solo la parte de la fecha
+        if (typeof dateStr === 'string' && dateStr.includes('T')) {
+          return dateStr.split('T')[0];
+        }
+        return dateStr;
+      };
+
+      const formData = {
         nombre: personaData.nombre || '',
         apellido: personaData.apellido || '',
         tipo_documento: personaData.tipo_documento || 'DNI',
-        numero_documento: personaData.numero_documento || '',
-        fecha_nacimiento: personaData.fecha_nacimiento ? personaData.fecha_nacimiento.split('T')[0] : '',
-        fecha_cobertura: personaData.fecha_cobertura ? personaData.fecha_cobertura.split('T')[0] : '',
-      });
+        numero_documento: String(personaData.numero_documento || ''),
+        fecha_nacimiento: formatDate(personaData.fecha_nacimiento),
+        fecha_cobertura: formatDate(personaData.fecha_cobertura),
+      };
+
+      setForm(formData);
+      setOriginalData(formData);
     }
   }, [personaId, personaData]);
 
   const handleChange = (field, value) => {
     setForm((prev) => ({ ...prev, [field]: value }));
+  };
+
+  const hasChanges = () => {
+    if (!originalData) return false;
+    return JSON.stringify(form) !== JSON.stringify(originalData);
+  };
+
+  const handleClose = () => {
+    if (hasChanges()) {
+      if (window.confirm('Hay cambios sin guardar. ¿Estás seguro de que querés descartar los cambios?')) {
+        onClose();
+      }
+    } else {
+      onClose();
+    }
   };
 
   const handleGuardar = async () => {
@@ -50,7 +80,7 @@ function AfiladoEditModal({ personaId, personaData, onClose, onSave }) {
       <div className="afiliado-edit-modal">
         <div className="afiliado-edit-modal__header">
           <h3>Editar Afiliado</h3>
-          <button className="afiliado-edit-modal__close" onClick={onClose}>✕</button>
+          <button className="afiliado-edit-modal__close" onClick={handleClose}>✕</button>
         </div>
 
         <div className="afiliado-edit-modal__body">
@@ -114,7 +144,7 @@ function AfiladoEditModal({ personaId, personaData, onClose, onSave }) {
           <button className="afiliado-edit-modal__btn afiliado-edit-modal__btn--primary" onClick={handleGuardar} disabled={saving}>
             {saving ? 'Guardando...' : 'Guardar Cambios'}
           </button>
-          <button className="afiliado-edit-modal__btn afiliado-edit-modal__btn--secondary" onClick={onClose} disabled={saving}>
+          <button className="afiliado-edit-modal__btn afiliado-edit-modal__btn--secondary" onClick={handleClose} disabled={saving}>
             Cancelar
           </button>
         </div>
