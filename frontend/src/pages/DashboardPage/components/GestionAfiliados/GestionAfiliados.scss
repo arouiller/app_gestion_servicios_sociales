@@ -138,6 +138,12 @@
     gap: 0.75rem;
     margin-bottom: 1rem;
     flex-wrap: wrap;
+
+    .search-container {
+      flex: 1;
+      min-width: 200px;
+      margin-bottom: 0;
+    }
   }
 
   &__filtro-input {

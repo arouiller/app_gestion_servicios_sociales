@@ -267,7 +267,7 @@ function TablaAfiliados({ afiliados, grupos, pagination, onEditar, onEliminar, o
       <div className="gestion-afiliados__filtros">
         <SearchContainer
           value={filtros.search}
-          onChange={(e) => onFiltroChange('search', e.target.value)}
+          onChange={(val) => onFiltroChange('search', val)}
           placeholder="Buscar por nombre, documento o email..."
         />
         <select
