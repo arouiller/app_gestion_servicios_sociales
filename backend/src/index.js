@@ -34,15 +34,7 @@ app.get('/api/health', (req, res) => {
 app.use('/api/auth', require('./routes/auth'));
 app.use('/api/migrations', require('./routes/migrations'));
 
-// 2.0.x routes (mantener durante refactor incremental)
-app.use('/api/afiliados', require('./routes/afiliados'));
-app.use('/api/grupos', require('./routes/grupos'));
-app.use('/api/planes', require('./routes/planes'));
-
-// Shared routes
-app.use('/api/lookup', require('./routes/lookup'));
-
-// 1.0.x routes (nuevas para refactor)
+// 1.0.x routes (refactor completado)
 app.use('/api/personas', require('./routes/personas'));
 app.use('/api/planes-v1', require('./routes/v1.0-planes'));
 app.use('/api/recibos', require('./routes/recibos'));

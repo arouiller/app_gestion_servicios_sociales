@@ -1,13 +1,6 @@
 const sequelize = require('../config/database');
 
-// 2.0.x Models (mantener durante refactor incremental)
-const Afiliado = require('./Afiliado');
-const GrupoFamiliar = require('./GrupoFamiliar');
-const HistorialGrupoFamiliar = require('./HistorialGrupoFamiliar');
-const Plan = require('./Plan');
-const IntegranteServicio = require('./IntegranteServicio');
-
-// Lookup entities (compartidos en ambas versiones)
+// Lookup entities
 const Cobrador = require('./Cobrador');
 const TipoDePlan = require('./TipoDePlan');
 const ObraSocial = require('./ObraSocial');
@@ -28,20 +21,14 @@ const ReciboIntegrante = require('./ReciboIntegrante');
 // Initialize all models
 const db = {
   sequelize,
-  // 2.0.x
-  Afiliado,
-  GrupoFamiliar,
-  HistorialGrupoFamiliar,
-  Plan,
-  IntegranteServicio,
-  // Shared
+  // Lookup entities
   Cobrador,
   TipoDePlan,
   ObraSocial,
   ServicioAdicional,
   TipoDeGrupo,
   Usuario,
-  // 1.0.x
+  // 1.0.x Models
   Persona,
   PlanV1,
   PlanIntegrante,
@@ -49,27 +36,6 @@ const db = {
   Recibo,
   ReciboIntegrante,
 };
-
-// Define associations for 2.0.x
-if (db.Plan && db.TipoDePlan) {
-  db.Plan.belongsTo(db.TipoDePlan, { foreignKey: 'tipo_plan_numero' });
-}
-if (db.Plan && db.Cobrador) {
-  db.Plan.belongsTo(db.Cobrador, { foreignKey: 'cobrador_numero' });
-}
-if (db.Plan && db.TipoDeGrupo) {
-  db.Plan.belongsTo(db.TipoDeGrupo, { foreignKey: 'tipo_de_grupo_numero' });
-}
-if (db.Plan && db.ObraSocial) {
-  db.Plan.belongsTo(db.ObraSocial, { foreignKey: 'os_numero' });
-}
-if (db.GrupoFamiliar && db.Plan) {
-  db.GrupoFamiliar.hasMany(db.Plan, { foreignKey: 'grupo_id', onDelete: 'CASCADE' });
-  db.Plan.belongsTo(db.GrupoFamiliar, { foreignKey: 'grupo_id' });
-}
-if (db.IntegranteServicio && db.ServicioAdicional) {
-  db.IntegranteServicio.belongsTo(db.ServicioAdicional, { foreignKey: 'servicio_adicional_numero' });
-}
 
 // Define associations for 1.0.x
 // Plan 1.0.x associations (reuse lookup models)

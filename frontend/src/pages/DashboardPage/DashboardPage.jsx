@@ -2,9 +2,9 @@ import React, { useState } from 'react';
 import { useAuth } from '../../context/AuthContext';
 import DatosPersonales from './components/DatosPersonales/DatosPersonales';
 import MigrationsDashboard from './components/MigrationsDashboard/MigrationsDashboard';
-import GestionAfiliados from './components/GestionAfiliados/GestionAfiliados';
-import GestionGruposFamiliares from './components/GestionGruposFamiliares/GestionGruposFamiliares';
-import GestionPlanes from './components/GestionPlanes/GestionPlanes';
+import BusquedaAfiliados from './components/v1.0/BusquedaAfiliados';
+import ListadoPlanes from './components/v1.0/ListadoPlanes';
+import PlanesPorCobrador from './components/v1.0/PlanesPorCobrador';
 import Cobradores from './components/Cobradores/Cobradores';
 import ObrasSociales from './components/ObrasSociales/ObrasSociales';
 import ServiciosAdicionales from './components/ServiciosAdicionales/ServiciosAdicionales';
@@ -35,9 +35,9 @@ function buildMenu(isAdmin) {
       key: 'gestion',
       label: 'Gestión',
       children: [
-        { key: 'afiliados', label: 'Afiliados' },
-        { key: 'grupos-familiares', label: 'Grupos Familiares' },
-        { key: 'planes', label: 'Planes' },
+        { key: 'busqueda-afiliados', label: 'Búsqueda de Afiliados' },
+        { key: 'listado-planes', label: 'Listado de Planes' },
+        { key: 'planes-por-cobrador', label: 'Planes por Cobrador' },
         ...(isAdmin ? [
           { key: 'cobradores', label: 'Cobradores' },
           { key: 'obras-sociales', label: 'Obras Sociales' },
@@ -203,9 +203,9 @@ function DashboardPage() {
 
         <main className="dashboard__content">
           {activeModule === 'datos-personales' && <DatosPersonales />}
-          {activeModule === 'afiliados' && <GestionAfiliados />}
-          {activeModule === 'grupos-familiares' && <GestionGruposFamiliares />}
-          {activeModule === 'planes' && <GestionPlanes />}
+          {activeModule === 'busqueda-afiliados' && <BusquedaAfiliados />}
+          {activeModule === 'listado-planes' && <ListadoPlanes />}
+          {activeModule === 'planes-por-cobrador' && <PlanesPorCobrador />}
           {activeModule === 'migraciones-bd' && <MigrationsDashboard />}
           {activeModule === 'cobradores' && <Cobradores />}
           {activeModule === 'obras-sociales' && <ObrasSociales />}
