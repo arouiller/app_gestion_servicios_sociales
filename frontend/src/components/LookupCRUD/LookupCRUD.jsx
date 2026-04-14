@@ -38,7 +38,7 @@ const LookupCRUD = ({ titulo, singularName, endpoint, campos }) => {
   const handleOpenForm = (registro = null) => {
     if (registro) {
       setFormData(registro);
-      setEditingId(registro[campos[0]?.pk || 'id']);
+      setEditingId(registro[campos[0].name]);
     } else {
       setFormData({});
       setEditingId(null);
