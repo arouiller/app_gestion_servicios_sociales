@@ -91,6 +91,7 @@ function MigrationsDashboard() {
       setError(null);
       setIsLoading(true);
 
+      console.log('[MigrationsDashboard] handleConfirm:', { version: preview.version, direction, preview });
       const result = await migrationsAPI.execute(preview.version, direction);
 
       if (result.success) {
