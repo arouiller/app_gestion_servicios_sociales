@@ -3,6 +3,7 @@ import { useAuth } from '../../../../context/AuthContext';
 import planesV1Service from '../../../../services/planesV1Service';
 import PlanV1Modal from './modals/PlanV1Modal';
 import BulkUpdateCuotaModal from '../BulkUpdateCuotaModal/BulkUpdateCuotaModal';
+import GenerarRecibosModal from './modals/GenerarRecibosModal';
 import SearchContainer from '../../../../components/SearchContainer/SearchContainer';
 import ActionButton from '../../../../components/ActionButton/ActionButton';
 import StatusBadge from '../../../../components/StatusBadge/StatusBadge';
@@ -24,6 +25,7 @@ function GestionPlanesV1() {
   const [filtros, setFiltros] = useState({ estado: '', cobrador: '', obraSocial: '' });
   const [searchText, setSearchText] = useState('');
   const [bulkUpdateModalOpen, setBulkUpdateModalOpen] = useState(false);
+  const [generarRecibosModalOpen, setGenerarRecibosModalOpen] = useState(false);
 
   // Cargar planes sin usar filtros como dependencia inicial
   useEffect(() => {
@@ -139,6 +141,9 @@ function GestionPlanesV1() {
             <ActionButton variant="secondary" onClick={() => setBulkUpdateModalOpen(true)}>
               Aumento Masivo
             </ActionButton>
+            <ActionButton variant="secondary" onClick={() => setGenerarRecibosModalOpen(true)}>
+              Generar Recibos
+            </ActionButton>
           </div>
         )}
       </div>
@@ -224,6 +229,14 @@ function GestionPlanesV1() {
         onSuccess={(result) => {
           mostrarMensaje(`${result.updated} planes actualizados exitosamente`, 'success');
           cargar();
+        }}
+      />
+
+      <GenerarRecibosModal
+        isOpen={generarRecibosModalOpen}
+        onClose={() => setGenerarRecibosModalOpen(false)}
+        onSuccess={(result) => {
+          mostrarMensaje(`${result.recibos?.length || 0} recibos generados exitosamente`, 'success');
         }}
       />
     </div>
