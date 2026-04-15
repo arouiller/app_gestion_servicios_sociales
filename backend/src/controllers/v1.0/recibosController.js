@@ -31,7 +31,7 @@ exports.generar = async (req, res, next) => {
     let planesAGenerar = [];
     if (!planes || planes.length === 0) {
       // Generar para todos los planes ACTIVO
-      const todosPlanes = await db.Plan.findAll({
+      const todosPlanes = await db.PlanV1.findAll({
         where: { estado: 'ACTIVO' },
         raw: true,
         transaction,
@@ -56,7 +56,8 @@ exports.generar = async (req, res, next) => {
       }
 
       // Obtener datos del plan con sus relaciones
-      const plan = await db.Plan.findByPk(planNumero, {
+      const plan = await db.PlanV1.findByPk(planNumero, {
+        attributes: ['plan_numero', 'numero_afiliado', 'domicilio', 'valor_cuota'],
         include: [
           { model: db.TipoDePlan, attributes: ['tipo_plan_nombre'] },
           { model: db.Cobrador, attributes: ['cobrador_apellido', 'cobrador_nombre'] },
