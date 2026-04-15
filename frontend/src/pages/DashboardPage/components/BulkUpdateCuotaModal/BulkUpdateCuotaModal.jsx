@@ -4,9 +4,10 @@ import lookupService from '../../../../services/lookupService';
 import './BulkUpdateCuotaModal.scss';
 
 function BulkUpdateCuotaModal({ isOpen, onClose, onSuccess }) {
-  const [step, setStep] = useState(1); // 1: select filter, 2: preview, 3: confirm
-  const [filtro, setFiltro] = useState('tipo_plan');
-  const [nuevoCuota, setNuevoCuota] = useState('');
+  const [step, setStep] = useState(1); // 1: config, 2: preview, 3: confirm
+  const [tipoAumento, setTipoAumento] = useState('porcentual'); // 'fijo' | 'porcentual'
+  const [valor, setValor] = useState('');
+  const [filtro, setFiltro] = useState('todos'); // 'todos' | 'tipo_plan' | 'cobrador' | 'os'
   const [selectValue, setSelectValue] = useState('');
   const [previewCount, setPreviewCount] = useState(null);
   const [affectedPlanes, setAffectedPlanes] = useState([]);
@@ -34,26 +35,28 @@ function BulkUpdateCuotaModal({ isOpen, onClose, onSuccess }) {
       ]);
 
       setLookupData({
-        tiposPlan: tpRes.success ? tpRes.data : [],
-        cobradores: cobRes.success ? cobRes.data : [],
-        obrasSociales: osRes.success ? osRes.data : [],
+        tiposPlan: (tpRes?.success && Array.isArray(tpRes.data)) ? tpRes.data : [],
+        cobradores: (cobRes?.success && Array.isArray(cobRes.data)) ? cobRes.data : [],
+        obrasSociales: (osRes?.success && Array.isArray(osRes.data)) ? osRes.data : [],
       });
     } catch (err) {
       console.error('Error loading lookup data:', err);
+      setError('Error al cargar datos de filtros');
     }
   };
 
   const resetForm = () => {
     setStep(1);
-    setFiltro('tipo_plan');
-    setNuevoCuota('');
+    setTipoAumento('porcentual');
+    setValor('');
+    setFiltro('todos');
     setSelectValue('');
     setPreviewCount(null);
     setAffectedPlanes([]);
     setError(null);
   };
 
-  const handleFilterChange = (e) => {
+  const handleFiltroChange = (e) => {
     setFiltro(e.target.value);
     setSelectValue('');
     setPreviewCount(null);
@@ -70,7 +73,7 @@ function BulkUpdateCuotaModal({ isOpen, onClose, onSuccess }) {
     if (filtro === 'tipo_plan') return 'Tipo de Plan';
     if (filtro === 'cobrador') return 'Cobrador';
     if (filtro === 'os') return 'Obra Social';
-    return 'Seleccionar';
+    return '';
   };
 
   const getSelectKeyField = () => {
@@ -95,15 +98,21 @@ function BulkUpdateCuotaModal({ isOpen, onClose, onSuccess }) {
     return item[nameField];
   };
 
+  const getUnidadTexto = () => {
+    return tipoAumento === 'porcentual' ? '%' : '$';
+  };
+
   const handlePreview = async () => {
     setError(null);
 
-    if (!nuevoCuota || parseFloat(nuevoCuota) <= 0) {
-      setError('Ingresa un valor válido');
+    // Validar valor
+    if (!valor || parseFloat(valor) <= 0) {
+      setError(`Ingresa un valor ${tipoAumento === 'porcentual' ? 'porcentual' : 'fijo'} válido`);
       return;
     }
 
-    if (!selectValue) {
+    // Validar filtro si no es "todos"
+    if (filtro !== 'todos' && !selectValue) {
       setError(`Selecciona un ${getSelectLabel().toLowerCase()}`);
       return;
     }
@@ -111,9 +120,13 @@ function BulkUpdateCuotaModal({ isOpen, onClose, onSuccess }) {
     setLoading(true);
     try {
       const params = {};
-      if (filtro === 'tipo_plan') params.tipo_plan_numero = selectValue;
-      else if (filtro === 'cobrador') params.cobrador_numero = selectValue;
-      else if (filtro === 'os') params.os_numero = selectValue;
+      if (filtro === 'tipo_plan' && selectValue) {
+        params.tipo_plan_numero = selectValue;
+      } else if (filtro === 'cobrador' && selectValue) {
+        params.cobrador_numero = selectValue;
+      } else if (filtro === 'os' && selectValue) {
+        params.os_numero = selectValue;
+      }
 
       // Get preview count
       const countRes = await planesService.countByFilter(filtro, params);
@@ -133,7 +146,7 @@ function BulkUpdateCuotaModal({ isOpen, onClose, onSuccess }) {
       setAffectedPlanes(planesRes.data);
       setStep(2);
     } catch (err) {
-      setError(err.message);
+      setError(err.message || 'Error al cargar preview');
     } finally {
       setLoading(false);
     }
@@ -145,12 +158,17 @@ function BulkUpdateCuotaModal({ isOpen, onClose, onSuccess }) {
 
     try {
       const params = {};
-      if (filtro === 'tipo_plan') params.tipo_plan_numero = selectValue;
-      else if (filtro === 'cobrador') params.cobrador_numero = selectValue;
-      else if (filtro === 'os') params.os_numero = selectValue;
+      if (filtro === 'tipo_plan' && selectValue) {
+        params.tipo_plan_numero = selectValue;
+      } else if (filtro === 'cobrador' && selectValue) {
+        params.cobrador_numero = selectValue;
+      } else if (filtro === 'os' && selectValue) {
+        params.os_numero = selectValue;
+      }
 
       const payload = {
-        nuevo_valor: parseFloat(nuevoCuota),
+        valor: parseFloat(valor),
+        tipoAumento,
         filtro,
         ...params,
       };
@@ -166,7 +184,7 @@ function BulkUpdateCuotaModal({ isOpen, onClose, onSuccess }) {
       onClose();
       resetForm();
     } catch (err) {
-      setError(err.message);
+      setError(err.message || 'Error al ejecutar actualización');
     } finally {
       setLoading(false);
     }
@@ -191,41 +209,91 @@ function BulkUpdateCuotaModal({ isOpen, onClose, onSuccess }) {
 
           {step === 1 && (
             <>
+              {/* Tipo de Aumento */}
               <div className="form-group">
-                <label>Filtrar por:</label>
-                <select value={filtro} onChange={handleFilterChange}>
-                  <option value="tipo_plan">Tipo de Plan</option>
-                  <option value="cobrador">Cobrador</option>
-                  <option value="os">Obra Social</option>
+                <label>Tipo de aumento:</label>
+                <div className="radio-group">
+                  <label className="radio-label">
+                    <input
+                      type="radio"
+                      name="tipoAumento"
+                      value="porcentual"
+                      checked={tipoAumento === 'porcentual'}
+                      onChange={(e) => setTipoAumento(e.target.value)}
+                    />
+                    Porcentual (%)
+                  </label>
+                  <label className="radio-label">
+                    <input
+                      type="radio"
+                      name="tipoAumento"
+                      value="fijo"
+                      checked={tipoAumento === 'fijo'}
+                      onChange={(e) => setTipoAumento(e.target.value)}
+                    />
+                    Fijo ($)
+                  </label>
+                </div>
+              </div>
+
+              {/* Valor del Aumento */}
+              <div className="form-group">
+                <label>
+                  Valor del aumento:
+                  <span className="form-hint">
+                    {tipoAumento === 'porcentual'
+                      ? ' (ej: 10 para 10%)'
+                      : ' (ej: 50 para $50)'}
+                  </span>
+                </label>
+                <div className="input-with-unit">
+                  <input
+                    type="number"
+                    step="0.01"
+                    min="0.01"
+                    value={valor}
+                    onChange={(e) => setValor(e.target.value)}
+                    placeholder={tipoAumento === 'porcentual' ? '10' : '50.00'}
+                  />
+                  <span className="input-unit">{getUnidadTexto()}</span>
+                </div>
+              </div>
+
+              {/* Filtro de Planes */}
+              <div className="form-group">
+                <label>Seleccionar planes:</label>
+                <select value={filtro} onChange={handleFiltroChange}>
+                  <option value="todos">Todos los planes activos</option>
+                  <option value="tipo_plan">Por Tipo de Plan</option>
+                  <option value="cobrador">Por Cobrador</option>
+                  <option value="os">Por Obra Social</option>
                 </select>
               </div>
 
-              <div className="form-group">
-                <label>{getSelectLabel()}:</label>
-                <select
-                  value={selectValue}
-                  onChange={(e) => setSelectValue(e.target.value)}
-                >
-                  <option value="">— Seleccionar —</option>
-                  {getSelectOptions().map((item) => (
-                    <option key={item[getSelectKeyField()]} value={item[getSelectKeyField()]}>
-                      {getSelectDisplayName(item)}
-                    </option>
-                  ))}
-                </select>
-              </div>
-
-              <div className="form-group">
-                <label>Nuevo valor de cuota:</label>
-                <input
-                  type="number"
-                  step="0.01"
-                  min="0"
-                  value={nuevoCuota}
-                  onChange={(e) => setNuevoCuota(e.target.value)}
-                  placeholder="Ej: 500.00"
-                />
-              </div>
+              {/* Selector de Filtro (si no es "todos") */}
+              {filtro !== 'todos' && (
+                <div className="form-group">
+                  <label>{getSelectLabel()}:</label>
+                  <select
+                    value={selectValue}
+                    onChange={(e) => setSelectValue(e.target.value)}
+                  >
+                    <option value="">— Seleccionar —</option>
+                    {getSelectOptions().length > 0 ? (
+                      getSelectOptions().map((item) => (
+                        <option
+                          key={item[getSelectKeyField()]}
+                          value={item[getSelectKeyField()]}
+                        >
+                          {getSelectDisplayName(item)}
+                        </option>
+                      ))
+                    ) : (
+                      <option disabled>Sin opciones disponibles</option>
+                    )}
+                  </select>
+                </div>
+              )}
             </>
           )}
 
@@ -233,11 +301,18 @@ function BulkUpdateCuotaModal({ isOpen, onClose, onSuccess }) {
             <>
               <div className="preview-summary">
                 <p>Se afectarán <strong>{previewCount} planes</strong></p>
-                <p>Nuevo valor de cuota: <strong>${parseFloat(nuevoCuota).toFixed(2)}</strong></p>
+                <p>
+                  Tipo de aumento: <strong>{tipoAumento === 'porcentual' ? `${valor}%` : `$${parseFloat(valor).toFixed(2)}`}</strong>
+                </p>
+                {filtro !== 'todos' && (
+                  <p>
+                    Filtro: <strong>{getSelectLabel()} - {selectValue}</strong>
+                  </p>
+                )}
               </div>
 
               <div className="planes-list">
-                <h4>Planes afectados:</h4>
+                <h4>Primeros planes a afectar:</h4>
                 {affectedPlanes.length > 0 ? (
                   <div className="planes-table">
                     <div className="planes-table__header">
@@ -278,7 +353,7 @@ function BulkUpdateCuotaModal({ isOpen, onClose, onSuccess }) {
               <button
                 className="btn btn-primary"
                 onClick={handlePreview}
-                disabled={loading || !nuevoCuota || !selectValue}
+                disabled={loading || !valor || (filtro !== 'todos' && !selectValue)}
               >
                 {loading ? 'Cargando...' : 'Ver preview'}
               </button>
