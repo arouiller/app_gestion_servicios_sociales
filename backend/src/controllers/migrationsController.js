@@ -66,6 +66,31 @@ async function stats(req, res) {
 }
 
 /**
+ * GET /api/migrations/debug/migraciones-bd
+ * [DEBUG] Retorna el contenido exacto de la tabla migraciones_bd
+ */
+async function debugMigracionesBd(req, res) {
+  try {
+    const sequelize = require('../config/database');
+    const [rows] = await sequelize.query(
+      `SELECT version, descripcion, tipo, estado, fecha_ejecucion FROM migraciones_bd ORDER BY version ASC`
+    );
+
+    res.json({
+      success: true,
+      data: {
+        total: rows.length,
+        migrations: rows,
+      },
+      timestamp: new Date(),
+    });
+  } catch (err) {
+    console.error('Error fetching migraciones_bd:', err);
+    res.status(500).json({ success: false, message: err.message });
+  }
+}
+
+/**
  * GET /api/migrations/preview/:version/:direction
  * Retorna el SQL que se ejecutaría para un upgrade/downgrade sin ejecutarlo
  * direction: "upgrade" | "downgrade"
@@ -158,4 +183,5 @@ module.exports = {
   stats,
   preview,
   execute,
+  debugMigracionesBd,
 };
