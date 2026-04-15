@@ -1,0 +1,253 @@
+@import '../../../../styles/colors';
+
+.modal-overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.4);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 1000;
+}
+
+.modal-content {
+  background: $color-white;
+  border-radius: 12px;
+  box-shadow: 0 20px 60px rgba(0, 0, 0, 0.15);
+  max-width: 600px;
+  width: 95%;
+  max-height: 90vh;
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+
+  &.bulk-cuota-modal {
+    max-width: 700px;
+  }
+}
+
+.modal-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 1.5rem;
+  border-bottom: 1px solid $color-border;
+  flex-shrink: 0;
+
+  h2 {
+    margin: 0;
+    font-size: 1.1rem;
+    font-weight: 700;
+    color: #111827;
+  }
+}
+
+.modal-close {
+  background: none;
+  border: none;
+  font-size: 1.1rem;
+  color: #6b7280;
+  cursor: pointer;
+  line-height: 1;
+  padding: 0.2rem;
+  flex-shrink: 0;
+
+  &:hover {
+    color: #111827;
+  }
+}
+
+.modal-body {
+  padding: 1.5rem;
+  overflow-y: auto;
+  flex: 1;
+}
+
+.modal-footer {
+  display: flex;
+  gap: 0.75rem;
+  justify-content: flex-end;
+  padding: 1.5rem;
+  border-top: 1px solid $color-border;
+  flex-shrink: 0;
+}
+
+.form-group {
+  margin-bottom: 1.25rem;
+
+  label {
+    display: block;
+    font-weight: 600;
+    font-size: 0.95rem;
+    color: #111827;
+    margin-bottom: 0.5rem;
+  }
+
+  select,
+  input {
+    width: 100%;
+    padding: 0.625rem 0.75rem;
+    border: 1px solid $color-border;
+    border-radius: 6px;
+    font-size: 0.95rem;
+    font-family: inherit;
+
+    &:focus {
+      outline: none;
+      border-color: $color-primary;
+      box-shadow: 0 0 0 3px $color-primary-light;
+    }
+  }
+}
+
+.alert {
+  padding: 0.75rem 1rem;
+  border-radius: 6px;
+  margin-bottom: 1rem;
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+
+  &.alert-error {
+    background: $color-danger-bg;
+    color: $color-danger;
+    border: 1px solid lighten($color-danger, 20%);
+  }
+}
+
+.preview-summary {
+  background: $color-info-bg;
+  border: 1px solid $color-info;
+  border-radius: 6px;
+  padding: 1rem;
+  margin-bottom: 1.5rem;
+
+  p {
+    margin: 0.5rem 0;
+    font-size: 0.95rem;
+    color: #111827;
+
+    strong {
+      color: $color-info;
+      font-weight: 600;
+    }
+  }
+}
+
+.planes-list {
+  margin-bottom: 1.5rem;
+
+  h4 {
+    margin: 0 0 1rem;
+    font-size: 0.95rem;
+    font-weight: 600;
+    color: #111827;
+  }
+
+  .empty-message {
+    text-align: center;
+    color: $color-text-muted;
+    padding: 1rem;
+    font-size: 0.9rem;
+  }
+}
+
+.planes-table {
+  border: 1px solid $color-border;
+  border-radius: 6px;
+  overflow: hidden;
+  max-height: 400px;
+  overflow-y: auto;
+
+  &__header {
+    display: grid;
+    grid-template-columns: 80px 1fr 120px;
+    background: $color-bg-light;
+    border-bottom: 1px solid $color-border;
+    font-weight: 600;
+    font-size: 0.9rem;
+    color: #111827;
+    position: sticky;
+    top: 0;
+    z-index: 10;
+
+    div {
+      padding: 0.75rem;
+    }
+  }
+
+  &__row {
+    display: grid;
+    grid-template-columns: 80px 1fr 120px;
+    border-bottom: 1px solid $color-border;
+    font-size: 0.9rem;
+    color: $color-text;
+
+    &:last-child {
+      border-bottom: none;
+    }
+
+    div {
+      padding: 0.75rem;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+    }
+  }
+
+  &__more {
+    padding: 0.75rem;
+    text-align: center;
+    background: $color-bg-light;
+    color: $color-text-muted;
+    font-size: 0.9rem;
+    border-top: 1px solid $color-border;
+  }
+}
+
+.btn {
+  padding: 0.625rem 1.25rem;
+  border: 1px solid transparent;
+  border-radius: 6px;
+  font-size: 0.95rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  white-space: nowrap;
+
+  &:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+  }
+
+  &.btn-primary {
+    background: $color-primary;
+    color: $color-white;
+    border-color: $color-primary;
+
+    &:hover:not(:disabled) {
+      background: $color-primary-hover;
+      border-color: $color-primary-hover;
+    }
+  }
+
+  &.btn-secondary {
+    background: $color-bg-light;
+    color: $color-text;
+    border-color: $color-border;
+
+    &:hover:not(:disabled) {
+      background: darken($color-bg-light, 5%);
+    }
+  }
+
+  &.btn-danger {
+    background: $color-danger;
+    color: $color-white;
+    border-color: $color-danger;
+
+    &:hover:not(:disabled) {
+      background: darken($color-danger, 10%);
+    }
+  }
+}
