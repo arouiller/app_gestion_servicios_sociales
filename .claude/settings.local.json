@@ -1,6 +1,7 @@
 {
   "permissions": {
     "allow": [
+      "Bash(*)",
       "WebFetch(domain:github.com)",
       "Read(//c/Program Files/**)",
       "Read(//c/Users/alejandro.rouiller/AppData/Roaming/**)",
@@ -8,7 +9,8 @@
       "Bash(mkdir -p backend/src/migrations/versions/1.0.2_planes_y_personas)",
       "Bash(mkdir -p backend/src/migrations/versions/1.0.3_historial_cuota_y_recibos)",
       "Bash(mkdir -p backend/src/controllers/v1.0)",
-      "Bash(mkdir -p frontend/src/services/v1.0)"
+      "Bash(mkdir -p frontend/src/services/v1.0)",
+      "Bash(git *)"
     ]
   }
 }

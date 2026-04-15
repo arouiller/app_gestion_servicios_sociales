@@ -1,13 +1,16 @@
 import React, { useState, useEffect } from 'react';
-import ActionButton from '../../../../components/ActionButton/ActionButton';
 import PreviewModal from './modals/PreviewModal';
-import migrationsAPI from './services/migrationsService';
+import VersionesTab from './tabs/VersionesTab';
+import HistorialTab from './tabs/HistorialTab';
+import EstadisticasTab from './tabs/EstadisticasTab';
+import migrationsAPI from '../../../../services/migrationsService';
 import './styles/MigrationsDashboard.scss';
 
 function MigrationsDashboard() {
   const [activeTab, setActiveTab] = useState('versiones');
   const [versions, setVersions] = useState([]);
   const [history, setHistory] = useState([]);
+  const [stats, setStats] = useState(null);
   const [currentVersion, setCurrentVersion] = useState(null);
 
   const [preview, setPreview] = useState(null);
@@ -31,9 +34,10 @@ function MigrationsDashboard() {
   const loadAllData = async () => {
     try {
       setError(null);
-      const [listRes, historyRes] = await Promise.all([
+      const [listRes, historyRes, statsRes] = await Promise.all([
         migrationsAPI.list(),
         migrationsAPI.history(),
+        migrationsAPI.stats(),
       ]);
 
       if (listRes.success) {
@@ -43,6 +47,10 @@ function MigrationsDashboard() {
 
       if (historyRes.success) {
         setHistory(historyRes.data.history);
+      }
+
+      if (statsRes.success) {
+        setStats(statsRes.data);
       }
     } catch (err) {
       console.error('Error loading migration data:', err);
@@ -139,109 +147,34 @@ function MigrationsDashboard() {
           >
             Historial
           </button>
+          <button
+            className={`tab-btn ${activeTab === 'estadisticas' ? 'active' : ''}`}
+            onClick={() => setActiveTab('estadisticas')}
+          >
+            Estadísticas
+          </button>
         </div>
 
         <div className="tabs-content">
           {activeTab === 'versiones' && (
-            <div className="migrations-dashboard__content">
-              <h3>Versiones Disponibles</h3>
-              {versions.length === 0 ? (
-                <p className="migrations-dashboard__empty">No hay versiones disponibles</p>
-              ) : (
-                <table className="migrations-dashboard__versions-table">
-                  <thead>
-                    <tr>
-                      <th>Versión</th>
-                      <th>Estado</th>
-                      <th>Acciones</th>
-                    </tr>
-                  </thead>
-                  <tbody>
-                    {[...versions].sort((a, b) => Number(b.version) - Number(a.version)).map((v) => (
-                      <tr key={v.version}>
-                        <td className="migrations-dashboard__version-number">v{v.version}</td>
-                        <td className="migrations-dashboard__version-status">
-                          {Number(currentVersion) === Number(v.version) ? (
-                            <span className="migrations-dashboard__current">Actual</span>
-                          ) : Number(currentVersion) > Number(v.version) ? (
-                            <span className="migrations-dashboard__previous">Anterior</span>
-                          ) : (
-                            <span className="migrations-dashboard__available">Disponible</span>
-                          )}
-                        </td>
-                        <td className="migrations-dashboard__version-action">
-                          <div className="migrations-dashboard__action-buttons">
-                            {/* Downgrade button - enabled only on previous version */}
-                            <ActionButton
-                              variant="icon"
-                              icon="⬇️"
-                              onClick={() => handleDowngrade(v.version)}
-                              disabled={Number(currentVersion) - 1 !== Number(v.version) || isLoading}
-                              title={Number(currentVersion) - 1 === Number(v.version) ? 'Revertir a esta versión' : 'Downgrade no disponible'}
-                            />
-
-                            {/* Re-apply button - enabled only on current version */}
-                            <ActionButton
-                              variant="icon"
-                              icon="🔄"
-                              onClick={() => handleReapply(v.version)}
-                              disabled={Number(currentVersion) !== Number(v.version) || isLoading}
-                              title={Number(currentVersion) === Number(v.version) ? 'Re-ejecutar esta versión' : 'Re-apply no disponible'}
-                            />
-
-                            {/* Upgrade button - enabled only on next version */}
-                            <ActionButton
-                              variant="icon"
-                              icon="⬆️"
-                              onClick={() => handleUpgrade(v.version)}
-                              disabled={Number(currentVersion) + 1 !== Number(v.version) || isLoading}
-                              title={Number(currentVersion) + 1 === Number(v.version) ? 'Actualizar a esta versión' : 'Upgrade no disponible'}
-                            />
-                          </div>
-                        </td>
-                      </tr>
-                    ))}
-                  </tbody>
-                </table>
-              )}
-            </div>
+            <VersionesTab
+              versions={versions}
+              currentVersion={currentVersion}
+              isLoading={isLoading}
+              onUpgrade={handleUpgrade}
+              onDowngrade={handleDowngrade}
+              onReapply={handleReapply}
+            />
           )}
 
-          {activeTab === 'historial' && (
-            <div className="tab-content">
-              {history.length === 0 ? (
-                <p>No hay historial de migraciones</p>
-              ) : (
-                <table className="historial-table">
-                  <thead>
-                    <tr>
-                      <th>Versión</th>
-                      <th>Tipo</th>
-                      <th>Estado</th>
-                      <th>Fecha</th>
-                    </tr>
-                  </thead>
-                  <tbody>
-                    {history.map((record) => (
-                      <tr key={record.id}>
-                        <td>{record.version}</td>
-                        <td>{record.tipo === 'upgrade' ? '↑ Upgrade' : '↓ Downgrade'}</td>
-                        <td>
-                          <span
-                            className={`status-badge ${
-                              record.estado === 'exitosa' ? 'exitosa' : 'fallida'
-                            }`}
-                          >
-                            {record.estado === 'exitosa' ? '✓ Exitosa' : '✗ Fallida'}
-                          </span>
-                        </td>
-                        <td>{new Date(record.fecha_ejecucion).toLocaleString('es-AR')}</td>
-                      </tr>
-                    ))}
-                  </tbody>
-                </table>
-              )}
-            </div>
+          {activeTab === 'historial' && <HistorialTab history={history} />}
+
+          {activeTab === 'estadisticas' && (
+            <EstadisticasTab
+              stats={stats}
+              isLoading={isLoading}
+              onRefresh={loadAllData}
+            />
           )}
         </div>
       </div>
