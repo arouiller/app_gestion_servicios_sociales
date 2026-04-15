@@ -125,7 +125,13 @@ async function getAppliedMigrations() {
   const [rows] = await sequelize.query(
     `SELECT version FROM migraciones_bd WHERE estado = 'exitosa' ORDER BY version ASC`
   );
-  return rows.map((r) => r.version);
+  const versions = rows.map((r) => r.version);
+
+  // Ordenar semánticamente (no alfabéticamente) para encontrar la versión actual correctamente
+  // Ejemplo: [1.0.0, 1.0.1, 2.0.0, 2.0.1, 2.0.3, 2.0.4] → último es 2.0.4 alfabéticamente
+  // Pero si solo 2.0.3 es actual, las demás se ejecutaron después por error
+  // Ordenamos para asegurar orden semántico: la versión mayor es la actual
+  return versions.sort((a, b) => compareVersions(a, b));
 }
 
 async function recordMigration(version, descripcion, tipo, estado = 'exitosa', transaction = null) {

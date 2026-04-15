@@ -12,7 +12,6 @@ router.get('/list', migrationsController.list);
 router.get('/history', migrationsController.history);
 router.get('/stats', migrationsController.stats);
 router.get('/preview/:version/:direction', migrationsController.preview);
-router.get('/debug/migraciones-bd', migrationsController.debugMigracionesBd);
 
 // POST routes (write)
 router.post('/execute/:version/:direction', migrationsController.execute);
