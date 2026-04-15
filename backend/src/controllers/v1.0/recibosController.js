@@ -1,5 +1,5 @@
 const db = require('../../models');
-const { sequelize } = require('../../config/database');
+const sequelize = require('../../config/database');
 
 /**
  * POST /api/recibos/generar
