@@ -252,6 +252,32 @@ const getMaxAfiliadoNumber = async (req, res, next) => {
   }
 };
 
+// ── GET /api/v1.0/planes/:planNumero/historial-cuota ────────────────────────────
+// Obtener historial de cambios de cuota para un plan
+
+const getHistorialCuota = async (req, res, next) => {
+  try {
+    const { planNumero } = req.params;
+
+    // Verificar que el plan existe
+    const plan = await db.PlanV1.findByPk(planNumero);
+    if (!plan) {
+      return res.status(404).json({ success: false, message: 'Plan no encontrado' });
+    }
+
+    // Obtener historial de cuota ordenado por fecha descendente
+    const historial = await db.HistorialCuota.findAll({
+      where: { plan_numero: planNumero },
+      order: [['fecha_cambio', 'DESC']],
+      raw: true,
+    });
+
+    return res.json({ success: true, data: historial || [] });
+  } catch (error) {
+    next(error);
+  }
+};
+
 module.exports = {
   listar,
   getByPersona,
@@ -260,4 +286,5 @@ module.exports = {
   actualizar,
   eliminar,
   getMaxAfiliadoNumber,
+  getHistorialCuota,
 };
