@@ -74,7 +74,7 @@ exports.generar = async (req, res, next) => {
       // Obtener integrantes del plan
       const integrantes = await db.PlanIntegrante.findAll({
         where: { plan_numero: planNumero },
-        include: [{ model: db.Persona, attributes: ['id', 'apellido', 'nombre'] }],
+        include: [{ model: db.Persona, attributes: ['id', 'apellido', 'nombre', 'tipo_documento', 'numero_documento', 'fecha_nacimiento', 'fecha_cobertura'] }],
         transaction,
       });
 
