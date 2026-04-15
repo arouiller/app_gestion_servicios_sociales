@@ -28,16 +28,16 @@ function BulkUpdateCuotaModal({ isOpen, onClose, onSuccess }) {
 
   const loadLookupData = async () => {
     try {
-      const [tpRes, cobRes, osRes] = await Promise.all([
-        lookupService.getTipoPlan(),
-        lookupService.getCobrador(),
-        lookupService.getObraSocial(),
+      const [tiposDeplan, cobradores, obrasSociales] = await Promise.all([
+        lookupService.getTiposDePlan(),
+        lookupService.getCobradores(),
+        lookupService.getObrasSociales(),
       ]);
 
       setLookupData({
-        tiposPlan: (tpRes?.success && Array.isArray(tpRes.data)) ? tpRes.data : [],
-        cobradores: (cobRes?.success && Array.isArray(cobRes.data)) ? cobRes.data : [],
-        obrasSociales: (osRes?.success && Array.isArray(osRes.data)) ? osRes.data : [],
+        tiposPlan: Array.isArray(tiposDeplan) ? tiposDeplan : [],
+        cobradores: Array.isArray(cobradores) ? cobradores : [],
+        obrasSociales: Array.isArray(obrasSociales) ? obrasSociales : [],
       });
     } catch (err) {
       console.error('Error loading lookup data:', err);
@@ -302,7 +302,12 @@ function BulkUpdateCuotaModal({ isOpen, onClose, onSuccess }) {
               <div className="preview-summary">
                 <p>Se afectarán <strong>{previewCount} planes</strong></p>
                 <p>
-                  Tipo de aumento: <strong>{tipoAumento === 'porcentual' ? `${valor}%` : `$${parseFloat(valor).toFixed(2)}`}</strong>
+                  Tipo de aumento: <strong>
+                    {tipoAumento === 'porcentual'
+                      ? `${valor}%`
+                      : `$${Number(valor).toFixed(2)}`
+                    }
+                  </strong>
                 </p>
                 {filtro !== 'todos' && (
                   <p>
@@ -324,7 +329,7 @@ function BulkUpdateCuotaModal({ isOpen, onClose, onSuccess }) {
                       <div key={plan.plan_numero} className="planes-table__row">
                         <div>{plan.plan_numero}</div>
                         <div>{plan.numero_afiliado}</div>
-                        <div>${plan.valor_cuota?.toFixed(2)}</div>
+                        <div>${Number(plan.valor_cuota || 0).toFixed(2)}</div>
                       </div>
                     ))}
                     {affectedPlanes.length > 5 && (
