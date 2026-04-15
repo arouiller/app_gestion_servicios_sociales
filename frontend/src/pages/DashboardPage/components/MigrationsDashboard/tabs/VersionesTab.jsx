@@ -41,17 +41,16 @@ function VersionesTab({
         </thead>
         <tbody>
           {sortedVersions.map((v) => {
-            const vNum = parseFloat(v.version);
-            const currentNum = parseFloat(currentVersion);
-            const isCurrentVersion = vNum === currentNum;
-            const isPreviousVersion = vNum < currentNum;
-            const isNextVersion = vNum === currentNum + 0.1 || vNum > currentNum;
+            // Usar el campo 'estado' del API en lugar de recalcular localmente
+            const isCurrentVersion = v.estado === 'aplicada';
+            const isPreviousVersion = v.estado === 'pasada';
+            const isNextVersion = v.estado === 'pendiente';
 
             return (
               <tr key={v.version}>
                 <td className="migrations-dashboard__version-number">v{v.version}</td>
                 <td className="migrations-dashboard__version-desc">
-                  {v.description || '—'}
+                  {v.descripcion || '—'}
                 </td>
                 <td className="migrations-dashboard__version-status">
                   {isCurrentVersion ? (
@@ -64,12 +63,12 @@ function VersionesTab({
                 </td>
                 <td className="migrations-dashboard__version-action">
                   <div className="migrations-dashboard__action-buttons">
-                    {/* Downgrade button - enabled only if this is the previous version */}
+                    {/* Downgrade button - enabled only if this is the current version */}
                     <ActionButton
                       variant="icon"
                       icon="⬇️"
                       onClick={() => onDowngrade(v.version)}
-                      disabled={vNum !== currentNum - 0.1 && vNum !== currentNum - 1 || isLoading}
+                      disabled={v.estado !== 'aplicada' || isLoading}
                       title="Revertir a esta versión"
                     />
 
@@ -78,16 +77,16 @@ function VersionesTab({
                       variant="icon"
                       icon="🔄"
                       onClick={() => onReapply(v.version)}
-                      disabled={!isCurrentVersion || isLoading}
+                      disabled={v.estado !== 'aplicada' || isLoading}
                       title="Re-ejecutar esta versión"
                     />
 
-                    {/* Upgrade button - enabled only if this is the next version */}
+                    {/* Upgrade button - enabled only if this is a pending version */}
                     <ActionButton
                       variant="icon"
                       icon="⬆️"
                       onClick={() => onUpgrade(v.version)}
-                      disabled={vNum !== currentNum + 0.1 && vNum !== currentNum + 1 || isLoading}
+                      disabled={v.estado !== 'pendiente' || isLoading}
                       title="Actualizar a esta versión"
                     />
                   </div>
