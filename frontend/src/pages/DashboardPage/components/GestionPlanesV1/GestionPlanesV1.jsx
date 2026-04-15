@@ -2,6 +2,7 @@ import React, { useCallback, useEffect, useState } from 'react';
 import { useAuth } from '../../../../context/AuthContext';
 import planesV1Service from '../../../../services/planesV1Service';
 import PlanV1Modal from './modals/PlanV1Modal';
+import BulkUpdateCuotaModal from '../BulkUpdateCuotaModal/BulkUpdateCuotaModal';
 import SearchContainer from '../../../../components/SearchContainer/SearchContainer';
 import ActionButton from '../../../../components/ActionButton/ActionButton';
 import StatusBadge from '../../../../components/StatusBadge/StatusBadge';
@@ -22,6 +23,7 @@ function GestionPlanesV1() {
   const [planEditando, setPlanEditando] = useState(null);
   const [filtros, setFiltros] = useState({ estado: '', cobrador: '', obraSocial: '' });
   const [searchText, setSearchText] = useState('');
+  const [bulkUpdateModalOpen, setBulkUpdateModalOpen] = useState(false);
 
   // Cargar planes sin usar filtros como dependencia inicial
   useEffect(() => {
@@ -130,9 +132,14 @@ function GestionPlanesV1() {
       <div className="gestion-planes-v1__header">
         <h2 className="gestion-planes-v1__title">Planes de Servicio v1.0</h2>
         {isAdmin && (
-          <ActionButton variant="primary" icon="+" onClick={handleCrearPlan}>
-            Nuevo Plan
-          </ActionButton>
+          <div className="gestion-planes-v1__actions">
+            <ActionButton variant="primary" icon="+" onClick={handleCrearPlan}>
+              Nuevo Plan
+            </ActionButton>
+            <ActionButton variant="secondary" onClick={() => setBulkUpdateModalOpen(true)}>
+              Aumento Masivo
+            </ActionButton>
+          </div>
         )}
       </div>
 
@@ -210,6 +217,15 @@ function GestionPlanesV1() {
           onSave={handleModalSave}
         />
       )}
+
+      <BulkUpdateCuotaModal
+        isOpen={bulkUpdateModalOpen}
+        onClose={() => setBulkUpdateModalOpen(false)}
+        onSuccess={(result) => {
+          mostrarMensaje(`${result.updated} planes actualizados exitosamente`, 'success');
+          cargar();
+        }}
+      />
     </div>
   );
 }
