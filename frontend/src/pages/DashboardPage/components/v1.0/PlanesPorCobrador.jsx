@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import lookupService from '../../../../services/lookupService';
-import planesService from '../../../../services/v1.0/planesService';
+import planesService from '../../../../services/planesV1Service';
 import './PlanesPorCobrador.scss';
 
 const PlanesPorCobrador = () => {
