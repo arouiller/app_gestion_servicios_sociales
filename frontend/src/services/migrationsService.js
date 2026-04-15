@@ -44,12 +44,14 @@ const migrationsAPI = {
   },
 
   /**
-   * POST /api/migrations/execute
+   * POST /api/migrations/execute/:version/:direction
    * Ejecuta la migración en transacción
-   * @param {string} direction - "upgrade" o "downgrade"
+   * @param {string} version - Versión destino (ej: "2.0.4")
+   * @param {string} direction - "upgrade", "downgrade" o "reapply"
    */
-  execute: async (direction) => {
-    const { data } = await api.post('/migrations/execute', { direction });
+  execute: async (version, direction) => {
+    const url = `/migrations/execute/${version}/${direction}`;
+    const { data } = await api.post(url);
     return data;
   },
 };
