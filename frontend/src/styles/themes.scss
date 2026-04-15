@@ -1,0 +1,202 @@
+// ── Sistema de Temas ───────────────────────────────────────────────────────
+// Define 4 temas distintos con variables CSS
+// Aplicar clase tema en <body> para cambiar: body.theme-claro, body.theme-oscuro, etc.
+
+// ── Tema Claro (por defecto) ────────────────────────────────────────────────
+body.theme-claro,
+body {
+  --color-bg: #f5f5f5;
+  --color-surface: #ffffff;
+  --color-surface-alt: #f8f9fa;
+  --color-primary: #4a90d9;
+  --color-primary-hover: #0056b3;
+  --color-primary-light: rgba(74, 144, 217, 0.1);
+  --color-text: #212529;
+  --color-text-muted: #6c757d;
+  --color-border: #dee2e6;
+  --color-danger: #dc3545;
+  --color-danger-hover: #c82333;
+  --color-success: #28a745;
+  --color-warning: #ffc107;
+  --color-info: #17a2b8;
+  --color-row-alt: #f8f9fa;
+  --shadow-sm: 0 1px 3px rgba(0, 0, 0, 0.12);
+  --shadow-md: 0 4px 6px rgba(0, 0, 0, 0.15);
+  --shadow-lg: 0 4px 20px rgba(0, 0, 0, 0.15);
+}
+
+// ── Tema Oscuro ─────────────────────────────────────────────────────────────
+body.theme-oscuro {
+  --color-bg: #1a1a2e;
+  --color-surface: #16213e;
+  --color-surface-alt: #0f3460;
+  --color-primary: #4a90d9;
+  --color-primary-hover: #2d5ba8;
+  --color-primary-light: rgba(74, 144, 217, 0.2);
+  --color-text: #e9ecef;
+  --color-text-muted: #adb5bd;
+  --color-border: #495057;
+  --color-danger: #f8696b;
+  --color-danger-hover: #e6484b;
+  --color-success: #51cf66;
+  --color-warning: #ffd43b;
+  --color-info: #4dabf7;
+  --color-row-alt: #0f3460;
+  --shadow-sm: 0 1px 3px rgba(0, 0, 0, 0.5);
+  --shadow-md: 0 4px 6px rgba(0, 0, 0, 0.6);
+  --shadow-lg: 0 4px 20px rgba(0, 0, 0, 0.7);
+}
+
+// ── Tema Azul ───────────────────────────────────────────────────────────────
+body.theme-azul {
+  --color-bg: #e8f0fe;
+  --color-surface: #ffffff;
+  --color-surface-alt: #f0f7ff;
+  --color-primary: #1a73e8;
+  --color-primary-hover: #0d47a1;
+  --color-primary-light: rgba(26, 115, 232, 0.1);
+  --color-text: #1a1a1a;
+  --color-text-muted: #5f6368;
+  --color-border: #d1d5db;
+  --color-danger: #d32f2f;
+  --color-danger-hover: #b71c1c;
+  --color-success: #0f9747;
+  --color-warning: #f57c00;
+  --color-info: #0288d1;
+  --color-row-alt: #f0f7ff;
+  --shadow-sm: 0 1px 2px rgba(0, 0, 0, 0.1);
+  --shadow-md: 0 2px 4px rgba(0, 0, 0, 0.15);
+  --shadow-lg: 0 4px 20px rgba(0, 0, 0, 0.12);
+}
+
+// ── Tema Verde ──────────────────────────────────────────────────────────────
+body.theme-verde {
+  --color-bg: #e8f5e9;
+  --color-surface: #ffffff;
+  --color-surface-alt: #f1f8f6;
+  --color-primary: #2e7d32;
+  --color-primary-hover: #1b5e20;
+  --color-primary-light: rgba(46, 125, 50, 0.1);
+  --color-text: #1b5e20;
+  --color-text-muted: #558b2f;
+  --color-border: #c8e6c9;
+  --color-danger: #d32f2f;
+  --color-danger-hover: #b71c1c;
+  --color-success: #2e7d32;
+  --color-warning: #fbc02d;
+  --color-info: #1976d2;
+  --color-row-alt: #f1f8f6;
+  --shadow-sm: 0 1px 3px rgba(0, 0, 0, 0.12);
+  --shadow-md: 0 4px 6px rgba(0, 0, 0, 0.15);
+  --shadow-lg: 0 4px 20px rgba(0, 0, 0, 0.15);
+}
+
+// ── Aplicar variables a elementos globales ──────────────────────────────────
+body {
+  background-color: var(--color-bg);
+  color: var(--color-text);
+  transition: background-color 0.3s ease, color 0.3s ease;
+}
+
+// Aplicar a elementos comunes
+a {
+  color: var(--color-primary);
+
+  &:hover {
+    color: var(--color-primary-hover);
+  }
+}
+
+button,
+input[type="button"],
+input[type="submit"] {
+  &:not(.btn--secondary) {
+    background-color: var(--color-primary);
+    color: white;
+
+    &:hover {
+      background-color: var(--color-primary-hover);
+    }
+  }
+}
+
+input,
+textarea,
+select {
+  background-color: var(--color-surface);
+  color: var(--color-text);
+  border-color: var(--color-border);
+
+  &:focus {
+    border-color: var(--color-primary);
+  }
+}
+
+table {
+  thead {
+    background-color: var(--color-surface-alt);
+    border-bottom-color: var(--color-border);
+  }
+
+  tbody {
+    tr {
+      border-bottom-color: var(--color-border);
+
+      &:nth-child(even) {
+        background-color: var(--color-row-alt);
+      }
+
+      &:hover {
+        background-color: var(--color-primary-light);
+      }
+    }
+  }
+}
+
+// Modal y overlays
+.plan-v1-modal,
+.modal {
+  background-color: var(--color-surface);
+  color: var(--color-text);
+  box-shadow: var(--shadow-lg);
+
+  &__header {
+    border-bottom-color: var(--color-border);
+  }
+
+  &__footer {
+    border-top-color: var(--color-border);
+  }
+}
+
+.modal__overlay {
+  background-color: rgba(0, 0, 0, 0.5);
+}
+
+// Cards
+.card {
+  background-color: var(--color-surface);
+  border-color: var(--color-border);
+  box-shadow: var(--shadow-sm);
+}
+
+// Alerts y notificaciones
+.alert {
+  &--danger {
+    background-color: rgba(220, 53, 69, 0.1);
+    border-color: var(--color-danger);
+    color: var(--color-danger);
+  }
+
+  &--success {
+    background-color: rgba(40, 167, 69, 0.1);
+    border-color: var(--color-success);
+    color: var(--color-success);
+  }
+
+  &--warning {
+    background-color: rgba(255, 193, 7, 0.1);
+    border-color: var(--color-warning);
+    color: var(--color-text);
+  }
+}
