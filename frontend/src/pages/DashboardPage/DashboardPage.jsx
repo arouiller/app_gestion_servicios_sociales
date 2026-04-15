@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
 import { useAuth } from '../../context/AuthContext';
+import ThemeSwitcher from '../../components/ThemeSwitcher/ThemeSwitcher';
 import DatosPersonales from './components/DatosPersonales/DatosPersonales';
 import MigrationsDashboard from './components/MigrationsDashboard/MigrationsDashboard';
 import BusquedaAfiliados from './components/v1.0/BusquedaAfiliados';
@@ -186,6 +187,7 @@ function DashboardPage() {
               {user?.rol === 'admin' ? 'Administrador' : 'Usuario'}
             </span>
           </div>
+          <ThemeSwitcher />
           <button className="dashboard__logout-btn" onClick={logout}>
             Cerrar sesión
           </button>
