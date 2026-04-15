@@ -20,8 +20,10 @@ function PlanV1Modal({ mode, planData, onClose, onSave }) {
     tiposDeGrupo: [],
   });
 
-  const [activeTab, setActiveTab] = useState('datos'); // 'datos' | 'afiliados' | 'recibos'
+  const [activeTab, setActiveTab] = useState('datos'); // 'datos' | 'afiliados' | 'recibos' | 'historial'
   const [maxAfiliadoNumber, setMaxAfiliadoNumber] = useState(null);
+  const [historialCuota, setHistorialCuota] = useState([]);
+  const [historialLoading, setHistorialLoading] = useState(false);
 
   // Secondary modals
   const [afiladoSearchOpen, setAfiladoSearchOpen] = useState(false);
@@ -88,6 +90,20 @@ function PlanV1Modal({ mode, planData, onClose, onSave }) {
       }
     } catch (err) {
       console.error('Error loading full plan data:', err);
+    }
+  };
+
+  const loadHistorialCuota = async () => {
+    try {
+      setHistorialLoading(true);
+      const data = await planesV1Service.obtenerHistorialCuota(planData.plan_numero);
+      console.log('[PlanV1Modal] Historial de cuota:', data);
+      setHistorialCuota(Array.isArray(data) ? data : []);
+    } catch (err) {
+      console.error('Error loading historial cuota:', err);
+      setHistorialCuota([]);
+    } finally {
+      setHistorialLoading(false);
     }
   };
 
@@ -240,6 +256,20 @@ function PlanV1Modal({ mode, planData, onClose, onSave }) {
                 onClick={() => setActiveTab('recibos')}
               >
                 Recibos
+              </button>
+            )}
+            {mode === 'editar' && (
+              <button
+                type="button"
+                className={`plan-v1-modal__tab ${activeTab === 'historial' ? 'active' : ''}`}
+                onClick={async () => {
+                  setActiveTab('historial');
+                  if (historialCuota.length === 0) {
+                    await loadHistorialCuota();
+                  }
+                }}
+              >
+                Historial de Cuota
               </button>
             )}
           </div>
@@ -467,6 +497,37 @@ function PlanV1Modal({ mode, planData, onClose, onSave }) {
                           <td>{recibo.id}</td>
                           <td>{new Date(recibo.periodo).toLocaleDateString('es-AR')}</td>
                           <td>${parseFloat(recibo.valor_cuota).toFixed(2)}</td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                )}
+              </div>
+            )}
+
+            {/* Tab: Historial de Cuota */}
+            {activeTab === 'historial' && (
+              <div className="plan-v1-modal__tab-content">
+                <h4>Historial de Cuota</h4>
+                {historialLoading ? (
+                  <p className="plan-v1-modal__empty">Cargando historial...</p>
+                ) : !historialCuota || historialCuota.length === 0 ? (
+                  <p className="plan-v1-modal__empty">No hay cambios de cuota registrados.</p>
+                ) : (
+                  <table className="plan-v1-modal__historial-tabla">
+                    <thead>
+                      <tr>
+                        <th>Fecha de Cambio</th>
+                        <th>Valor Anterior</th>
+                        <th>Valor Nuevo</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {historialCuota.map((cambio, idx) => (
+                        <tr key={idx}>
+                          <td>{new Date(cambio.fecha_cambio).toLocaleDateString('es-AR')}</td>
+                          <td>${parseFloat(cambio.valor_anterior).toFixed(2)}</td>
+                          <td>${parseFloat(cambio.valor_nuevo).toFixed(2)}</td>
                         </tr>
                       ))}
                     </tbody>
