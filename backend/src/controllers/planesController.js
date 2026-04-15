@@ -41,31 +41,42 @@ exports.filter = async (req, res, next) => {
 /**
  * PATCH /api/planes/bulk-update-cuota
  * Actualiza masivamente el valor_cuota de planes
- * Body: { plan_numeros: [1,2,3], nuevo_valor: 500, filtro: 'todos|tipo_plan|cobrador|os|estado', ... }
+ * Body: {
+ *   valor: 500 (número),
+ *   tipoAumento: 'fijo' | 'porcentual',
+ *   filtro?: 'tipo_plan' | 'cobrador' | 'os' | 'todos',
+ *   tipo_plan_numero?: number,
+ *   cobrador_numero?: number,
+ *   os_numero?: number
+ * }
  * Retorna: { success, updated: N, affectedPlanes: [], historialIds: [] }
  */
 exports.bulkUpdateCuota = async (req, res, next) => {
   const transaction = await db.sequelize.transaction();
   try {
-    const { plan_numeros, nuevo_valor, filtro } = req.body;
+    const { valor, tipoAumento, filtro } = req.body;
     const userId = req.user.id;
 
-    if (!nuevo_valor || nuevo_valor <= 0) {
-      return res.status(400).json({ success: false, message: 'nuevo_valor debe ser positivo' });
+    if (!valor || parseFloat(valor) <= 0) {
+      return res.status(400).json({ success: false, message: 'valor debe ser positivo' });
+    }
+
+    if (!tipoAumento || !['fijo', 'porcentual'].includes(tipoAumento)) {
+      return res.status(400).json({ success: false, message: 'tipoAumento debe ser "fijo" o "porcentual"' });
     }
 
     let planesToUpdate = [];
 
-    // Si se proporciona lista explícita
-    if (Array.isArray(plan_numeros) && plan_numeros.length > 0) {
-      planesToUpdate = await db.PlanV1.findAll({
-        where: { plan_numero: { [Op.in]: plan_numeros } },
-        transaction,
-      });
-    } else if (filtro) {
-      // Si se usa filtro
+    // Determinar planes a actualizar
+    if (filtro && filtro !== 'todos') {
       const where = buildFilterWhere(filtro, req.body);
       planesToUpdate = await db.PlanV1.findAll({ where, transaction });
+    } else {
+      // Todos los planes activos
+      planesToUpdate = await db.PlanV1.findAll({
+        where: { estado: 'ACTIVO' },
+        transaction,
+      });
     }
 
     if (planesToUpdate.length === 0) {
@@ -75,15 +86,28 @@ exports.bulkUpdateCuota = async (req, res, next) => {
     const historialIds = [];
     const affectedPlanes = [];
     const timestamp = new Date();
+    const valorNumerico = parseFloat(valor);
 
     for (const plan of planesToUpdate) {
-      const valorAnterior = plan.valor_cuota;
+      const valorAnterior = parseFloat(plan.valor_cuota);
+      let valorNuevo;
+
+      // Calcular nuevo valor según tipo
+      if (tipoAumento === 'fijo') {
+        valorNuevo = valorAnterior + valorNumerico;
+      } else {
+        // porcentual
+        valorNuevo = valorAnterior * (1 + valorNumerico / 100);
+      }
+
+      // Redondear a 2 decimales
+      valorNuevo = Math.round(valorNuevo * 100) / 100;
 
       // Registrar en historial
       const historial = await db.HistorialCuota.create({
         plan_numero: plan.plan_numero,
         valor_anterior: valorAnterior,
-        valor_nuevo: nuevo_valor,
+        valor_nuevo: valorNuevo,
         fecha_cambio: timestamp,
         usuario_id: userId,
       }, { transaction });
@@ -91,7 +115,7 @@ exports.bulkUpdateCuota = async (req, res, next) => {
       historialIds.push(historial.id);
 
       // Actualizar plan
-      plan.valor_cuota = nuevo_valor;
+      plan.valor_cuota = valorNuevo;
       plan.fecha_actualizacion = timestamp;
       await plan.save({ transaction });
 
@@ -99,7 +123,7 @@ exports.bulkUpdateCuota = async (req, res, next) => {
         plan_numero: plan.plan_numero,
         numero_afiliado: plan.numero_afiliado,
         valor_anterior: valorAnterior,
-        valor_nuevo: nuevo_valor,
+        valor_nuevo: valorNuevo,
       });
     }
 
