@@ -105,8 +105,13 @@ async function preview(req, res) {
 
 /**
  * POST /api/migrations/execute/:version/:direction
- * Ejecuta una migración específica (upgrade o downgrade)
- * direction: "upgrade" | "downgrade"
+ * Ejecuta una migración específica (upgrade, downgrade o reapply)
+ * direction: "upgrade" | "downgrade" | "reapply"
+ *
+ * Reglas:
+ * - upgrade: versión debe estar pendiente (siguiente secuencial)
+ * - downgrade: versión debe ser la actual (última aplicada)
+ * - reapply: versión debe ser la actual (downgrade + upgrade en transacción)
  */
 async function execute(req, res) {
   try {

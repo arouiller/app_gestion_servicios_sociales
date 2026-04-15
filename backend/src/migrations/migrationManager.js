@@ -14,6 +14,24 @@ const MIGRATIONS_DIR = path.join(__dirname, 'versions');
 
 // ── Utilidades ────────────────────────────────────────────────────────────────
 
+/**
+ * Compara dos versiones semánticas (X.Y.Z).
+ * Retorna: -1 si v1 < v2, 0 si iguales, 1 si v1 > v2
+ * Ejemplo: compareVersions("2.0.3", "1.0.5") → 1 (2.0.3 es mayor)
+ */
+function compareVersions(v1, v2) {
+  const parts1 = v1.split('.').map(Number);
+  const parts2 = v2.split('.').map(Number);
+
+  for (let i = 0; i < Math.max(parts1.length, parts2.length); i++) {
+    const p1 = parts1[i] || 0;
+    const p2 = parts2[i] || 0;
+    if (p1 > p2) return 1;
+    if (p1 < p2) return -1;
+  }
+  return 0;
+}
+
 function getMigrationFolders() {
   if (!fs.existsSync(MIGRATIONS_DIR)) {
     fs.mkdirSync(MIGRATIONS_DIR, { recursive: true });
@@ -24,7 +42,12 @@ function getMigrationFolders() {
     .readdirSync(MIGRATIONS_DIR, { withFileTypes: true })
     .filter((e) => e.isDirectory() && e.name !== 'node_modules')
     .map((e) => e.name)
-    .sort();
+    .sort((a, b) => {
+      // Ordenar descendente (mayor primero) por versión semántica
+      const versionA = getVersion(a);
+      const versionB = getVersion(b);
+      return compareVersions(versionB, versionA); // B > A → descendente
+    });
 }
 
 function getVersion(folder) {
@@ -125,19 +148,31 @@ async function appendHistory(version, descripcion, tipo, estado, durationMs = nu
 
 /**
  * Retorna el estado de todas las migraciones disponibles.
+ * Estados posibles:
+ * - 'aplicada': versión actual (última ejecutada exitosamente)
+ * - 'pasada': versión completada pero no es la actual
+ * - 'pendiente': versión no ejecutada aún
  */
 async function list() {
   await ensureTable();
   const applied = await getAppliedMigrations();
+  const currentVersion = applied.length > 0 ? applied[applied.length - 1] : null;
   const folders = getMigrationFolders();
 
   return folders.map((folder) => {
     const version = getVersion(folder);
+    let estado = 'pendiente';
+
+    if (applied.includes(version)) {
+      // Diferencia entre "aplicada" (actual) y "pasada" (completada)
+      estado = version === currentVersion ? 'aplicada' : 'pasada';
+    }
+
     return {
       version,
       folder,
       descripcion: getDescription(folder),
-      estado: applied.includes(version) ? 'aplicada' : 'pendiente',
+      estado,
     };
   });
 }
@@ -340,11 +375,21 @@ async function execute(version, direction) {
   }
 
   // Validation
+  const currentVersion = applied.length > 0 ? applied[applied.length - 1] : null;
+
   if (direction === 'upgrade' && applied.includes(version)) {
     throw new Error(`Versión ${version} ya está aplicada`);
   }
-  if (direction === 'downgrade' && !applied.includes(version)) {
-    throw new Error(`Versión ${version} no está aplicada`);
+
+  if (direction === 'downgrade') {
+    // Downgrade solo se permite para la versión actual (última aplicada)
+    if (version !== currentVersion) {
+      throw new Error(
+        `No se puede hacer downgrade de v${version}. ` +
+        `Solo la versión actual (v${currentVersion}) puede revertirse. ` +
+        `Para volver a versiones anteriores, debe hacer downgrade secuencial desde v${currentVersion}.`
+      );
+    }
   }
 
   const description = getDescription(folder);
