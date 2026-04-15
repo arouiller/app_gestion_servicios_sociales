@@ -91,10 +91,10 @@ function MigrationsDashboard() {
       setError(null);
       setIsLoading(true);
 
-      const result = await migrationsAPI.execute(preview.version, direction);
+      const result = await migrationsAPI.execute(direction);
 
       if (result.success) {
-        setSuccess(`Migración ${direction} v${preview.version} ejecutada exitosamente`);
+        setSuccess(`Migración ${direction} v${preview.version} ejecutada exitosamente en ${result.data?.duration || '?'}s`);
         setPreview(null);
         // Reload data
         await loadAllData();
