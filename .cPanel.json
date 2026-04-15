@@ -1,0 +1,25 @@
+{
+  "deployment": {
+    "package_manager": "npm",
+    "nodejs_version": "20"
+  },
+  "hooks": {
+    "build": [
+      "cd backend",
+      "npm install --production",
+      "node scripts/build.js"
+    ],
+    "post_deploy": [
+      "cd backend/dist",
+      "npm install --production --no-audit"
+    ]
+  },
+  "nodejs_app": {
+    "startup_file": "backend/dist/src/index.js",
+    "env_variables": {
+      "NODE_ENV": "production"
+    },
+    "max_pool_size": 4,
+    "processes": 1
+  }
+}
