@@ -35,6 +35,12 @@ const planesV1Service = {
   suspender: async (planNumero) => {
     return planesV1Service.actualizar(planNumero, { estado: 'SUSPENDIDO' });
   },
+
+  // Obtener historial de cambios de cuota
+  obtenerHistorialCuota: async (planNumero) => {
+    const { data } = await api.get(`/v1.0/planes/${planNumero}/historial-cuota`);
+    return data.data;
+  },
 };
 
 export default planesV1Service;
