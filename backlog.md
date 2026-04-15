@@ -18,11 +18,66 @@ Estos ítems se abordan **después** de completar todas las fases del PLAN.md.
 
 | ID | Prioridad | Estado | Descripción | Contexto / Motivo | Archivos estimados |
 |----|-----------|--------|-------------|-------------------|--------------------|
+| BACKLOG-004 | 🔴 Alta | ⏳ Pendiente | Panel de Gestión de Usuarios: CRUD + cambio de rol + blanqueo de contraseña | Requerimiento core: solo admin puede acceder. Necesita: listar usuarios, crear nuevos (email), cambiar rol, blanquear contraseña. Usuarios nuevos/blanqueados loguearse solo con email y cambiar contraseña en primer acceso | Múltiples (GestionUsuarios.jsx, usuariosController, usuariosService, rutas) |
 | BACKLOG-003 | 🟡 Media | ⏳ Pendiente | Estandarizar formato de listados: mismo layout para todas las tablas + iconos consistentes para acciones | Requerimiento transversal: todos los formularios con listados (Planes, Cobradores, Servicios, Tipos de Plan, Obras Sociales, etc.) deben tener el mismo formato visual y usar los mismos iconos (ej: ✎ editar, 🗑 eliminar, 👁 ver detalle) en todos los formularios | Múltiples componentes (todas las tablas de listado) |
 | BACKLOG-002 | 🔴 Alta | ⏳ Pendiente | Agregar tab de recibos en vista de plan | Descubierto en Fase 4 (GenerarRecibosModal). Los recibos se generan correctamente pero no hay forma de visualizarlos desde la UI. Usuario necesita consultar qué recibos existen para un plan específico | PlanDetailModal.jsx, recibosService.js |
 | BACKLOG-001 | 🟡 Media | ⏳ Pendiente | Mejorar preview de aumento de cuotas: navegación completa + comparación antes/después | Descubierto en Fase 3 (BulkUpdateCuotaModal). Actualmente muestra solo primeros 5 planes; usuario necesita validar todos los registros y ver contraste de valores | BulkUpdateCuotaModal.jsx, SCSS |
 
 ## Detalles de Items
+
+### BACKLOG-004: Panel de Gestión de Usuarios (Admin Only)
+
+**Descripción:**
+Crear un panel administrativo para gestionar usuarios del sistema. Solo usuarios con rol `admin` pueden acceder. Funcionalidades incluyen: listar usuarios, crear nuevos usuarios (solo requiere email), cambiar rol de usuario (admin ↔ usuario), y blanquear contraseña. Usuarios nuevos o con contraseña blanqueada tienen flujo especial de login.
+
+**Requerimientos:**
+
+a. **Backend: Endpoints**
+   - `GET /api/usuarios` - Listar todos los usuarios (admin only)
+   - `POST /api/usuarios` - Crear nuevo usuario { email } (admin only)
+   - `PUT /api/usuarios/:id/rol` - Cambiar rol { rol: 'admin'|'usuario' } (admin only)
+   - `POST /api/usuarios/:id/blanquear-password` - Blanquear contraseña (admin only)
+   - `POST /api/auth/password-reset` - Cambiar contraseña con token (sin autenticación)
+
+b. **Frontend: Panel GestionUsuarios**
+   - Tabla de usuarios: email | nombre | apellido | rol | estado | acciones
+   - Botón "+ Nuevo Usuario" → modal con campo email
+   - Acciones por usuario: ✎ editar rol, 🔑 blanquear contraseña, 🗑 eliminar
+   - Confirmaciones antes de cambios críticos
+
+c. **Flujo de Login para Usuarios Nuevos/Blanqueados**
+   - Usuario intenta login con email normal (sin contraseña)
+   - Backend valida email + verifica si contraseña está blanqueada
+   - Si sí: permite acceso directo → pantalla de "Cambiar Contraseña Obligatorio"
+   - Usuario debe cambiar contraseña antes de acceder al dashboard
+   - Usa token de sesión temporal válido solo para este endpoint
+
+d. **Base de Datos**
+   - Agregar columna `password_blanqueada` (BOOLEAN) a tabla usuarios
+   - Migración 1.0.5 para agregar esta columna
+
+**Contexto:**
+- Funcionalidad core de administración
+- Necesario para onboarding de nuevos usuarios
+- Permite reset de contraseñas olvidadas
+- Solo accessible por admin
+
+**Archivos a crear/modificar:**
+- Backend: `usuariosController.js` (extensión), `routes/usuarios.js` (agregar rutas), migración 1.0.5
+- Frontend: `GestionUsuarios.jsx`, `GestionUsuarios.scss`, `modals/UsuarioFormModal.jsx`, `usuariosService.js` (extensión)
+- Componente: pantalla de "Cambiar Contraseña Obligatorio" (ChangePasswordRequired.jsx)
+
+**Estimación:** 6-8 horas (backend 3h, frontend 3-4h, testing 1h)
+
+**Prioridad:** 🔴 Alta — Funcionalidad core para administración
+
+**Notas:**
+- Validación: email único
+- No permitir que se elimine el último admin
+- Auditoria: registrar quién cambió qué rol/blanqueó contraseña (campo opcional)
+- Confirmaciones de seguridad para cambios de rol y blanqueo
+
+---
 
 ### BACKLOG-003: Estandarizar Formato de Listados + Iconos de Acciones
 
