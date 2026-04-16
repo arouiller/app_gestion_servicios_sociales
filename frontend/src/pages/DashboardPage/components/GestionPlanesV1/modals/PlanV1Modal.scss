@@ -304,4 +304,23 @@
     font-weight: 600;
     font-size: 0.875rem;
   }
+
+  &__recibos-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: 1rem;
+
+    h4 {
+      margin: 0;
+      font-size: 1rem;
+      font-weight: 600;
+    }
+
+    button {
+      padding: 0.5rem 1rem;
+      font-size: 0.85rem;
+      white-space: nowrap;
+    }
+  }
 }

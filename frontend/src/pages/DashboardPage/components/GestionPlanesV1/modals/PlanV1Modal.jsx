@@ -1,4 +1,5 @@
 import React, { useState, useEffect, useCallback, useMemo, useRef } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { usePlanV1Form } from '../hooks/usePlanV1Form';
 import ActionButton from '../../../../../components/ActionButton/ActionButton';
 import planesV1Service from '../../../../../services/planesV1Service';
@@ -14,6 +15,7 @@ import { useModalEscapeKey } from '../../../../../hooks/useModalEscapeKey';
 import './PlanV1Modal.scss';
 
 function PlanV1Modal({ mode, planData, onClose, onSave }) {
+  const navigate = useNavigate();
   const { form, errors, handleFieldChange, addIntegrante, removeIntegrante, updateIntegranteRol, validate, reset } = usePlanV1Form(planData);
   const [loading, setLoading] = useState(false);
   const [lookupData, setLookupData] = useState({
@@ -546,7 +548,16 @@ function PlanV1Modal({ mode, planData, onClose, onSave }) {
             {/* Tab: Recibos */}
             {activeTab === 'recibos' && (
               <div className="plan-v1-modal__tab-content">
-                <h4>Recibos</h4>
+                <div className="plan-v1-modal__recibos-header">
+                  <h4>Recibos del plan</h4>
+                  <button
+                    type="button"
+                    className="btn btn-secondary btn-sm"
+                    onClick={() => navigate('/recibos')}
+                  >
+                    Ir a Gestión de Recibos →
+                  </button>
+                </div>
                 {recibosLoading ? (
                   <p className="plan-v1-modal__empty">Cargando recibos...</p>
                 ) : recibos.length === 0 ? (
