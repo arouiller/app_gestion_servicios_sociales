@@ -3,6 +3,8 @@ import lookupService from '../../services/lookupService';
 import ErrorDisplay from '../ErrorDisplay/ErrorDisplay';
 import SearchContainer from '../SearchContainer/SearchContainer';
 import ActionButton from '../ActionButton/ActionButton';
+import IconButton from '../IconButton/IconButton';
+import '../../../styles/_table-standard.scss';
 import './LookupCRUD.scss';
 
 const LookupCRUD = ({ titulo, singularName, endpoint, campos }) => {
@@ -132,7 +134,8 @@ const LookupCRUD = ({ titulo, singularName, endpoint, campos }) => {
           <p>No hay {titulo.toLowerCase()}. Creá el primero.</p>
         </div>
       ) : (
-        <table className="lookup-table">
+        <div className="table-wrapper">
+          <table className="table-standard lookup-table">
           <thead>
             <tr>
               {campos.map(campo => (
@@ -147,25 +150,26 @@ const LookupCRUD = ({ titulo, singularName, endpoint, campos }) => {
                 {campos.map(campo => (
                   <td key={campo.name}>{registro[campo.name]}</td>
                 ))}
-                <td className="acciones">
-                  <ActionButton
-                    variant="icon"
-                    icon="✎"
-                    onClick={() => handleOpenForm(registro)}
-                    title="Editar"
-                  />
-                  <ActionButton
-                    variant="icon"
-                    icon="🗑"
-                    onClick={() => handleDelete(Object.values(registro)[0])}
-                    title="Eliminar"
-                    className="action-button--danger"
-                  />
+                <td className="table-actions">
+                  <div className="action-button-group">
+                    <IconButton
+                      icon="edit"
+                      title="Editar"
+                      onClick={() => handleOpenForm(registro)}
+                    />
+                    <IconButton
+                      icon="delete"
+                      title="Eliminar"
+                      onClick={() => handleDelete(Object.values(registro)[0])}
+                      className="icon-button--danger"
+                    />
+                  </div>
                 </td>
               </tr>
             ))}
           </tbody>
-        </table>
+          </table>
+        </div>
       )}
 
       {showForm && (

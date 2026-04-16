@@ -6,7 +6,9 @@ import BulkUpdateCuotaModal from '../BulkUpdateCuotaModal/BulkUpdateCuotaModal';
 import GenerarRecibosModal from './modals/GenerarRecibosModal';
 import SearchContainer from '../../../../components/SearchContainer/SearchContainer';
 import ActionButton from '../../../../components/ActionButton/ActionButton';
+import IconButton from '../../../../components/IconButton/IconButton';
 import StatusBadge from '../../../../components/StatusBadge/StatusBadge';
+import '../../../../styles/_table-standard.scss';
 import './GestionPlanesV1.scss';
 
 const ITEMS_PER_PAGE = 20;
@@ -167,8 +169,8 @@ function GestionPlanesV1() {
           {isAdmin ? 'No hay planes. Creá el primero.' : 'No hay planes disponibles.'}
         </p>
       ) : (
-        <div className="gestion-planes-v1__tabla-wrapper">
-          <table className="gestion-planes-v1__tabla">
+        <div className="table-wrapper">
+          <table className="table-standard gestion-planes-v1__tabla">
             <thead>
               <tr>
                 <th>Número de Afiliado</th>
@@ -189,22 +191,22 @@ function GestionPlanesV1() {
                   <td>
                     <StatusBadge status={plan.estado} />
                   </td>
-                  <td className="gestion-planes-v1__tabla-acciones">
-                    <ActionButton
-                      variant="icon"
-                      icon="✎"
-                      onClick={() => handleEditarPlan(plan)}
-                      title="Editar"
-                    />
-                    {plan.estado !== 'SUSPENDIDO' && (
-                      <ActionButton
-                        variant="icon"
-                        icon="🗑"
-                        onClick={() => handleSuspenderPlan(plan)}
-                        title="Suspender"
-                        className="action-button--danger"
+                  <td className="table-actions">
+                    <div className="action-button-group">
+                      <IconButton
+                        icon="edit"
+                        title="Editar"
+                        onClick={() => handleEditarPlan(plan)}
                       />
-                    )}
+                      {plan.estado !== 'SUSPENDIDO' && (
+                        <IconButton
+                          icon="delete"
+                          title="Suspender"
+                          onClick={() => handleSuspenderPlan(plan)}
+                          className="icon-button--danger"
+                        />
+                      )}
+                    </div>
                   </td>
                 </tr>
               ))}
