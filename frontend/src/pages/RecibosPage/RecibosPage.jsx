@@ -23,8 +23,6 @@ const formatFecha = (fecha) => {
 };
 
 function RecibosPage() {
-  const navigate = useNavigate();
-
   // Vista state
   const [vista, setVista] = useState('periodos'); // 'periodos' | 'detalle-periodo'
 
