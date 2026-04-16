@@ -304,3 +304,107 @@
     }
   }
 }
+
+.search-filter {
+  margin-bottom: 1rem;
+  display: flex;
+
+  .search-input {
+    flex: 1;
+    padding: 0.625rem 0.75rem;
+    border: 1px solid $color-border;
+    border-radius: 6px;
+    font-size: 0.95rem;
+    font-family: inherit;
+
+    &:focus {
+      outline: none;
+      border-color: $color-primary;
+      box-shadow: 0 0 0 3px $color-primary-light;
+    }
+  }
+}
+
+.planes-table__full {
+  width: 100%;
+  border-collapse: collapse;
+  border: 1px solid $color-border;
+  border-radius: 6px;
+  overflow: hidden;
+  margin-bottom: 1rem;
+
+  thead {
+    background: $color-bg-light;
+    position: sticky;
+    top: 0;
+    z-index: 10;
+
+    th {
+      padding: 0.75rem;
+      text-align: left;
+      font-weight: 600;
+      font-size: 0.9rem;
+      color: #111827;
+      border-bottom: 1px solid $color-border;
+      white-space: nowrap;
+    }
+  }
+
+  tbody {
+    max-height: 400px;
+    overflow-y: auto;
+
+    tr {
+      border-bottom: 1px solid $color-border;
+
+      &:last-child {
+        border-bottom: none;
+      }
+
+      &:hover {
+        background: $color-bg-light;
+      }
+
+      td {
+        padding: 0.75rem;
+        font-size: 0.9rem;
+        color: $color-text;
+        overflow: hidden;
+        text-overflow: ellipsis;
+        white-space: nowrap;
+
+        &.planes-table__new-value {
+          color: $color-primary;
+          font-weight: 600;
+        }
+
+        &.planes-table__difference {
+          color: #059669;
+          font-weight: 600;
+        }
+      }
+    }
+  }
+}
+
+.pagination-controls {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 1rem;
+  margin-top: 1rem;
+  padding: 1rem;
+  background: $color-bg-light;
+  border-radius: 6px;
+
+  .pagination-info {
+    font-size: 0.9rem;
+    color: $color-text-muted;
+    font-weight: 500;
+  }
+
+  button {
+    padding: 0.5rem 1rem;
+    font-size: 0.9rem;
+  }
+}

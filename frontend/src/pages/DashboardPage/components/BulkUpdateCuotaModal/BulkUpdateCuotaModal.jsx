@@ -18,6 +18,9 @@ function BulkUpdateCuotaModal({ isOpen, onClose, onSuccess }) {
     cobradores: [],
     obrasSociales: [],
   });
+  const [previewPage, setPreviewPage] = useState(1);
+  const planesPerPage = 10;
+  const [searchFilter, setSearchFilter] = useState('');
 
   useEffect(() => {
     if (isOpen) {
@@ -102,6 +105,21 @@ function BulkUpdateCuotaModal({ isOpen, onClose, onSuccess }) {
     return tipoAumento === 'porcentual' ? '%' : '$';
   };
 
+  const calculateNewCuota = (valorActual) => {
+    const valActualNum = parseFloat(valorActual || 0);
+    if (tipoAumento === 'porcentual') {
+      return valActualNum * (1 + parseFloat(valor) / 100);
+    } else {
+      return valActualNum + parseFloat(valor);
+    }
+  };
+
+  const calculateDifference = (valorActual) => {
+    const valActualNum = parseFloat(valorActual || 0);
+    const newCuota = calculateNewCuota(valorActual);
+    return newCuota - valActualNum;
+  };
+
   const handlePreview = async () => {
     setError(null);
 
@@ -144,6 +162,8 @@ function BulkUpdateCuotaModal({ isOpen, onClose, onSuccess }) {
 
       setPreviewCount(countRes.count);
       setAffectedPlanes(planesRes.data);
+      setPreviewPage(1);
+      setSearchFilter('');
       setStep(2);
     } catch (err) {
       setError(err.message || 'Error al cargar preview');
@@ -317,27 +337,110 @@ function BulkUpdateCuotaModal({ isOpen, onClose, onSuccess }) {
               </div>
 
               <div className="planes-list">
-                <h4>Primeros planes a afectar:</h4>
+                <h4>Planes a afectar:</h4>
+
+                {affectedPlanes.length > planesPerPage && (
+                  <div className="search-filter">
+                    <input
+                      type="text"
+                      placeholder="Buscar por Plan # o Afiliado..."
+                      value={searchFilter}
+                      onChange={(e) => {
+                        setSearchFilter(e.target.value);
+                        setPreviewPage(1);
+                      }}
+                      className="search-input"
+                    />
+                  </div>
+                )}
+
                 {affectedPlanes.length > 0 ? (
-                  <div className="planes-table">
-                    <div className="planes-table__header">
-                      <div>Plan #</div>
-                      <div>Afiliado</div>
-                      <div>Cuota Actual</div>
-                    </div>
-                    {affectedPlanes.slice(0, 5).map((plan) => (
-                      <div key={plan.plan_numero} className="planes-table__row">
-                        <div>{plan.plan_numero}</div>
-                        <div>{plan.numero_afiliado}</div>
-                        <div>${Number(plan.valor_cuota || 0).toFixed(2)}</div>
-                      </div>
-                    ))}
-                    {affectedPlanes.length > 5 && (
-                      <div className="planes-table__more">
-                        ... y {affectedPlanes.length - 5} más
+                  <>
+                    <table className="planes-table__full">
+                      <thead>
+                        <tr>
+                          <th>Plan #</th>
+                          <th>Afiliado</th>
+                          <th>Cuota Actual</th>
+                          <th>Cuota Nueva</th>
+                          <th>Aumento</th>
+                        </tr>
+                      </thead>
+                      <tbody>
+                        {affectedPlanes
+                          .filter(
+                            (plan) =>
+                              searchFilter === '' ||
+                              plan.plan_numero.toString().includes(searchFilter) ||
+                              plan.numero_afiliado.toString().includes(searchFilter)
+                          )
+                          .slice((previewPage - 1) * planesPerPage, previewPage * planesPerPage)
+                          .map((plan) => {
+                            const newCuota = calculateNewCuota(plan.valor_cuota);
+                            const difference = calculateDifference(plan.valor_cuota);
+                            return (
+                              <tr key={plan.plan_numero} className="planes-table__row">
+                                <td>{plan.plan_numero}</td>
+                                <td>{plan.numero_afiliado}</td>
+                                <td>${Number(plan.valor_cuota || 0).toFixed(2)}</td>
+                                <td className="planes-table__new-value">${newCuota.toFixed(2)}</td>
+                                <td className="planes-table__difference">
+                                  +${difference.toFixed(2)} ({((difference / (plan.valor_cuota || 1)) * 100).toFixed(1)}%)
+                                </td>
+                              </tr>
+                            );
+                          })}
+                      </tbody>
+                    </table>
+
+                    {/* Paginación */}
+                    {affectedPlanes.filter(
+                      (plan) =>
+                        searchFilter === '' ||
+                        plan.plan_numero.toString().includes(searchFilter) ||
+                        plan.numero_afiliado.toString().includes(searchFilter)
+                    ).length > planesPerPage && (
+                      <div className="pagination-controls">
+                        <button
+                          type="button"
+                          disabled={previewPage === 1}
+                          onClick={() => setPreviewPage(previewPage - 1)}
+                          className="btn btn-secondary"
+                        >
+                          ← Anterior
+                        </button>
+                        <span className="pagination-info">
+                          Página {previewPage} de{' '}
+                          {Math.ceil(
+                            affectedPlanes.filter(
+                              (plan) =>
+                                searchFilter === '' ||
+                                plan.plan_numero.toString().includes(searchFilter) ||
+                                plan.numero_afiliado.toString().includes(searchFilter)
+                            ).length / planesPerPage
+                          )}
+                        </span>
+                        <button
+                          type="button"
+                          disabled={
+                            previewPage >=
+                            Math.ceil(
+                              affectedPlanes.filter(
+                                (plan) =>
+                                  searchFilter === '' ||
+                                  plan.plan_numero.toString().includes(searchFilter) ||
+                                  plan.numero_afiliado.toString().includes(searchFilter)
+                              ).length / planesPerPage
+                            )
+                          }
+                          onClick={() => setPreviewPage(previewPage + 1)}
+                          className="btn btn-secondary"
+                        >
+                          Siguiente →
+                        </button>
                       </div>
                     )}
-                  </div>
+                  </>
                 ) : (
                   <p className="empty-message">No hay planes para mostrar</p>
                 )}
