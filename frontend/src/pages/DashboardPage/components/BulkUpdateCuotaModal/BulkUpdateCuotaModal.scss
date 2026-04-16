@@ -22,7 +22,7 @@
   flex-direction: column;
 
   &.bulk-cuota-modal {
-    max-width: 950px;
+    max-width: 1050px;
   }
 }
 
@@ -354,11 +354,11 @@
       border-bottom: 2px solid $color-border;
       white-space: nowrap;
 
-      &:nth-child(1) { width: 80px; } // Plan #
-      &:nth-child(2) { width: 140px; } // Afiliado
+      &:nth-child(1) { width: 70px; } // Plan #
+      &:nth-child(2) { width: 120px; } // Afiliado
       &:nth-child(3) { width: 130px; } // Cuota Actual
-      &:nth-child(4) { width: 130px; } // Cuota Nueva
-      &:nth-child(5) { width: 160px; } // Aumento
+      &:nth-child(4) { width: 160px; } // Aumento
+      &:nth-child(5) { width: 130px; } // Cuota Nueva
     }
   }
 
@@ -381,11 +381,11 @@
         word-wrap: break-word;
         overflow-wrap: break-word;
 
-        &:nth-child(1) { width: 80px; } // Plan #
-        &:nth-child(2) { width: 140px; } // Afiliado
+        &:nth-child(1) { width: 70px; } // Plan #
+        &:nth-child(2) { width: 120px; } // Afiliado
         &:nth-child(3) { width: 130px; } // Cuota Actual
-        &:nth-child(4) { width: 130px; } // Cuota Nueva
-        &:nth-child(5) { width: 160px; } // Aumento
+        &:nth-child(4) { width: 160px; } // Aumento
+        &:nth-child(5) { width: 130px; } // Cuota Nueva
 
         &.planes-table__new-value {
           color: $color-primary;

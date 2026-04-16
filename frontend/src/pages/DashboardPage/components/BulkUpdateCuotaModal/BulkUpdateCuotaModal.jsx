@@ -363,8 +363,8 @@ function BulkUpdateCuotaModal({ isOpen, onClose, onSuccess }) {
                           <th>Plan #</th>
                           <th>Afiliado</th>
                           <th>Cuota Actual</th>
-                          <th>Cuota Nueva</th>
                           <th>Aumento</th>
+                          <th>Cuota Nueva</th>
                         </tr>
                       </thead>
                       <tbody>
@@ -384,10 +384,10 @@ function BulkUpdateCuotaModal({ isOpen, onClose, onSuccess }) {
                                 <td>{plan.plan_numero}</td>
                                 <td>{plan.numero_afiliado}</td>
                                 <td>${Number(plan.valor_cuota || 0).toFixed(2)}</td>
-                                <td className="planes-table__new-value">${newCuota.toFixed(2)}</td>
                                 <td className="planes-table__difference">
                                   +${difference.toFixed(2)} ({((difference / (plan.valor_cuota || 1)) * 100).toFixed(1)}%)
                                 </td>
+                                <td className="planes-table__new-value">${newCuota.toFixed(2)}</td>
                               </tr>
                             );
                           })}
