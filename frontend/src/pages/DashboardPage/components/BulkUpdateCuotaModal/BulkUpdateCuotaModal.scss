@@ -332,6 +332,7 @@
   border-radius: 6px;
   overflow: hidden;
   margin-bottom: 1rem;
+  table-layout: fixed;
 
   thead {
     background: $color-bg-light;
@@ -347,14 +348,28 @@
       color: #111827;
       border-bottom: 1px solid $color-border;
       white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      word-break: break-word;
+
+      &:nth-child(1) { width: 70px; } // Plan #
+      &:nth-child(2) { width: 90px; } // Afiliado
+      &:nth-child(3) { width: 110px; } // Cuota Actual
+      &:nth-child(4) { width: 110px; } // Cuota Nueva
+      &:nth-child(5) { width: 130px; } // Aumento
     }
   }
 
   tbody {
+    display: block;
     max-height: 400px;
     overflow-y: auto;
+    width: 100%;
 
     tr {
+      display: table;
+      width: 100%;
+      table-layout: fixed;
       border-bottom: 1px solid $color-border;
 
       &:last-child {
@@ -372,6 +387,13 @@
         overflow: hidden;
         text-overflow: ellipsis;
         white-space: nowrap;
+        word-break: break-word;
+
+        &:nth-child(1) { width: 70px; } // Plan #
+        &:nth-child(2) { width: 90px; } // Afiliado
+        &:nth-child(3) { width: 110px; } // Cuota Actual
+        &:nth-child(4) { width: 110px; } // Cuota Nueva
+        &:nth-child(5) { width: 130px; } // Aumento
 
         &.planes-table__new-value {
           color: $color-primary;
