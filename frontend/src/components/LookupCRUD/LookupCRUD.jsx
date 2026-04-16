@@ -4,7 +4,7 @@ import ErrorDisplay from '../ErrorDisplay/ErrorDisplay';
 import SearchContainer from '../SearchContainer/SearchContainer';
 import ActionButton from '../ActionButton/ActionButton';
 import IconButton from '../IconButton/IconButton';
-import '../../../styles/_table-standard.scss';
+import '../../styles/_table-standard.scss';
 import './LookupCRUD.scss';
 
 const LookupCRUD = ({ titulo, singularName, endpoint, campos }) => {
