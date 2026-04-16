@@ -1094,4 +1094,58 @@ return Array.isArray(response.data) ? response.data : response.data.data || [];
 
 ---
 
+### BUG-018: Búsqueda de Afiliados - "Ver Planes" Siempre Muestra "Sin Planes"
+
+**Descripción:**
+En la página de Búsqueda de Afiliados, al hacer click en el botón "Ver Planes" de un afiliado, la pantalla muestra "Esta persona no tiene planes asociados" aunque el afiliado SÍ tiene planes en la base de datos.
+
+**Pasos para reproducir:**
+1. Ir a Dashboard → Gestión → Búsqueda de Afiliados
+2. Buscar un afiliado (ej: "Juan")
+3. Ver resultados en tabla
+4. Hacer click en botón "Ver Planes" de un afiliado que sabemos tiene planes
+5. **Resultado:** Muestra "Esta persona no tiene planes asociados" ❌
+6. **Esperado:** Mostrar tabla con los planes asociados ✅
+
+**Severidad:** 🔴 CRÍTICO
+- Funcionalidad de "Ver Planes" no funciona
+- Usuario no puede consultar planes de un afiliado
+- Bloquea navegación en Búsqueda de Afiliados
+
+**Reportado:** 2026-04-16
+**Ubicación probable:**
+- Frontend: `frontend/src/pages/DashboardPage/components/v1.0/BusquedaAfiliados.jsx` (línea 36-48)
+- Backend: `backend/src/services/planesV1Service.js` (método getByPersona)
+- Backend: `backend/src/controllers/v1.0/planesController.js` (endpoint getByPersona)
+
+**Estado:** 🔬 En análisis
+
+**Causa raíz identificada:**
+
+**Causa #1: Método inexistente en Frontend Service**
+- `BusquedaAfiliados.jsx` línea 41 llama a: `planesService.getByPersona(persona.id)`
+- Pero `planesV1Service.js` NO define este método
+- Resultado: `undefined` → TypeError → catch block → `setPlanesPersona([])` (array vacío)
+
+**Causa #2: Backend tiene el endpoint pero Frontend Service no lo implementa**
+- Backend: `GET /api/v1.0/planes/por-persona/:personaId` existe (línea 22 en v1.0-planes.js)
+- Backend retorna: `{ success: true, data: planes }`
+- Frontend: Falta implementar la llamada a este endpoint
+
+**Solución implementada:**
+Agregar método a `planesV1Service.js` (después de obtenerHistorialCuota):
+```javascript
+getByPersona: async (personaId) => {
+  const { data } = await api.get(`/v1.0/planes/por-persona/${personaId}`);
+  return data.data;
+},
+```
+
+**Archivos modificados:**
+- `frontend/src/services/planesV1Service.js` (agregado método getByPersona)
+
+**Estado:** 🚀 Desarrollado
+
+---
+
 **Última actualización:** 2026-04-16
