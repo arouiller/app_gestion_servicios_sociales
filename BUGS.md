@@ -10,8 +10,6 @@ Registro de bugs detectados durante implementación del plan de auditoría (Fase
 ## Registros Activos
 
 | ID | Severidad | Fase | Descripción | Reportado | Estado |
-|----|-----------|------|-------------|-----------|--------|
-| BUG-013 | 🔴 CRÍTICO | BACKLOG-008 | Regeneración de recibos: frontend no maneja 409 response, muestra "0 recibos" | 2026-04-16 | 🔧 En solución |
 | BUG-010 | 🔴 CRÍTICO | BACKLOG-004 | POST /api/usuarios retorna "Cannot POST /api/api/usuarios" (URL duplicada) | 2026-04-16 | ✅ Verificado |
 | BUG-008 | 🔴 CRÍTICO | BACKLOG-002 | ReciboDetalleModal no abre - se actualiza plan en su lugar | 2026-04-16 | 🔧 Pendiente análisis |
 | BUG-006 | 🔴 CRÍTICO | Migrations | Downgrade en v1.0.x aún no verificado | 2026-04-15 | 🔧 Pendiente verificación |
@@ -22,7 +20,8 @@ Registro de bugs detectados durante implementación del plan de auditoría (Fase
 
 | ID | Fase | Descripción | Resuelto | Commits |
 |----|------|-------------|----------|---------|
-| BUG-012 | BACKLOG-006 | Password blanqueada: nueva contraseña no funciona en siguiente login (campo password → password_hash) | 2026-04-16 | (siguiente) |
+| BUG-013 | BACKLOG-008 | Regeneración de recibos: frontend no maneja 409, mostraba "0 recibos" | 2026-04-16 | 43b7dcb, 7f7aae6 |
+| BUG-012 | BACKLOG-006 | Password blanqueada: nueva contraseña no funciona en siguiente login (campo password → password_hash) | 2026-04-16 | 60a0d7f |
 | BUG-009 | BACKLOG-001 | Distribución de columnas desalineada en tabla de preview | 2026-04-16 | 27f822c |
 | BUG-011 | BACKLOG-004 | Migraciones no ejecutadas en producción | 2026-04-16 | Ejecutadas manualmente en Hostinger |
 | BUG-010 | BACKLOG-004 | URL duplicada en POST /api/usuarios | 2026-04-16 | 451131d |
@@ -781,7 +780,36 @@ Response: HTTP 409
 **Reportado:** 2026-04-16
 **Asociado a:** BACKLOG-008 (Registro de períodos + confirmación)
 
-**Estado:** 🔧 En solución
+**Estado:** ✅ RESUELTO
+
+**Causa raíz identificada:**
+1. Axios lanza error para cualquier status >= 400 (incluyendo 409)
+2. `recibosService.generar()` capturaba 409 en el catch block
+3. Retornaba objeto con `recibos: []`, simulando "0 recibos generados"
+4. Frontend nunca veía `existe: true` para mostrar confirmación
+
+**Solución implementada:**
+En `frontend/src/services/recibosService.js`, método `generar()`:
+```javascript
+catch (error) {
+  // Manejar 409 como respuesta válida (período ya existe)
+  if (error.response?.status === 409) {
+    return error.response.data;  // ← Retorna {existe: true, cantidad, mensaje}
+  }
+  // Otros errores...
+  return { success: false, message: ..., recibos: [] };
+}
+```
+
+Ahora el flujo funciona:
+1. Backend retorna 409 con `existe: true, cantidad: 10`
+2. recibosService retorna la respuesta directamente (sin convertir a error)
+3. GenerarRecibosModal verifica `result.existe === true` (línea 62)
+4. Muestra step 2: modal de confirmación ✅
+5. Usuario ve advertencia y botón "Sí, Regenerar"
+
+**Archivos corregidos:**
+- `frontend/src/services/recibosService.js` (método generar)
 
 ---
 
