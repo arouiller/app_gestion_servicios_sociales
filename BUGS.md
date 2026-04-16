@@ -11,7 +11,7 @@ Registro de bugs detectados durante implementación del plan de auditoría (Fase
 
 | ID | Severidad | Fase | Descripción | Reportado | Estado |
 |----|-----------|------|-------------|-----------|--------|
-| BUG-010 | 🔴 CRÍTICO | BACKLOG-004 | POST /api/usuarios retorna "Cannot POST /api/api/usuarios" (URL duplicada) | 2026-04-16 | 🔧 Pendiente análisis |
+| BUG-010 | 🔴 CRÍTICO | BACKLOG-004 | POST /api/usuarios retorna "Cannot POST /api/api/usuarios" (URL duplicada) | 2026-04-16 | 🔧 Pendiente verificación |
 | BUG-009 | 🟡 IMPORTANTE | BACKLOG-001 | Distribución de columnas desalineada en tabla de preview | 2026-04-16 | 🔧 Pendiente análisis |
 | BUG-008 | 🔴 CRÍTICO | BACKLOG-002 | ReciboDetalleModal no abre - se actualiza plan en su lugar | 2026-04-16 | 🔧 Pendiente análisis |
 | BUG-006 | 🔴 CRÍTICO | Migrations | Downgrade en v1.0.x aún no verificado | 2026-04-15 | 🔧 Pendiente verificación |
@@ -555,13 +555,30 @@ POST https://seagreen-skunk-116671.hostingersite.com/api/api/usuarios
 **Reportado:** 2026-04-16
 **Asociado a:** BACKLOG-004 (Panel de Gestión de Usuarios)
 
-**Estado:** 🔧 Pendiente análisis
+**Causa raíz identificada:**
+- `api.js` configura axios baseURL como `http://localhost:5000/api`
+- `usuariosService.js` estaba usando rutas como `/api/usuarios`
+- Resultado: baseURL + ruta = `/api` + `/api/usuarios` = `/api/api/usuarios` ❌
 
-**Propuestas de investigación:**
-- [ ] Revisar `frontend/src/services/api.js` y baseURL
-- [ ] Verificar todas las rutas en usuariosService.js
-- [ ] Comparar con otros servicios (planesService, personasService) para ver patrón correcto
-- [ ] Ajustar URLs removiendo `/api` de los métodos del servicio
+**Solución implementada:**
+Cambiar todas las rutas en `usuariosService.js` removiendo prefijo `/api`:
+- `GET /api/usuarios` → `GET /usuarios`
+- `POST /api/usuarios` → `POST /usuarios`
+- `PUT /api/usuarios/:id/rol` → `PUT /usuarios/:id/rol`
+- `POST /api/usuarios/:id/blanquear-password` → `POST /usuarios/:id/blanquear-password`
+- `POST /api/auth/password-reset` → `POST /auth/password-reset`
+
+Patrón confirmado en otros servicios (planesService, personasService, etc.)
+
+**Fix commit:** 451131d
+
+**Estado:** 🔧 Pendiente verificación
+
+**Verificación pendiente:**
+- [ ] Crear nuevo usuario desde GestionUsuarios
+- [ ] Verificar que POST se realiza a URL correcta (sin duplicación)
+- [ ] Confirmar que usuario se crea exitosamente
+- [ ] Probar otros métodos: cambiarRol, blanquearPassword, resetPassword
 
 ---
 
