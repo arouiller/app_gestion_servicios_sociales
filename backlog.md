@@ -20,16 +20,59 @@ Estos ítems se abordan **después** de completar todas las fases del PLAN.md.
 
 | ID | Prioridad | Estado | Descripción | Contexto / Motivo | Archivos estimados |
 |----|-----------|--------|-------------|-------------------|--------------------|
-| BACKLOG-008 | 🔴 Alta | 🔄 Desarrollado | Registro de períodos de emisión de recibos + confirmación antes de regenerar | Sistema debe registrar qué meses ya tienen recibos generados. Si usuario intenta generar para un mes existente, mostrar confirmación. Si confirma, borrar recibos antiguos y regenerar. Previene duplicación accidental de recibos | GenerarRecibosModal.jsx, recibosController.js, nueva migración (tabla de períodos) |
-| BACKLOG-007 | 🔴 Alta | ✅ Aprobado | Control de acceso por rol: usuarios comunes no ven Administración | Usuarios comunes deben tener acceso a: Búsqueda de Afiliados, Gestión de Planes, Cobradores, Obras Sociales, Servicios, Tipos de Grupo, Tipos de Plan. Deben estar excluidos de: Gestión de Usuarios, Migraciones BD. Solo admin ve la sección "Administración" | DashboardPage.jsx |
-| BACKLOG-006 | 🔴 Alta | ✅ Aprobado | Flujo de login para usuarios con password blanqueada | Implementado y probado: Checkbox "Tengo contraseña blanqueada" en LoginPage. Backend detecta password_blanqueada y retorna flag debe_cambiar_password. Frontend redirige a /cambiar-password. Flujo completo funcional y validado para onboarding de nuevos usuarios | LoginPage.jsx, authService.js, auth.js |
+| BACKLOG-009 | 🔴 Alta | 🔄 Desarrollado | Usuarios comunes pueden realizar todas las acciones en páginas accesibles | Usuarios con rol "usuario" deben poder ejecutar todas las acciones CRUD en páginas a las que tienen acceso (Gestión de Planes, Búsqueda de Afiliados, etc.). Actualmente algunas acciones solo funcionan para admin. Mejorar UX removiendo restricciones innecesarias | Múltiples (GestionPlanesV1, BusquedaAfiliados, etc.) |
+| BACKLOG-008 | 🔴 Alta | ✅ Aprobado | Registro de períodos de emisión de recibos + confirmación antes de regenerar | Sistema debe registrar qué meses ya tienen recibos generados. Si usuario intenta generar para un mes existente, mostrar confirmación. Si confirma, borrar recibos antiguos y regenerar. Previene duplicación accidental de recibos | GenerarRecibosModal.jsx, recibosController.js, nueva migración (tabla de períodos) |
+| BACKLOG-007 | 🔴 Alta | ✅ Completado | Control de acceso por rol: usuarios comunes no ven Administración | Usuarios comunes deben tener acceso a: Búsqueda de Afiliados, Gestión de Planes, Cobradores, Obras Sociales, Servicios, Tipos de Grupo, Tipos de Plan. Deben estar excluidos de: Gestión de Usuarios, Migraciones BD. Solo admin ve la sección "Administración" | DashboardPage.jsx |
+| BACKLOG-006 | 🔴 Alta | ✅ Completado | Flujo de login para usuarios con password blanqueada | Implementado y probado: Checkbox "Tengo contraseña blanqueada" en LoginPage. Backend detecta password_blanqueada y retorna flag debe_cambiar_password. Frontend redirige a /cambiar-password. Flujo completo funcional y validado para onboarding de nuevos usuarios | LoginPage.jsx, authService.js, auth.js |
 | BACKLOG-005 | 🟡 Media | ✅ Completado | Mejorar columna "Cambio" en tab Historial de Cuota | Implementado y aprobado: Nueva columna que muestra tipo de cambio (Fijo/Porcentual) con valor. Lógica de inferencia de tipo por cálculo dinámico | PlanV1Modal.jsx |
-| BACKLOG-004 | 🔴 Alta | ✅ Aprobado | Panel de Gestión de Usuarios: CRUD + cambio de rol + blanqueo de contraseña | Implementado y probado: Panel CRUD completo (listar, crear, cambiar rol, blanquear contraseña). Backend: endpoints /api/usuarios, /api/usuarios/:id/rol, /api/usuarios/:id/blanquear-password. Frontend: GestionUsuarios, UsuarioFormModal, ChangePasswordRequired. Flujo: usuarios nuevos con password_blanqueada acceden a /cambiar-password. Todo funcional y validado | Múltiples (GestionUsuarios.jsx, usuariosController, usuariosService, rutas, auth.js, ChangePasswordRequired.jsx) |
+| BACKLOG-004 | 🔴 Alta | ✅ Completado | Panel de Gestión de Usuarios: CRUD + cambio de rol + blanqueo de contraseña | Implementado y probado: Panel CRUD completo (listar, crear, cambiar rol, blanquear contraseña). Backend: endpoints /api/usuarios, /api/usuarios/:id/rol, /api/usuarios/:id/blanquear-password. Frontend: GestionUsuarios, UsuarioFormModal, ChangePasswordRequired. Flujo: usuarios nuevos con password_blanqueada acceden a /cambiar-password. Todo funcional y validado | Múltiples (GestionUsuarios.jsx, usuariosController, usuariosService, rutas, auth.js, ChangePasswordRequired.jsx) |
 | BACKLOG-003 | 🟡 Media | ⏳ Pendiente | Estandarizar formato de listados: mismo layout para todas las tablas + iconos consistentes para acciones | Requerimiento transversal: todos los formularios con listados (Planes, Cobradores, Servicios, Tipos de Plan, Obras Sociales, etc.) deben tener el mismo formato visual y usar los mismos iconos (ej: ✎ editar, 🗑 eliminar, 👁 ver detalle) en todos los formularios | Múltiples componentes (todas las tablas de listado) |
 | BACKLOG-002 | 🔴 Alta | ✅ Completado | Agregar tab de recibos en vista de plan | Implementado y aprobado: Tab de recibos con paginación, carga dinámica y visualización de detalles. BUG-008 resuelto | PlanDetailModal.jsx, recibosService.js |
 | BACKLOG-001 | 🟡 Media | ✅ Completado | Mejorar preview de aumento de cuotas: navegación completa + comparación antes/después | Implementado y aprobado: Tabla con alineación correcta, paginación, búsqueda y contraste antes/después. BUG-009 resuelto | BulkUpdateCuotaModal.jsx, SCSS |
 
 ## Detalles de Items
+
+### BACKLOG-009: Usuarios Comunes - Acceso a Todas las Acciones en Páginas Permitidas
+
+**Descripción:**
+Los usuarios con rol "usuario" (no admin) deben poder ejecutar todas las acciones CRUD disponibles en las páginas a las que tienen acceso. Actualmente, algunas funcionalidades están restringidas innecesariamente a usuarios admin.
+
+**Requerimientos:**
+
+a. **Revisión de Restricciones**
+   - Analizar todas las páginas accesibles para usuarios comunes
+   - Identificar acciones que están bloqueadas para "usuario" pero deberían estar disponibles
+   - Ejemplos: crear planes, editar planes, buscar afiliados, ver detalles, etc.
+
+b. **Acciones que deben estar disponibles para usuarios comunes**
+   - En Gestión de Planes: crear, editar, ver detalle, generar recibos
+   - En Búsqueda de Afiliados: buscar, ver detalle
+   - En Gestión de Cobradores/OS/Servicios/etc: acceso CRUD completo (si la página es visible)
+
+c. **Mantener restricciones para admin-only**
+   - Gestión de Usuarios (crear, cambiar rol, blanquear contraseña)
+   - Migraciones de BD
+   - Cambiar acceso global o configuración del sistema
+
+**Contexto:**
+- UX mejora: usuarios comunes ven botones/acciones y pueden usarlos sin errores
+- Las páginas ya están filtradas por rol en el menú
+- Si usuario ve una página, debería poder usar todas sus funciones
+- No debería haber botones deshabilitados o mensajes "acción no permitida" en páginas accesibles
+
+**Archivos a revisar:**
+- `frontend/src/pages/DashboardPage/components/GestionPlanesV1/` (verificar permisos en modales)
+- `frontend/src/pages/DashboardPage/components/BusquedaAfiliados/` (idem)
+- `backend/src/routes/` (verificar middleware requireAdmin en endpoints innecesarios)
+- `backend/src/controllers/` (verificar lógica de autorización)
+
+**Estimación:** 2-3 horas (auditoría + correcciones menores)
+
+**Prioridad:** 🔴 Alta — Mejora UX y coherencia del sistema
+
+**Estado:** 🔄 Desarrollado
+
+---
 
 ### BACKLOG-008: Registro de Períodos de Emisión de Recibos + Confirmación
 

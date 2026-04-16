@@ -133,19 +133,19 @@ function GestionPlanesV1() {
     <div className="gestion-planes-v1">
       <div className="gestion-planes-v1__header">
         <h2 className="gestion-planes-v1__title">Planes de Servicio v1.0</h2>
-        {isAdmin && (
-          <div className="gestion-planes-v1__actions">
-            <ActionButton variant="primary" icon="+" onClick={handleCrearPlan}>
-              Nuevo Plan
-            </ActionButton>
+        <div className="gestion-planes-v1__actions">
+          <ActionButton variant="primary" icon="+" onClick={handleCrearPlan}>
+            Nuevo Plan
+          </ActionButton>
+          {isAdmin && (
             <ActionButton variant="secondary" onClick={() => setBulkUpdateModalOpen(true)}>
               Aumento Masivo
             </ActionButton>
-            <ActionButton variant="secondary" onClick={() => setGenerarRecibosModalOpen(true)}>
-              Generar Recibos
-            </ActionButton>
-          </div>
-        )}
+          )}
+          <ActionButton variant="secondary" onClick={() => setGenerarRecibosModalOpen(true)}>
+            Generar Recibos
+          </ActionButton>
+        </div>
       </div>
 
       {error && <div className="gestion-planes-v1__alert gestion-planes-v1__alert--error">{error}</div>}
@@ -175,7 +175,7 @@ function GestionPlanesV1() {
                 <th>Cobrador</th>
                 <th>Obra Social</th>
                 <th>Estado</th>
-                {isAdmin && <th>Acciones</th>}
+                <th>Acciones</th>
               </tr>
             </thead>
             <tbody>
@@ -188,25 +188,23 @@ function GestionPlanesV1() {
                   <td>
                     <StatusBadge status={plan.estado} />
                   </td>
-                  {isAdmin && (
-                    <td className="gestion-planes-v1__tabla-acciones">
+                  <td className="gestion-planes-v1__tabla-acciones">
+                    <ActionButton
+                      variant="icon"
+                      icon="✎"
+                      onClick={() => handleEditarPlan(plan)}
+                      title="Editar"
+                    />
+                    {plan.estado !== 'SUSPENDIDO' && (
                       <ActionButton
                         variant="icon"
-                        icon="✎"
-                        onClick={() => handleEditarPlan(plan)}
-                        title="Editar"
+                        icon="🗑"
+                        onClick={() => handleSuspenderPlan(plan)}
+                        title="Suspender"
+                        className="action-button--danger"
                       />
-                      {plan.estado !== 'SUSPENDIDO' && (
-                        <ActionButton
-                          variant="icon"
-                          icon="🗑"
-                          onClick={() => handleSuspenderPlan(plan)}
-                          title="Suspender"
-                          className="action-button--danger"
-                        />
-                      )}
-                    </td>
-                  )}
+                    )}
+                  </td>
                 </tr>
               ))}
             </tbody>

@@ -10,6 +10,7 @@ Registro de bugs detectados durante implementación del plan de auditoría (Fase
 ## Registros Activos
 
 | ID | Severidad | Fase | Descripción | Reportado | Estado |
+|----|-----------|------|-------------|-----------|--------|
 
 ---
 
@@ -17,6 +18,7 @@ Registro de bugs detectados durante implementación del plan de auditoría (Fase
 
 | ID | Fase | Descripción | Resuelto | Commits |
 |----|------|-------------|----------|---------|
+| BUG-014 | BACKLOG-009 | Botones de acciones no visibles para usuarios no-admin (removidos condicionales isAdmin innecesarios) | 2026-04-16 | (pendiente) |
 | BUG-010 | BACKLOG-004 | POST /api/usuarios retorna URL duplicada (verificado resuelto) | 2026-04-16 | 451131d |
 | BUG-008 | BACKLOG-002 | ReciboDetalleModal no abre (verificado resuelto) | 2026-04-16 | (fix anterior) |
 | BUG-006 | Migrations | Downgrade en v1.0.x (verificado resuelto) | 2026-04-16 | (fix anterior) |
@@ -810,6 +812,59 @@ Ahora el flujo funciona:
 
 **Archivos corregidos:**
 - `frontend/src/services/recibosService.js` (método generar)
+
+---
+
+### BUG-014: Botones de Acciones No Visibles para Usuarios No-Admin en Gestión de Planes
+
+**Descripción:**
+Después de implementar BACKLOG-009 (permitir usuarios comunes realizar acciones CRUD), los botones de acciones (editar, eliminar) no son visibles para usuarios con rol "usuario" en la página de Gestión de Planes. Los botones deberían estar disponibles ahora, pero están ocultos/deshabilitados.
+
+**Pasos para reproducir:**
+1. Iniciar sesión con usuario no-admin (rol "usuario")
+2. Ir a Dashboard → Gestión → Gestión de Planes
+3. Ver listado de planes
+4. **Resultado:** No hay botones de acciones (editar ✎, eliminar 🗑) visibles en la tabla
+5. **Esperado:** Deberían haber botones de acciones para editar/eliminar planes
+
+**Comportamiento observado:**
+- El backend ahora permite POST/PUT/DELETE para usuarios comunes (BACKLOG-009 implementado)
+- Pero el frontend aún tiene lógica que oculta/deshabilita los botones para usuarios no-admin
+- Los botones están condicionales al rol admin
+
+**Causa probable:**
+El componente GestionPlanesV1 o sus modales (PlanV1Modal) probablemente tienen:
+```javascript
+if (!isAdmin) {
+  // No mostrar botones de acciones
+  // O deshabilitar botones
+}
+```
+
+Esto debería haber sido removido o actualizado junto con BACKLOG-009.
+
+**Ubicación del código:**
+- Frontend: `frontend/src/pages/DashboardPage/components/GestionPlanesV1/`
+  - GestionPlanesV1.jsx (tabla principal)
+  - PlanV1Modal.jsx (modal de edición)
+  - Buscar condicionales `isAdmin` o `requireAdmin`
+
+**Severidad:** 🔴 CRÍTICO
+- BACKLOG-009 (permitir acciones a usuarios comunes) no es funcional
+- Inconsistencia: backend permite, frontend bloquea
+- Usuario ve página pero no puede interactuar
+
+**Reportado:** 2026-04-16
+**Asociado a:** BACKLOG-009 (Usuarios comunes acciones CRUD)
+
+**Estado:** 🔧 Pendiente análisis
+
+**Investigaciones requeridas:**
+- [ ] Revisar GestionPlanesV1.jsx para condicionales isAdmin
+- [ ] Revisar PlanV1Modal.jsx para botones deshabilitados
+- [ ] Buscar otros componentes con lógica de `!isAdmin` que bloquee acciones
+- [ ] Verificar ActionButtons están configurados para mostrar siempre
+- [ ] Confirmar que API retorna 200 cuando usuario común hace CRUD
 
 ---
 
