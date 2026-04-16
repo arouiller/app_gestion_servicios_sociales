@@ -32,7 +32,8 @@ De cualquier estado → Descartado
 ## Items
 
 | ID | Prioridad | Estado | Descripción | Contexto / Motivo | Archivos estimados |
-|----|-----------|--------|-------------|-------------------|--------------------|
+|----|-----------|--------|-------------|-------------------|----|
+| BACKLOG-013 | 🔴 Alta | 📋 Registrado | Mejora de flujo de login para usuarios con contraseña blanqueada | Usuario ingresa email, marca "tengo contraseña blanqueada", es redirigido a formulario de seteo con email pre-cargado. Mejora UX y completa flujo de onboarding. | LoginPage.jsx, ChangePasswordRequired.jsx, authService.js |
 | BACKLOG-011 | 🔴 Alta | ✅ Solucionado | Agregar acciones (editar y habilitar) a planes en búsqueda de afiliados | Desde planes visibles de un afiliado en búsqueda, permitir edición y cambio de estado (ACTIVO ↔ SUSPENDIDO) con modal reutilizable. Implementado, funcional y aprobado. | BusquedaAfiliados.jsx, PlanV1Modal.jsx |
 | BACKLOG-012 | 🔴 Alta | 🚀 Desarrollado | Mejorar comportamiento de ventanas modales (cierre, ESC, cambios no guardados) | Modales no cierran al hacer click fuera. Pueden cerrarse con ESC. Si hay cambios, ESC muestra advertencia. Con múltiples modales, ESC solo cierra la más arriba. Implementado en todas las modales. | Todos los modales (PlanV1Modal, GenerarRecibosModal, BulkUpdateCuotaModal, etc.) |
 | BACKLOG-010 | 🔴 Alta | ✅ Solucionado | Botón Aumento Masivo habilitado para todos los perfiles | Usuarios comunes pueden ejecutar aumento masivo de cuotas. Restricción requireAdmin removida de PATCH /api/planes/bulk-update-cuota. Usuarios no-admin pueden aplicar cambios masivos de valores. | backend/src/routes/planes.js, GestionPlanesV1.jsx |
@@ -47,6 +48,88 @@ De cualquier estado → Descartado
 | BACKLOG-001 | 🟡 Media | ✅ Solucionado | Mejorar preview de aumento de cuotas: navegación completa + comparación antes/después | Implementado y aprobado: Tabla con alineación correcta, paginación, búsqueda y contraste antes/después. BUG-009 resuelto | BulkUpdateCuotaModal.jsx, SCSS |
 
 ## Detalles de Items
+
+### BACKLOG-013: Mejora de Flujo de Login para Usuarios con Contraseña Blanqueada
+
+**Descripción:**
+Mejorar la experiencia de usuario en el flujo de login para usuarios que tienen su contraseña blanqueada. Cuando un usuario marca el checkbox "Tengo contraseña blanqueada", debe ser redirigido a un formulario de seteo de contraseña con su email pre-cargado (sin necesidad de ingresarlo nuevamente).
+
+**Requerimientos:**
+
+a. **Flujo de Login (LoginPage.jsx)**
+   - Usuario ingresa email en campo de email
+   - Usuario marca checkbox "Tengo contraseña blanqueada"
+   - Al enviar formulario:
+     * Backend valida email + verifica que password_blanqueada=true
+     * Si válido: backend retorna `debe_cambiar_password: true`
+     * Frontend captura el email ingresado
+     * Redirige a `/cambiar-password` pasando el email en state/sessionStorage
+
+b. **Formulario de Seteo de Contraseña (ChangePasswordRequired.jsx)**
+   - Recibe email como parámetro (desde state de navegación)
+   - Muestra email como read-only (no editable)
+   - Campo: "Nueva contraseña" (password input)
+   - Campo: "Confirmar contraseña" (password input)
+   - Validaciones:
+     * Ambas contraseñas requeridas
+     * Ambas contraseñas deben coincidir
+     * Mínimo 8 caracteres
+     * Al menos 1 mayúscula, 1 minúscula, 1 número
+   - Botón: "Establecer contraseña"
+   - Al guardar:
+     * Enviar POST /api/auth/cambiar-password con { email, nueva_password }
+     * Si éxito: mostrar "Contraseña establecida. Por favor inicia sesión"
+     * Redirigir a `/login` con email pre-cargado (opcional: agregar parámetro ?email=...)
+
+c. **Backend Validation**
+   - Endpoint POST /api/auth/cambiar-password ya debe existir (creado en BACKLOG-006)
+   - Validar que email + password_blanqueada=true coincidan
+   - Actualizar password en BD
+   - Marcar password_blanqueada=false
+   - Retornar token JWT (opcional: auto-login después de cambio)
+
+d. **Casos de Uso**
+   1. Usuario nuevo recibe email con admin asignándole contraseña blanqueada
+   2. Usuario hace login con email + checkbox marcado
+   3. Es redirigido automáticamente a seteo de contraseña
+   4. Establece su contraseña sin repetir email
+   5. Es redirigido a login para iniciar sesión con nueva contraseña
+
+**Contexto:**
+- BACKLOG-006 ya implementó el flujo básico de login con blanqueo
+- Actualmente después de login con password_blanqueada, el usuario ve ChangePasswordRequired pero debe ingresar email nuevamente
+- Mejora UX: elimina repetición innecesaria de email
+- Completa el flujo de onboarding para nuevos usuarios
+
+**Archivos a modificar:**
+- `frontend/src/pages/LoginPage/LoginPage.jsx` (capturar email, pasar a ChangePasswordRequired)
+- `frontend/src/pages/ChangePasswordRequired/ChangePasswordRequired.jsx` (recibir email como prop, mostrar read-only)
+- `frontend/src/services/authService.js` (métodos existentes, verificar que cambiar-password funcione)
+- Backend: verificar que POST /api/auth/cambiar-password existe y funciona (si no existe, crear)
+
+**Estimación:** 1.5-2 horas
+  - Frontend: actualizar LoginPage para pasar email (0.5h)
+  - Frontend: actualizar ChangePasswordRequired para recibir email (0.5h)
+  - Backend: verificar/crear endpoint cambiar-password (0.5h)
+  - Testing: verificar flujo completo (0.5h)
+
+**Prioridad:** 🔴 Alta — Completa flujo de onboarding, necesario para nuevos usuarios
+
+**Estado:** 📋 Registrado (2026-04-16)
+
+**Notas Técnicas:**
+- Este item mejora el flujo que ya existe (BACKLOG-006)
+- No es nuevo desarrollo, es refinement del flujo existente
+- El checkbox "Tengo contraseña blanqueada" ya existe en LoginPage
+- ChangePasswordRequired ya existe pero no recibe email como prop
+- El principal cambio es: capturar email en LoginPage → pasarlo a ChangePasswordRequired
+
+**Cambios Necesarios Resumidos:**
+1. LoginPage.jsx: agregar `email` a state que se pasa a navigation
+2. ChangePasswordRequired.jsx: recibir `email` como prop/param, mostrarlo read-only, pasarlo al endpoint
+3. Backend: validar que POST /api/auth/cambiar-password esté implementado
+
+---
 
 ### BACKLOG-009: Usuarios Comunes - Acceso a Todas las Acciones en Páginas Permitidas
 
