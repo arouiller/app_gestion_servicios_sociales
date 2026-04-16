@@ -1,10 +1,30 @@
-import React, { useState } from 'react';
+import React, { useState, useCallback, useMemo } from 'react';
+import ConfirmCloseDialog from '../../../../../components/ConfirmCloseDialog/ConfirmCloseDialog';
+import { useModalEscapeKey } from '../../../../../hooks/useModalEscapeKey';
 import './UsuarioFormModal.scss';
 
 export default function UsuarioFormModal({ onSubmit, onClose }) {
   const [email, setEmail] = useState('');
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
+  const [showConfirmClose, setShowConfirmClose] = useState(false);
+
+  const hasChanges = useMemo(() => email !== '', [email]);
+
+  const handleEscapeWithChanges = useCallback(() => {
+    setShowConfirmClose(true);
+  }, []);
+
+  const handleConfirmClose = useCallback(() => {
+    setShowConfirmClose(false);
+    onClose?.();
+  }, [onClose]);
+
+  const handleCancelClose = useCallback(() => {
+    setShowConfirmClose(false);
+  }, []);
+
+  useModalEscapeKey(true, hasChanges, onClose, hasChanges ? handleEscapeWithChanges : undefined);
 
   const handleSubmit = async (e) => {
     e.preventDefault();
@@ -30,11 +50,12 @@ export default function UsuarioFormModal({ onSubmit, onClose }) {
   };
 
   return (
-    <div className="usuario-form-modal__overlay" onClick={onClose}>
-      <div
-        className="usuario-form-modal"
-        onClick={(e) => e.stopPropagation()}
-      >
+    <>
+      <div className="usuario-form-modal__overlay">
+        <div
+          className="usuario-form-modal"
+          onClick={(e) => e.stopPropagation()}
+        >
         <h3 className="usuario-form-modal__title">Nuevo Usuario</h3>
 
         <form onSubmit={handleSubmit}>
@@ -62,7 +83,13 @@ export default function UsuarioFormModal({ onSubmit, onClose }) {
             </button>
             <button
               type="button"
-              onClick={onClose}
+              onClick={() => {
+                if (hasChanges) {
+                  setShowConfirmClose(true);
+                } else {
+                  onClose?.();
+                }
+              }}
               disabled={loading}
               className="usuario-form-modal__btn-cancel"
             >
@@ -70,7 +97,15 @@ export default function UsuarioFormModal({ onSubmit, onClose }) {
             </button>
           </div>
         </form>
+        </div>
       </div>
-    </div>
+
+      <ConfirmCloseDialog
+        isOpen={showConfirmClose}
+        onConfirm={handleConfirmClose}
+        onCancel={handleCancelClose}
+        title="¿Cerrar sin guardar?"
+      />
+    </>
   );
 }

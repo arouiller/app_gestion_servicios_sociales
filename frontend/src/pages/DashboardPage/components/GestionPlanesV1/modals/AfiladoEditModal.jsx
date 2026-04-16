@@ -1,5 +1,7 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback, useMemo } from 'react';
 import personasService from '../../../../../services/personasService';
+import ConfirmCloseDialog from '../../../../../components/ConfirmCloseDialog/ConfirmCloseDialog';
+import { useModalEscapeKey } from '../../../../../hooks/useModalEscapeKey';
 import './AfiladoEditModal.scss';
 
 function AfiladoEditModal({ personaId, personaData, onClose, onSave }) {
@@ -13,6 +15,30 @@ function AfiladoEditModal({ personaId, personaData, onClose, onSave }) {
     fecha_nacimiento: '',
     fecha_cobertura: '',
   });
+  const [showConfirmClose, setShowConfirmClose] = useState(false);
+
+  // Detect if form has changes
+  const hasChangesValue = useMemo(() => {
+    if (!originalData) return false;
+    return JSON.stringify(form) !== JSON.stringify(originalData);
+  }, [form, originalData]);
+
+  // Handle ESC key with confirmation if there are changes
+  const handleEscapeWithChanges = useCallback(() => {
+    setShowConfirmClose(true);
+  }, []);
+
+  const handleConfirmClose = useCallback(() => {
+    setShowConfirmClose(false);
+    onClose?.();
+  }, [onClose]);
+
+  const handleCancelClose = useCallback(() => {
+    setShowConfirmClose(false);
+  }, []);
+
+  // Use ESC key handler
+  useModalEscapeKey(true, hasChangesValue, onClose, hasChangesValue ? handleEscapeWithChanges : undefined);
 
   useEffect(() => {
     // Cargar datos de la persona si se proporcionan
@@ -46,21 +72,6 @@ function AfiladoEditModal({ personaId, personaData, onClose, onSave }) {
     setForm((prev) => ({ ...prev, [field]: value }));
   };
 
-  const hasChanges = () => {
-    if (!originalData) return false;
-    return JSON.stringify(form) !== JSON.stringify(originalData);
-  };
-
-  const handleClose = () => {
-    if (hasChanges()) {
-      if (window.confirm('Hay cambios sin guardar. ¿Estás seguro de que querés descartar los cambios?')) {
-        onClose();
-      }
-    } else {
-      onClose();
-    }
-  };
-
   const handleGuardar = async () => {
     setSaving(true);
     try {
@@ -76,11 +87,22 @@ function AfiladoEditModal({ personaId, personaData, onClose, onSave }) {
 
   return (
     <>
-      <div className="afiliado-edit-modal__overlay" onClick={onClose} />
+      <div className="afiliado-edit-modal__overlay" />
       <div className="afiliado-edit-modal">
         <div className="afiliado-edit-modal__header">
           <h3>Editar Afiliado</h3>
-          <button className="afiliado-edit-modal__close" onClick={handleClose}>✕</button>
+          <button
+            className="afiliado-edit-modal__close"
+            onClick={() => {
+              if (hasChangesValue) {
+                setShowConfirmClose(true);
+              } else {
+                onClose?.();
+              }
+            }}
+          >
+            ✕
+          </button>
         </div>
 
         <div className="afiliado-edit-modal__body">
@@ -144,11 +166,29 @@ function AfiladoEditModal({ personaId, personaData, onClose, onSave }) {
           <button className="afiliado-edit-modal__btn afiliado-edit-modal__btn--primary" onClick={handleGuardar} disabled={saving}>
             {saving ? 'Guardando...' : 'Guardar Cambios'}
           </button>
-          <button className="afiliado-edit-modal__btn afiliado-edit-modal__btn--secondary" onClick={handleClose} disabled={saving}>
+          <button
+            className="afiliado-edit-modal__btn afiliado-edit-modal__btn--secondary"
+            onClick={() => {
+              if (hasChangesValue) {
+                setShowConfirmClose(true);
+              } else {
+                onClose?.();
+              }
+            }}
+            disabled={saving}
+          >
             Cancelar
           </button>
         </div>
       </div>
+
+      {/* Confirmation dialog for closing with unsaved changes */}
+      <ConfirmCloseDialog
+        isOpen={showConfirmClose}
+        onConfirm={handleConfirmClose}
+        onCancel={handleCancelClose}
+        title="¿Cerrar sin guardar?"
+      />
     </>
   );
 }
