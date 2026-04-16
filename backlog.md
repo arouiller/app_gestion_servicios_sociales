@@ -8,28 +8,41 @@ Estos ítems se abordan **después** de completar todas las fases del PLAN.md.
 - 🟡 Media — mejora importante pero no bloqueante  
 - 🟢 Baja — nice to have
 
-## Convención de estados
-- ⏳ Pendiente
-- 🔄 En análisis
+## Ciclo de vida de los backlog items
+Estados posibles:
+- 📋 Registrado
+- 🔬 En análisis
 - ✅ Incorporado al plan
-- 🔄 Desarrollado
+- 🚀 Desarrollado
 - 🚫 Descartado (con motivo)
-- ✅ Aprobado
+- ✅ Solucionado
+
+Flujo de transiciones:
+```
+Registrado → En análisis → Incorporado al plan → Desarrollado → Solucionado
+Registrado → En análisis → Incorporado al plan → Descartado
+De cualquier estado → Descartado
+```
+
+**Regla crítica:** Un backlog item solo puede pasar a "Solucionado" o "Descartado" a través del pedido explícito del usuario final
+
+**Nota:** Si un backlog item desarrollado encuentra problemas, se abre un bug en BUGS.md y el item vuelve a estado "Desarrollado" hasta que se resuelva el bug.
+
 
 ## Items
 
 | ID | Prioridad | Estado | Descripción | Contexto / Motivo | Archivos estimados |
 |----|-----------|--------|-------------|-------------------|--------------------|
-| BACKLOG-010 | 🔴 Alta | ✅ Completado | Botón Aumento Masivo habilitado para todos los perfiles | Usuarios comunes pueden ejecutar aumento masivo de cuotas. Restricción requireAdmin removida de PATCH /api/planes/bulk-update-cuota. Usuarios no-admin pueden aplicar cambios masivos de valores. | backend/src/routes/planes.js, GestionPlanesV1.jsx |
-| BACKLOG-009 | 🔴 Alta | ✅ Completado | Usuarios comunes pueden realizar todas las acciones en páginas accesibles | Usuarios comunes ahora tienen acceso CRUD completo en Gestión de Planes: crear, editar, suspender, generar recibos, aumento masivo. Restricciones innecesarias removidas. | Múltiples (GestionPlanesV1, BusquedaAfiliados, etc.) |
-| BACKLOG-008 | 🔴 Alta | ✅ Completado | Registro de períodos de emisión de recibos + confirmación antes de regenerar | Sistema debe registrar qué meses ya tienen recibos generados. Si usuario intenta generar para un mes existente, mostrar confirmación. Si confirma, borrar recibos antiguos y regenerar. Previene duplicación accidental de recibos | GenerarRecibosModal.jsx, recibosController.js, nueva migración (tabla de períodos) |
-| BACKLOG-007 | 🔴 Alta | ✅ Completado | Control de acceso por rol: usuarios comunes no ven Administración | Usuarios comunes deben tener acceso a: Búsqueda de Afiliados, Gestión de Planes, Cobradores, Obras Sociales, Servicios, Tipos de Grupo, Tipos de Plan. Deben estar excluidos de: Gestión de Usuarios, Migraciones BD. Solo admin ve la sección "Administración" | DashboardPage.jsx |
-| BACKLOG-006 | 🔴 Alta | ✅ Completado | Flujo de login para usuarios con password blanqueada | Implementado y probado: Checkbox "Tengo contraseña blanqueada" en LoginPage. Backend detecta password_blanqueada y retorna flag debe_cambiar_password. Frontend redirige a /cambiar-password. Flujo completo funcional y validado para onboarding de nuevos usuarios | LoginPage.jsx, authService.js, auth.js |
-| BACKLOG-005 | 🟡 Media | ✅ Completado | Mejorar columna "Cambio" en tab Historial de Cuota | Implementado y aprobado: Nueva columna que muestra tipo de cambio (Fijo/Porcentual) con valor. Lógica de inferencia de tipo por cálculo dinámico | PlanV1Modal.jsx |
-| BACKLOG-004 | 🔴 Alta | ✅ Completado | Panel de Gestión de Usuarios: CRUD + cambio de rol + blanqueo de contraseña | Implementado y probado: Panel CRUD completo (listar, crear, cambiar rol, blanquear contraseña). Backend: endpoints /api/usuarios, /api/usuarios/:id/rol, /api/usuarios/:id/blanquear-password. Frontend: GestionUsuarios, UsuarioFormModal, ChangePasswordRequired. Flujo: usuarios nuevos con password_blanqueada acceden a /cambiar-password. Todo funcional y validado | Múltiples (GestionUsuarios.jsx, usuariosController, usuariosService, rutas, auth.js, ChangePasswordRequired.jsx) |
-| BACKLOG-003 | 🟡 Media | ✅ Completado | Estandarizar formato de listados: mismo layout para todas las tablas + iconos consistentes para acciones | Fase 1 + Fase 2 completadas: estilos estándar, componentes creados, aplicados a GestionPlanesV1 y LookupCRUD. | Múltiples componentes (todas las tablas de listado) |
-| BACKLOG-002 | 🔴 Alta | ✅ Completado | Agregar tab de recibos en vista de plan | Implementado y aprobado: Tab de recibos con paginación, carga dinámica y visualización de detalles. BUG-008 resuelto | PlanDetailModal.jsx, recibosService.js |
-| BACKLOG-001 | 🟡 Media | ✅ Completado | Mejorar preview de aumento de cuotas: navegación completa + comparación antes/después | Implementado y aprobado: Tabla con alineación correcta, paginación, búsqueda y contraste antes/después. BUG-009 resuelto | BulkUpdateCuotaModal.jsx, SCSS |
+| BACKLOG-010 | 🔴 Alta | ✅ Solucionado | Botón Aumento Masivo habilitado para todos los perfiles | Usuarios comunes pueden ejecutar aumento masivo de cuotas. Restricción requireAdmin removida de PATCH /api/planes/bulk-update-cuota. Usuarios no-admin pueden aplicar cambios masivos de valores. | backend/src/routes/planes.js, GestionPlanesV1.jsx |
+| BACKLOG-009 | 🔴 Alta | ✅ Solucionado | Usuarios comunes pueden realizar todas las acciones en páginas accesibles | Usuarios comunes ahora tienen acceso CRUD completo en Gestión de Planes: crear, editar, suspender, generar recibos, aumento masivo. Restricciones innecesarias removidas. | Múltiples (GestionPlanesV1, BusquedaAfiliados, etc.) |
+| BACKLOG-008 | 🔴 Alta | ✅ Solucionado | Registro de períodos de emisión de recibos + confirmación antes de regenerar | Sistema debe registrar qué meses ya tienen recibos generados. Si usuario intenta generar para un mes existente, mostrar confirmación. Si confirma, borrar recibos antiguos y regenerar. Previene duplicación accidental de recibos | GenerarRecibosModal.jsx, recibosController.js, nueva migración (tabla de períodos) |
+| BACKLOG-007 | 🔴 Alta | ✅ Solucionado | Control de acceso por rol: usuarios comunes no ven Administración | Usuarios comunes deben tener acceso a: Búsqueda de Afiliados, Gestión de Planes, Cobradores, Obras Sociales, Servicios, Tipos de Grupo, Tipos de Plan. Deben estar excluidos de: Gestión de Usuarios, Migraciones BD. Solo admin ve la sección "Administración" | DashboardPage.jsx |
+| BACKLOG-006 | 🔴 Alta | ✅ Solucionado | Flujo de login para usuarios con password blanqueada | Implementado y probado: Checkbox "Tengo contraseña blanqueada" en LoginPage. Backend detecta password_blanqueada y retorna flag debe_cambiar_password. Frontend redirige a /cambiar-password. Flujo completo funcional y validado para onboarding de nuevos usuarios | LoginPage.jsx, authService.js, auth.js |
+| BACKLOG-005 | 🟡 Media | ✅ Solucionado | Mejorar columna "Cambio" en tab Historial de Cuota | Implementado y aprobado: Nueva columna que muestra tipo de cambio (Fijo/Porcentual) con valor. Lógica de inferencia de tipo por cálculo dinámico | PlanV1Modal.jsx |
+| BACKLOG-004 | 🔴 Alta | ✅ Solucionado | Panel de Gestión de Usuarios: CRUD + cambio de rol + blanqueo de contraseña | Implementado y probado: Panel CRUD completo (listar, crear, cambiar rol, blanquear contraseña). Backend: endpoints /api/usuarios, /api/usuarios/:id/rol, /api/usuarios/:id/blanquear-password. Frontend: GestionUsuarios, UsuarioFormModal, ChangePasswordRequired. Flujo: usuarios nuevos con password_blanqueada acceden a /cambiar-password. Todo funcional y validado | Múltiples (GestionUsuarios.jsx, usuariosController, usuariosService, rutas, auth.js, ChangePasswordRequired.jsx) |
+| BACKLOG-003 | 🟡 Media | ✅ Solucionado | Estandarizar formato de listados: mismo layout para todas las tablas + iconos consistentes para acciones | Fase 1 + Fase 2 completadas: estilos estándar, componentes creados, aplicados a GestionPlanesV1 y LookupCRUD. | Múltiples componentes (todas las tablas de listado) |
+| BACKLOG-002 | 🔴 Alta | ✅ Solucionado | Agregar tab de recibos en vista de plan | Implementado y aprobado: Tab de recibos con paginación, carga dinámica y visualización de detalles. BUG-008 resuelto | PlanDetailModal.jsx, recibosService.js |
+| BACKLOG-001 | 🟡 Media | ✅ Solucionado | Mejorar preview de aumento de cuotas: navegación completa + comparación antes/después | Implementado y aprobado: Tabla con alineación correcta, paginación, búsqueda y contraste antes/después. BUG-009 resuelto | BulkUpdateCuotaModal.jsx, SCSS |
 
 ## Detalles de Items
 
@@ -71,7 +84,7 @@ c. **Mantener restricciones para admin-only**
 
 **Prioridad:** 🔴 Alta — Mejora UX y coherencia del sistema
 
-**Estado:** ✅ Completado
+**Estado:** ✅ Solucionado (2026-04-16)
 
 **Verificación Completada (2026-04-16):**
 - ✅ Gestión de Planes: CRUD completo para usuarios comunes
@@ -154,7 +167,7 @@ e. **Tabla periodos_recibos será creada por migración**
 
 **Prioridad:** 🔴 Alta — Control de duplicación es crítico
 
-**Estado:** ✅ Completado
+**Estado:** ✅ Solucionado (2026-04-16)
 
 **Verificación Completada (2026-04-16):**
 - ✅ Backend detecta períodos existentes y retorna HTTP 409 con { existe: true, cantidad: X }
@@ -207,7 +220,7 @@ c. **Comportamiento esperado**
 
 **Prioridad:** 🔴 Alta — Control de acceso es crítico para seguridad
 
-**Estado:** 🔄 Desarrollado
+**Estado:** ✅ Solucionado (2026-04-16)
 
 ---
 
@@ -358,7 +371,7 @@ c. **Aplicar a los siguientes componentes**
 
 **Prioridad:** 🟡 Media — Mejora importante para consistencia pero no bloqueante
 
-**Estado:** ✅ Completado
+**Estado:** ✅ Solucionado (2026-04-16)
 
 **Fase 1: Componentes y Estilos (Completada - 2026-04-16)**
 - ✅ Creado `frontend/src/styles/_table-standard.scss`
@@ -533,7 +546,7 @@ c. **Frontend: Flujo post-login**
 
 **Prioridad:** 🔴 Alta — Bloqueante para usuarios nuevos
 
-**Estado:** 🔄 Desarrollado
+**Estado:** ✅ Solucionado (2026-04-16)
 
 **Notas:**
 - El endpoint POST /api/auth/password-reset ya existe (creado en BACKLOG-004)
@@ -573,7 +586,7 @@ b. **Frontend: Remover restricción de deshabilitado**
 
 **Prioridad:** 🔴 Alta — Completa el acceso CRUD para usuarios comunes
 
-**Estado:** ✅ Completado
+**Estado:** ✅ Solucionado (2026-04-16)
 
 **Implementación Completada (2026-04-16):**
 1. ✅ Removido `requireAdmin` de `backend/src/routes/planes.js` (línea 12)
