@@ -208,6 +208,28 @@
     align-items: center;
     gap: 0.3rem;
   }
+
+  &__checkbox-label {
+    display: flex;
+    flex-direction: row-reverse;
+    align-items: center;
+    gap: 0.5rem;
+    cursor: pointer;
+    font-size: 0.9rem;
+    color: var(--color-text);
+
+    input[type="checkbox"] {
+      margin: 0;
+      cursor: pointer;
+      width: 18px;
+      height: 18px;
+      flex-shrink: 0;
+    }
+
+    span {
+      flex: 1;
+    }
+  }
 }
 
 // ── Indicador de fortaleza de contraseña ──────────────────────────────────────
