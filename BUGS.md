@@ -10,9 +10,6 @@ Registro de bugs detectados durante implementación del plan de auditoría (Fase
 ## Registros Activos
 
 | ID | Severidad | Fase | Descripción | Reportado | Estado |
-| BUG-010 | 🔴 CRÍTICO | BACKLOG-004 | POST /api/usuarios retorna "Cannot POST /api/api/usuarios" (URL duplicada) | 2026-04-16 | ✅ Verificado |
-| BUG-008 | 🔴 CRÍTICO | BACKLOG-002 | ReciboDetalleModal no abre - se actualiza plan en su lugar | 2026-04-16 | 🔧 Pendiente análisis |
-| BUG-006 | 🔴 CRÍTICO | Migrations | Downgrade en v1.0.x aún no verificado | 2026-04-15 | 🔧 Pendiente verificación |
 
 ---
 
@@ -20,6 +17,9 @@ Registro de bugs detectados durante implementación del plan de auditoría (Fase
 
 | ID | Fase | Descripción | Resuelto | Commits |
 |----|------|-------------|----------|---------|
+| BUG-010 | BACKLOG-004 | POST /api/usuarios retorna URL duplicada (verificado resuelto) | 2026-04-16 | 451131d |
+| BUG-008 | BACKLOG-002 | ReciboDetalleModal no abre (verificado resuelto) | 2026-04-16 | (fix anterior) |
+| BUG-006 | Migrations | Downgrade en v1.0.x (verificado resuelto) | 2026-04-16 | (fix anterior) |
 | BUG-013 | BACKLOG-008 | Regeneración de recibos: frontend no maneja 409, mostraba "0 recibos" | 2026-04-16 | 43b7dcb, 7f7aae6 |
 | BUG-012 | BACKLOG-006 | Password blanqueada: nueva contraseña no funciona en siguiente login (campo password → password_hash) | 2026-04-16 | 60a0d7f |
 | BUG-009 | BACKLOG-001 | Distribución de columnas desalineada en tabla de preview | 2026-04-16 | 27f822c |
