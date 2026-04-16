@@ -1,5 +1,5 @@
 const express = require('express');
-const { verifyToken, requireAdmin } = require('../middleware/auth');
+const { verifyToken } = require('../middleware/auth');
 const { validate, rules } = require('../middleware/validate');
 const controller = require('../controllers/v1.0/planesController');
 
@@ -23,8 +23,8 @@ router.get('/por-persona/:personaId', verifyToken, controller.getByPersona);
 router.get('/numero-afiliado/max', verifyToken, controller.getMaxAfiliadoNumber);
 router.get('/:planNumero/historial-cuota', verifyToken, controller.getHistorialCuota);
 router.get('/:planNumero', verifyToken, controller.obtener);
-router.post('/', verifyToken, requireAdmin, validate(crearSchema), controller.crear);
-router.put('/:planNumero', verifyToken, requireAdmin, controller.actualizar);
-router.delete('/:planNumero', verifyToken, requireAdmin, controller.eliminar);
+router.post('/', verifyToken, validate(crearSchema), controller.crear);
+router.put('/:planNumero', verifyToken, controller.actualizar);
+router.delete('/:planNumero', verifyToken, controller.eliminar);
 
 module.exports = router;

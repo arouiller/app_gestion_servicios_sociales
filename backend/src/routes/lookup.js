@@ -1,11 +1,10 @@
 const express = require('express');
 const router = express.Router();
 const lookupController = require('../controllers/lookupController');
-const { verifyToken, requireAdmin } = require('../middleware/auth');
+const { verifyToken } = require('../middleware/auth');
 
-// All lookup routes require authentication AND admin role
+// All lookup routes require authentication (admin-only operations are handled per-route)
 router.use(verifyToken);
-router.use(requireAdmin);
 
 // Lookup CRUD routes
 router.get('/:entidad', lookupController.list);
