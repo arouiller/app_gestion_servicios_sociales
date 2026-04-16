@@ -35,7 +35,8 @@ De cualquier estado → Descartado
 |----|-----------|--------|-------------|-------------------|----|
 | BACKLOG-013 | 🔴 Alta | 📋 Registrado | Mejora de flujo de login para usuarios con contraseña blanqueada | Usuario ingresa email, marca "tengo contraseña blanqueada", es redirigido a formulario de seteo con email pre-cargado. Mejora UX y completa flujo de onboarding. | LoginPage.jsx, ChangePasswordRequired.jsx, authService.js |
 | BACKLOG-011 | 🔴 Alta | ✅ Solucionado | Agregar acciones (editar y habilitar) a planes en búsqueda de afiliados | Desde planes visibles de un afiliado en búsqueda, permitir edición y cambio de estado (ACTIVO ↔ SUSPENDIDO) con modal reutilizable. Implementado, funcional y aprobado. | BusquedaAfiliados.jsx, PlanV1Modal.jsx |
-| BACKLOG-012 | 🔴 Alta | 🚀 Desarrollado | Mejorar comportamiento de ventanas modales (cierre, ESC, cambios no guardados) | Modales no cierran al hacer click fuera. Pueden cerrarse con ESC. Si hay cambios, ESC muestra advertencia. Con múltiples modales, ESC solo cierra la más arriba. Implementado en todas las modales. | Todos los modales (PlanV1Modal, GenerarRecibosModal, BulkUpdateCuotaModal, etc.) |
+| BACKLOG-012 | 🔴 Alta | ✅ Solucionado | Mejorar comportamiento de ventanas modales (cierre, ESC, cambios no guardados) | Modales no cierran al hacer click fuera. Pueden cerrarse con ESC. Si hay cambios, ESC muestra advertencia. Con múltiples modales, ESC solo cierra la más arriba. Implementado, probado y aprobado. | Todos los modales (PlanV1Modal, GenerarRecibosModal, BulkUpdateCuotaModal, etc.) |
+| BACKLOG-013 | 🔴 Alta | ✅ Solucionado | Mejora de flujo de login para usuarios con contraseña blanqueada | Email pre-cargado en formulario de seteo de contraseña. Elimina repetición de email en onboarding. Implementado, probado y aprobado. | LoginPage.jsx, ChangePasswordRequired.jsx |
 | BACKLOG-010 | 🔴 Alta | ✅ Solucionado | Botón Aumento Masivo habilitado para todos los perfiles | Usuarios comunes pueden ejecutar aumento masivo de cuotas. Restricción requireAdmin removida de PATCH /api/planes/bulk-update-cuota. Usuarios no-admin pueden aplicar cambios masivos de valores. | backend/src/routes/planes.js, GestionPlanesV1.jsx |
 | BACKLOG-009 | 🔴 Alta | ✅ Solucionado | Usuarios comunes pueden realizar todas las acciones en páginas accesibles | Usuarios comunes ahora tienen acceso CRUD completo en Gestión de Planes: crear, editar, suspender, generar recibos, aumento masivo. Restricciones innecesarias removidas. | Múltiples (GestionPlanesV1, BusquedaAfiliados, etc.) |
 | BACKLOG-008 | 🔴 Alta | ✅ Solucionado | Registro de períodos de emisión de recibos + confirmación antes de regenerar | Sistema debe registrar qué meses ya tienen recibos generados. Si usuario intenta generar para un mes existente, mostrar confirmación. Si confirma, borrar recibos antiguos y regenerar. Previene duplicación accidental de recibos | GenerarRecibosModal.jsx, recibosController.js, nueva migración (tabla de períodos) |
@@ -115,19 +116,43 @@ d. **Casos de Uso**
 
 **Prioridad:** 🔴 Alta — Completa flujo de onboarding, necesario para nuevos usuarios
 
-**Estado:** 📋 Registrado (2026-04-16)
+**Estado:** ✅ Solucionado (2026-04-16)
 
-**Notas Técnicas:**
-- Este item mejora el flujo que ya existe (BACKLOG-006)
-- No es nuevo desarrollo, es refinement del flujo existente
-- El checkbox "Tengo contraseña blanqueada" ya existe en LoginPage
-- ChangePasswordRequired ya existe pero no recibe email como prop
-- El principal cambio es: capturar email en LoginPage → pasarlo a ChangePasswordRequired
+**Implementación Completada (2026-04-16):**
 
-**Cambios Necesarios Resumidos:**
-1. LoginPage.jsx: agregar `email` a state que se pasa a navigation
-2. ChangePasswordRequired.jsx: recibir `email` como prop/param, mostrarlo read-only, pasarlo al endpoint
-3. Backend: validar que POST /api/auth/cambiar-password esté implementado
+1. ✅ LoginPage.jsx
+   - Ya existía: email se pasa via navigation state a /cambiar-password
+   - Agregado: recepción de email desde ChangePasswordRequired (después de cambio de contraseña)
+   - Agregado: useEffect para pre-llenar email field cuando viene de state
+   - Agregado: mostrar successMessage cuando el usuario es redirigido desde ChangePasswordRequired
+   - Email field se pre-llena automáticamente si viene del flujo de cambio de contraseña
+
+2. ✅ ChangePasswordRequired.jsx
+   - Agregado: import de useLocation hook
+   - Agregado: useEffect que captura email desde location.state?.email
+   - Modificado: email field ahora tiene `disabled={true}` (read-only)
+   - Modificado: agregado título `title="El email no puede ser modificado"`
+   - Modificado: cuando se guarda contraseña, redirige a /login con email en state
+   - El email ahora se pre-carga automáticamente (no editable)
+
+3. ✅ Flujo completo
+   - Usuario ingresa email en LoginPage + marca "tengo contraseña blanqueada"
+   - Email se pasa a ChangePasswordRequired via navigation state
+   - Email field en ChangePasswordRequired muestra el valor (read-only)
+   - Usuario solo ingresa contraseña nueva + confirmación
+   - Al guardar, redirige a /login con email pre-cargado
+   - LoginPage muestra successMessage y email field pre-lleno
+   - Usuario puede iniciar sesión directamente sin repetir email
+
+**Commits:**
+- 8a75567 - docs(BACKLOG-013): registrar y analizar
+- [implementation] - feat(BACKLOG-013): implementar email pre-cargado en formulario de cambio de contraseña
+
+**Beneficios:**
+- ✅ Mejora UX: elimina repetición de email
+- ✅ Flujo intuitivo: progresión clara (login → cambio → login nuevamente)
+- ✅ Completa BACKLOG-006: onboarding funcional para nuevos usuarios
+- ✅ Minimiza fricción: menos campos para llenar
 
 ---
 
