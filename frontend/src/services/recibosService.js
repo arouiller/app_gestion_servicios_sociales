@@ -4,13 +4,24 @@ const recibosService = {
   /**
    * POST /api/recibos/generar
    * Genera recibos para un período
-   * @param {object} data - { periodo: "2026-04-01", planes: [] }
+   * @param {object} data - { periodo: "2026-04-01", planes: [], force?: boolean }
+   *
+   * Posibles respuestas:
+   * - 201 (éxito): { success: true, recibos: [...], mensaje: "..." }
+   * - 409 (período existe): { success: false, existe: true, cantidad: X, mensaje: "..." }
+   * - Otros errores: error en response.data
    */
   generar: async (data) => {
     try {
       const response = await api.post('/recibos/generar', data);
       return response.data;
     } catch (error) {
+      // Manejar 409 como respuesta válida (período ya existe)
+      if (error.response?.status === 409) {
+        return error.response.data;
+      }
+
+      // Otros errores
       return {
         success: false,
         message: error.response?.data?.message || error.message,
