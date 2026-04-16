@@ -24,7 +24,7 @@ const usuariosService = {
   // Listar todos los usuarios (admin only)
   list: async () => {
     try {
-      const response = await api.get('/api/usuarios');
+      const response = await api.get('/usuarios');
       return response.data.data || [];
     } catch (error) {
       console.error('Error fetching usuarios:', error);
@@ -35,7 +35,7 @@ const usuariosService = {
   // Crear nuevo usuario (admin only)
   crear: async (email) => {
     try {
-      const response = await api.post('/api/usuarios', { email });
+      const response = await api.post('/usuarios', { email });
       return response.data.data;
     } catch (error) {
       console.error('Error creating usuario:', error);
@@ -46,7 +46,7 @@ const usuariosService = {
   // Cambiar rol del usuario (admin only)
   cambiarRol: async (id, rol) => {
     try {
-      const response = await api.put(`/api/usuarios/${id}/rol`, { rol });
+      const response = await api.put(`/usuarios/${id}/rol`, { rol });
       return response.data.data;
     } catch (error) {
       console.error('Error changing rol:', error);
@@ -57,7 +57,7 @@ const usuariosService = {
   // Blanquear contraseña del usuario (admin only)
   blanquearPassword: async (id) => {
     try {
-      const response = await api.post(`/api/usuarios/${id}/blanquear-password`);
+      const response = await api.post(`/usuarios/${id}/blanquear-password`);
       return response.data.data;
     } catch (error) {
       console.error('Error resetting password:', error);
@@ -68,7 +68,7 @@ const usuariosService = {
   // Cambiar contraseña (para usuarios con password_blanqueada)
   resetPassword: async (email, passwordNueva) => {
     try {
-      const response = await api.post('/api/auth/password-reset', {
+      const response = await api.post('/auth/password-reset', {
         email,
         password_nueva: passwordNueva,
       });
