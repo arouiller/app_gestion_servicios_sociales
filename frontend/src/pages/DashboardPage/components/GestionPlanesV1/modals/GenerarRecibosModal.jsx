@@ -6,17 +6,25 @@ import './GenerarRecibosModal.scss';
 
 function GenerarRecibosModal({ isOpen, onClose, onSuccess }) {
   const [step, setStep] = useState(1); // 1: config, 2: confirmation (si existe), 3: generating, 4: done
-  const [periodo, setPeriodo] = useState('');
+  const [mes, setMes] = useState(new Date().getMonth() + 1); // 1-12
+  const [anio, setAnio] = useState(new Date().getFullYear());
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
   const [recibosGenerados, setRecibosGenerados] = useState([]);
   const [existingPeriodo, setExistingPeriodo] = useState(null);
   const [showConfirmClose, setShowConfirmClose] = useState(false);
 
+  // Derivar período en formato YYYY-MM-01
+  const periodo = useMemo(() => {
+    if (!mes || !anio || String(anio).length < 4) return '';
+    return `${anio}-${String(mes).padStart(2, '0')}-01`;
+  }, [mes, anio]);
+
   // Detect if form has changes
   const hasChanges = useMemo(() => {
-    return step > 1 || periodo !== '';
-  }, [step, periodo]);
+    const hoy = new Date();
+    return step > 1 || mes !== (hoy.getMonth() + 1) || anio !== hoy.getFullYear();
+  }, [step, mes, anio]);
 
   // Handle ESC key with confirmation if there are changes
   const handleEscapeWithChanges = useCallback(() => {
@@ -43,21 +51,12 @@ function GenerarRecibosModal({ isOpen, onClose, onSuccess }) {
 
   const resetForm = () => {
     setStep(1);
-    setPeriodo('');
+    setMes(new Date().getMonth() + 1);
+    setAnio(new Date().getFullYear());
     setError(null);
     setRecibosGenerados([]);
     setExistingPeriodo(null);
     setLoading(false);
-  };
-
-  const handleDateChange = (e) => {
-    const value = e.target.value;
-    // Convertir de formato YYYY-MM a YYYY-MM-01
-    if (value) {
-      setPeriodo(`${value}-01`);
-    } else {
-      setPeriodo('');
-    }
   };
 
   const getPeriodoDisplay = () => {
@@ -179,11 +178,22 @@ function GenerarRecibosModal({ isOpen, onClose, onSuccess }) {
             <>
               <div className="form-group">
                 <label>Período:</label>
-                <input
-                  type="month"
-                  value={periodo.substring(0, 7)}
-                  onChange={handleDateChange}
-                />
+                <div className="periodo-selectors">
+                  <select value={mes} onChange={(e) => setMes(Number(e.target.value))}>
+                    {['Enero','Febrero','Marzo','Abril','Mayo','Junio',
+                      'Julio','Agosto','Septiembre','Octubre','Noviembre','Diciembre']
+                      .map((nombre, i) => (
+                        <option key={i + 1} value={i + 1}>{nombre}</option>
+                      ))}
+                  </select>
+                  <input
+                    type="number"
+                    min="2000"
+                    max="2099"
+                    value={anio}
+                    onChange={(e) => setAnio(Number(e.target.value))}
+                  />
+                </div>
                 {periodo && (
                   <p className="periodo-display">
                     Generarás recibos para <strong>{getPeriodoDisplay()}</strong> para todos los planes ACTIVO
