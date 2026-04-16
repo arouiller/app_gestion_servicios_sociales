@@ -65,6 +65,7 @@ async function stats(req, res) {
   }
 }
 
+
 /**
  * GET /api/migrations/preview/:version/:direction
  * Retorna el SQL que se ejecutaría para un upgrade/downgrade sin ejecutarlo
@@ -75,14 +76,20 @@ async function preview(req, res) {
     const { version, direction } = req.params;
 
     // Validate direction
-    if (!['upgrade', 'downgrade'].includes(direction)) {
+    if (!['upgrade', 'downgrade', 'reapply'].includes(direction)) {
       return res.status(400).json({
         success: false,
-        message: 'Dirección inválida. Use "upgrade" o "downgrade"',
+        message: 'Dirección inválida. Use "upgrade", "downgrade" o "reapply"',
       });
     }
 
-    const data = await migrationManager.getPreview(version, direction);
+    // For reapply, show the upgrade SQL
+    let data;
+    if (direction === 'reapply') {
+      data = await migrationManager.getPreview(version, 'upgrade');
+    } else {
+      data = await migrationManager.getPreview(version, direction);
+    }
 
     res.json({
       success: true,
@@ -99,18 +106,34 @@ async function preview(req, res) {
 
 /**
  * POST /api/migrations/execute/:version/:direction
- * Ejecuta una migración específica (upgrade o downgrade)
- * direction: "upgrade" | "downgrade"
+ * Ejecuta una migración específica (upgrade, downgrade o reapply)
+ * direction: "upgrade" | "downgrade" | "reapply"
+ *
+ * Reglas:
+ * - upgrade: versión debe estar pendiente (siguiente secuencial)
+ * - downgrade: versión debe ser la actual (última aplicada)
+ * - reapply: versión debe ser la actual (downgrade + upgrade en transacción)
  */
 async function execute(req, res) {
   try {
     const { version, direction } = req.params;
 
     // Validate direction
-    if (!['upgrade', 'downgrade'].includes(direction)) {
+    if (!['upgrade', 'downgrade', 'reapply'].includes(direction)) {
       return res.status(400).json({
         success: false,
-        message: 'Dirección inválida. Use "upgrade" o "downgrade"',
+        message: 'Dirección inválida. Use "upgrade", "downgrade" o "reapply"',
+      });
+    }
+
+    // For reapply, execute downgrade then upgrade
+    if (direction === 'reapply') {
+      await migrationManager.execute(version, 'downgrade');
+      const result = await migrationManager.execute(version, 'upgrade');
+      return res.json({
+        success: true,
+        message: `Migración reapply v${version} ejecutada exitosamente`,
+        data: result,
       });
     }
 

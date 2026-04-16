@@ -44,6 +44,89 @@ const lookupService = {
     const response = await api.delete(`/lookup/${entidad}/${id}`);
     return response.data;
   },
+
+  // ── Métodos específicos para planes v1.0 ──
+
+  /**
+   * Obtener tipos de plan
+   */
+  getTiposDePlan: async () => {
+    try {
+      const { data } = await api.get('/lookup/tipos-de-plan');
+      return data || [];
+    } catch (error) {
+      console.error('Error loading tipos de plan:', error);
+      return [];
+    }
+  },
+
+  /**
+   * Obtener cobradores
+   */
+  getCobradores: async () => {
+    try {
+      const { data } = await api.get('/lookup/cobradores');
+      return data || [];
+    } catch (error) {
+      console.error('Error loading cobradores:', error);
+      return [];
+    }
+  },
+
+  /**
+   * Obtener obras sociales
+   */
+  getObrasSociales: async () => {
+    try {
+      const { data } = await api.get('/lookup/obras-sociales');
+      return data || [];
+    } catch (error) {
+      console.error('Error loading obras sociales:', error);
+      return [];
+    }
+  },
+
+  /**
+   * Obtener tipos de grupo
+   */
+  getTiposDeGrupo: async () => {
+    try {
+      const { data } = await api.get('/lookup/tipos-de-grupo');
+      return data || [];
+    } catch (error) {
+      console.error('Error loading tipos de grupo:', error);
+      return [];
+    }
+  },
+
+  /**
+   * Cargar todos los lookups necesarios para planes en paralelo
+   */
+  loadAllLookupsForPlans: async () => {
+    try {
+      const [tiposDeplan, cobradores, obrasSociales, tiposDeGrupo] = await Promise.all([
+        lookupService.getTiposDePlan(),
+        lookupService.getCobradores(),
+        lookupService.getObrasSociales(),
+        lookupService.getTiposDeGrupo(),
+      ]);
+
+      return {
+        tiposDeplan,
+        cobradores,
+        obrasSociales,
+        tiposDeGrupo,
+      };
+    } catch (error) {
+      console.error('Error loading all lookups:', error);
+      return {
+        tiposDeplan: [],
+        cobradores: [],
+        obrasSociales: [],
+        tiposDeGrupo: [],
+      };
+    }
+  },
 };
 
 export default lookupService;

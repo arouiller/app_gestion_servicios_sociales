@@ -1,6 +1,7 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useAuth } from '../../../../context/AuthContext';
 import authService from '../../../../services/authService';
+import usuariosService from '../../../../services/usuariosService';
 import './DatosPersonales.scss';
 
 function DatosPersonales() {
@@ -19,6 +20,8 @@ function DatosPersonales() {
   const [loading, setLoading] = useState(false);
   const [mensaje, setMensaje] = useState(null);
   const [cambiarPassword, setCambiarPassword] = useState(false);
+  const [temaPreferido, setTemaPreferido] = useState(user?.tema_preferido || 'claro');
+  const temas = ['claro', 'oscuro', 'azul', 'verde'];
 
   const handleChange = (e) => {
     const { name, value } = e.target;
@@ -61,6 +64,23 @@ function DatosPersonales() {
       }
     } finally {
       setLoading(false);
+    }
+  };
+
+  const handleTemaChange = async (nuevoTema) => {
+    try {
+      setTemaPreferido(nuevoTema);
+      // Aplicar tema en localStorage inmediatamente
+      localStorage.setItem('selectedTheme', nuevoTema);
+      document.body.className = document.body.className.replace(/theme-\w+/, `theme-${nuevoTema}`);
+
+      // Guardar en backend
+      if (user?.id) {
+        await usuariosService.actualizarTema(user.id, nuevoTema);
+      }
+    } catch (err) {
+      console.error('Error al actualizar tema:', err);
+      setTemaPreferido(user?.tema_preferido || 'claro');
     }
   };
 
@@ -207,6 +227,20 @@ function DatosPersonales() {
         <div className="datos-personales__meta-item">
           <span className="datos-personales__meta-label">Estado</span>
           <span className="datos-personales__badge datos-personales__badge--activo">Activo</span>
+        </div>
+        <div className="datos-personales__meta-item">
+          <span className="datos-personales__meta-label">Tema Preferido</span>
+          <select
+            value={temaPreferido}
+            onChange={(e) => handleTemaChange(e.target.value)}
+            className="datos-personales__tema-select"
+          >
+            {temas.map((tema) => (
+              <option key={tema} value={tema}>
+                {tema.charAt(0).toUpperCase() + tema.slice(1)}
+              </option>
+            ))}
+          </select>
         </div>
       </div>
     </div>

@@ -1,0 +1,30 @@
+@import '../../styles/colors';
+
+.status-badge {
+  display: inline-block;
+  padding: 4px 12px;
+  border-radius: 4px;
+  font-size: 12px;
+  font-weight: 500;
+  white-space: nowrap;
+
+  &--activo {
+    background-color: $color-success-bg;
+    color: $color-success;
+  }
+
+  &--suspendido {
+    background-color: $color-suspended-bg;
+    color: $color-suspended;
+  }
+
+  &--pendiente {
+    background-color: $color-warning-bg;
+    color: #856404;
+  }
+
+  &--inactivo {
+    background-color: $color-bg-light;
+    color: $color-text-muted;
+  }
+}

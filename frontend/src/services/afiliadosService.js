@@ -2,7 +2,7 @@ import api from './api';
 
 const afiliadosService = {
   listar: async (params = {}) => {
-    const { data } = await api.get('/afiliados', { params });
+    const { data } = await api.get('/personas/listar', { params });
     return data;
   },
 

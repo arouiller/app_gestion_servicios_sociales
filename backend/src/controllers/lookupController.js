@@ -159,6 +159,9 @@ exports.update = async (req, res, next) => {
 
     const datos = req.body;
 
+    // Remove PK field from update payload to prevent primary key constraint violation
+    delete datos[config.pkField];
+
     // Validar que TODOS los campos estén presentes
     const camposRequeridos = config.campos;
     const camposFaltantes = camposRequeridos.filter(

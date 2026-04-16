@@ -20,6 +20,8 @@ const crearSchema = {
 
 router.get('/', verifyToken, controller.listar);
 router.get('/por-persona/:personaId', verifyToken, controller.getByPersona);
+router.get('/numero-afiliado/max', verifyToken, controller.getMaxAfiliadoNumber);
+router.get('/:planNumero/historial-cuota', verifyToken, controller.getHistorialCuota);
 router.get('/:planNumero', verifyToken, controller.obtener);
 router.post('/', verifyToken, requireAdmin, validate(crearSchema), controller.crear);
 router.put('/:planNumero', verifyToken, requireAdmin, controller.actualizar);

@@ -1,10 +1,11 @@
 import React, { useState } from 'react';
 import { useAuth } from '../../context/AuthContext';
+import ThemeSwitcher from '../../components/ThemeSwitcher/ThemeSwitcher';
 import DatosPersonales from './components/DatosPersonales/DatosPersonales';
 import MigrationsDashboard from './components/MigrationsDashboard/MigrationsDashboard';
 import BusquedaAfiliados from './components/v1.0/BusquedaAfiliados';
-import ListadoPlanes from './components/v1.0/ListadoPlanes';
-import PlanesPorCobrador from './components/v1.0/PlanesPorCobrador';
+import GestionPlanesV1 from './components/GestionPlanesV1/GestionPlanesV1';
+import GestionPlanesV1ErrorBoundary from './components/GestionPlanesV1/GestionPlanesV1ErrorBoundary';
 import Cobradores from './components/Cobradores/Cobradores';
 import ObrasSociales from './components/ObrasSociales/ObrasSociales';
 import ServiciosAdicionales from './components/ServiciosAdicionales/ServiciosAdicionales';
@@ -36,8 +37,9 @@ function buildMenu(isAdmin) {
       label: 'Gestión',
       children: [
         { key: 'busqueda-afiliados', label: 'Búsqueda de Afiliados' },
-        { key: 'listado-planes', label: 'Listado de Planes' },
-        { key: 'planes-por-cobrador', label: 'Planes por Cobrador' },
+        ...(isAdmin ? [
+          { key: 'gestion-planes-v1', label: 'Gestión de Planes' },
+        ] : []),
         ...(isAdmin ? [
           { key: 'cobradores', label: 'Cobradores' },
           { key: 'obras-sociales', label: 'Obras Sociales' },
@@ -185,6 +187,7 @@ function DashboardPage() {
               {user?.rol === 'admin' ? 'Administrador' : 'Usuario'}
             </span>
           </div>
+          <ThemeSwitcher />
           <button className="dashboard__logout-btn" onClick={logout}>
             Cerrar sesión
           </button>
@@ -204,8 +207,11 @@ function DashboardPage() {
         <main className="dashboard__content">
           {activeModule === 'datos-personales' && <DatosPersonales />}
           {activeModule === 'busqueda-afiliados' && <BusquedaAfiliados />}
-          {activeModule === 'listado-planes' && <ListadoPlanes />}
-          {activeModule === 'planes-por-cobrador' && <PlanesPorCobrador />}
+          {activeModule === 'gestion-planes-v1' && (
+            <GestionPlanesV1ErrorBoundary>
+              <GestionPlanesV1 />
+            </GestionPlanesV1ErrorBoundary>
+          )}
           {activeModule === 'migraciones-bd' && <MigrationsDashboard />}
           {activeModule === 'cobradores' && <Cobradores />}
           {activeModule === 'obras-sociales' && <ObrasSociales />}

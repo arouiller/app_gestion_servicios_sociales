@@ -45,6 +45,11 @@ const Usuario = sequelize.define('usuarios', {
     type: DataTypes.DATE,
     allowNull: true,
   },
+  tema_preferido: {
+    type: DataTypes.STRING(50),
+    defaultValue: 'claro',
+    allowNull: false,
+  },
 }, {
   timestamps: false,
   tableName: 'usuarios',

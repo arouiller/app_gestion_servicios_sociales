@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import planesService from '../../../../services/v1.0/planesService';
+import planesService from '../../../../services/planesV1Service';
 import './ListadoPlanes.scss';
 
 const ListadoPlanes = () => {

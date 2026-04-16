@@ -1,25 +1,18 @@
 const express = require('express');
-const { verifyToken, requireAdmin } = require('../middleware/auth');
-const { validate, rules } = require('../middleware/validate');
-const controller = require('../controllers/planesController');
-
 const router = express.Router();
+const { verifyToken, requireAdmin } = require('../middleware/auth');
+const planesController = require('../controllers/planesController');
 
-const crearSchema = {
-  nombre: [
-    rules.required('El nombre del plan'),
-    rules.minLength(2, 'El nombre del plan'),
-    rules.maxLength(150, 'El nombre del plan'),
-  ],
-  precio_mensual: [
-    rules.required('El precio mensual'),
-  ],
-};
+// GET /api/planes/filter/:filtro
+// Obtiene planes filtrados por tipo_plan, cobrador, os, estado
+router.get('/filter/:filtro', verifyToken, planesController.filter);
 
-router.get('/', verifyToken, controller.listar);
-router.get('/:id', verifyToken, controller.obtener);
-router.post('/', verifyToken, requireAdmin, validate(crearSchema), controller.crear);
-router.put('/:id', verifyToken, requireAdmin, controller.actualizar);
-router.delete('/:id', verifyToken, requireAdmin, controller.eliminar);
+// PATCH /api/planes/bulk-update-cuota
+// Actualiza masivamente valor_cuota de planes (admin only)
+router.patch('/bulk-update-cuota', verifyToken, requireAdmin, planesController.bulkUpdateCuota);
+
+// GET /api/planes/count/:filtro
+// Preview: cuenta de planes a ser afectados por filtro
+router.get('/count/:filtro', verifyToken, planesController.countByFilter);
 
 module.exports = router;

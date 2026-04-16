@@ -1,29 +1,60 @@
 import api from './api';
 
 const planesService = {
-  listar: async (params = {}) => {
-    const { data } = await api.get('/planes', { params });
-    return data.data;
+  /**
+   * GET /api/planes/filter/:filtro
+   * Obtiene planes filtrados
+   * @param {string} filtro - todos, tipo_plan, cobrador, os, estado
+   * @param {object} params - parámetros de filtro según el tipo
+   */
+  getByFilter: async (filtro, params = {}) => {
+    try {
+      const response = await api.get(`/planes/filter/${filtro}`, { params });
+      return response.data;
+    } catch (error) {
+      return {
+        success: false,
+        message: error.response?.data?.message || error.message,
+      };
+    }
   },
 
-  obtener: async (id) => {
-    const { data } = await api.get(`/planes/${id}`);
-    return data.data;
+  /**
+   * GET /api/planes/count/:filtro
+   * Preview: cuenta de planes a ser afectados por filtro
+   * @param {string} filtro - tipo_plan, cobrador, os, estado
+   * @param {object} params - parámetros de filtro
+   */
+  countByFilter: async (filtro, params = {}) => {
+    try {
+      const response = await api.get(`/planes/count/${filtro}`, { params });
+      return response.data;
+    } catch (error) {
+      return {
+        success: false,
+        message: error.response?.data?.message || error.message,
+        count: 0,
+      };
+    }
   },
 
-  crear: async (payload) => {
-    const { data } = await api.post('/planes', payload);
-    return data;
-  },
-
-  actualizar: async (id, payload) => {
-    const { data } = await api.put(`/planes/${id}`, payload);
-    return data;
-  },
-
-  eliminar: async (id) => {
-    const { data } = await api.delete(`/planes/${id}`);
-    return data;
+  /**
+   * PATCH /api/planes/bulk-update-cuota
+   * Actualiza masivamente el valor_cuota
+   * @param {object} data - { plan_numeros?, nuevo_valor, filtro?, tipo_plan_numero?, ... }
+   */
+  bulkUpdateCuota: async (data) => {
+    try {
+      const response = await api.patch('/planes/bulk-update-cuota', data);
+      return response.data;
+    } catch (error) {
+      return {
+        success: false,
+        message: error.response?.data?.message || error.message,
+        updated: 0,
+        affectedPlanes: [],
+      };
+    }
   },
 };
 

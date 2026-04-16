@@ -1,0 +1,40 @@
+@import '../../styles/colors';
+
+.search-container {
+  margin-bottom: 20px;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+
+  &__input-wrapper {
+    position: relative;
+    display: flex;
+    align-items: center;
+  }
+
+  &__input {
+    width: 100%;
+    padding: 10px 12px 10px 36px;
+    border: 1px solid $color-border;
+    border-radius: 4px;
+    font-size: 14px;
+    transition: border-color 0.2s, box-shadow 0.2s;
+
+    &:focus {
+      outline: none;
+      border-color: $color-primary;
+      box-shadow: 0 0 0 3px $color-primary-light;
+    }
+
+    &::placeholder {
+      color: $color-text-light;
+    }
+  }
+
+  &__icon {
+    position: absolute;
+    left: 10px;
+    color: $color-text-muted;
+    pointer-events: none;
+  }
+}

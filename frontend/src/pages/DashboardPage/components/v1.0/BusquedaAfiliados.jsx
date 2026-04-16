@@ -1,6 +1,6 @@
 import React, { useState, useCallback } from 'react';
-import personasService from '../../../../services/v1.0/personasService';
-import planesService from '../../../../services/v1.0/planesService';
+import personasService from '../../../../services/personasService';
+import planesService from '../../../../services/planesV1Service';
 import './BusquedaAfiliados.scss';
 
 const BusquedaAfiliados = () => {

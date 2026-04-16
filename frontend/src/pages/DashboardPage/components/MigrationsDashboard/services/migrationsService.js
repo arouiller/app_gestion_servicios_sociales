@@ -46,7 +46,9 @@ export const migrationsAPI = {
    * Returns: { success, message, data: { version, description, direction, durationMs } }
    */
   execute: async (version, direction) => {
-    const response = await api.post(`${BASE_URL}/execute/${version}/${direction}`);
+    const url = `${BASE_URL}/execute/${version}/${direction}`;
+    console.log('[migrationsService.execute] POST', url, { version, direction });
+    const response = await api.post(url);
     return response.data;
   },
 };

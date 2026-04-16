@@ -1,12 +1,16 @@
 import React, { useState, useEffect } from 'react';
 import PreviewModal from './modals/PreviewModal';
-import migrationsAPI from './services/migrationsService';
+import VersionesTab from './tabs/VersionesTab';
+import HistorialTab from './tabs/HistorialTab';
+import EstadisticasTab from './tabs/EstadisticasTab';
+import migrationsAPI from '../../../../services/migrationsService';
 import './styles/MigrationsDashboard.scss';
 
 function MigrationsDashboard() {
   const [activeTab, setActiveTab] = useState('versiones');
   const [versions, setVersions] = useState([]);
   const [history, setHistory] = useState([]);
+  const [stats, setStats] = useState(null);
   const [currentVersion, setCurrentVersion] = useState(null);
 
   const [preview, setPreview] = useState(null);
@@ -30,9 +34,10 @@ function MigrationsDashboard() {
   const loadAllData = async () => {
     try {
       setError(null);
-      const [listRes, historyRes] = await Promise.all([
+      const [listRes, historyRes, statsRes] = await Promise.all([
         migrationsAPI.list(),
         migrationsAPI.history(),
+        migrationsAPI.stats(),
       ]);
 
       if (listRes.success) {
@@ -43,18 +48,22 @@ function MigrationsDashboard() {
       if (historyRes.success) {
         setHistory(historyRes.data.history);
       }
+
+      if (statsRes.success) {
+        setStats(statsRes.data);
+      }
     } catch (err) {
       console.error('Error loading migration data:', err);
       setError('Error al cargar datos de migraciones');
     }
   };
 
-  const handleUpgrade = async (version) => {
+  const handleMigration = async (version, direction) => {
     try {
       setError(null);
-      const previewRes = await migrationsAPI.preview(version, 'upgrade');
+      const previewRes = await migrationsAPI.preview(version, direction);
       if (previewRes.success) {
-        setPreview({ ...previewRes.data, open: true });
+        setPreview({ ...previewRes.data, open: true, direction });
       } else {
         setError(previewRes.message || 'Error al obtener preview');
       }
@@ -63,6 +72,10 @@ function MigrationsDashboard() {
       setError(err.message || 'Error al obtener preview');
     }
   };
+
+  const handleUpgrade = (version) => handleMigration(version, 'upgrade');
+  const handleDowngrade = (version) => handleMigration(version, 'downgrade');
+  const handleReapply = (version) => handleMigration(version, 'reapply');
 
   const handleClosePreview = () => {
     if (!isLoading) {
@@ -78,10 +91,11 @@ function MigrationsDashboard() {
       setError(null);
       setIsLoading(true);
 
+      console.log('[MigrationsDashboard] handleConfirm:', { version: preview.version, direction, preview });
       const result = await migrationsAPI.execute(preview.version, direction);
 
       if (result.success) {
-        setSuccess(`Migración ${direction} v${preview.version} ejecutada exitosamente`);
+        setSuccess(`Migración ${direction} v${preview.version} ejecutada exitosamente en ${result.data?.duration || '?'}s`);
         setPreview(null);
         // Reload data
         await loadAllData();
@@ -134,79 +148,34 @@ function MigrationsDashboard() {
           >
             Historial
           </button>
+          <button
+            className={`tab-btn ${activeTab === 'estadisticas' ? 'active' : ''}`}
+            onClick={() => setActiveTab('estadisticas')}
+          >
+            Estadísticas
+          </button>
         </div>
 
         <div className="tabs-content">
           {activeTab === 'versiones' && (
-            <div className="tab-content">
-              <div className="versions-list">
-                {versions.length === 0 ? (
-                  <p>No hay versiones disponibles</p>
-                ) : (
-                  versions.map((version) => (
-                    <div key={version.version} className="version-card">
-                      <div className="version-card__header">
-                        <span className="version-number">{version.version}</span>
-                        <span
-                          className={`status-badge ${
-                            version.estado === 'aplicada' ? 'applied' : 'pending'
-                          }`}
-                        >
-                          {version.estado === 'aplicada' ? '✓ Aplicada' : '○ Pendiente'}
-                        </span>
-                      </div>
-                      <p className="version-description">{version.descripcion}</p>
-                      {version.estado === 'pendiente' && (
-                        <button
-                          className="btn btn-primary btn-sm"
-                          onClick={() => handleUpgrade(version.version)}
-                          disabled={isLoading}
-                        >
-                          ↑ Upgrade
-                        </button>
-                      )}
-                    </div>
-                  ))
-                )}
-              </div>
-            </div>
+            <VersionesTab
+              versions={versions}
+              currentVersion={currentVersion}
+              isLoading={isLoading}
+              onUpgrade={handleUpgrade}
+              onDowngrade={handleDowngrade}
+              onReapply={handleReapply}
+            />
           )}
 
-          {activeTab === 'historial' && (
-            <div className="tab-content">
-              {history.length === 0 ? (
-                <p>No hay historial de migraciones</p>
-              ) : (
-                <table className="historial-table">
-                  <thead>
-                    <tr>
-                      <th>Versión</th>
-                      <th>Tipo</th>
-                      <th>Estado</th>
-                      <th>Fecha</th>
-                    </tr>
-                  </thead>
-                  <tbody>
-                    {history.map((record) => (
-                      <tr key={record.id}>
-                        <td>{record.version}</td>
-                        <td>{record.tipo === 'upgrade' ? '↑ Upgrade' : '↓ Downgrade'}</td>
-                        <td>
-                          <span
-                            className={`status-badge ${
-                              record.estado === 'exitosa' ? 'exitosa' : 'fallida'
-                            }`}
-                          >
-                            {record.estado === 'exitosa' ? '✓ Exitosa' : '✗ Fallida'}
-                          </span>
-                        </td>
-                        <td>{new Date(record.fecha_ejecucion).toLocaleString('es-AR')}</td>
-                      </tr>
-                    ))}
-                  </tbody>
-                </table>
-              )}
-            </div>
+          {activeTab === 'historial' && <HistorialTab history={history} />}
+
+          {activeTab === 'estadisticas' && (
+            <EstadisticasTab
+              stats={stats}
+              isLoading={isLoading}
+              onRefresh={loadAllData}
+            />
           )}
         </div>
       </div>
