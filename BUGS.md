@@ -955,8 +955,14 @@ El botón "Aumento Masivo" en Gestión de Planes debe estar visible para todos l
 - ✅ Habilitado y funcional para admin
 - ✅ UX mejorada: usuario comprende por qué botón no está disponible
 
+**Validación y Aprobación (2026-04-16):**
+- ✅ Validado por usuario
+- ✅ Aprobado por usuario
+- ✅ Comportamiento confirmado como correcto
+
 **Commits:**
 - 169a924 - fix(BUG-015): mostrar botón visible pero deshabilitado para no-admin
+- 4d46c1c - docs(BUGS): marcado como CERRADO
 
 ---
 
