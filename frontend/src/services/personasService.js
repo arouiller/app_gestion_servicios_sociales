@@ -23,8 +23,12 @@ const personasService = {
         }
       }
 
-      const { data } = await api.get('/personas', { params: queryParams });
-      return data;
+      const response = await api.get('/personas', { params: queryParams });
+
+      // El backend retorna directamente un array, no un objeto con propiedad 'data'
+      // Si la respuesta es un array, retornarlo directamente
+      // Si es un objeto con 'data', retornar response.data.data (la estructura envuelta)
+      return Array.isArray(response.data) ? response.data : response.data.data || [];
     } catch (error) {
       console.error('Error en buscar personas:', error);
       throw error;

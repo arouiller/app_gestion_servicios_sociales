@@ -1054,25 +1054,32 @@ En la página de Búsqueda de Afiliados, al ingresar un texto en el campo de bú
 
 **Estado:** 🔬 En análisis
 
-**Causa raíz identificada:**
-En `frontend/src/pages/DashboardPage/components/v1.0/BusquedaAfiliados.jsx` línea 26, se llama a:
+**Causa raíz identificada (Versión 2):**
+Mismatch entre formato de respuesta del backend y parsing en frontend:
+
+**Backend** (`personasController.search` línea 40):
 ```javascript
-const resultado = await personasService.search(value);  // ❌ Método no existe
+res.status(200).json(personas);  // Retorna directamente: [...]
 ```
 
-Pero en `personasService.js`, el método real se llama `buscar()`, no `search()`:
+**Frontend Service** (`personasService.buscar` línea 26-27):
 ```javascript
-buscar: async (params = {}) => {  // ✅ Método correcto
+const { data } = await api.get('/personas', { params: queryParams });
+return data;  // ❌ data es undefined (no hay propiedad 'data')
 ```
 
-Cuando se intenta llamar a un método inexistente, JavaScript lanza un error TypeError que es capturado en el catch block, mostrando "Error en la búsqueda" sin hacer la llamada al backend.
+**Problema:** El service intenta destructurar `.data` de un array directo, resultando en `undefined`.
+Luego BusquedaAfiliados asigna `undefined` a personas, causando error al intentar renderizar.
 
 **Solución implementada:**
-Cambiar línea 26 en BusquedaAfiliados.jsx:
-- `personasService.search(value)` → `personasService.buscar(value)`
+Actualizar `personasService.buscar()` para manejar respuestas tanto de array directo como de objeto con estructura `{ data: ... }`:
+```javascript
+return Array.isArray(response.data) ? response.data : response.data.data || [];
+```
 
 **Archivos modificados:**
-- `frontend/src/pages/DashboardPage/components/v1.0/BusquedaAfiliados.jsx` (línea 26)
+- `frontend/src/pages/DashboardPage/components/v1.0/BusquedaAfiliados.jsx` (línea 26 - cambiar search por buscar)
+- `frontend/src/services/personasService.js` (línea 6-32 - actualizar parseo de respuesta)
 
 **Estado:** 🚀 Desarrollado
 
