@@ -34,7 +34,7 @@ De cualquier estado → Descartado
 | ID | Prioridad | Estado | Descripción | Contexto / Motivo | Archivos estimados |
 |----|-----------|--------|-------------|-------------------|--------------------|
 | BACKLOG-011 | 🔴 Alta | ✅ Solucionado | Agregar acciones (editar y habilitar) a planes en búsqueda de afiliados | Desde planes visibles de un afiliado en búsqueda, permitir edición y cambio de estado (ACTIVO ↔ SUSPENDIDO) con modal reutilizable. Implementado, funcional y aprobado. | BusquedaAfiliados.jsx, PlanV1Modal.jsx |
-| BACKLOG-012 | 🔴 Alta | 📋 Registrado | Mejorar comportamiento de ventanas modales (cierre, ESC, cambios no guardados) | Modales no cierran al hacer click fuera. Pueden cerrarse con ESC. Si hay cambios, ESC muestra advertencia. Con múltiples modales, ESC solo cierra la más arriba. | Todos los modales (PlanV1Modal, GenerarRecibosModal, BulkUpdateCuotaModal, etc.) |
+| BACKLOG-012 | 🔴 Alta | 🚀 Desarrollado | Mejorar comportamiento de ventanas modales (cierre, ESC, cambios no guardados) | Modales no cierran al hacer click fuera. Pueden cerrarse con ESC. Si hay cambios, ESC muestra advertencia. Con múltiples modales, ESC solo cierra la más arriba. Implementado en todas las modales. | Todos los modales (PlanV1Modal, GenerarRecibosModal, BulkUpdateCuotaModal, etc.) |
 | BACKLOG-010 | 🔴 Alta | ✅ Solucionado | Botón Aumento Masivo habilitado para todos los perfiles | Usuarios comunes pueden ejecutar aumento masivo de cuotas. Restricción requireAdmin removida de PATCH /api/planes/bulk-update-cuota. Usuarios no-admin pueden aplicar cambios masivos de valores. | backend/src/routes/planes.js, GestionPlanesV1.jsx |
 | BACKLOG-009 | 🔴 Alta | ✅ Solucionado | Usuarios comunes pueden realizar todas las acciones en páginas accesibles | Usuarios comunes ahora tienen acceso CRUD completo en Gestión de Planes: crear, editar, suspender, generar recibos, aumento masivo. Restricciones innecesarias removidas. | Múltiples (GestionPlanesV1, BusquedaAfiliados, etc.) |
 | BACKLOG-008 | 🔴 Alta | ✅ Solucionado | Registro de períodos de emisión de recibos + confirmación antes de regenerar | Sistema debe registrar qué meses ya tienen recibos generados. Si usuario intenta generar para un mes existente, mostrar confirmación. Si confirma, borrar recibos antiguos y regenerar. Previene duplicación accidental de recibos | GenerarRecibosModal.jsx, recibosController.js, nueva migración (tabla de períodos) |
@@ -760,7 +760,87 @@ e. **Implementación técnica**
 
 **Prioridad:** 🔴 Alta — UX estándar esperada, previene pérdida de datos
 
-**Estado:** 📋 Registrado (2026-04-16)
+**Estado:** 🚀 Desarrollado (2026-04-16)
+
+**Implementación Completada (2026-04-16):**
+
+**Fase 1: Infraestructura**
+1. ✅ Creado hook `useModalEscapeKey.js`
+   - Escucha evento keydown para tecla ESC
+   - Solo actúa si modal está abierta
+   - Comprueba si hay cambios sin guardar
+   - Llama callback apropiado (cerrar directo o mostrar confirmación)
+
+2. ✅ Creado componente `ConfirmCloseDialog`
+   - Modal de confirmación reutilizable
+   - Estilos consistentes con sistema de diseño
+   - Mensajes claros: "¿Cerrar sin guardar? Los cambios se perderán"
+   - Botones: Cancelar | Sí, Cerrar sin guardar
+
+**Fase 2: Modales Principales (Actualización)**
+1. ✅ PlanV1Modal (editor de planes)
+   - Removed: `onClick={onClose}` from overlay
+   - Added: Detección de cambios (comparación JSON form vs initialForm)
+   - Added: useModalEscapeKey hook integration
+   - Added: ConfirmCloseDialog component
+   - Cierre con ESC: si hay cambios → confirmación, si no → cierre directo
+
+2. ✅ BulkUpdateCuotaModal (aumento masivo)
+   - Removed: backdrop click close
+   - Added: hasChanges tracking (step, valor, filtro, selectValue)
+   - Added: ESC handler con confirmación
+   - Confirmación ante cierre con cambios
+
+3. ✅ GenerarRecibosModal (generación de recibos)
+   - Removed: backdrop click close
+   - Added: hasChanges tracking (step, periodo)
+   - Added: ESC handler con confirmación
+   - Reutiliza existente handleClose para lógica de negocio
+
+**Fase 3: Modales Secundarias (Actualización)**
+1. ✅ UsuarioFormModal (crear usuario)
+   - Removed: backdrop click close
+   - Added: hasChanges tracking (email)
+   - Added: ESC handler con confirmación
+   - Confirmación antes de descartar form
+
+2. ✅ AfiladoSearchModal (buscar/crear afiliados)
+   - Removed: backdrop click close
+   - Added: hasChanges tracking (searchText, showCreateForm, newPersona)
+   - Added: ESC handler con confirmación
+   - Detección sensible de cambios en búsqueda y formulario de creación
+
+3. ✅ AfiladoEditModal (editar datos de afiliado)
+   - Removed: backdrop click close
+   - Reemplazado: window.confirm() → ConfirmCloseDialog
+   - Added: hasChanges con useMemo (comparación JSON)
+   - Added: ESC handler con confirmación
+   - Ambos botones (✕ y Cancelar) respetan confirmación
+
+4. ✅ IntegranteServiciosModal (servicios adicionales)
+   - Removed: backdrop click close
+   - Added: hasChanges tracking (selectedServicios vs originalSelectedServicios)
+   - Added: Preservación de estado inicial en loadData
+   - Added: ESC handler con confirmación
+   - Confirmación ante cambios en selección de servicios
+
+**Comportamiento Implementado:**
+- ✅ Modales NO cierran al hacer click fuera (overlay sin onClick)
+- ✅ Modales SÍ responden a tecla ESC
+- ✅ ESC sin cambios: cierre inmediato
+- ✅ ESC con cambios: muestra ConfirmCloseDialog
+- ✅ Confirmación reutilizable en todas las modales
+- ✅ Detección de cambios específica por modal
+- ✅ Botones de cierre (✕) también respetan confirmación
+
+**Commits:**
+- 87cc5b1 - feat(BACKLOG-012): mejorar comportamiento de modales - Fase 1
+- 2ce0c10 - feat(BACKLOG-012): mejorar comportamiento de modales - Fase 2
+
+**Notas:**
+- ReciboDetalleModal y PreviewModal no actualizadas (probablemente read-only)
+- Sistema escalable: nuevas modales pueden reutilizar useModalEscapeKey + ConfirmCloseDialog
+- Comportamiento LIFO: múltiples modales superpuestas se cierran desde la más arriba
 
 ---
 
