@@ -20,6 +20,7 @@ Estos ítems se abordan **después** de completar todas las fases del PLAN.md.
 
 | ID | Prioridad | Estado | Descripción | Contexto / Motivo | Archivos estimados |
 |----|-----------|--------|-------------|-------------------|--------------------|
+| BACKLOG-006 | 🔴 Alta | 🔄 Desarrollado | Flujo de login para usuarios con password blanqueada | Agregar checkbox "clave blanqueada" en formulario login. Si password_blanqueada=true: solicitar nueva clave, registrarla, desloguear y volver a login. Requerimiento core para onboarding de nuevos usuarios | LoginPage.jsx, authService.js |
 | BACKLOG-005 | 🟡 Media | ✅ Completado | Mejorar columna "Cambio" en tab Historial de Cuota | Implementado y aprobado: Nueva columna que muestra tipo de cambio (Fijo/Porcentual) con valor. Lógica de inferencia de tipo por cálculo dinámico | PlanV1Modal.jsx |
 | BACKLOG-004 | 🔴 Alta | 🔄 Desarrollado | Panel de Gestión de Usuarios: CRUD + cambio de rol + blanqueo de contraseña | Implementado: Panel CRUD completo (listar, crear, cambiar rol, blanquear contraseña). Backend: endpoints /api/usuarios, /api/usuarios/:id/rol, /api/usuarios/:id/blanquear-password. Frontend: GestionUsuarios, UsuarioFormModal, ChangePasswordRequired. Flujo: usuarios nuevos con password_blanqueada acceden a /cambiar-password | Múltiples (GestionUsuarios.jsx, usuariosController, usuariosService, rutas, auth.js, ChangePasswordRequired.jsx) |
 | BACKLOG-003 | 🟡 Media | ⏳ Pendiente | Estandarizar formato de listados: mismo layout para todas las tablas + iconos consistentes para acciones | Requerimiento transversal: todos los formularios con listados (Planes, Cobradores, Servicios, Tipos de Plan, Obras Sociales, etc.) deben tener el mismo formato visual y usar los mismos iconos (ej: ✎ editar, 🗑 eliminar, 👁 ver detalle) en todos los formularios | Múltiples componentes (todas las tablas de listado) |
@@ -259,6 +260,69 @@ b. **Contraste antes/después de valores**
 **Estimación:** 1.5-2 horas (agregar paginación + nueva columna con cálculo dinámico)
 
 **Prioridad:** 🟡 Media — Mejora importante para confiabilidad pero no bloqueante
+
+---
+
+### BACKLOG-006: Flujo de Login para Usuarios con Password Blanqueada
+
+**Descripción:**
+Mejorar el formulario de login para soportar usuarios que tienen `password_blanqueada=true`. Cuando un usuario con password blanqueada intenta loguearse, el sistema debe:
+1. Detectar que tiene password blanqueada
+2. Permitir acceso sin validar contraseña
+3. Redirigir a pantalla de cambio obligatorio de contraseña
+4. Después de cambiar contraseña, desloguear y volver a login
+
+**Requerimientos:**
+
+a. **Frontend: Formulario de Login mejorado**
+   - Agregar checkbox "Tengo contraseña blanqueada" (opcional, visible)
+   - Si checkbox está activo:
+     - No validar campo de password (permitir vacío)
+     - Enviar solo email al backend
+   - Si checkbox está inactivo:
+     - Comportamiento normal (requiere email + password)
+
+b. **Backend: Endpoint POST /api/auth/login mejorado**
+   - Recibir flag `password_blanqueada` en payload
+   - Si `password_blanqueada=true`:
+     - Buscar usuario por email
+     - Verificar que `password_blanqueada=true` en BD
+     - Retornar token temporal + flag indicando que debe cambiar contraseña
+   - Si `password_blanqueada=false`:
+     - Comportamiento normal (validar password)
+
+c. **Frontend: Flujo post-login**
+   - Si response incluye flag "debe_cambiar_password":
+     - Redirigir a `/cambiar-password`
+     - Pasar email en state/sessionStorage
+     - Mostrar formulario de cambio obligatorio
+   - Después de cambiar contraseña:
+     - Desloguear automáticamente
+     - Redirigir a `/login`
+     - Mostrar mensaje: "Contraseña actualizada. Por favor inicia sesión nuevamente"
+
+**Contexto:**
+- Requerimiento core para onboarding de nuevos usuarios
+- BACKLOG-004 crea usuarios con `password_blanqueada=true`
+- Necesario para que nuevos usuarios puedan acceder al sistema
+- Flujo seguro: obliga cambio de contraseña en primer acceso
+
+**Archivos a modificar:**
+- `frontend/src/pages/LoginPage/LoginPage.jsx` (agregar checkbox + lógica)
+- `frontend/src/pages/LoginPage/LoginPage.scss` (estilos)
+- `frontend/src/services/authService.js` (agregar parámetro password_blanqueada)
+- `backend/src/routes/auth.js` (actualizar POST /api/auth/login)
+
+**Estimación:** 3-4 horas (frontend 2h, backend 1h, testing 1h)
+
+**Prioridad:** 🔴 Alta — Bloqueante para usuarios nuevos
+
+**Estado:** 🔄 Desarrollado
+
+**Notas:**
+- El endpoint POST /api/auth/password-reset ya existe (creado en BACKLOG-004)
+- ChangePasswordRequired.jsx ya existe (creado en BACKLOG-004)
+- Solo necesita integración con LoginPage
 
 ---
 

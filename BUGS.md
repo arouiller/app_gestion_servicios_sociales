@@ -11,7 +11,6 @@ Registro de bugs detectados durante implementación del plan de auditoría (Fase
 
 | ID | Severidad | Fase | Descripción | Reportado | Estado |
 |----|-----------|------|-------------|-----------|--------|
-| BUG-011 | 🔴 CRÍTICO | BACKLOG-004 | Migraciones no ejecutadas en producción: falta `password_blanqueada` y `tema_preferido` en tabla usuarios | 2026-04-16 | 🔧 Pendiente análisis |
 | BUG-010 | 🔴 CRÍTICO | BACKLOG-004 | POST /api/usuarios retorna "Cannot POST /api/api/usuarios" (URL duplicada) | 2026-04-16 | ✅ Verificado |
 | BUG-009 | 🟡 IMPORTANTE | BACKLOG-001 | Distribución de columnas desalineada en tabla de preview | 2026-04-16 | 🔧 Pendiente análisis |
 | BUG-008 | 🔴 CRÍTICO | BACKLOG-002 | ReciboDetalleModal no abre - se actualiza plan en su lugar | 2026-04-16 | 🔧 Pendiente análisis |
@@ -23,6 +22,8 @@ Registro de bugs detectados durante implementación del plan de auditoría (Fase
 
 | ID | Fase | Descripción | Resuelto | Commits |
 |----|------|-------------|----------|---------|
+| BUG-011 | BACKLOG-004 | Migraciones no ejecutadas en producción | 2026-04-16 | Ejecutadas manualmente en Hostinger |
+| BUG-010 | BACKLOG-004 | URL duplicada en POST /api/usuarios | 2026-04-16 | 451131d |
 | BUG-007 | Migrations | POST /api/migrations/execute retorna "Cannot POST" (404) | 2026-04-15 | 3446668 |
 | BUG-003 | 4 | GenerarRecibosModal: Campos null en ReciboIntegrante | 2026-04-15 | e32eb94 |
 | BUG-005 | Migrations | v2.0.0-v2.0.4 todas mostraban "Actual" (solo v2.0.3 debería) | 2026-04-15 | 56a73bf, 5528b8f |
