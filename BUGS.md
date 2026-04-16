@@ -1144,7 +1144,15 @@ getByPersona: async (personaId) => {
 **Archivos modificados:**
 - `frontend/src/services/planesV1Service.js` (agregado método getByPersona)
 
-**Estado:** 🚀 Desarrollado
+**Estado:** ✅ Solucionado (2026-04-16)
+
+**Verificación completada:**
+- ✅ Método `getByPersona()` implementado en planesV1Service
+- ✅ Llamadas al backend se disparan correctamente
+- ✅ Planes se muestran correctamente en búsqueda de afiliados
+
+**Commits:**
+- 6fe4cfd - fix(BUG-018): agregar método getByPersona en planesV1Service
 
 ---
 
