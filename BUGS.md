@@ -18,7 +18,7 @@ Registro de bugs detectados durante implementación del plan de auditoría (Fase
 
 | ID | Fase | Descripción | Resuelto | Commits |
 |----|------|-------------|----------|---------|
-| BUG-014 | BACKLOG-009 | Botones de acciones no visibles para usuarios no-admin (removidos condicionales isAdmin innecesarios) | 2026-04-16 | (pendiente) |
+| BUG-014 | BACKLOG-009 | Botones de acciones no visibles para usuarios no-admin (removidos condicionales isAdmin innecesarios) | 2026-04-16 | 1531825 |
 | BUG-010 | BACKLOG-004 | POST /api/usuarios retorna URL duplicada (verificado resuelto) | 2026-04-16 | 451131d |
 | BUG-008 | BACKLOG-002 | ReciboDetalleModal no abre (verificado resuelto) | 2026-04-16 | (fix anterior) |
 | BUG-006 | Migrations | Downgrade en v1.0.x (verificado resuelto) | 2026-04-16 | (fix anterior) |
@@ -859,12 +859,34 @@ Esto debería haber sido removido o actualizado junto con BACKLOG-009.
 
 **Estado:** 🔧 Pendiente análisis
 
-**Investigaciones requeridas:**
-- [ ] Revisar GestionPlanesV1.jsx para condicionales isAdmin
-- [ ] Revisar PlanV1Modal.jsx para botones deshabilitados
-- [ ] Buscar otros componentes con lógica de `!isAdmin` que bloquee acciones
-- [ ] Verificar ActionButtons están configurados para mostrar siempre
-- [ ] Confirmar que API retorna 200 cuando usuario común hace CRUD
+**Causa raíz identificada:**
+BACKLOG-009 removió restricciones `requireAdmin` del backend (líneas de POST/PUT/DELETE en v1.0-planes.js, personas.js, lookup.js), permitiendo acceso a usuarios comunes. Sin embargo, el frontend no fue actualizado y aún tenía condicionales `isAdmin` que ocultaban:
+1. Línea 136-148: Botón "Nuevo Plan" dentro de `{isAdmin && (...)}`
+2. Línea 178: Columna "Acciones" con `{isAdmin && <th>Acciones</th>}`
+3. Línea 191-209: Botones editar/suspender dentro de `{isAdmin && (...)}`
+
+**Solución implementada (2026-04-16):**
+1. Removido condicional `isAdmin &&` que envolvía "Nuevo Plan" en header (ahora visible para todos)
+2. Removido condicional de columna "Acciones" (ahora siempre visible)
+3. Removido condicional de botones editar/suspender (ahora siempre visible)
+4. Mantenido condicional `isAdmin &&` en "Aumento Masivo" (requiere `requireAdmin` en backend)
+
+**Backend verification:**
+- ✅ POST /api/v1.0/planes: solo `verifyToken` (sin requireAdmin)
+- ✅ PUT /api/v1.0/planes/:id: solo `verifyToken`
+- ✅ DELETE /api/v1.0/planes/:id: solo `verifyToken`
+- ✅ POST /api/recibos/generar: solo `verifyToken`
+- 🔒 PATCH /api/planes/bulk-update-cuota: requiere `requireAdmin` (mantenida restricción)
+
+**Verificación pendiente:**
+- [ ] Iniciar sesión con usuario no-admin (rol "usuario")
+- [ ] Navegar a Gestión → Gestión de Planes
+- [ ] Confirmar botones "Nuevo Plan", "Generar Recibos" visibles
+- [ ] Confirmar columna "Acciones" con botones editar/suspender visibles
+- [ ] Confirmar "Aumento Masivo" NO visible para usuario no-admin
+- [ ] Probar click en botones: editar, suspender, generar recibos (sin errores de permisos)
+
+**Estado:** ✅ Corregido, pendiente verificación por usuario
 
 ---
 
