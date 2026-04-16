@@ -7,6 +7,7 @@ import LoginPage from './pages/LoginPage/LoginPage';
 import RegisterPage from './pages/RegisterPage/RegisterPage';
 import ChangePasswordRequired from './pages/ChangePasswordRequired/ChangePasswordRequired';
 import DashboardPage from './pages/DashboardPage/DashboardPage';
+import RecibosPage from './pages/RecibosPage/RecibosPage';
 
 function App() {
   return (
@@ -22,6 +23,14 @@ function App() {
             element={
               <ProtectedRoute>
                 <DashboardPage />
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/recibos"
+            element={
+              <ProtectedRoute>
+                <RecibosPage />
               </ProtectedRoute>
             }
           />
