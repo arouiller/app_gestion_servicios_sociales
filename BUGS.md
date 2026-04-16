@@ -878,15 +878,15 @@ BACKLOG-009 removió restricciones `requireAdmin` del backend (líneas de POST/P
 - ✅ POST /api/recibos/generar: solo `verifyToken`
 - 🔒 PATCH /api/planes/bulk-update-cuota: requiere `requireAdmin` (mantenida restricción)
 
-**Verificación pendiente:**
-- [ ] Iniciar sesión con usuario no-admin (rol "usuario")
-- [ ] Navegar a Gestión → Gestión de Planes
-- [ ] Confirmar botones "Nuevo Plan", "Generar Recibos" visibles
-- [ ] Confirmar columna "Acciones" con botones editar/suspender visibles
-- [ ] Confirmar "Aumento Masivo" NO visible para usuario no-admin
-- [ ] Probar click en botones: editar, suspender, generar recibos (sin errores de permisos)
+**Verificación completada (2026-04-16):**
+- ✅ Iniciar sesión con usuario no-admin (rol "usuario")
+- ✅ Navegar a Gestión → Gestión de Planes
+- ✅ Confirmar botones "Nuevo Plan", "Generar Recibos" visibles
+- ✅ Confirmar columna "Acciones" con botones editar/suspender visibles
+- ✅ Confirmar "Aumento Masivo" NO visible para usuario no-admin
+- ✅ Probar click en botones: editar, suspender, generar recibos (sin errores de permisos)
 
-**Estado:** ✅ Corregido, pendiente verificación por usuario
+**Estado:** ✅ CERRADO — Funcionalidad BACKLOG-009 ahora completamente operativa
 
 ---
 
