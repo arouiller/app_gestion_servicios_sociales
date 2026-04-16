@@ -13,6 +13,8 @@ function GenerarRecibosModal({ isOpen, onClose, onSuccess }) {
   const [recibosGenerados, setRecibosGenerados] = useState([]);
   const [existingPeriodo, setExistingPeriodo] = useState(null);
   const [showConfirmClose, setShowConfirmClose] = useState(false);
+  const [periodoExistentePreview, setPeriodoExistentePreview] = useState(null);
+  const [verificandoPeriodo, setVerificandoPeriodo] = useState(false);
 
   // Derivar período en formato YYYY-MM-01
   const periodo = useMemo(() => {
@@ -49,6 +51,34 @@ function GenerarRecibosModal({ isOpen, onClose, onSuccess }) {
     }
   }, [isOpen]);
 
+  // Verificar si el período seleccionado ya tiene recibos (con debounce)
+  useEffect(() => {
+    if (!periodo || step !== 1) {
+      // Solo verificar en step 1 y si hay período válido
+      setPeriodoExistentePreview(null);
+      return;
+    }
+
+    setVerificandoPeriodo(true);
+
+    // Debounce de 500ms
+    const timeoutId = setTimeout(async () => {
+      try {
+        const periodos = await recibosService.listPeriodos();
+        const periodoYYYYMM = periodo.substring(0, 7); // YYYY-MM
+        const existe = periodos?.find(p => p.periodo === periodoYYYYMM);
+        setPeriodoExistentePreview(existe || null);
+      } catch (err) {
+        console.error('Error verificando período:', err);
+        setPeriodoExistentePreview(null);
+      } finally {
+        setVerificandoPeriodo(false);
+      }
+    }, 500);
+
+    return () => clearTimeout(timeoutId);
+  }, [periodo, step]);
+
   const resetForm = () => {
     setStep(1);
     setMes(new Date().getMonth() + 1);
@@ -56,6 +86,8 @@ function GenerarRecibosModal({ isOpen, onClose, onSuccess }) {
     setError(null);
     setRecibosGenerados([]);
     setExistingPeriodo(null);
+    setPeriodoExistentePreview(null);
+    setVerificandoPeriodo(false);
     setLoading(false);
   };
 
@@ -195,9 +227,29 @@ function GenerarRecibosModal({ isOpen, onClose, onSuccess }) {
                   />
                 </div>
                 {periodo && (
-                  <p className="periodo-display">
-                    Generarás recibos para <strong>{getPeriodoDisplay()}</strong> para todos los planes ACTIVO
-                  </p>
+                  <>
+                    <p className="periodo-display">
+                      Generarás recibos para <strong>{getPeriodoDisplay()}</strong> para todos los planes ACTIVO
+                    </p>
+                    {verificandoPeriodo && (
+                      <div className="periodo-checking">
+                        <span className="spinner-mini"></span>
+                        Verificando período...
+                      </div>
+                    )}
+                    {periodoExistentePreview && !verificandoPeriodo && (
+                      <div className="periodo-existe-alerta">
+                        <p className="alerta-icon">⚠️</p>
+                        <p className="alerta-titulo">Período con recibos existentes</p>
+                        <p className="alerta-texto">
+                          Ya existen <strong>{periodoExistentePreview.cantidad_recibos} recibos</strong> para este período.
+                        </p>
+                        <p className="alerta-subtexto">
+                          Se borrarán y regenerarán si haces clic en "Generar"
+                        </p>
+                      </div>
+                    )}
+                  </>
                 )}
               </div>
             </>
