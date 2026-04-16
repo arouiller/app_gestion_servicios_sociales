@@ -6,6 +6,7 @@ import MigrationsDashboard from './components/MigrationsDashboard/MigrationsDash
 import BusquedaAfiliados from './components/v1.0/BusquedaAfiliados';
 import GestionPlanesV1 from './components/GestionPlanesV1/GestionPlanesV1';
 import GestionPlanesV1ErrorBoundary from './components/GestionPlanesV1/GestionPlanesV1ErrorBoundary';
+import RecibosPage from '../RecibosPage/RecibosPage';
 import Cobradores from './components/Cobradores/Cobradores';
 import ObrasSociales from './components/ObrasSociales/ObrasSociales';
 import ServiciosAdicionales from './components/ServiciosAdicionales/ServiciosAdicionales';
@@ -39,6 +40,7 @@ function buildMenu(isAdmin) {
       children: [
         { key: 'busqueda-afiliados', label: 'Búsqueda de Afiliados' },
         { key: 'gestion-planes-v1', label: 'Gestión de Planes' },
+        { key: 'gestion-recibos', label: 'Gestión de Recibos' },
         { key: 'cobradores', label: 'Cobradores' },
         { key: 'obras-sociales', label: 'Obras Sociales' },
         { key: 'servicios-adicionales', label: 'Servicios Adicionales' },
@@ -211,6 +213,7 @@ function DashboardPage() {
               <GestionPlanesV1 />
             </GestionPlanesV1ErrorBoundary>
           )}
+          {activeModule === 'gestion-recibos' && <RecibosPage />}
           {activeModule === 'gestion-usuarios' && <GestionUsuarios />}
           {activeModule === 'migraciones-bd' && <MigrationsDashboard />}
           {activeModule === 'cobradores' && <Cobradores />}

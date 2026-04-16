@@ -1,5 +1,4 @@
 import React, { useState, useEffect, useCallback, useMemo } from 'react';
-import { useNavigate } from 'react-router-dom';
 import recibosService from '../../services/recibosService';
 import GenerarRecibosModal from '../DashboardPage/components/GestionPlanesV1/modals/GenerarRecibosModal';
 import ReciboDetalleModal from '../DashboardPage/components/GestionPlanesV1/modals/ReciboDetalleModal';
@@ -111,16 +110,7 @@ function RecibosPage() {
       <div className="recibos-page">
         {/* Header */}
         <div className="recibos-page__header">
-          <div className="recibos-page__header-left">
-            <button
-              className="recibos-page__btn-back"
-              onClick={() => navigate('/dashboard')}
-              title="Volver al Dashboard"
-            >
-              ← Dashboard
-            </button>
-            <h1>Gestión de Recibos</h1>
-          </div>
+          <h1>Gestión de Recibos</h1>
           <button
             className="recibos-page__btn-primary"
             onClick={() => setGenerarModalOpen(true)}
