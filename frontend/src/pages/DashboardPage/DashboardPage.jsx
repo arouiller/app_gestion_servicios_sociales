@@ -38,20 +38,17 @@ function buildMenu(isAdmin) {
       label: 'Gestión',
       children: [
         { key: 'busqueda-afiliados', label: 'Búsqueda de Afiliados' },
-        ...(isAdmin ? [
-          { key: 'gestion-planes-v1', label: 'Gestión de Planes' },
-        ] : []),
-        ...(isAdmin ? [
-          { key: 'cobradores', label: 'Cobradores' },
-          { key: 'obras-sociales', label: 'Obras Sociales' },
-          { key: 'servicios-adicionales', label: 'Servicios Adicionales' },
-          { key: 'tipos-de-grupo', label: 'Tipos de Grupo' },
-          { key: 'tipos-de-plan', label: 'Tipos de Plan' },
-        ] : []),
+        { key: 'gestion-planes-v1', label: 'Gestión de Planes' },
+        { key: 'cobradores', label: 'Cobradores' },
+        { key: 'obras-sociales', label: 'Obras Sociales' },
+        { key: 'servicios-adicionales', label: 'Servicios Adicionales' },
+        { key: 'tipos-de-grupo', label: 'Tipos de Grupo' },
+        { key: 'tipos-de-plan', label: 'Tipos de Plan' },
       ],
     },
   ];
 
+  // Sección de Administración solo para admin
   if (isAdmin) {
     menu.push({
       key: 'administracion',
