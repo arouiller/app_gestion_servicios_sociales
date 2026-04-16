@@ -18,7 +18,7 @@ Registro de bugs detectados durante implementación del plan de auditoría (Fase
 
 | ID | Fase | Descripción | Resuelto | Commits |
 |----|------|-------------|----------|---------|
-| BUG-016 | BACKLOG-003 | Iconos de acciones inconsistentes: estandarizado ✎ y 🗑 en todas las tablas | 2026-04-16 | (pendiente) |
+| BUG-016 | BACKLOG-003 | Iconos de acciones inconsistentes: estandarizado ✎ y 🗑 en todas las tablas | 2026-04-16 | eb42769 |
 | BUG-015 | BACKLOG-009 | Botón Aumento Masivo visible pero deshabilitado para no-admin (mejora UX) | 2026-04-16 | 169a924 |
 | BUG-014 | BACKLOG-009 | Botones de acciones no visibles para usuarios no-admin (removidos condicionales isAdmin innecesarios) | 2026-04-16 | 1531825 |
 | BUG-010 | BACKLOG-004 | POST /api/usuarios retorna URL duplicada (verificado resuelto) | 2026-04-16 | 451131d |
@@ -1014,7 +1014,7 @@ Se estandarizaron los iconos en PlanV1Modal (tab Afiliados) para que coincidan c
 - ✅ Estilos visuales ahora uniformes
 
 **Commits:**
-- (en progreso)
+- eb42769 - fix(BUG-016): estandarizar iconos de acciones en tab Afiliados
 
 ---
 
