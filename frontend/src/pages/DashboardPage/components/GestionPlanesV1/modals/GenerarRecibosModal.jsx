@@ -51,7 +51,29 @@ function GenerarRecibosModal({ isOpen, onClose, onSuccess }) {
     }
   }, [isOpen]);
 
-  // Verificar si el período seleccionado ya tiene recibos (con debounce)
+  // Verificación inmediata al abrir modal (sin debounce)
+  useEffect(() => {
+    if (!isOpen || step !== 1) return;
+
+    const checkInitialPeriodo = async () => {
+      try {
+        const hoy = new Date();
+        const mesActual = hoy.getMonth() + 1;
+        const anioActual = hoy.getFullYear();
+        const periodoActual = `${anioActual}-${String(mesActual).padStart(2, '0')}`;
+
+        const periodos = await recibosService.listPeriodos();
+        const existe = periodos?.find(p => p.periodo === periodoActual);
+        setPeriodoExistentePreview(existe || null);
+      } catch (err) {
+        console.error('Error verificando período inicial:', err);
+      }
+    };
+
+    checkInitialPeriodo();
+  }, [isOpen, step]);
+
+  // Verificar si el período seleccionado ya tiene recibos (con debounce para cambios posteriores)
   useEffect(() => {
     if (!periodo || step !== 1) {
       // Solo verificar en step 1 y si hay período válido
