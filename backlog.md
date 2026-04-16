@@ -33,7 +33,8 @@ De cualquier estado → Descartado
 
 | ID | Prioridad | Estado | Descripción | Contexto / Motivo | Archivos estimados |
 |----|-----------|--------|-------------|-------------------|--------------------|
-| BACKLOG-011 | 🔴 Alta | 🚀 Desarrollado | Agregar acciones (editar y habilitar) a planes en búsqueda de afiliados | Desde planes visibles de un afiliado en búsqueda, permitir edición y cambio de estado (ACTIVO ↔ SUSPENDIDO) con modal reutilizable. Implementado y funcional. | BusquedaAfiliados.jsx, PlanV1Modal.jsx |
+| BACKLOG-011 | 🔴 Alta | ✅ Solucionado | Agregar acciones (editar y habilitar) a planes en búsqueda de afiliados | Desde planes visibles de un afiliado en búsqueda, permitir edición y cambio de estado (ACTIVO ↔ SUSPENDIDO) con modal reutilizable. Implementado, funcional y aprobado. | BusquedaAfiliados.jsx, PlanV1Modal.jsx |
+| BACKLOG-012 | 🔴 Alta | 📋 Registrado | Mejorar comportamiento de ventanas modales (cierre, ESC, cambios no guardados) | Modales no cierran al hacer click fuera. Pueden cerrarse con ESC. Si hay cambios, ESC muestra advertencia. Con múltiples modales, ESC solo cierra la más arriba. | Todos los modales (PlanV1Modal, GenerarRecibosModal, BulkUpdateCuotaModal, etc.) |
 | BACKLOG-010 | 🔴 Alta | ✅ Solucionado | Botón Aumento Masivo habilitado para todos los perfiles | Usuarios comunes pueden ejecutar aumento masivo de cuotas. Restricción requireAdmin removida de PATCH /api/planes/bulk-update-cuota. Usuarios no-admin pueden aplicar cambios masivos de valores. | backend/src/routes/planes.js, GestionPlanesV1.jsx |
 | BACKLOG-009 | 🔴 Alta | ✅ Solucionado | Usuarios comunes pueden realizar todas las acciones en páginas accesibles | Usuarios comunes ahora tienen acceso CRUD completo en Gestión de Planes: crear, editar, suspender, generar recibos, aumento masivo. Restricciones innecesarias removidas. | Múltiples (GestionPlanesV1, BusquedaAfiliados, etc.) |
 | BACKLOG-008 | 🔴 Alta | ✅ Solucionado | Registro de períodos de emisión de recibos + confirmación antes de regenerar | Sistema debe registrar qué meses ya tienen recibos generados. Si usuario intenta generar para un mes existente, mostrar confirmación. Si confirma, borrar recibos antiguos y regenerar. Previene duplicación accidental de recibos | GenerarRecibosModal.jsx, recibosController.js, nueva migración (tabla de períodos) |
@@ -671,6 +672,95 @@ d. **Manejo de errores**
 
 **Commits:**
 - 0c364a6 - feat(BACKLOG-011): agregar acciones (editar y habilitar) a planes en búsqueda de afiliados
+
+**Aprobación de Usuario (2026-04-16):**
+- ✅ Funcionalidad completa verificada
+- ✅ Integración con PlanV1Modal funcional
+- ✅ Cambios de estado ACTIVO ↔ SUSPENDIDO operacionales
+- ✅ Mensajes de éxito/error claros
+
+---
+
+### BACKLOG-012: Mejorar Comportamiento de Ventanas Modales (Cierre, ESC, Cambios)
+
+**Descripción:**
+Mejorar la experiencia de usuario en las ventanas modales del sistema con tres cambios principales:
+1. Las modales NO deben cerrarse al hacer click fuera (backdrop no cierra)
+2. Las modales pueden cerrarse presionando la tecla ESC
+3. Si el usuario ha realizado cambios en los datos y presiona ESC, mostrar confirmación antes de cerrar
+4. Con múltiples modales superpuestas, ESC solo cierra la más arriba (LIFO stack behavior)
+
+**Requerimientos:**
+
+a. **Comportamiento al hacer click fuera (backdrop)**
+   - Actual: probablemente permite cerrar al hacer click fuera
+   - Cambio: NO cerrar al hacer click fuera de la modal
+   - Razón: prevenir cierre accidental, usuario debe usar botón explícito o ESC
+
+b. **Comportamiento de tecla ESC**
+   - Presionar ESC abre la modal
+   - Si NO hay cambios en los datos:
+     * Cerrar inmediatamente sin confirmación
+   - Si SÍ hay cambios en los datos:
+     * Mostrar modal de confirmación: "¿Cerrar sin guardar? Los cambios se perderán"
+     * Botones: "Cancelar" | "Sí, Cerrar sin guardar"
+     * Si usuario elige "Cancelar": permanecer en modal
+     * Si usuario elige "Sí, Cerrar": cerrar sin guardar
+
+c. **Manejo de múltiples modales superpuestas**
+   - Cuando hay varias modales abiertas (ej: modal A abierto, modal B abierto arriba):
+     * ESC cierra SOLO la modal que está al frente (modal B)
+     * Modal A permanece abierta
+   - Patrón LIFO (Last In, First Out)
+   - Registrar stack de modales abiertas (en componente padre o context global)
+
+d. **Detección de cambios**
+   - Cada modal necesita saber si hay cambios no guardados
+   - Estrategia: comparar estado actual vs estado inicial de datos
+   - O usar flag booleano `hasChanges` que se actualiza en onChange/onInput
+   - Implementar en cada modal: PlanV1Modal, GenerarRecibosModal, BulkUpdateCuotaModal, FormModals, etc.
+
+e. **Implementación técnica**
+   - Crear hook personalizado: `useModalKeyboard(isOpen, hasChanges, onEsc, onEscWithChanges)`
+   - Este hook:
+     * Escucha eventos de teclado (ESC)
+     * Solo actúa si modal está abierta
+     * Comprueba si hay cambios
+     * Llama callback apropiado
+   - O envoltura Modal global que maneje ESC automáticamente
+   - Modal wrapper que:
+     * Detecta clicks fuera (backdrop)
+     * Escucha ESC
+     * Maneja confirmación de cambios
+
+**Contexto:**
+- Mejorar UX: usuarios quieren poder cerrar modales con ESC (patrón estándar)
+- Prevenir pérdida accidental de datos: confirmar si hay cambios
+- Evitar cierre accidental al hacer click fuera: mejora estabilidad
+- Múltiples modales superpuestas: comportamiento intuitivo (solo cierra la más arriba)
+
+**Archivos a modificar/crear:**
+- `frontend/src/hooks/useModalKeyboard.js` (NUEVO - hook para manejo de ESC)
+- `frontend/src/components/ModalWrapper/ModalWrapper.jsx` (NUEVO O MEJORAR - wrapper base para modales)
+- Todos los modales:
+  * `frontend/src/pages/DashboardPage/components/GestionPlanesV1/modals/PlanV1Modal.jsx`
+  * `frontend/src/pages/DashboardPage/components/GestionPlanesV1/modals/GenerarRecibosModal.jsx`
+  * `frontend/src/pages/DashboardPage/components/BulkUpdateCuotaModal/BulkUpdateCuotaModal.jsx`
+  * `frontend/src/pages/DashboardPage/components/GestionPlanesV1/modals/UsuarioFormModal.jsx`
+  * `frontend/src/pages/DashboardPage/components/LookupCRUD/LookupCRUDFormModal.jsx`
+  * Otros modales/formularios
+
+**Estimación:** 6-8 horas
+  - Hook useModalKeyboard: 1h
+  - ModalWrapper mejorado: 1h
+  - Auditar modales actuales: 1.5h
+  - Modificar cada modal (agregar hasChanges tracking, integrar hook): 2-3h
+  - Modal de confirmación (reutilizar existente): 0.5h
+  - Testing: 1h
+
+**Prioridad:** 🔴 Alta — UX estándar esperada, previene pérdida de datos
+
+**Estado:** 📋 Registrado (2026-04-16)
 
 ---
 

@@ -1,5 +1,7 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback, useMemo } from 'react';
 import recibosService from '../../../../../services/recibosService';
+import ConfirmCloseDialog from '../../../../../components/ConfirmCloseDialog/ConfirmCloseDialog';
+import { useModalEscapeKey } from '../../../../../hooks/useModalEscapeKey';
 import './GenerarRecibosModal.scss';
 
 function GenerarRecibosModal({ isOpen, onClose, onSuccess }) {
@@ -9,6 +11,29 @@ function GenerarRecibosModal({ isOpen, onClose, onSuccess }) {
   const [error, setError] = useState(null);
   const [recibosGenerados, setRecibosGenerados] = useState([]);
   const [existingPeriodo, setExistingPeriodo] = useState(null);
+  const [showConfirmClose, setShowConfirmClose] = useState(false);
+
+  // Detect if form has changes
+  const hasChanges = useMemo(() => {
+    return step > 1 || periodo !== '';
+  }, [step, periodo]);
+
+  // Handle ESC key with confirmation if there are changes
+  const handleEscapeWithChanges = useCallback(() => {
+    setShowConfirmClose(true);
+  }, []);
+
+  const handleConfirmClose = useCallback(() => {
+    setShowConfirmClose(false);
+    onClose?.();
+  }, [onClose]);
+
+  const handleCancelClose = useCallback(() => {
+    setShowConfirmClose(false);
+  }, []);
+
+  // Use ESC key handler
+  useModalEscapeKey(isOpen, hasChanges, onClose, hasChanges ? handleEscapeWithChanges : undefined);
 
   useEffect(() => {
     if (isOpen) {
@@ -124,12 +149,24 @@ function GenerarRecibosModal({ isOpen, onClose, onSuccess }) {
   if (!isOpen) return null;
 
   return (
-    <div className="modal-overlay" onClick={handleClose}>
-      <div className="modal-content generar-recibos-modal" onClick={(e) => e.stopPropagation()}>
-        <div className="modal-header">
-          <h2>Generar Recibos</h2>
-          <button className="modal-close" onClick={handleClose}>✕</button>
-        </div>
+    <>
+      <div className="modal-overlay">
+        <div className="modal-content generar-recibos-modal" onClick={(e) => e.stopPropagation()}>
+          <div className="modal-header">
+            <h2>Generar Recibos</h2>
+            <button
+              className="modal-close"
+              onClick={() => {
+                if (hasChanges) {
+                  setShowConfirmClose(true);
+                } else {
+                  handleClose();
+                }
+              }}
+            >
+              ✕
+            </button>
+          </div>
 
         <div className="modal-body">
           {error && (
@@ -285,8 +322,17 @@ function GenerarRecibosModal({ isOpen, onClose, onSuccess }) {
             </>
           )}
         </div>
+        </div>
       </div>
-    </div>
+
+      {/* Confirmation dialog for closing with unsaved changes */}
+      <ConfirmCloseDialog
+        isOpen={showConfirmClose}
+        onConfirm={handleConfirmClose}
+        onCancel={handleCancelClose}
+        title="¿Cerrar sin guardar?"
+      />
+    </>
   );
 }
 
