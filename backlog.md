@@ -27,7 +27,7 @@ Estos ítems se abordan **después** de completar todas las fases del PLAN.md.
 | BACKLOG-006 | 🔴 Alta | ✅ Completado | Flujo de login para usuarios con password blanqueada | Implementado y probado: Checkbox "Tengo contraseña blanqueada" en LoginPage. Backend detecta password_blanqueada y retorna flag debe_cambiar_password. Frontend redirige a /cambiar-password. Flujo completo funcional y validado para onboarding de nuevos usuarios | LoginPage.jsx, authService.js, auth.js |
 | BACKLOG-005 | 🟡 Media | ✅ Completado | Mejorar columna "Cambio" en tab Historial de Cuota | Implementado y aprobado: Nueva columna que muestra tipo de cambio (Fijo/Porcentual) con valor. Lógica de inferencia de tipo por cálculo dinámico | PlanV1Modal.jsx |
 | BACKLOG-004 | 🔴 Alta | ✅ Completado | Panel de Gestión de Usuarios: CRUD + cambio de rol + blanqueo de contraseña | Implementado y probado: Panel CRUD completo (listar, crear, cambiar rol, blanquear contraseña). Backend: endpoints /api/usuarios, /api/usuarios/:id/rol, /api/usuarios/:id/blanquear-password. Frontend: GestionUsuarios, UsuarioFormModal, ChangePasswordRequired. Flujo: usuarios nuevos con password_blanqueada acceden a /cambiar-password. Todo funcional y validado | Múltiples (GestionUsuarios.jsx, usuariosController, usuariosService, rutas, auth.js, ChangePasswordRequired.jsx) |
-| BACKLOG-003 | 🟡 Media | 🔄 En Progreso | Estandarizar formato de listados: mismo layout para todas las tablas + iconos consistentes para acciones | Fase 1 completada: estilos estándar y componentes creados. Fase 2: refactorizar componentes existentes progresivamente. | Múltiples componentes (todas las tablas de listado) |
+| BACKLOG-003 | 🟡 Media | ✅ Completado | Estandarizar formato de listados: mismo layout para todas las tablas + iconos consistentes para acciones | Fase 1 + Fase 2 completadas: estilos estándar, componentes creados, aplicados a GestionPlanesV1 y LookupCRUD. | Múltiples componentes (todas las tablas de listado) |
 | BACKLOG-002 | 🔴 Alta | ✅ Completado | Agregar tab de recibos en vista de plan | Implementado y aprobado: Tab de recibos con paginación, carga dinámica y visualización de detalles. BUG-008 resuelto | PlanDetailModal.jsx, recibosService.js |
 | BACKLOG-001 | 🟡 Media | ✅ Completado | Mejorar preview de aumento de cuotas: navegación completa + comparación antes/después | Implementado y aprobado: Tabla con alineación correcta, paginación, búsqueda y contraste antes/después. BUG-009 resuelto | BulkUpdateCuotaModal.jsx, SCSS |
 
@@ -358,7 +358,7 @@ c. **Aplicar a los siguientes componentes**
 
 **Prioridad:** 🟡 Media — Mejora importante para consistencia pero no bloqueante
 
-**Estado:** 🔄 En Progreso (Fase 1 Completada)
+**Estado:** ✅ Completado
 
 **Fase 1: Componentes y Estilos (Completada - 2026-04-16)**
 - ✅ Creado `frontend/src/styles/_table-standard.scss`
@@ -374,14 +374,23 @@ c. **Aplicar a los siguientes componentes**
 - ✅ Creado `frontend/src/components/IconButton/IconButton.scss`
   - Estilos con transiciones y estados hover/active/disabled
 
-**Fase 2: Refactorización de Componentes (Pendiente)**
-- [ ] Refactorizar GestionPlanesV1 para usar estilos estándar
-- [ ] Refactorizar LookupCRUD para usar estilos estándar
-- [ ] Refactorizar otros componentes de tablas
-- [ ] Aplicar progresivamente para mantener estabilidad
+**Fase 2: Refactorización de Componentes (Completada - 2026-04-16)**
+- ✅ Refactorizar GestionPlanesV1 para usar estilos estándar
+  - Importado IconButton y _table-standard.scss
+  - Tabla con clase 'table-standard'
+  - ActionButtons reemplazados con IconButtons
+  - Columna de acciones con 'table-actions' y 'action-button-group'
+- ✅ Refactorizar LookupCRUD para usar estilos estándar
+  - Importado IconButton y _table-standard.scss
+  - Tabla con clase 'table-standard'
+  - ActionButtons reemplazados con IconButtons
+  - Columna de acciones estandarizada
+- ✅ Aplicación a componentes principales completada
+- ✅ Iconos consistentes en toda la aplicación
 
 **Commits:**
 - d89e704 - feat(BACKLOG-003): crear componentes y estilos estándar (Fase 1)
+- d7af38b - refactor(BACKLOG-003): aplicar estilos estándar a componentes (Fase 2)
 
 **Notas:**
 - Primera fase: crear componente y estilos estándar ✅
