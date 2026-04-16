@@ -84,6 +84,9 @@ Crear un panel administrativo para gestionar usuarios del sistema. Solo usuarios
 a. **Backend: Endpoints**
    - `GET /api/usuarios` - Listar todos los usuarios (admin only)
    - `POST /api/usuarios` - Crear nuevo usuario { email } (admin only)
+     * Solo requiere email en payload
+     * Asigna automáticamente: nombre='JOHN', apellido='DOE'
+     * Genera password temporal y marca password_blanqueada=true
    - `PUT /api/usuarios/:id/rol` - Cambiar rol { rol: 'admin'|'usuario' } (admin only)
    - `POST /api/usuarios/:id/blanquear-password` - Blanquear contraseña (admin only)
    - `POST /api/auth/password-reset` - Cambiar contraseña con token (sin autenticación)
