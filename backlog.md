@@ -33,7 +33,7 @@ De cualquier estado → Descartado
 
 | ID | Prioridad | Estado | Descripción | Contexto / Motivo | Archivos estimados |
 |----|-----------|--------|-------------|-------------------|--------------------|
-| BACKLOG-011 | 🔴 Alta | 📋 Registrado | Agregar acciones (editar y habilitar) a planes en búsqueda de afiliados | Desde planes visibles de un afiliado en búsqueda, permitir edición y cambio de estado (ACTIVO ↔ SUSPENDIDO) con modal reutilizable. | BusquedaAfiliados.jsx, PlanV1Modal.jsx |
+| BACKLOG-011 | 🔴 Alta | 🚀 Desarrollado | Agregar acciones (editar y habilitar) a planes en búsqueda de afiliados | Desde planes visibles de un afiliado en búsqueda, permitir edición y cambio de estado (ACTIVO ↔ SUSPENDIDO) con modal reutilizable. Implementado y funcional. | BusquedaAfiliados.jsx, PlanV1Modal.jsx |
 | BACKLOG-010 | 🔴 Alta | ✅ Solucionado | Botón Aumento Masivo habilitado para todos los perfiles | Usuarios comunes pueden ejecutar aumento masivo de cuotas. Restricción requireAdmin removida de PATCH /api/planes/bulk-update-cuota. Usuarios no-admin pueden aplicar cambios masivos de valores. | backend/src/routes/planes.js, GestionPlanesV1.jsx |
 | BACKLOG-009 | 🔴 Alta | ✅ Solucionado | Usuarios comunes pueden realizar todas las acciones en páginas accesibles | Usuarios comunes ahora tienen acceso CRUD completo en Gestión de Planes: crear, editar, suspender, generar recibos, aumento masivo. Restricciones innecesarias removidas. | Múltiples (GestionPlanesV1, BusquedaAfiliados, etc.) |
 | BACKLOG-008 | 🔴 Alta | ✅ Solucionado | Registro de períodos de emisión de recibos + confirmación antes de regenerar | Sistema debe registrar qué meses ya tienen recibos generados. Si usuario intenta generar para un mes existente, mostrar confirmación. Si confirma, borrar recibos antiguos y regenerar. Previene duplicación accidental de recibos | GenerarRecibosModal.jsx, recibosController.js, nueva migración (tabla de períodos) |
@@ -652,7 +652,25 @@ d. **Manejo de errores**
 
 **Prioridad:** 🔴 Alta — Funcionalidad importante para gestión desde búsqueda
 
-**Estado:** 📋 Registrado (2026-04-16)
+**Estado:** 🚀 Desarrollado (2026-04-16)
+
+**Implementación Completada (2026-04-16):**
+1. ✅ Importados PlanV1Modal e IconButton en BusquedaAfiliados.jsx
+2. ✅ Agregados estados: showPlanModal, editingPlan, successMessage
+3. ✅ Implementados handlers:
+   - `handleEditarPlan()`: abre modal con plan para editar
+   - `handlePlanSaved()`: refresca planes y cierra modal
+   - `handleToggleEstado()`: cambia estado ACTIVO ↔ SUSPENDIDO con confirmación
+4. ✅ Agregada columna "Acciones" en tabla de planes con dos botones:
+   - Botón ✎ (editar): abre PlanV1Modal en modo edición
+   - Botón 🔒/🔓 (estado): alterna entre ACTIVO y SUSPENDIDO
+5. ✅ Integración con planesV1Service.actualizar() y .getByPersona()
+6. ✅ Mensajes de éxito y error actualizados
+7. ✅ Estilos aplicados: success-message, table-standard class, action-button-group
+8. ✅ Modal reutilizable sin cambios (PlanV1Modal existente)
+
+**Commits:**
+- 0c364a6 - feat(BACKLOG-011): agregar acciones (editar y habilitar) a planes en búsqueda de afiliados
 
 ---
 
