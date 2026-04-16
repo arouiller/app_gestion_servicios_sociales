@@ -12,9 +12,13 @@ const authService = {
     return response.data;
   },
 
-  login: async ({ email, password }) => {
-    const response = await api.post('/auth/login', { email, password });
-    if (response.data.success) {
+  login: async ({ email, password, password_blanqueada = false }) => {
+    const response = await api.post('/auth/login', {
+      email,
+      password,
+      password_blanqueada
+    });
+    if (response.data.success && response.data.jwt) {
       localStorage.setItem('jwt_token', response.data.jwt);
       localStorage.setItem('user', JSON.stringify(response.data.user));
     }

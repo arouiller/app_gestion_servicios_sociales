@@ -16,6 +16,7 @@ function LoginPage() {
   const [globalError, setGlobalError] = useState('');
   const [loading, setLoading] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
+  const [passwordBlanqueada, setPasswordBlanqueada] = useState(false);
 
   const from = location.state?.from?.pathname || '/dashboard';
 
@@ -30,7 +31,8 @@ function LoginPage() {
     const e = {};
     if (!form.email.trim()) e.email = 'El email es requerido';
     else if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(form.email)) e.email = 'Email inválido';
-    if (!form.password) e.password = 'La contraseña es requerida';
+    // No validar password si checkbox de "contraseña blanqueada" está activo
+    if (!passwordBlanqueada && !form.password) e.password = 'La contraseña es requerida';
     return e;
   };
 
@@ -50,8 +52,21 @@ function LoginPage() {
     setGlobalError('');
 
     try {
-      await login({ email: form.email.trim(), password: form.password });
-      navigate(from, { replace: true });
+      const response = await login({
+        email: form.email.trim(),
+        password: form.password,
+        password_blanqueada: passwordBlanqueada
+      });
+
+      // Si el usuario tiene contraseña blanqueada, redirigir a cambio obligatorio
+      if (response?.debe_cambiar_password) {
+        navigate('/cambiar-password', {
+          state: { email: form.email.trim() },
+          replace: true
+        });
+      } else {
+        navigate(from, { replace: true });
+      }
     } catch (err) {
       const data = err.response?.data;
       if (data?.errors) {
@@ -158,6 +173,25 @@ function LoginPage() {
                 <FiAlertCircle size={12} /> {errors.password}
               </span>
             )}
+          </div>
+
+          {/* Checkbox contraseña blanqueada */}
+          <div className="form-group form-group--checkbox">
+            <label className="form-group__checkbox-label">
+              <input
+                type="checkbox"
+                checked={passwordBlanqueada}
+                onChange={(e) => {
+                  setPasswordBlanqueada(e.target.checked);
+                  // Limpiar error de password si checkbox se activa
+                  if (e.target.checked) {
+                    setErrors((err) => ({ ...err, password: '' }));
+                  }
+                }}
+                disabled={loading}
+              />
+              <span>Tengo contraseña blanqueada</span>
+            </label>
           </div>
 
           <button type="submit" className="auth-submit" disabled={loading}>

@@ -286,4 +286,61 @@
       background: darken($color-bg-light, 5%);
     }
   }
+
+  &.btn-danger {
+    background: $color-danger;
+    color: $color-white;
+    border-color: $color-danger;
+
+    &:hover:not(:disabled) {
+      background: darken($color-danger, 10%);
+      border-color: darken($color-danger, 10%);
+    }
+  }
+}
+
+.warning-message {
+  text-align: center;
+  padding: 1.5rem;
+  background: #fef3c7;
+  border: 1px solid #fcd34d;
+  border-radius: 8px;
+  margin-bottom: 1.5rem;
+
+  .warning-icon {
+    font-size: 2rem;
+    margin: 0;
+    line-height: 1;
+  }
+
+  .warning-title {
+    margin: 0.5rem 0 0;
+    color: #92400e;
+    font-weight: 600;
+    font-size: 1rem;
+  }
+
+  .warning-text {
+    margin: 0.5rem 0 0;
+    color: #b45309;
+  }
+}
+
+.confirmation-alert {
+  padding: 1rem;
+  background: #fee2e2;
+  border: 1px solid #fecaca;
+  border-radius: 6px;
+  margin-bottom: 1rem;
+
+  p {
+    margin: 0;
+    color: #7f1d1d;
+    font-size: 0.9rem;
+
+    strong {
+      font-weight: 600;
+      color: #991b1b;
+    }
+  }
 }

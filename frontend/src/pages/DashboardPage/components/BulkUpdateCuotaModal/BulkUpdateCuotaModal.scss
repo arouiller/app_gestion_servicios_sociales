@@ -22,7 +22,7 @@
   flex-direction: column;
 
   &.bulk-cuota-modal {
-    max-width: 700px;
+    max-width: 1050px;
   }
 }
 
@@ -302,5 +302,113 @@
     &:hover:not(:disabled) {
       background: darken($color-danger, 10%);
     }
+  }
+}
+
+.search-filter {
+  margin-bottom: 1rem;
+  display: flex;
+
+  .search-input {
+    flex: 1;
+    padding: 0.625rem 0.75rem;
+    border: 1px solid $color-border;
+    border-radius: 6px;
+    font-size: 0.95rem;
+    font-family: inherit;
+
+    &:focus {
+      outline: none;
+      border-color: $color-primary;
+      box-shadow: 0 0 0 3px $color-primary-light;
+    }
+  }
+}
+
+// Tabla de Preview
+.bulk-cuota-modal {
+  &__table {
+    width: 100%;
+    border-collapse: collapse;
+    margin-top: 1rem;
+    margin-bottom: 1rem;
+
+    thead tr {
+      background-color: #f8f9fa;
+      border-bottom: 2px solid #dee2e6;
+    }
+
+    th {
+      padding: 0.75rem;
+      text-align: left;
+      font-weight: 600;
+      font-size: 0.875rem;
+      color: #111827;
+    }
+
+    tbody tr {
+      border-bottom: 1px solid #dee2e6;
+      transition: background-color 0.2s;
+
+      &:last-child {
+        border-bottom: none;
+      }
+
+      &:hover {
+        background-color: #f9f9f9;
+      }
+    }
+
+    td {
+      padding: 0.75rem;
+      font-size: 0.875rem;
+      color: $color-text;
+    }
+  }
+
+  &__pagination {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 1rem;
+    padding: 1rem;
+    background: $color-bg-light;
+    border-radius: 6px;
+  }
+
+  &__pagination-info {
+    font-size: 0.9rem;
+    color: $color-text-muted;
+    font-weight: 500;
+  }
+
+  &__btn-pagination {
+    padding: 0.625rem 1.25rem;
+    border: 1px solid $color-border;
+    border-radius: 6px;
+    font-size: 0.9rem;
+    font-weight: 600;
+    cursor: pointer;
+    background: $color-white;
+    color: $color-text;
+    transition: all 0.2s ease;
+
+    &:hover:not(:disabled) {
+      background: $color-bg-light;
+      border-color: $color-primary;
+      color: $color-primary;
+    }
+
+    &:disabled {
+      opacity: 0.5;
+      cursor: not-allowed;
+    }
+  }
+
+  &__empty {
+    text-align: center;
+    color: $color-text-muted;
+    padding: 1rem;
+    font-size: 0.9rem;
   }
 }

@@ -2,6 +2,7 @@ const express = require('express');
 const { verifyToken, generateToken } = require('../middleware/auth');
 const { validate, rules } = require('../middleware/validate');
 const Usuario = require('../models/Usuario');
+const { resetPassword } = require('../controllers/usuariosController');
 
 const router = express.Router();
 
@@ -56,8 +57,26 @@ router.post('/register', validate(registerSchema), async (req, res) => {
 
 // ── POST /api/auth/login ────────────────────────────────────────────────────
 
-router.post('/login', validate(loginSchema), async (req, res) => {
-  const { email, password } = req.body;
+router.post('/login', async (req, res) => {
+  const { email, password, password_blanqueada } = req.body;
+
+  // Validar email requerido
+  if (!email) {
+    return res.status(400).json({
+      success: false,
+      message: 'Email es requerido',
+      errors: { email: 'Email es requerido' }
+    });
+  }
+
+  // Si no es flujo de contraseña blanqueada, validar password
+  if (!password_blanqueada && !password) {
+    return res.status(400).json({
+      success: false,
+      message: 'Email y contraseña son requeridos',
+      errors: { password: 'Contraseña es requerida' }
+    });
+  }
 
   // Buscar usuario
   const usuario = await Usuario.findOne({ where: { email: email.toLowerCase().trim() } });
@@ -70,6 +89,31 @@ router.post('/login', validate(loginSchema), async (req, res) => {
   };
 
   if (!usuario) return res.status(401).json(credencialesInvalidas);
+
+  // ── Flujo: contraseña blanqueada ──
+  if (password_blanqueada) {
+    if (!usuario.password_blanqueada) {
+      return res.status(400).json({
+        success: false,
+        message: 'Esta cuenta no tiene contraseña blanqueada',
+        errors: { general: 'Esta cuenta no tiene contraseña blanqueada' }
+      });
+    }
+
+    // Generar token temporal solo para cambio de contraseña
+    const tempToken = generateToken({ id: usuario.id, email: usuario.email, rol: usuario.rol });
+
+    return res.json({
+      success: true,
+      message: 'Acceso para cambio de contraseña',
+      user: usuario.toSafeJSON(),
+      jwt: tempToken,
+      debe_cambiar_password: true,
+      expiresIn: process.env.JWT_EXPIRE || '7d',
+    });
+  }
+
+  // ── Flujo normal: login con contraseña ──
 
   // Verificar que tiene contraseña (podría ser un usuario OAuth sin password)
   if (!usuario.password_hash) {
@@ -87,6 +131,19 @@ router.post('/login', validate(loginSchema), async (req, res) => {
     return res.status(403).json({
       success: false,
       message: 'Tu cuenta está suspendida. Contactá al administrador.',
+    });
+  }
+
+  // Si el usuario tiene contraseña blanqueada pero intenta login normal, obligar cambio
+  if (usuario.password_blanqueada) {
+    const tempToken = generateToken({ id: usuario.id, email: usuario.email, rol: usuario.rol });
+    return res.json({
+      success: true,
+      message: 'Debe cambiar contraseña en primer acceso',
+      user: usuario.toSafeJSON(),
+      jwt: tempToken,
+      debe_cambiar_password: true,
+      expiresIn: process.env.JWT_EXPIRE || '7d',
     });
   }
 
@@ -214,5 +271,9 @@ router.put('/perfil', verifyToken, validate(perfilSchema), async (req, res) => {
     user: usuario.toSafeJSON(),
   });
 });
+
+// ── POST /api/auth/password-reset ───────────────────────────────────────────
+
+router.post('/password-reset', resetPassword);
 
 module.exports = router;

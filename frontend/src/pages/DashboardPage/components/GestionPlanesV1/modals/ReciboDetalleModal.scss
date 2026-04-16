@@ -101,4 +101,18 @@
       background-color: #0056b3;
     }
   }
+
+  &__loading {
+    text-align: center;
+    color: #6c757d;
+    padding: 2rem 1rem;
+    font-style: italic;
+  }
+
+  &__error {
+    text-align: center;
+    color: #dc3545;
+    padding: 2rem 1rem;
+    font-weight: 600;
+  }
 }

@@ -1,6 +1,6 @@
 const express = require('express');
 const router = express.Router();
-const { verifyToken, requireAdmin } = require('../middleware/auth');
+const { verifyToken } = require('../middleware/auth');
 const personasController = require('../controllers/v1.0/personasController');
 
 // GET /api/personas?search=texto
@@ -12,11 +12,11 @@ router.get('/', verifyToken, personasController.search);
 router.get('/listar', verifyToken, personasController.listar);
 
 // POST /api/personas
-// Crear nueva persona (admin only)
-router.post('/', verifyToken, requireAdmin, personasController.crear);
+// Crear nueva persona
+router.post('/', verifyToken, personasController.crear);
 
 // PUT /api/personas/:personaId
-// Actualizar persona (admin only)
-router.put('/:personaId', verifyToken, requireAdmin, personasController.actualizar);
+// Actualizar persona
+router.put('/:personaId', verifyToken, personasController.actualizar);
 
 module.exports = router;

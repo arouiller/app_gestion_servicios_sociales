@@ -3,11 +3,12 @@ import recibosService from '../../../../../services/recibosService';
 import './GenerarRecibosModal.scss';
 
 function GenerarRecibosModal({ isOpen, onClose, onSuccess }) {
-  const [step, setStep] = useState(1); // 1: config, 2: generating, 3: done
+  const [step, setStep] = useState(1); // 1: config, 2: confirmation (si existe), 3: generating, 4: done
   const [periodo, setPeriodo] = useState('');
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
   const [recibosGenerados, setRecibosGenerados] = useState([]);
+  const [existingPeriodo, setExistingPeriodo] = useState(null);
 
   useEffect(() => {
     if (isOpen) {
@@ -20,6 +21,7 @@ function GenerarRecibosModal({ isOpen, onClose, onSuccess }) {
     setPeriodo('');
     setError(null);
     setRecibosGenerados([]);
+    setExistingPeriodo(null);
     setLoading(false);
   };
 
@@ -48,24 +50,29 @@ function GenerarRecibosModal({ isOpen, onClose, onSuccess }) {
     }
 
     setLoading(true);
-    setStep(2);
 
     try {
-      // Generar para todos los planes (planes array vacío)
+      // Primera llamada: verificar si el período ya existe
       const result = await recibosService.generar({
         periodo,
         planes: [],
       });
 
-      if (!result.mensaje && !result.recibos) {
-        setError(result.message || 'Error al generar recibos');
-        setStep(1);
+      // Si existe período y no tiene force, el backend retorna 409 con existe: true
+      if (result.existe === true) {
+        // Mostrar confirmación
+        setExistingPeriodo(result);
+        setStep(2);
+        setLoading(false);
         return;
       }
 
-      setRecibosGenerados(result.recibos || []);
+      // Si no existe, proceder con la generación (step 3: generating)
       setStep(3);
+      setRecibosGenerados(result.recibos || []);
+      setStep(4);
     } catch (err) {
+      // Error al generar
       setError(err.message || 'Error al generar recibos');
       setStep(1);
     } finally {
@@ -73,8 +80,38 @@ function GenerarRecibosModal({ isOpen, onClose, onSuccess }) {
     }
   };
 
+  const handleConfirmRegeneration = async () => {
+    setError(null);
+    setLoading(true);
+    setStep(3);
+
+    try {
+      // Segunda llamada: con force=true para regenerar
+      const result = await recibosService.generar({
+        periodo,
+        planes: [],
+        force: true,
+      });
+
+      if (!result.recibos) {
+        setError(result.message || 'Error al regenerar recibos');
+        setStep(2);
+        setLoading(false);
+        return;
+      }
+
+      setRecibosGenerados(result.recibos || []);
+      setStep(4);
+    } catch (err) {
+      setError(err.message || 'Error al regenerar recibos');
+      setStep(2);
+    } finally {
+      setLoading(false);
+    }
+  };
+
   const handleClose = () => {
-    if (step === 3) {
+    if (step === 4) {
       onSuccess?.({ recibos: recibosGenerados });
       onClose();
       resetForm();
@@ -119,14 +156,35 @@ function GenerarRecibosModal({ isOpen, onClose, onSuccess }) {
             </>
           )}
 
-          {step === 2 && (
+          {step === 2 && existingPeriodo && (
+            <>
+              <div className="warning-message">
+                <p className="warning-icon">⚠️</p>
+                <p className="warning-title">Período ya tiene recibos generados</p>
+                <p className="warning-text">
+                  Ya existen <strong>{existingPeriodo.cantidad} recibos</strong> generados para el período <strong>{getPeriodoDisplay()}</strong>.
+                </p>
+              </div>
+
+              <div className="confirmation-alert">
+                <p>
+                  Si continúas, <strong>todos los recibos del período serán borrados y se volverán a generar</strong>.
+                </p>
+                <p style={{ marginTop: '0.5rem', fontSize: '0.9rem', color: '#666' }}>
+                  Esta acción no se puede deshacer.
+                </p>
+              </div>
+            </>
+          )}
+
+          {step === 3 && (
             <div className="generating-state">
               <div className="spinner"></div>
               <p>Generando recibos para {getPeriodoDisplay()}...</p>
             </div>
           )}
 
-          {step === 3 && (
+          {step === 4 && (
             <>
               <div className="success-message">
                 <p className="success-icon">✓</p>
@@ -186,7 +244,28 @@ function GenerarRecibosModal({ isOpen, onClose, onSuccess }) {
             </>
           )}
 
-          {step === 3 && (
+          {step === 2 && (
+            <>
+              <button
+                className="btn btn-secondary"
+                onClick={() => {
+                  setStep(1);
+                  setExistingPeriodo(null);
+                }}
+              >
+                Cancelar
+              </button>
+              <button
+                className="btn btn-danger"
+                onClick={handleConfirmRegeneration}
+                disabled={loading}
+              >
+                {loading ? 'Regenerando...' : 'Sí, Regenerar'}
+              </button>
+            </>
+          )}
+
+          {step === 4 && (
             <>
               <button
                 className="btn btn-secondary"

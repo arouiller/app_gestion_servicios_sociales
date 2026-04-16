@@ -18,6 +18,7 @@ const IntegranteServicio = require('./IntegranteServicio');
 const HistorialCuota = require('./HistorialCuota');
 const Recibo = require('./Recibo');
 const ReciboIntegrante = require('./ReciboIntegrante');
+const PeriodosRecibos = require('./PeriodosRecibos');
 
 // Initialize all models
 const db = {
@@ -37,6 +38,7 @@ const db = {
   HistorialCuota,
   Recibo,
   ReciboIntegrante,
+  PeriodosRecibos,
 };
 
 // Define associations for 1.0.x
