@@ -33,6 +33,7 @@ De cualquier estado → Descartado
 
 | ID | Prioridad | Estado | Descripción | Contexto / Motivo | Archivos estimados |
 |----|-----------|--------|-------------|-------------------|----|
+| BACKLOG-014 | 🔴 Alta | 📋 Registrado | Página dedicada de gestión de recibos por período | Mejora UX: página centralizada para consultar recibos generados por mes/año y generar nuevos | RecibosPage.jsx, RecibosService.js, routes |
 | BACKLOG-013 | 🔴 Alta | ✅ Solucionado | Mejora de flujo de login para usuarios con contraseña blanqueada | Email pre-cargado en formulario de seteo de contraseña. Elimina repetición de email en onboarding. Implementado, probado y aprobado. | LoginPage.jsx, ChangePasswordRequired.jsx |
 | BACKLOG-012 | 🔴 Alta | ✅ Solucionado | Mejorar comportamiento de ventanas modales (cierre, ESC, cambios no guardados) | Modales no cierran al hacer click fuera. Pueden cerrarse con ESC. Si hay cambios, ESC muestra advertencia. Con múltiples modales, ESC solo cierra la más arriba. Implementado, probado y aprobado. | Todos los modales (PlanV1Modal, GenerarRecibosModal, BulkUpdateCuotaModal, etc.) |
 | BACKLOG-011 | 🔴 Alta | ✅ Solucionado | Agregar acciones (editar y habilitar) a planes en búsqueda de afiliados | Desde planes visibles de un afiliado en búsqueda, permitir edición y cambio de estado (ACTIVO ↔ SUSPENDIDO) con modal reutilizable. Implementado, funcional y aprobado. | BusquedaAfiliados.jsx, PlanV1Modal.jsx |
@@ -948,6 +949,106 @@ e. **Implementación técnica**
 - ReciboDetalleModal y PreviewModal no actualizadas (probablemente read-only)
 - Sistema escalable: nuevas modales pueden reutilizar useModalEscapeKey + ConfirmCloseDialog
 - Comportamiento LIFO: múltiples modales superpuestas se cierran desde la más arriba
+
+---
+
+### BACKLOG-014: Página Dedicada de Gestión de Recibos por Período
+
+**Descripción:**
+Crear una página dedicada para la gestión centralizada de recibos generados. La página permitirá:
+1. Listar todos los períodos (meses/años) para los cuales ya se han generado recibos
+2. Acceder al listado completo de recibos de cada período
+3. Generar nuevos recibos para un período seleccionado (mes y año)
+
+El acceso a esta página será a través de un botón "Generar recibos" desde la vista de edición de planes.
+
+**Requerimientos:**
+
+a. **Estructura de la Página (RecibosPage.jsx)**
+   - Header: "Gestión de Recibos"
+   - Dos secciones principales:
+     * Sección 1: Listado de períodos disponibles
+     * Sección 2: Formulario para generar nuevos recibos
+
+b. **Listado de Períodos Generados**
+   - Tabla con columnas:
+     - Período (formato: "Enero 2026", "Febrero 2026", etc.)
+     - Cantidad de recibos generados
+     - Fecha de generación
+     - Acción: Link para ver listado de recibos del mes
+   - Si no hay períodos generados: mostrar mensaje "No hay recibos generados aún"
+   - Ordenamiento: descendente por período (más reciente primero)
+   - Paginación si hay muchos períodos
+
+c. **Link a Listado de Recibos por Período**
+   - Al hacer click en el link de un período:
+     * Redirigir a nueva vista (RecibosListPage.jsx)
+     * Pasar período como parámetro (YYYY-MM)
+     * Mostrar tabla con todos los recibos del período
+     * Columnas: Plan #, Afiliado, Integrantes, Valor Cuota, Acciones (descargar PDF?, ver detalle)
+     * Paginación si es necesario
+
+d. **Formulario de Generación de Recibos**
+   - Botón principal: "Generar Recibos"
+   - Al hacer click en botón:
+     * Mostrar modal/formulario con:
+       - Campo 1: Selector de mes (select con opciones: Enero, Febrero, Marzo, ..., Diciembre)
+       - Campo 2: Selector de año (input numérico o select con últimos 5 años)
+       - Selección por defecto: mes actual y año actual
+       - Botón: "Generar"
+       - Botón: "Cancelar"
+   - Al hacer click en "Generar":
+     * Validar que mes y año sean válidos
+     * Convertir formato legible a YYYY-MM
+     * Llamar a endpoint POST /api/recibos/generar con período
+     * Usar misma lógica que GenerarRecibosModal (detectar período existente, mostrar confirmación si existe, etc.)
+     * Después de generación exitosa:
+       - Mostrar mensaje de éxito
+       - Refrescar lista de períodos
+       - Opcionalmente: navegar automáticamente al listado de recibos generados
+
+e. **Integración con Edición de Planes**
+   - En PlanV1Modal.jsx:
+     * Reemplazar o complementar botón "Generar recibos"
+     * El botón debe dirigir a RecibosPage.jsx (no abrir GenerarRecibosModal)
+     * Opcionalmente: pasar plan_numero como parámetro para pre-filtrar (si es útil)
+
+f. **Consultas de Datos (Backend)**
+   - Endpoint GET /api/recibos/periodos
+     * Retorna lista de períodos con: periodo (YYYY-MM), cantidad_recibos, fecha_generacion
+   - Endpoint GET /api/recibos?periodo=YYYY-MM
+     * Retorna lista de recibos del período especificado
+   - Endpoint POST /api/recibos/generar (ya existe)
+     * Lógica de detección de período existente (BACKLOG-008)
+
+**Contexto:**
+- Actualmente, la generación de recibos se hace a través de GenerarRecibosModal dentro de la edición de planes
+- Usuario necesita una forma centralizada y clara de gestionar recibos
+- Consultar recibos generados requiere entrar en la vista de edición de cada plan
+- Mejora UX: página dedicada permite visualizar período actual, histórico de generaciones, y generar nuevos recibos de forma centralizada
+- Flujo intuitivo: Edición de Planes → botón "Generar recibos" → va a RecibosPage → lista períodos → puede generar nuevo → usa misma lógica existente
+
+**Archivos a crear/modificar:**
+- `frontend/src/pages/RecibosPage/RecibosPage.jsx` (NUEVO - página principal)
+- `frontend/src/pages/RecibosPage/RecibosPage.scss` (NUEVO - estilos)
+- `frontend/src/pages/RecibosPage/RecibosListPage.jsx` (NUEVO - listado de recibos por período)
+- `frontend/src/pages/RecibosPage/RecibosListPage.scss` (NUEVO - estilos)
+- `frontend/src/pages/RecibosPage/components/GenerarRecibosForm.jsx` (NUEVO - formulario de generación)
+- `frontend/src/pages/DashboardPage/components/GestionPlanesV1/modals/PlanV1Modal.jsx` (modificar botón "Generar recibos")
+- `frontend/src/services/recibosService.js` (extender con métodos: getPeriodos(), listByPeriodo())
+- `frontend/src/App.jsx` (agregar nueva ruta: /recibos)
+
+**Estimación:** 6-8 horas
+  - Crear estructura de páginas y componentes: 2h
+  - Desarrollar listado de períodos: 1.5h
+  - Desarrollar formulario de generación: 1.5h
+  - Desarrollar listado de recibos por período: 1.5h
+  - Integración con PlanV1Modal: 0.5h
+  - Testing y ajustes: 1h
+
+**Prioridad:** 🔴 Alta — Mejora importante para UX en gestión de recibos
+
+**Estado:** 📋 Registrado (2026-04-16)
 
 ---
 
