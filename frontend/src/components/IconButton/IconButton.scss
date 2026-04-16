@@ -1,0 +1,83 @@
+// Estilos para el componente IconButton
+
+.icon-button {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 2rem;
+  height: 2rem;
+  padding: 0.25rem;
+  font-size: 1rem;
+  border: 1px solid #dee2e6;
+  background-color: white;
+  border-radius: 3px;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  margin: 0 0.25rem;
+
+  &:hover:not(:disabled) {
+    background-color: #f8f9fa;
+    border-color: #adb5bd;
+    transform: scale(1.05);
+  }
+
+  &:active:not(:disabled) {
+    transform: scale(0.98);
+  }
+
+  &:disabled,
+  &--disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+
+    &:hover {
+      background-color: white;
+      border-color: #dee2e6;
+      transform: none;
+    }
+  }
+
+  // Variante: danger (para eliminar)
+  &.icon-button--danger {
+    &:hover:not(:disabled) {
+      background-color: #f8d7da;
+      border-color: #f5c6cb;
+      color: #721c24;
+    }
+  }
+
+  // Variante: success (para confirmar)
+  &.icon-button--success {
+    &:hover:not(:disabled) {
+      background-color: #d4edda;
+      border-color: #c3e6cb;
+      color: #155724;
+    }
+  }
+
+  // Variante: primary (destacado)
+  &.icon-button--primary {
+    background-color: #007bff;
+    border-color: #007bff;
+    color: white;
+
+    &:hover:not(:disabled) {
+      background-color: #0056b3;
+      border-color: #0056b3;
+    }
+  }
+
+  // Tamaño pequeño (para tablas compactas)
+  &.icon-button--sm {
+    width: 1.75rem;
+    height: 1.75rem;
+    font-size: 0.85rem;
+  }
+
+  // Tamaño grande
+  &.icon-button--lg {
+    width: 2.5rem;
+    height: 2.5rem;
+    font-size: 1.25rem;
+  }
+}
