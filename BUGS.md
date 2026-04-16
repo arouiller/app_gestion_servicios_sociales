@@ -469,7 +469,7 @@ El ActionButton debe tener `type="button"` para prevenir que actúe como submit 
 
 **Reportado:** 2026-04-16
 
-**Estado:** 🔬 En análisis (pendiente verificación del usuario)
+**Estado:** ✅ Solucionado (2026-04-16)
 
 ---
 
@@ -505,7 +505,12 @@ Problema de CSS/grid layout:
 **Reportado:** 2026-04-16
 **Asociado a:** BACKLOG-001 (tab/feature)
 
-**Estado:** 🔬 En análisis (pendiente verificación del usuario)
+**Estado:** ✅ Solucionado (2026-04-16)
+
+**Verificación completada:**
+- ✅ Tabla de preview alineada correctamente
+- ✅ Encabezados coinciden con valores
+- ✅ Funcionalidad de aumento masivo operativa
 
 **Propuestas de investigación:**
 - [ ] Revisar CSS de `planes-table__full` (ancho de columnas)
@@ -648,7 +653,12 @@ Al intentar usar funcionalidades de BACKLOG-004 (Gestión de Usuarios) en produc
 **Reportado:** 2026-04-16
 **Asociado a:** BACKLOG-004 (Panel de Gestión de Usuarios)
 
-**Estado:** 🔬 En análisis (pendiente verificación del usuario)
+**Estado:** ✅ Solucionado (2026-04-16)
+
+**Verificación completada:**
+- ✅ Tabla `usuarios` tiene columna `password_blanqueada`
+- ✅ Tabla `usuarios` tiene columna `tema_preferido`
+- ✅ Gestión de Usuarios funcional en producción
 
 ---
 
