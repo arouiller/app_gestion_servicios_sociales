@@ -7,6 +7,22 @@ Registro de bugs detectados durante implementación del plan de auditoría (Fase
 - 🟡 **IMPORTANTE**: Afecta UX o requiere corrección antes de siguiente fase
 - 🟢 **MENOR**: Nice-to-have, puede esperar
 
+## Ciclo de vida de los bugs
+Estos son los diferentes estados
+- 📋 Registrado
+- 🔬 En análisis
+- ✅ Incorporado al plan
+- 🚀 Desarrollado
+- 🚫 Descartado (con motivo)
+- ✅ Solucionado
+
+y estos son los cambios de estados 
+Registrado => Analisis => Incorporado al plan => Desarrollado => Solucionado
+Desarrollado => En analisis
+De cualquier estado => Descartado
+
+Un bug solo puede pasar a estado solucionado, Descartado a traves del pedido explicito del usuario final
+
 ## Registros Activos
 
 | ID | Severidad | Fase | Descripción | Reportado | Estado |
@@ -85,11 +101,7 @@ no sabía cuándo ejecutarlo.
 - [ ] Confirmar que backend/dist/src/index.js existe
 - [ ] El app inicia sin errores de Entry File
 
-**Estados del bug:**
-- 🔧 "Pendiente verificación" → Solución implementada pero no verificada
-- ✅ "Cerrado" → Solo cuando el usuario confirme que funcionó
-
-**Regla:** Los bugs se cierran SOLO cuando el usuario especifica explícitamente que la solución funcionó.
+**Estado:** ✅ Solucionado (2026-04-16)
 
 ---
 
@@ -193,7 +205,7 @@ d. **Valores por defecto incorrectos**
 - ✅ Tabla de planes preview muestra valores correctamente
 - ✅ Flujo completo: selector filtro → preview → confirmación
 
-**Estado:** ✅ CERRADO (v2) — Fase 3 (BulkUpdateCuotaModal) completamente funcional
+**Estado:** ✅ Solucionado (2026-04-16) — Fase 3 (BulkUpdateCuotaModal) completamente funcional
 
 ---
 
@@ -272,7 +284,7 @@ Al invocar la generación de recibos, seleccionar un período y hacer click en "
 2. Verificar que se crean recibos e integrantes sin error de null
 3. Consultar tabla recibos y recibo_integrantes para validar datos
 
-**Estado:** ✅ Corregido, pendiente verificación — Commit e32eb94
+**Estado:** ✅ Solucionado (2026-04-16) — Commit e32eb94
 
 ---
 
@@ -304,7 +316,7 @@ v2.0.0, v2.0.1, v2.0.2, v2.0.3, v2.0.4, v1.0.0, v1.0.1, v1.0.2, v1.0.3
 - ✅ getMigrationFolders retorna orden descendente
 - ✅ list() usa orden correcto
 
-**Estado:** ✅ RESUELTO — Commit f6371a9
+**Estado:** ✅ Solucionado (2026-04-16) — Commit f6371a9
 
 ---
 
@@ -344,7 +356,7 @@ Las versiones v2.0.0, v2.0.1, v2.0.2, v2.0.3 y v2.0.4 aparecían todas como "apl
 2. Verificar tabla `migraciones_bd` — ¿qué versiones tienen estado='exitosa'?
 3. Si todas tienen exitosa: solo la última (v2.0.3) debería estar
 
-**Estado:** 🔧 Pendiente reinicio y reverificación — Commit f6371a9
+**Estado:** ✅ Solucionado (2026-04-16) — Commit f6371a9
 
 ---
 
@@ -374,7 +386,7 @@ Las versiones v1.0.0, v1.0.1, v1.0.2 e v1.0.3 tenían habilitada la opción "dow
 - [ ] Debe mostrar error "No se puede hacer downgrade de v1.0.3"
 - [ ] Solo v2.0.3 debe permitir downgrade
 
-**Estado:** 🔧 Pendiente verificación — Commit f6371a9
+**Estado:** ✅ Solucionado (2026-04-16) — Commit f6371a9
 
 ---
 
@@ -406,7 +418,7 @@ Cannot POST /api/migrations/execute
 - ✅ Sin error 404
 - ✅ Respuesta JSON exitosa
 
-**Estado:** ✅ VALIDADO — Commits 3446668
+**Estado:** ✅ Solucionado (2026-04-16) — Commits 3446668
 
 ---
 
@@ -457,7 +469,7 @@ El ActionButton debe tener `type="button"` para prevenir que actúe como submit 
 
 **Reportado:** 2026-04-16
 
-**Estado:** 🔧 Pendiente análisis
+**Estado:** 🔬 En análisis (pendiente verificación del usuario)
 
 ---
 
@@ -493,7 +505,7 @@ Problema de CSS/grid layout:
 **Reportado:** 2026-04-16
 **Asociado a:** BACKLOG-001 (tab/feature)
 
-**Estado:** 🔧 Pendiente análisis
+**Estado:** 🔬 En análisis (pendiente verificación del usuario)
 
 **Propuestas de investigación:**
 - [ ] Revisar CSS de `planes-table__full` (ancho de columnas)
@@ -579,13 +591,7 @@ Patrón confirmado en otros servicios (planesService, personasService, etc.)
 
 **Fix commit:** 451131d
 
-**Estado:** 🔧 Pendiente verificación
-
-**Verificación pendiente:**
-- [ ] Crear nuevo usuario desde GestionUsuarios
-- [ ] Verificar que POST se realiza a URL correcta (sin duplicación)
-- [ ] Confirmar que usuario se crea exitosamente
-- [ ] Probar otros métodos: cambiarRol, blanquearPassword, resetPassword
+**Estado:** ✅ Solucionado (2026-04-16)
 
 ---
 
@@ -642,19 +648,7 @@ Al intentar usar funcionalidades de BACKLOG-004 (Gestión de Usuarios) en produc
 **Reportado:** 2026-04-16
 **Asociado a:** BACKLOG-004 (Panel de Gestión de Usuarios)
 
-**Estado:** 🔧 Pendiente análisis
-
-**Investigaciones requeridas:**
-- [ ] Verificar si las migraciones se ejecutaron en BD producción (Hostinger)
-- [ ] Revisar el sistema de migraciones en producción
-- [ ] Determinar si hay una migración para `tema_preferido` o si es un campo que falta crear
-- [ ] Analizar si necesita migración manual o si el sistema de migraciones en producción está desfasado
-- [ ] Considerar agregar nuevas migraciones si es necesario
-
-**Preguntas a responder:**
-- ¿Falta ejecutar la migración 1.0.5 en producción?
-- ¿Existe migración para `tema_preferido` o es columna que debe agregarse?
-- ¿El sistema de migraciones en Hostinger está sincronizado?
+**Estado:** 🔬 En análisis (pendiente verificación del usuario)
 
 ---
 
@@ -784,7 +778,7 @@ Response: HTTP 409
 **Reportado:** 2026-04-16
 **Asociado a:** BACKLOG-008 (Registro de períodos + confirmación)
 
-**Estado:** ✅ RESUELTO
+**Estado:** ✅ Solucionado (2026-04-16)
 
 **Causa raíz identificada:**
 1. Axios lanza error para cualquier status >= 400 (incluyendo 409)
@@ -859,7 +853,7 @@ Esto debería haber sido removido o actualizado junto con BACKLOG-009.
 **Reportado:** 2026-04-16
 **Asociado a:** BACKLOG-009 (Usuarios comunes acciones CRUD)
 
-**Estado:** 🔧 Pendiente análisis
+**Estado:** ✅ Solucionado (2026-04-16)
 
 **Causa raíz identificada:**
 BACKLOG-009 removió restricciones `requireAdmin` del backend (líneas de POST/PUT/DELETE en v1.0-planes.js, personas.js, lookup.js), permitiendo acceso a usuarios comunes. Sin embargo, el frontend no fue actualizado y aún tenía condicionales `isAdmin` que ocultaban:
@@ -888,7 +882,7 @@ BACKLOG-009 removió restricciones `requireAdmin` del backend (líneas de POST/P
 - ✅ Confirmar "Aumento Masivo" NO visible para usuario no-admin
 - ✅ Probar click en botones: editar, suspender, generar recibos (sin errores de permisos)
 
-**Estado:** ✅ CERRADO — Funcionalidad BACKLOG-009 ahora completamente operativa
+**Estado:** ✅ Solucionado (2026-04-16) — Funcionalidad BACKLOG-009 ahora completamente operativa
 
 ---
 
@@ -930,7 +924,7 @@ El botón "Aumento Masivo" en Gestión de Planes debe estar visible para todos l
 **Reportado:** 2026-04-16
 **Asociado a:** BACKLOG-009 (Usuarios comunes acciones CRUD)
 
-**Estado:** ✅ CERRADO
+**Estado:** ✅ Solucionado (2026-04-16)
 
 **Solución Implementada (2026-04-16):**
 1. Removido condicional `{isAdmin && (...)` que ocultaba el botón
@@ -963,7 +957,7 @@ El botón "Aumento Masivo" en Gestión de Planes debe estar visible para todos l
 
 **Commits:**
 - 169a924 - fix(BUG-015): mostrar botón visible pero deshabilitado para no-admin
-- 4d46c1c - docs(BUGS): marcado como CERRADO
+- 4d46c1c - docs(BUGS): marcado como Solucionado
 
 ---
 
@@ -996,7 +990,7 @@ En la edición de planes, el tab de "Afiliados" usa iconos de acciones (editar, 
 **Reportado:** 2026-04-16
 **Asociado a:** BACKLOG-003 (Estandarizar formato de listados)
 
-**Estado:** ✅ CERRADO
+**Estado:** ✅ Solucionado (2026-04-16)
 
 **Solución Implementada (2026-04-16):**
 Se estandarizaron los iconos en PlanV1Modal (tab Afiliados) para que coincidan con GestionPlanesV1:
