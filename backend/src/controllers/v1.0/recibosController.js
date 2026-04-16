@@ -280,3 +280,18 @@ exports.getById = async (req, res, next) => {
     next(error);
   }
 };
+
+/**
+ * GET /api/recibos/periodos
+ * Lista todos los períodos con recibos generados, ordenados descendentemente
+ */
+exports.listPeriodos = async (req, res, next) => {
+  try {
+    const periodos = await db.PeriodosRecibos.findAll({
+      order: [['periodo', 'DESC']],
+    });
+    res.status(200).json(periodos);
+  } catch (error) {
+    next(error);
+  }
+};
