@@ -20,14 +20,57 @@ Estos ítems se abordan **después** de completar todas las fases del PLAN.md.
 
 | ID | Prioridad | Estado | Descripción | Contexto / Motivo | Archivos estimados |
 |----|-----------|--------|-------------|-------------------|--------------------|
+| BACKLOG-007 | 🔴 Alta | 🔄 Desarrollado | Control de acceso por rol: usuarios comunes no ven Administración | Usuarios comunes deben tener acceso a: Búsqueda de Afiliados, Gestión de Planes, Cobradores, Obras Sociales, Servicios, Tipos de Grupo, Tipos de Plan. Deben estar excluidos de: Gestión de Usuarios, Migraciones BD. Solo admin ve la sección "Administración" | DashboardPage.jsx |
 | BACKLOG-006 | 🔴 Alta | ✅ Aprobado | Flujo de login para usuarios con password blanqueada | Implementado y probado: Checkbox "Tengo contraseña blanqueada" en LoginPage. Backend detecta password_blanqueada y retorna flag debe_cambiar_password. Frontend redirige a /cambiar-password. Flujo completo funcional y validado para onboarding de nuevos usuarios | LoginPage.jsx, authService.js, auth.js |
 | BACKLOG-005 | 🟡 Media | ✅ Completado | Mejorar columna "Cambio" en tab Historial de Cuota | Implementado y aprobado: Nueva columna que muestra tipo de cambio (Fijo/Porcentual) con valor. Lógica de inferencia de tipo por cálculo dinámico | PlanV1Modal.jsx |
-| BACKLOG-004 | 🔴 Alta | 🔄 Desarrollado | Panel de Gestión de Usuarios: CRUD + cambio de rol + blanqueo de contraseña | Implementado: Panel CRUD completo (listar, crear, cambiar rol, blanquear contraseña). Backend: endpoints /api/usuarios, /api/usuarios/:id/rol, /api/usuarios/:id/blanquear-password. Frontend: GestionUsuarios, UsuarioFormModal, ChangePasswordRequired. Flujo: usuarios nuevos con password_blanqueada acceden a /cambiar-password | Múltiples (GestionUsuarios.jsx, usuariosController, usuariosService, rutas, auth.js, ChangePasswordRequired.jsx) |
+| BACKLOG-004 | 🔴 Alta | ✅ Aprobado | Panel de Gestión de Usuarios: CRUD + cambio de rol + blanqueo de contraseña | Implementado y probado: Panel CRUD completo (listar, crear, cambiar rol, blanquear contraseña). Backend: endpoints /api/usuarios, /api/usuarios/:id/rol, /api/usuarios/:id/blanquear-password. Frontend: GestionUsuarios, UsuarioFormModal, ChangePasswordRequired. Flujo: usuarios nuevos con password_blanqueada acceden a /cambiar-password. Todo funcional y validado | Múltiples (GestionUsuarios.jsx, usuariosController, usuariosService, rutas, auth.js, ChangePasswordRequired.jsx) |
 | BACKLOG-003 | 🟡 Media | ⏳ Pendiente | Estandarizar formato de listados: mismo layout para todas las tablas + iconos consistentes para acciones | Requerimiento transversal: todos los formularios con listados (Planes, Cobradores, Servicios, Tipos de Plan, Obras Sociales, etc.) deben tener el mismo formato visual y usar los mismos iconos (ej: ✎ editar, 🗑 eliminar, 👁 ver detalle) en todos los formularios | Múltiples componentes (todas las tablas de listado) |
 | BACKLOG-002 | 🔴 Alta | ✅ Completado | Agregar tab de recibos en vista de plan | Implementado y aprobado: Tab de recibos con paginación, carga dinámica y visualización de detalles. BUG-008 resuelto | PlanDetailModal.jsx, recibosService.js |
 | BACKLOG-001 | 🟡 Media | ✅ Completado | Mejorar preview de aumento de cuotas: navegación completa + comparación antes/después | Implementado y aprobado: Tabla con alineación correcta, paginación, búsqueda y contraste antes/después. BUG-009 resuelto | BulkUpdateCuotaModal.jsx, SCSS |
 
 ## Detalles de Items
+
+### BACKLOG-007: Control de Acceso por Rol - Menú Dinámico
+
+**Descripción:**
+Los usuarios comunes (no administradores) deben tener acceso a todas las funcionalidades del menú EXCEPTO a la sección de "Administración" (Gestión de Usuarios y Migraciones de BD).
+
+**Requerimientos:**
+
+a. **Acceso permitido para usuarios comunes**
+   - Mi Cuenta → Datos Personales
+   - Gestión → Búsqueda de Afiliados
+   - Gestión → Gestión de Planes
+   - Gestión → Cobradores
+   - Gestión → Obras Sociales
+   - Gestión → Servicios Adicionales
+   - Gestión → Tipos de Grupo
+   - Gestión → Tipos de Plan
+
+b. **Acceso DENEGADO para usuarios comunes**
+   - Administración (sección completa NO visible)
+   - Administración → Gestión de Usuarios
+   - Administración → Migraciones BD
+
+c. **Comportamiento esperado**
+   - La sección "Administración" no debe aparecer en el sidebar para usuarios con rol "usuario"
+   - Solo usuarios con rol "admin" ven la sección "Administración"
+
+**Contexto:**
+- Los usuarios comunes no deben poder gestionar otros usuarios ni ejecutar migraciones
+- Mantener la seguridad separando funciones administrativas
+- Mejorar UX: no mostrar opciones inaccesibles
+
+**Archivos a modificar:**
+- `frontend/src/pages/DashboardPage/DashboardPage.jsx` (función buildMenu)
+
+**Estimación:** 0.5 horas (cambio simple en lógica de menú)
+
+**Prioridad:** 🔴 Alta — Control de acceso es crítico para seguridad
+
+**Estado:** 🔄 Desarrollado
+
+---
 
 ### BACKLOG-005: Mejorar columna "Cambio" en Historial de Cuota
 
