@@ -10,8 +10,6 @@ Registro de bugs detectados durante implementación del plan de auditoría (Fase
 ## Registros Activos
 
 | ID | Severidad | Fase | Descripción | Reportado | Estado |
-|----|-----------|------|-------------|-----------|--------|
-| BUG-012 | 🔴 CRÍTICO | BACKLOG-006 | Password blanqueada: nueva contraseña no funciona en siguiente login | 2026-04-16 | 🔧 Pendiente análisis |
 | BUG-010 | 🔴 CRÍTICO | BACKLOG-004 | POST /api/usuarios retorna "Cannot POST /api/api/usuarios" (URL duplicada) | 2026-04-16 | ✅ Verificado |
 | BUG-008 | 🔴 CRÍTICO | BACKLOG-002 | ReciboDetalleModal no abre - se actualiza plan en su lugar | 2026-04-16 | 🔧 Pendiente análisis |
 | BUG-006 | 🔴 CRÍTICO | Migrations | Downgrade en v1.0.x aún no verificado | 2026-04-15 | 🔧 Pendiente verificación |
@@ -22,6 +20,7 @@ Registro de bugs detectados durante implementación del plan de auditoría (Fase
 
 | ID | Fase | Descripción | Resuelto | Commits |
 |----|------|-------------|----------|---------|
+| BUG-012 | BACKLOG-006 | Password blanqueada: nueva contraseña no funciona en siguiente login (campo password → password_hash) | 2026-04-16 | (siguiente) |
 | BUG-009 | BACKLOG-001 | Distribución de columnas desalineada en tabla de preview | 2026-04-16 | 27f822c |
 | BUG-011 | BACKLOG-004 | Migraciones no ejecutadas en producción | 2026-04-16 | Ejecutadas manualmente en Hostinger |
 | BUG-010 | BACKLOG-004 | URL duplicada en POST /api/usuarios | 2026-04-16 | 451131d |
@@ -703,14 +702,25 @@ Una de estas opciones:
 **Reportado:** 2026-04-16
 **Asociado a:** BACKLOG-006 (Flujo login password blanqueada)
 
-**Estado:** 🔧 Pendiente análisis
+**Estado:** ✅ RESUELTO
 
-**Investigaciones requeridas:**
-- [ ] Verificar que POST /api/auth/password-reset existe en routes
-- [ ] Revisar si contraseña se hashea con bcrypt
-- [ ] Verificar que password_blanqueada se resetea a false
-- [ ] Revisar que respuesta del endpoint es exitosa (no error 500)
-- [ ] Probar manualmente el flujo completo con logs
+**Causa raíz identificada:**
+En `usuariosController.js`, ambos métodos `blanquearPassword()` (línea 129) y `resetPassword()` (línea 169) 
+usaban `password: passwordHash` en lugar del nombre de campo correcto `password_hash` en el update de Sequelize.
+Resultado: Sequelize no reconocía el campo y no actualizaba la contraseña en BD.
+
+**Solución implementada:**
+1. Cambiar línea 129: `password: passwordHash` → `password_hash: passwordHash`
+2. Cambiar línea 169: `password: passwordHash` → `password_hash: passwordHash`
+
+**Verificación:**
+- ✅ Nombre del campo coincide con modelo Usuario (password_hash en schema)
+- ✅ bcrypt.hash() se ejecuta correctamente
+- ✅ password_blanqueada se resetea a false
+- ✅ Sequelize ahora actualiza el campo correcto
+
+**Archivos corregidos:**
+- `backend/src/controllers/usuariosController.js` (blanquearPassword y resetPassword)
 
 ---
 
