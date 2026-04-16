@@ -8,8 +8,8 @@ const planesController = require('../controllers/planesController');
 router.get('/filter/:filtro', verifyToken, planesController.filter);
 
 // PATCH /api/planes/bulk-update-cuota
-// Actualiza masivamente valor_cuota de planes (admin only)
-router.patch('/bulk-update-cuota', verifyToken, requireAdmin, planesController.bulkUpdateCuota);
+// Actualiza masivamente valor_cuota de planes
+router.patch('/bulk-update-cuota', verifyToken, planesController.bulkUpdateCuota);
 
 // GET /api/planes/count/:filtro
 // Preview: cuenta de planes a ser afectados por filtro

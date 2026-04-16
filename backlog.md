@@ -20,8 +20,9 @@ Estos ítems se abordan **después** de completar todas las fases del PLAN.md.
 
 | ID | Prioridad | Estado | Descripción | Contexto / Motivo | Archivos estimados |
 |----|-----------|--------|-------------|-------------------|--------------------|
+| BACKLOG-010 | 🔴 Alta | 🔄 Desarrollado | Botón Aumento Masivo habilitado para todos los perfiles | Usuarios comunes deben poder ejecutar aumento masivo de cuotas. Remover restricción requireAdmin de PATCH /api/planes/bulk-update-cuota. Permite que usuarios no-admin apliquen cambios masivos de valores. | backend/src/routes/planes.js, GestionPlanesV1.jsx |
 | BACKLOG-009 | 🔴 Alta | 🔄 Desarrollado | Usuarios comunes pueden realizar todas las acciones en páginas accesibles | Usuarios con rol "usuario" deben poder ejecutar todas las acciones CRUD en páginas a las que tienen acceso (Gestión de Planes, Búsqueda de Afiliados, etc.). Actualmente algunas acciones solo funcionan para admin. Mejorar UX removiendo restricciones innecesarias | Múltiples (GestionPlanesV1, BusquedaAfiliados, etc.) |
-| BACKLOG-008 | 🔴 Alta | ✅ Aprobado | Registro de períodos de emisión de recibos + confirmación antes de regenerar | Sistema debe registrar qué meses ya tienen recibos generados. Si usuario intenta generar para un mes existente, mostrar confirmación. Si confirma, borrar recibos antiguos y regenerar. Previene duplicación accidental de recibos | GenerarRecibosModal.jsx, recibosController.js, nueva migración (tabla de períodos) |
+| BACKLOG-008 | 🔴 Alta | ✅ Completado | Registro de períodos de emisión de recibos + confirmación antes de regenerar | Sistema debe registrar qué meses ya tienen recibos generados. Si usuario intenta generar para un mes existente, mostrar confirmación. Si confirma, borrar recibos antiguos y regenerar. Previene duplicación accidental de recibos | GenerarRecibosModal.jsx, recibosController.js, nueva migración (tabla de períodos) |
 | BACKLOG-007 | 🔴 Alta | ✅ Completado | Control de acceso por rol: usuarios comunes no ven Administración | Usuarios comunes deben tener acceso a: Búsqueda de Afiliados, Gestión de Planes, Cobradores, Obras Sociales, Servicios, Tipos de Grupo, Tipos de Plan. Deben estar excluidos de: Gestión de Usuarios, Migraciones BD. Solo admin ve la sección "Administración" | DashboardPage.jsx |
 | BACKLOG-006 | 🔴 Alta | ✅ Completado | Flujo de login para usuarios con password blanqueada | Implementado y probado: Checkbox "Tengo contraseña blanqueada" en LoginPage. Backend detecta password_blanqueada y retorna flag debe_cambiar_password. Frontend redirige a /cambiar-password. Flujo completo funcional y validado para onboarding de nuevos usuarios | LoginPage.jsx, authService.js, auth.js |
 | BACKLOG-005 | 🟡 Media | ✅ Completado | Mejorar columna "Cambio" en tab Historial de Cuota | Implementado y aprobado: Nueva columna que muestra tipo de cambio (Fijo/Porcentual) con valor. Lógica de inferencia de tipo por cálculo dinámico | PlanV1Modal.jsx |
@@ -139,7 +140,18 @@ e. **Tabla periodos_recibos será creada por migración**
 
 **Prioridad:** 🔴 Alta — Control de duplicación es crítico
 
-**Estado:** 🔄 Desarrollado
+**Estado:** ✅ Completado
+
+**Verificación Completada (2026-04-16):**
+- ✅ Backend detecta períodos existentes y retorna HTTP 409 con { existe: true, cantidad: X }
+- ✅ Frontend recibe 409 y muestra modal de confirmación (resuelto en BUG-013)
+- ✅ Usuario puede confirmar regeneración o cancelar
+- ✅ Backend maneja `force: true` para borrar y regenerar recibos
+- ✅ Prevención de duplicados funcional
+
+**Commits asociados:**
+- 43b7dcb, 7f7aae6 - BUG-013: Frontend maneja 409 correctamente
+- Backend: Lógica de detección ya implementada
 
 ---
 
@@ -479,6 +491,41 @@ c. **Frontend: Flujo post-login**
 - El endpoint POST /api/auth/password-reset ya existe (creado en BACKLOG-004)
 - ChangePasswordRequired.jsx ya existe (creado en BACKLOG-004)
 - Solo necesita integración con LoginPage
+
+---
+
+### BACKLOG-010: Botón Aumento Masivo Habilitado para Todos los Perfiles
+
+**Descripción:**
+Remover restricción `requireAdmin` del endpoint PATCH /api/planes/bulk-update-cuota para permitir que usuarios comunes (no-admin) ejecuten aumento masivo de cuotas. Esto complementa BACKLOG-009 permitiendo acceso CRUD completo.
+
+**Requerimientos:**
+
+a. **Backend: Remover restricción admin**
+   - Archivo: `backend/src/routes/planes.js` (línea 12)
+   - Actual: `router.patch('/bulk-update-cuota', verifyToken, requireAdmin, planesController.bulkUpdateCuota);`
+   - Cambiar a: `router.patch('/bulk-update-cuota', verifyToken, planesController.bulkUpdateCuota);`
+   - Solo requiere `verifyToken` (autenticado), sin `requireAdmin`
+
+b. **Frontend: Remover restricción de deshabilitado**
+   - Archivo: `frontend/src/pages/DashboardPage/components/GestionPlanesV1/GestionPlanesV1.jsx` (líneas 140-147)
+   - Remover: `disabled={!isAdmin}` y `title={!isAdmin ? "Solo disponible para administradores" : ""}`
+   - Botón debe estar completamente habilitado para todos
+
+**Contexto:**
+- Consistencia: si usuarios comunes pueden crear/editar/eliminar planes, también deben poder aplicar cambios masivos
+- UX: mejora acceso a funcionalidades sin restricciones innecesarias
+- Seguridad: backend valida autenticación, no hay riesgo de acceso no autorizado
+
+**Archivos a modificar:**
+- `backend/src/routes/planes.js` (remover requireAdmin)
+- `frontend/src/pages/DashboardPage/components/GestionPlanesV1/GestionPlanesV1.jsx` (remover disabled + title)
+
+**Estimación:** 0.5 horas (cambios simples)
+
+**Prioridad:** 🔴 Alta — Completa el acceso CRUD para usuarios comunes
+
+**Estado:** 🔄 Desarrollado
 
 ---
 

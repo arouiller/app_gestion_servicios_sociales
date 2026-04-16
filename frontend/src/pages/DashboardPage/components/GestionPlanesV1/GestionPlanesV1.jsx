@@ -140,8 +140,6 @@ function GestionPlanesV1() {
           <ActionButton
             variant="secondary"
             onClick={() => setBulkUpdateModalOpen(true)}
-            disabled={!isAdmin}
-            title={!isAdmin ? "Solo disponible para administradores" : ""}
           >
             Aumento Masivo
           </ActionButton>
