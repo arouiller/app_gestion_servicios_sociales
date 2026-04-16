@@ -11,7 +11,6 @@ Registro de bugs detectados durante implementación del plan de auditoría (Fase
 
 | ID | Severidad | Fase | Descripción | Reportado | Estado |
 |----|-----------|------|-------------|-----------|--------|
-| BUG-015 | 🟡 IMPORTANTE | BACKLOG-009 | Botón "Aumento Masivo" no visible para usuarios no-admin (sin explicación) | 2026-04-16 | 🔧 Pendiente análisis |
 
 ---
 
@@ -19,6 +18,7 @@ Registro de bugs detectados durante implementación del plan de auditoría (Fase
 
 | ID | Fase | Descripción | Resuelto | Commits |
 |----|------|-------------|----------|---------|
+| BUG-015 | BACKLOG-009 | Botón Aumento Masivo visible pero deshabilitado para no-admin (mejora UX) | 2026-04-16 | 169a924 |
 | BUG-014 | BACKLOG-009 | Botones de acciones no visibles para usuarios no-admin (removidos condicionales isAdmin innecesarios) | 2026-04-16 | 1531825 |
 | BUG-010 | BACKLOG-004 | POST /api/usuarios retorna URL duplicada (verificado resuelto) | 2026-04-16 | 451131d |
 | BUG-008 | BACKLOG-002 | ReciboDetalleModal no abre (verificado resuelto) | 2026-04-16 | (fix anterior) |
@@ -929,12 +929,17 @@ El botón "Aumento Masivo" en Gestión de Planes debe estar visible para todos l
 **Reportado:** 2026-04-16
 **Asociado a:** BACKLOG-009 (Usuarios comunes acciones CRUD)
 
-**Estado:** 🔧 Pendiente análisis
+**Estado:** ✅ CERRADO
 
-**Código esperado después del fix:**
+**Solución Implementada (2026-04-16):**
+1. Removido condicional `{isAdmin && (...)` que ocultaba el botón
+2. Agregado `disabled={!isAdmin}` al ActionButton
+3. Agregado `title={!isAdmin ? "Solo disponible para administradores" : ""}` para tooltip
+
+**Código implementado:**
 ```javascript
-<ActionButton 
-  variant="secondary" 
+<ActionButton
+  variant="secondary"
   onClick={() => setBulkUpdateModalOpen(true)}
   disabled={!isAdmin}
   title={!isAdmin ? "Solo disponible para administradores" : ""}
@@ -943,11 +948,15 @@ El botón "Aumento Masivo" en Gestión de Planes debe estar visible para todos l
 </ActionButton>
 ```
 
-**Verificación pendiente:**
-- [ ] Aplicar cambio en GestionPlanesV1.jsx
-- [ ] Verificar que botón aparece deshabilitado para no-admin
-- [ ] Verificar que tooltip muestra mensaje correcto al pasar mouse
-- [ ] Verificar que botón está habilitado y funciona para admin
+**Verificación completada (2026-04-16):**
+- ✅ Cambio aplicado en GestionPlanesV1.jsx (líneas 140-147)
+- ✅ Botón visible para todos los usuarios
+- ✅ Deshabilitado con tooltip para no-admin
+- ✅ Habilitado y funcional para admin
+- ✅ UX mejorada: usuario comprende por qué botón no está disponible
+
+**Commits:**
+- 169a924 - fix(BUG-015): mostrar botón visible pero deshabilitado para no-admin
 
 ---
 
