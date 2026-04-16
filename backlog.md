@@ -12,18 +12,67 @@ Estos ítems se abordan **después** de completar todas las fases del PLAN.md.
 - ⏳ Pendiente
 - 🔄 En análisis
 - ✅ Incorporado al plan
+- 🔄 Desarrollado
 - 🚫 Descartado (con motivo)
+- ✅ Aprobado
 
 ## Items
 
 | ID | Prioridad | Estado | Descripción | Contexto / Motivo | Archivos estimados |
 |----|-----------|--------|-------------|-------------------|--------------------|
+| BACKLOG-005 | 🟡 Media | 🔄 Desarrollado | Mejorar columna "Cambio" en tab Historial de Cuota | Implementado: Nueva columna que muestra tipo de cambio (Fijo/Porcentual) con valor. Lógica de inferencia de tipo por cálculo dinámico | PlanV1Modal.jsx |
 | BACKLOG-004 | 🔴 Alta | ⏳ Pendiente | Panel de Gestión de Usuarios: CRUD + cambio de rol + blanqueo de contraseña | Requerimiento core: solo admin puede acceder. Necesita: listar usuarios, crear nuevos (email), cambiar rol, blanquear contraseña. Usuarios nuevos/blanqueados loguearse solo con email y cambiar contraseña en primer acceso | Múltiples (GestionUsuarios.jsx, usuariosController, usuariosService, rutas) |
 | BACKLOG-003 | 🟡 Media | ⏳ Pendiente | Estandarizar formato de listados: mismo layout para todas las tablas + iconos consistentes para acciones | Requerimiento transversal: todos los formularios con listados (Planes, Cobradores, Servicios, Tipos de Plan, Obras Sociales, etc.) deben tener el mismo formato visual y usar los mismos iconos (ej: ✎ editar, 🗑 eliminar, 👁 ver detalle) en todos los formularios | Múltiples componentes (todas las tablas de listado) |
-| BACKLOG-002 | 🔴 Alta | ✅ Incorporado al plan | Agregar tab de recibos en vista de plan | Descubierto en Fase 4 (GenerarRecibosModal). Los recibos se generan correctamente pero no hay forma de visualizarlos desde la UI. Usuario necesita consultar qué recibos existen para un plan específico | PlanDetailModal.jsx, recibosService.js |
-| BACKLOG-001 | 🟡 Media | ✅ Incorporado al plan | Mejorar preview de aumento de cuotas: navegación completa + comparación antes/después | Descubierto en Fase 3 (BulkUpdateCuotaModal). Actualmente muestra solo primeros 5 planes; usuario necesita validar todos los registros y ver contraste de valores | BulkUpdateCuotaModal.jsx, SCSS |
+| BACKLOG-002 | 🔴 Alta | 🔄 Desarrollado | Agregar tab de recibos en vista de plan | Implementado: Tab de recibos con paginación, carga dinámica y visualización de detalles. BUG-008 resuelto | PlanDetailModal.jsx, recibosService.js |
+| BACKLOG-001 | 🟡 Media | 🔄 Desarrollado | Mejorar preview de aumento de cuotas: navegación completa + comparación antes/después | Implementado con BUG-009 resuelto: Tabla con alineación correcta, paginación, búsqueda y contraste antes/después | BulkUpdateCuotaModal.jsx, SCSS |
 
 ## Detalles de Items
+
+### BACKLOG-005: Mejorar columna "Cambio" en Historial de Cuota
+
+**Descripción:**
+En el tab "Historial de Cuota" de la vista de edición de un plan, agregar una columna que muestre el cambio aplicado (tipo y valor) además de los valores anterior y nuevo.
+
+**Requerimientos:**
+
+a. **Nueva columna "Cambio"**
+   - Mostrar tipo de cambio: "Fijo" o "Porcentual"
+   - Mostrar valor del cambio: +$50 (fijo) o +10% (porcentual)
+   - Formato: "Fijo: +$50" o "Porcentual: +10%"
+   - Calcular dinámicamente si no está almacenado en BD
+
+b. **Tabla completa del Historial**
+   - Columnas:
+     - Fecha de Cambio ✅
+     - Valor Anterior ✅
+     - Cambio (NUEVO): tipo + valor
+     - Valor Nuevo ✅
+   - Ordenamiento: descendente por fecha (más reciente primero)
+
+c. **Lógica de cálculo**
+   - Si cambio es fijo: valor_nuevo - valor_anterior = cambio
+   - Si cambio es porcentual: ((valor_nuevo - valor_anterior) / valor_anterior * 100)
+   - Determinar tipo: Si existe campo en BD o inferir del cálculo
+
+**Contexto:**
+- Usuario necesita auditar cambios de cuota históricamente
+- Actualmente ve "Valor Anterior" y "Valor Nuevo" pero no distingue si fue aumento fijo o porcentual
+- Información completa permite validar que los cambios se aplicaron correctamente
+
+**Archivos a modificar:**
+- `frontend/src/pages/DashboardPage/components/GestionPlanesV1/modals/PlanV1Modal.jsx` (tabla de historial)
+- Backend: verificar si `HistorialCuota` tiene campo para tipo/valor de cambio
+
+**Estimación:** 1-2 horas (actualizar tabla + lógica de cálculo)
+
+**Prioridad:** 🟡 Media — Mejora para auditoría pero no bloqueante
+
+**Notas:**
+- Considerar si el backend almacena el tipo de cambio (fijo/porcentual)
+- Si no lo almacena, calcular dinámicamente en frontend
+- Align visually with BulkUpdateCuotaModal column format para consistencia
+
+---
 
 ### BACKLOG-004: Panel de Gestión de Usuarios (Admin Only)
 
