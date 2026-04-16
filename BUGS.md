@@ -11,6 +11,7 @@ Registro de bugs detectados durante implementación del plan de auditoría (Fase
 
 | ID | Severidad | Fase | Descripción | Reportado | Estado |
 |----|-----------|------|-------------|-----------|--------|
+| BUG-012 | 🔴 CRÍTICO | BACKLOG-006 | Password blanqueada: nueva contraseña no funciona en siguiente login | 2026-04-16 | 🔧 Pendiente análisis |
 | BUG-010 | 🔴 CRÍTICO | BACKLOG-004 | POST /api/usuarios retorna "Cannot POST /api/api/usuarios" (URL duplicada) | 2026-04-16 | ✅ Verificado |
 | BUG-008 | 🔴 CRÍTICO | BACKLOG-002 | ReciboDetalleModal no abre - se actualiza plan en su lugar | 2026-04-16 | 🔧 Pendiente análisis |
 | BUG-006 | 🔴 CRÍTICO | Migrations | Downgrade en v1.0.x aún no verificado | 2026-04-15 | 🔧 Pendiente verificación |
@@ -650,6 +651,66 @@ Al intentar usar funcionalidades de BACKLOG-004 (Gestión de Usuarios) en produc
 - ¿Falta ejecutar la migración 1.0.5 en producción?
 - ¿Existe migración para `tema_preferido` o es columna que debe agregarse?
 - ¿El sistema de migraciones en Hostinger está sincronizado?
+
+---
+
+### BUG-012: Nueva Contraseña No Funciona en Login Posterior a Cambio
+
+**Descripción:**
+En el flujo de blanqueo de contraseña (BACKLOG-006), cuando un usuario con password_blanqueada cambia su contraseña y luego intenta loguearse con la nueva contraseña, el sistema rechaza las credenciales con error "Email o contraseña incorrectos".
+
+**Pasos para reproducir:**
+1. Admin blanquea contraseña de usuario: POST /api/usuarios/:id/blanquear-password
+2. Usuario abre LoginPage, marca checkbox "Tengo contraseña blanqueada"
+3. Usuario ingresa email, sistema lo autentica (sin validar password)
+4. Sistema redirige a /cambiar-password
+5. Usuario ingresa nueva contraseña (ej: "MiNuevaPass123")
+6. Sistema muestra "Contraseña actualizada. Por favor inicia sesión nuevamente"
+7. Usuario inicia sesión nuevamente con email + "MiNuevaPass123"
+8. **Error: "Email o contraseña incorrectos"** ❌
+
+**Comportamiento esperado:**
+- Paso 7 debería permitir login exitoso con la nueva contraseña
+
+**Causa probable:**
+Una de estas opciones:
+1. **Password no se está hasheando** en endpoint POST /api/auth/password-reset
+   - Contraseña se guarda en texto plano en vez de hash bcrypt
+   - Login valida contra hash, por lo que no coincide
+2. **Flag password_blanqueada no se está reseteando**
+   - Después de cambiar contraseña, field sigue siendo true
+   - Siguiente login intenta usar flujo blanqueada nuevamente
+3. **Endpoint password-reset no existe o tiene error**
+   - Request falla silenciosamente
+   - Contraseña nunca se guarda en BD
+
+**URLs/Endpoints afectados:**
+- POST /api/auth/password-reset
+- Posiblemente: frontend/src/services/authService.js (resetPassword method)
+- Backend: auth.js route handler para password-reset
+
+**Archivos a revisar:**
+- `backend/src/routes/auth.js` - endpoint password-reset
+- `backend/src/controllers/authController.js` o similar - lógica de reset
+- `frontend/src/pages/ChangePasswordRequired/ChangePasswordRequired.jsx` - llamada al servicio
+- `frontend/src/services/authService.js` - método resetPassword
+
+**Severidad:** 🔴 CRÍTICO
+- Bloquea completamente BACKLOG-006 (flujo de usuarios con password blanqueada)
+- Usuarios nuevos no pueden establecer contraseña
+- Impacta onboarding de nuevos usuarios
+
+**Reportado:** 2026-04-16
+**Asociado a:** BACKLOG-006 (Flujo login password blanqueada)
+
+**Estado:** 🔧 Pendiente análisis
+
+**Investigaciones requeridas:**
+- [ ] Verificar que POST /api/auth/password-reset existe en routes
+- [ ] Revisar si contraseña se hashea con bcrypt
+- [ ] Verificar que password_blanqueada se resetea a false
+- [ ] Revisar que respuesta del endpoint es exitosa (no error 500)
+- [ ] Probar manualmente el flujo completo con logs
 
 ---
 
