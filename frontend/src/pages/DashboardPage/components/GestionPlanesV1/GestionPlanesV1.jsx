@@ -137,11 +137,14 @@ function GestionPlanesV1() {
           <ActionButton variant="primary" icon="+" onClick={handleCrearPlan}>
             Nuevo Plan
           </ActionButton>
-          {isAdmin && (
-            <ActionButton variant="secondary" onClick={() => setBulkUpdateModalOpen(true)}>
-              Aumento Masivo
-            </ActionButton>
-          )}
+          <ActionButton
+            variant="secondary"
+            onClick={() => setBulkUpdateModalOpen(true)}
+            disabled={!isAdmin}
+            title={!isAdmin ? "Solo disponible para administradores" : ""}
+          >
+            Aumento Masivo
+          </ActionButton>
           <ActionButton variant="secondary" onClick={() => setGenerarRecibosModalOpen(true)}>
             Generar Recibos
           </ActionButton>

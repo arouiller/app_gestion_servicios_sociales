@@ -11,6 +11,7 @@ Registro de bugs detectados durante implementación del plan de auditoría (Fase
 
 | ID | Severidad | Fase | Descripción | Reportado | Estado |
 |----|-----------|------|-------------|-----------|--------|
+| BUG-015 | 🟡 IMPORTANTE | BACKLOG-009 | Botón "Aumento Masivo" no visible para usuarios no-admin (sin explicación) | 2026-04-16 | 🔧 Pendiente análisis |
 
 ---
 
@@ -887,6 +888,66 @@ BACKLOG-009 removió restricciones `requireAdmin` del backend (líneas de POST/P
 - ✅ Probar click en botones: editar, suspender, generar recibos (sin errores de permisos)
 
 **Estado:** ✅ CERRADO — Funcionalidad BACKLOG-009 ahora completamente operativa
+
+---
+
+### BUG-015: Botón "Aumento Masivo" Debe Estar Visible para Todos (Deshabilitado para No-Admin)
+
+**Descripción:**
+El botón "Aumento Masivo" en Gestión de Planes debe estar visible para todos los usuarios (admin y no-admin). Para usuarios no-admin, el botón debe estar deshabilitado con un tooltip/título explicativo que indique que es una acción solo para administradores.
+
+**Pasos para reproducir (comportamiento actual):**
+1. Iniciar sesión con usuario no-admin (rol "usuario")
+2. Ir a Dashboard → Gestión → Gestión de Planes
+3. Observar botones en header: "Nuevo Plan" ✅, "Generar Recibos" ✅
+4. **Resultado:** Botón "Aumento Masivo" NO está visible
+5. **Esperado:** Botón visible pero deshabilitado: `disabled={!isAdmin}` + `title="Solo disponible para administradores"`
+
+**Comportamiento actual (incorrecto):**
+- Botón "Aumento Masivo" solo se muestra si `isAdmin` (línea 140-144 en GestionPlanesV1.jsx)
+- Está dentro de condicional `{isAdmin && (...)}`
+- Para usuarios no-admin, el botón desaparece completamente sin explicación
+
+**Solución requerida:**
+- Remover condicional `{isAdmin && (...)}`
+- Mostrar botón siempre
+- Agregar `disabled={!isAdmin}` al ActionButton
+- Agregar `title="Solo disponible para administradores"` para tooltip
+
+**Backend verification:**
+- ✅ PATCH /api/planes/bulk-update-cuota requiere `requireAdmin` (restricción correcta)
+- La restricción en el backend es válida y debe mantenerse
+- Si usuario no-admin intenta POST, backend rechazará con 403
+
+**Ubicación del código:**
+- Frontend: `frontend/src/pages/DashboardPage/components/GestionPlanesV1/GestionPlanesV1.jsx` (líneas 140-144)
+
+**Severidad:** 🟡 IMPORTANTE
+- Afecta UX: usuario no-admin no entiende por qué botón desaparece
+- Solución es simple (agregar disabled + title)
+
+**Reportado:** 2026-04-16
+**Asociado a:** BACKLOG-009 (Usuarios comunes acciones CRUD)
+
+**Estado:** 🔧 Pendiente análisis
+
+**Código esperado después del fix:**
+```javascript
+<ActionButton 
+  variant="secondary" 
+  onClick={() => setBulkUpdateModalOpen(true)}
+  disabled={!isAdmin}
+  title={!isAdmin ? "Solo disponible para administradores" : ""}
+>
+  Aumento Masivo
+</ActionButton>
+```
+
+**Verificación pendiente:**
+- [ ] Aplicar cambio en GestionPlanesV1.jsx
+- [ ] Verificar que botón aparece deshabilitado para no-admin
+- [ ] Verificar que tooltip muestra mensaje correcto al pasar mouse
+- [ ] Verificar que botón está habilitado y funciona para admin
 
 ---
 
