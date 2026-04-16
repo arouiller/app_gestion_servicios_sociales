@@ -356,11 +356,10 @@ function BulkUpdateCuotaModal({ isOpen, onClose, onSuccess }) {
 
                 {affectedPlanes.length > 0 ? (
                   <>
-                    <div className="planes-table__wrapper">
-                    <table className="planes-table__full">
+                    <table className="bulk-cuota-modal__table">
                       <thead>
                         <tr>
-                          <th>Plan #</th>
+                          <th>Plan</th>
                           <th>Afiliado</th>
                           <th>Cuota Actual</th>
                           <th>Aumento</th>
@@ -379,21 +378,24 @@ function BulkUpdateCuotaModal({ isOpen, onClose, onSuccess }) {
                           .map((plan) => {
                             const newCuota = calculateNewCuota(plan.valor_cuota);
                             const difference = calculateDifference(plan.valor_cuota);
+                            const porcentaje = ((difference / (plan.valor_cuota || 1)) * 100).toFixed(1);
                             return (
-                              <tr key={plan.plan_numero} className="planes-table__row">
+                              <tr key={plan.plan_numero}>
                                 <td>{plan.plan_numero}</td>
                                 <td>{plan.numero_afiliado}</td>
                                 <td>${Number(plan.valor_cuota || 0).toFixed(2)}</td>
-                                <td className="planes-table__difference">
-                                  +${difference.toFixed(2)} ({((difference / (plan.valor_cuota || 1)) * 100).toFixed(1)}%)
+                                <td>
+                                  {tipoAumento === 'porcentual'
+                                    ? `+${valor}% ($${difference.toFixed(2)})`
+                                    : `+$${difference.toFixed(2)} (${porcentaje}%)`
+                                  }
                                 </td>
-                                <td className="planes-table__new-value">${newCuota.toFixed(2)}</td>
+                                <td>${newCuota.toFixed(2)}</td>
                               </tr>
                             );
                           })}
                       </tbody>
                     </table>
-                    </div>
 
                     {/* Paginación */}
                     {affectedPlanes.filter(
@@ -402,16 +404,16 @@ function BulkUpdateCuotaModal({ isOpen, onClose, onSuccess }) {
                         plan.plan_numero.toString().includes(searchFilter) ||
                         plan.numero_afiliado.toString().includes(searchFilter)
                     ).length > planesPerPage && (
-                      <div className="pagination-controls">
+                      <div className="bulk-cuota-modal__pagination">
                         <button
                           type="button"
                           disabled={previewPage === 1}
                           onClick={() => setPreviewPage(previewPage - 1)}
-                          className="btn btn-secondary"
+                          className="bulk-cuota-modal__btn-pagination"
                         >
                           ← Anterior
                         </button>
-                        <span className="pagination-info">
+                        <span className="bulk-cuota-modal__pagination-info">
                           Página {previewPage} de{' '}
                           {Math.ceil(
                             affectedPlanes.filter(
@@ -436,7 +438,7 @@ function BulkUpdateCuotaModal({ isOpen, onClose, onSuccess }) {
                             )
                           }
                           onClick={() => setPreviewPage(previewPage + 1)}
-                          className="btn btn-secondary"
+                          className="bulk-cuota-modal__btn-pagination"
                         >
                           Siguiente →
                         </button>
@@ -444,7 +446,7 @@ function BulkUpdateCuotaModal({ isOpen, onClose, onSuccess }) {
                     )}
                   </>
                 ) : (
-                  <p className="empty-message">No hay planes para mostrar</p>
+                  <p className="bulk-cuota-modal__empty">No hay planes para mostrar</p>
                 )}
               </div>
             </>

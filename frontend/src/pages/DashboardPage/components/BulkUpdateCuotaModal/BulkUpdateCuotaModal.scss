@@ -325,100 +325,90 @@
   }
 }
 
-.planes-table__wrapper {
-  border: 1px solid $color-border;
-  border-radius: 6px;
-  overflow: hidden;
-  margin-bottom: 1rem;
-  max-height: 400px;
-  overflow-y: auto;
-}
+// Tabla de Preview
+.bulk-cuota-modal {
+  &__table {
+    width: 100%;
+    border-collapse: collapse;
+    margin-top: 1rem;
+    margin-bottom: 1rem;
 
-.planes-table__full {
-  width: 100%;
-  border-collapse: collapse;
-  table-layout: fixed;
-
-  thead {
-    background: $color-bg-light;
-    position: sticky;
-    top: 0;
-    z-index: 10;
+    thead tr {
+      background-color: #f8f9fa;
+      border-bottom: 2px solid #dee2e6;
+    }
 
     th {
       padding: 0.75rem;
       text-align: left;
       font-weight: 600;
-      font-size: 0.9rem;
+      font-size: 0.875rem;
       color: #111827;
-      border-bottom: 2px solid $color-border;
-      white-space: nowrap;
-
-      &:nth-child(1) { width: 70px; } // Plan #
-      &:nth-child(2) { width: 120px; } // Afiliado
-      &:nth-child(3) { width: 130px; } // Cuota Actual
-      &:nth-child(4) { width: 160px; } // Aumento
-      &:nth-child(5) { width: 130px; } // Cuota Nueva
     }
-  }
 
-  tbody {
-    tr {
-      border-bottom: 1px solid $color-border;
+    tbody tr {
+      border-bottom: 1px solid #dee2e6;
+      transition: background-color 0.2s;
 
       &:last-child {
         border-bottom: none;
       }
 
       &:hover {
-        background: $color-bg-light;
-      }
-
-      td {
-        padding: 0.75rem;
-        font-size: 0.9rem;
-        color: $color-text;
-        word-wrap: break-word;
-        overflow-wrap: break-word;
-
-        &:nth-child(1) { width: 70px; } // Plan #
-        &:nth-child(2) { width: 120px; } // Afiliado
-        &:nth-child(3) { width: 130px; } // Cuota Actual
-        &:nth-child(4) { width: 160px; } // Aumento
-        &:nth-child(5) { width: 130px; } // Cuota Nueva
-
-        &.planes-table__new-value {
-          color: $color-primary;
-          font-weight: 600;
-        }
-
-        &.planes-table__difference {
-          color: #059669;
-          font-weight: 600;
-        }
+        background-color: #f9f9f9;
       }
     }
+
+    td {
+      padding: 0.75rem;
+      font-size: 0.875rem;
+      color: $color-text;
+    }
   }
-}
 
-.pagination-controls {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  gap: 1rem;
-  margin-top: 1rem;
-  padding: 1rem;
-  background: $color-bg-light;
-  border-radius: 6px;
+  &__pagination {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 1rem;
+    padding: 1rem;
+    background: $color-bg-light;
+    border-radius: 6px;
+  }
 
-  .pagination-info {
+  &__pagination-info {
     font-size: 0.9rem;
     color: $color-text-muted;
     font-weight: 500;
   }
 
-  button {
-    padding: 0.5rem 1rem;
+  &__btn-pagination {
+    padding: 0.625rem 1.25rem;
+    border: 1px solid $color-border;
+    border-radius: 6px;
+    font-size: 0.9rem;
+    font-weight: 600;
+    cursor: pointer;
+    background: $color-white;
+    color: $color-text;
+    transition: all 0.2s ease;
+
+    &:hover:not(:disabled) {
+      background: $color-bg-light;
+      border-color: $color-primary;
+      color: $color-primary;
+    }
+
+    &:disabled {
+      opacity: 0.5;
+      cursor: not-allowed;
+    }
+  }
+
+  &__empty {
+    text-align: center;
+    color: $color-text-muted;
+    padding: 1rem;
     font-size: 0.9rem;
   }
 }
