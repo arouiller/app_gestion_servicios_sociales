@@ -1081,7 +1081,16 @@ return Array.isArray(response.data) ? response.data : response.data.data || [];
 - `frontend/src/pages/DashboardPage/components/v1.0/BusquedaAfiliados.jsx` (línea 26 - cambiar search por buscar)
 - `frontend/src/services/personasService.js` (línea 6-32 - actualizar parseo de respuesta)
 
-**Estado:** 🚀 Desarrollado
+**Estado:** ✅ Solucionado (2026-04-16)
+
+**Verificación completada:**
+- ✅ Búsqueda de afiliados funcional
+- ✅ Llamadas al backend se disparan correctamente
+- ✅ Resultados se muestran sin errores
+
+**Commits:**
+- bf22364 - fix(BUG-017): primer intento
+- 5079639 - fix(BUG-017): solución correcta con mismatch backend/frontend
 
 ---
 
