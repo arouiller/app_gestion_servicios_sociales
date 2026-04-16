@@ -126,7 +126,7 @@ exports.blanquearPassword = async (req, res, next) => {
     const passwordHash = await bcrypt.hash(passwordTemporal, 10);
 
     await usuario.update({
-      password: passwordHash,
+      password_hash: passwordHash,
       password_blanqueada: true,
     });
 
@@ -166,7 +166,7 @@ exports.resetPassword = async (req, res, next) => {
     const passwordHash = await bcrypt.hash(password_nueva, 10);
 
     await usuario.update({
-      password: passwordHash,
+      password_hash: passwordHash,
       password_blanqueada: false,
     });
 
