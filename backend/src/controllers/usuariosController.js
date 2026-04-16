@@ -47,7 +47,9 @@ exports.crear = async (req, res, next) => {
 
     const usuario = await db.Usuario.create({
       email,
-      password: passwordHash,
+      nombre: 'JOHN',
+      apellido: 'DOE',
+      password_hash: passwordHash,
       rol: 'usuario',
       password_blanqueada: true,
     });
