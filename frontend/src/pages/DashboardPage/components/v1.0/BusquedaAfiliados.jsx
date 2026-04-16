@@ -23,7 +23,7 @@ const BusquedaAfiliados = () => {
 
     try {
       setLoading(true);
-      const resultado = await personasService.search(value);
+      const resultado = await personasService.buscar(value);
       setPersonas(resultado);
     } catch (err) {
       setError('Error en la búsqueda');

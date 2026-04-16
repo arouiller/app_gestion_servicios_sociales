@@ -1022,4 +1022,60 @@ Se estandarizaron los iconos en PlanV1Modal (tab Afiliados) para que coincidan c
 
 ---
 
+### BUG-017: Búsqueda de Afiliados - Error en la Búsqueda sin Llamada al Backend
+
+**Descripción:**
+En la página de Búsqueda de Afiliados, al ingresar un texto en el campo de búsqueda, se muestra un mensaje "error en la búsqueda" pero NO se dispara ningún evento al backend. El sistema intenta hacer la búsqueda pero falla sin enviar la solicitud al servidor.
+
+**Pasos para reproducir:**
+1. Ir a Dashboard → Gestión → Búsqueda de Afiliados
+2. Ingresar cualquier texto en el campo de búsqueda (ej: "Juan")
+3. Presionar Enter o esperar a que se dispare la búsqueda
+4. **Resultado:** Mensaje "error en la búsqueda" aparece
+5. **Verificar:** No hay llamada GET/POST al backend en Network del navegador
+
+**Comportamiento esperado:**
+- Ingresar texto → Se envía solicitud al backend → Retorna resultados de búsqueda
+- Si no hay resultados: mostrar "No se encontraron afiliados"
+- Si hay error del servidor: mostrar mensaje descriptivo del error
+
+**Severidad:** 🔴 CRÍTICO
+- Funcionalidad principal de búsqueda no funciona
+- Usuario no puede buscar afiliados
+- Bloquea uso de la sección Gestión → Búsqueda de Afiliados
+
+**Reportado:** 2026-04-16
+**Asociado a:** BACKLOG-009 (Usuarios comunes acciones en páginas accesibles)
+
+**Ubicación probable:**
+- Archivo: `frontend/src/pages/DashboardPage/components/BusquedaAfiliados/BusquedaAfiliados.jsx`
+- Frontend service: `frontend/src/services/personasService.js` (búsqueda)
+- Backend: `backend/src/routes/personas.js` (endpoint de búsqueda)
+
+**Estado:** 🔬 En análisis
+
+**Causa raíz identificada:**
+En `frontend/src/pages/DashboardPage/components/v1.0/BusquedaAfiliados.jsx` línea 26, se llama a:
+```javascript
+const resultado = await personasService.search(value);  // ❌ Método no existe
+```
+
+Pero en `personasService.js`, el método real se llama `buscar()`, no `search()`:
+```javascript
+buscar: async (params = {}) => {  // ✅ Método correcto
+```
+
+Cuando se intenta llamar a un método inexistente, JavaScript lanza un error TypeError que es capturado en el catch block, mostrando "Error en la búsqueda" sin hacer la llamada al backend.
+
+**Solución implementada:**
+Cambiar línea 26 en BusquedaAfiliados.jsx:
+- `personasService.search(value)` → `personasService.buscar(value)`
+
+**Archivos modificados:**
+- `frontend/src/pages/DashboardPage/components/v1.0/BusquedaAfiliados.jsx` (línea 26)
+
+**Estado:** 🚀 Desarrollado
+
+---
+
 **Última actualización:** 2026-04-16
