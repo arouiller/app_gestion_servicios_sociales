@@ -20,8 +20,8 @@ Estos ítems se abordan **después** de completar todas las fases del PLAN.md.
 
 | ID | Prioridad | Estado | Descripción | Contexto / Motivo | Archivos estimados |
 |----|-----------|--------|-------------|-------------------|--------------------|
-| BACKLOG-010 | 🔴 Alta | 🔄 Desarrollado | Botón Aumento Masivo habilitado para todos los perfiles | Usuarios comunes deben poder ejecutar aumento masivo de cuotas. Remover restricción requireAdmin de PATCH /api/planes/bulk-update-cuota. Permite que usuarios no-admin apliquen cambios masivos de valores. | backend/src/routes/planes.js, GestionPlanesV1.jsx |
-| BACKLOG-009 | 🔴 Alta | 🔄 Desarrollado | Usuarios comunes pueden realizar todas las acciones en páginas accesibles | Usuarios con rol "usuario" deben poder ejecutar todas las acciones CRUD en páginas a las que tienen acceso (Gestión de Planes, Búsqueda de Afiliados, etc.). Actualmente algunas acciones solo funcionan para admin. Mejorar UX removiendo restricciones innecesarias | Múltiples (GestionPlanesV1, BusquedaAfiliados, etc.) |
+| BACKLOG-010 | 🔴 Alta | ✅ Completado | Botón Aumento Masivo habilitado para todos los perfiles | Usuarios comunes pueden ejecutar aumento masivo de cuotas. Restricción requireAdmin removida de PATCH /api/planes/bulk-update-cuota. Usuarios no-admin pueden aplicar cambios masivos de valores. | backend/src/routes/planes.js, GestionPlanesV1.jsx |
+| BACKLOG-009 | 🔴 Alta | ✅ Completado | Usuarios comunes pueden realizar todas las acciones en páginas accesibles | Usuarios comunes ahora tienen acceso CRUD completo en Gestión de Planes: crear, editar, suspender, generar recibos, aumento masivo. Restricciones innecesarias removidas. | Múltiples (GestionPlanesV1, BusquedaAfiliados, etc.) |
 | BACKLOG-008 | 🔴 Alta | ✅ Completado | Registro de períodos de emisión de recibos + confirmación antes de regenerar | Sistema debe registrar qué meses ya tienen recibos generados. Si usuario intenta generar para un mes existente, mostrar confirmación. Si confirma, borrar recibos antiguos y regenerar. Previene duplicación accidental de recibos | GenerarRecibosModal.jsx, recibosController.js, nueva migración (tabla de períodos) |
 | BACKLOG-007 | 🔴 Alta | ✅ Completado | Control de acceso por rol: usuarios comunes no ven Administración | Usuarios comunes deben tener acceso a: Búsqueda de Afiliados, Gestión de Planes, Cobradores, Obras Sociales, Servicios, Tipos de Grupo, Tipos de Plan. Deben estar excluidos de: Gestión de Usuarios, Migraciones BD. Solo admin ve la sección "Administración" | DashboardPage.jsx |
 | BACKLOG-006 | 🔴 Alta | ✅ Completado | Flujo de login para usuarios con password blanqueada | Implementado y probado: Checkbox "Tengo contraseña blanqueada" en LoginPage. Backend detecta password_blanqueada y retorna flag debe_cambiar_password. Frontend redirige a /cambiar-password. Flujo completo funcional y validado para onboarding de nuevos usuarios | LoginPage.jsx, authService.js, auth.js |
@@ -71,7 +71,21 @@ c. **Mantener restricciones para admin-only**
 
 **Prioridad:** 🔴 Alta — Mejora UX y coherencia del sistema
 
-**Estado:** 🔄 Desarrollado
+**Estado:** ✅ Completado
+
+**Verificación Completada (2026-04-16):**
+- ✅ Gestión de Planes: CRUD completo para usuarios comunes
+  - Crear plan ✅ (BUG-014 resuelto)
+  - Editar plan ✅ (BUG-014 resuelto)
+  - Suspender plan ✅ (BUG-014 resuelto)
+  - Generar recibos ✅ (botón visible para todos)
+  - Aumento masivo ✅ (BACKLOG-010 completado)
+- ✅ Backend: Restricciones `requireAdmin` removidas de POST/PUT/DELETE planes, personas, lookup
+- ✅ Frontend: Botones de acciones visibles para todos sin restricciones innecesarias
+
+**Commits asociados:**
+- 1531825 - fix(BUG-014): botones de acciones visibles para no-admin
+- 45ff900 - feat(BACKLOG-010): aumento masivo habilitado para todos
 
 ---
 
@@ -525,7 +539,16 @@ b. **Frontend: Remover restricción de deshabilitado**
 
 **Prioridad:** 🔴 Alta — Completa el acceso CRUD para usuarios comunes
 
-**Estado:** 🔄 Desarrollado
+**Estado:** ✅ Completado
+
+**Implementación Completada (2026-04-16):**
+1. ✅ Removido `requireAdmin` de `backend/src/routes/planes.js` (línea 12)
+2. ✅ Removido `disabled={!isAdmin}` y title de frontend
+3. ✅ Botón "Aumento Masivo" ahora habilitado para todos los perfiles
+4. ✅ Backend solo requiere `verifyToken` (autenticación)
+
+**Commits:**
+- 45ff900 - feat(BACKLOG-010): botón Aumento Masivo habilitado para todos
 
 ---
 
