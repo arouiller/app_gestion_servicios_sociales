@@ -33,6 +33,7 @@ De cualquier estado → Descartado
 
 | ID | Prioridad | Estado | Descripción | Contexto / Motivo | Archivos estimados |
 |----|-----------|--------|-------------|-------------------|--------------------|
+| BACKLOG-011 | 🔴 Alta | 📋 Registrado | Agregar acciones (editar y habilitar) a planes en búsqueda de afiliados | Desde planes visibles de un afiliado en búsqueda, permitir edición y cambio de estado (ACTIVO ↔ SUSPENDIDO) con modal reutilizable. | BusquedaAfiliados.jsx, PlanV1Modal.jsx |
 | BACKLOG-010 | 🔴 Alta | ✅ Solucionado | Botón Aumento Masivo habilitado para todos los perfiles | Usuarios comunes pueden ejecutar aumento masivo de cuotas. Restricción requireAdmin removida de PATCH /api/planes/bulk-update-cuota. Usuarios no-admin pueden aplicar cambios masivos de valores. | backend/src/routes/planes.js, GestionPlanesV1.jsx |
 | BACKLOG-009 | 🔴 Alta | ✅ Solucionado | Usuarios comunes pueden realizar todas las acciones en páginas accesibles | Usuarios comunes ahora tienen acceso CRUD completo en Gestión de Planes: crear, editar, suspender, generar recibos, aumento masivo. Restricciones innecesarias removidas. | Múltiples (GestionPlanesV1, BusquedaAfiliados, etc.) |
 | BACKLOG-008 | 🔴 Alta | ✅ Solucionado | Registro de períodos de emisión de recibos + confirmación antes de regenerar | Sistema debe registrar qué meses ya tienen recibos generados. Si usuario intenta generar para un mes existente, mostrar confirmación. Si confirma, borrar recibos antiguos y regenerar. Previene duplicación accidental de recibos | GenerarRecibosModal.jsx, recibosController.js, nueva migración (tabla de períodos) |
@@ -596,6 +597,62 @@ b. **Frontend: Remover restricción de deshabilitado**
 
 **Commits:**
 - 45ff900 - feat(BACKLOG-010): botón Aumento Masivo habilitado para todos
+
+---
+
+### BACKLOG-011: Agregar Acciones (Editar y Habilitar) a Planes en Búsqueda de Afiliados
+
+**Descripción:**
+En el componente BusquedaAfiliados, cuando se visualiza la tabla de planes de un afiliado seleccionado, agregar una columna "Acciones" con botones para:
+1. ✎ Editar plan (abre PlanV1Modal con modo edición)
+2. 🔒/🔓 Cambiar estado (ACTIVO ↔ SUSPENDIDO) con confirmación
+
+**Requerimientos:**
+
+a. **Nueva columna "Acciones" en tabla de planes**
+   - Ubicación: después de columna "Valor Cuota"
+   - Dos botones por plan:
+     * Botón Editar (✎): abre PlanV1Modal en modo edición (reutilizable)
+     * Botón Estado (🔒/🔓): cambia estado ACTIVO ↔ SUSPENDIDO con confirmación
+
+b. **Integración con PlanV1Modal**
+   - Modal debe aceptar parámetro `plan` (objeto plan completo)
+   - Modal debe aceptar callback `onSave` para actualizar tabla
+   - Reutilizar modal existente sin cambios (modal ya existe en GestionPlanesV1)
+   - Importar y usar el mismo componente
+
+c. **Cambio de Estado**
+   - Botón muestra icono 🔒 si estado es ACTIVO, 🔓 si es SUSPENDIDO
+   - Al hacer click:
+     * Si estado es ACTIVO → confirmar cambio a SUSPENDIDO
+     * Si estado es SUSPENDIDO → confirmar cambio a ACTIVO
+   - Confirmación modal: "¿Cambiar estado de {plan.numero_afiliado}?"
+   - Si usuario confirma:
+     * Llamar a planesV1Service.actualizar(planNumero, {estado: 'SUSPENDIDO'|'ACTIVO'})
+     * Actualizar tabla localmente
+     * Mostrar mensaje de éxito
+
+d. **Manejo de errores**
+   - Si actualización falla: mostrar error
+   - Si modal cancela: no hacer cambios
+   - Tabla debe refrescarse automáticamente después de cualquier operación exitosa
+
+**Contexto:**
+- Actualmente tabla de planes en BusquedaAfiliados es solo lectura
+- Usuario debe poder realizar acciones directas desde búsqueda (editar, cambiar estado)
+- Reúsa componente existente (PlanV1Modal) → sin duplicación de código
+- Mejora flujo: accede a afiliado → ve planes → edita o cambia estado sin salir de búsqueda
+
+**Archivos a modificar:**
+- `frontend/src/pages/DashboardPage/components/v1.0/BusquedaAfiliados.jsx` (agregar columna + lógica)
+- `frontend/src/pages/DashboardPage/components/v1.0/BusquedaAfiliados.scss` (estilos para nueva columna)
+- Nota: PlanV1Modal ya existe en GestionPlanesV1 y es reutilizable (no modificar)
+
+**Estimación:** 2-3 horas (agregar columna + integrar modal + lógica de estado + testing)
+
+**Prioridad:** 🔴 Alta — Funcionalidad importante para gestión desde búsqueda
+
+**Estado:** 📋 Registrado (2026-04-16)
 
 ---
 
