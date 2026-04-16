@@ -526,6 +526,7 @@ function PlanV1Modal({ mode, planData, onClose, onSave }) {
                               <td>${parseFloat(recibo.valor_cuota).toFixed(2)}</td>
                               <td>
                                 <ActionButton
+                                  type="button"
                                   variant="icon"
                                   icon="👁️"
                                   onClick={() => setReciboDetailOpen(recibo.id)}
@@ -580,17 +581,35 @@ function PlanV1Modal({ mode, planData, onClose, onSave }) {
                       <tr>
                         <th>Fecha de Cambio</th>
                         <th>Valor Anterior</th>
+                        <th>Cambio</th>
                         <th>Valor Nuevo</th>
                       </tr>
                     </thead>
                     <tbody>
-                      {historialCuota.map((cambio, idx) => (
-                        <tr key={idx}>
-                          <td>{new Date(cambio.fecha_cambio).toLocaleDateString('es-AR')}</td>
-                          <td>${parseFloat(cambio.valor_anterior).toFixed(2)}</td>
-                          <td>${parseFloat(cambio.valor_nuevo).toFixed(2)}</td>
-                        </tr>
-                      ))}
+                      {historialCuota.map((cambio, idx) => {
+                        const valorAnterior = parseFloat(cambio.valor_anterior || 0);
+                        const valorNuevo = parseFloat(cambio.valor_nuevo || 0);
+                        const diferencia = valorNuevo - valorAnterior;
+                        const porcentajeChange = valorAnterior > 0 ? ((diferencia / valorAnterior) * 100) : 0;
+
+                        // Determinar si fue fijo o porcentual (inferir del cálculo)
+                        // Si el cambio es muy cercano a un múltiplo de 0.01 y no es 0, probablemente fue fijo
+                        const esFijo = diferencia % 1 === 0 || Math.abs(diferencia) < 0.01;
+
+                        return (
+                          <tr key={idx}>
+                            <td>{new Date(cambio.fecha_cambio).toLocaleDateString('es-AR')}</td>
+                            <td>${valorAnterior.toFixed(2)}</td>
+                            <td className="plan-v1-modal__cambio-cell">
+                              {esFijo
+                                ? `Fijo: +$${diferencia.toFixed(2)}`
+                                : `Porcentual: +${porcentajeChange.toFixed(1)}%`
+                              }
+                            </td>
+                            <td>${valorNuevo.toFixed(2)}</td>
+                          </tr>
+                        );
+                      })}
                     </tbody>
                   </table>
                 )}

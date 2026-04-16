@@ -9,7 +9,8 @@ function ActionButton({
   disabled = false,
   title = '',
   onClick,
-  className = ''
+  className = '',
+  type = 'button'
 }) {
   const baseClass = 'action-button';
   const variantClass = `${baseClass}--${variant}`;
@@ -20,6 +21,7 @@ function ActionButton({
 
   return (
     <button
+      type={type}
       className={classes}
       disabled={disabled}
       onClick={onClick}
