@@ -356,6 +356,7 @@ function BulkUpdateCuotaModal({ isOpen, onClose, onSuccess }) {
 
                 {affectedPlanes.length > 0 ? (
                   <>
+                    <div className="planes-table__wrapper">
                     <table className="planes-table__full">
                       <thead>
                         <tr>
@@ -392,6 +393,7 @@ function BulkUpdateCuotaModal({ isOpen, onClose, onSuccess }) {
                           })}
                       </tbody>
                     </table>
+                    </div>
 
                     {/* Paginación */}
                     {affectedPlanes.filter(

@@ -325,13 +325,18 @@
   }
 }
 
-.planes-table__full {
-  width: 100%;
-  border-collapse: collapse;
+.planes-table__wrapper {
   border: 1px solid $color-border;
   border-radius: 6px;
   overflow: hidden;
   margin-bottom: 1rem;
+  max-height: 400px;
+  overflow-y: auto;
+}
+
+.planes-table__full {
+  width: 100%;
+  border-collapse: collapse;
   table-layout: fixed;
 
   thead {
@@ -346,11 +351,8 @@
       font-weight: 600;
       font-size: 0.9rem;
       color: #111827;
-      border-bottom: 1px solid $color-border;
+      border-bottom: 2px solid $color-border;
       white-space: nowrap;
-      overflow: hidden;
-      text-overflow: ellipsis;
-      word-break: break-word;
 
       &:nth-child(1) { width: 70px; } // Plan #
       &:nth-child(2) { width: 90px; } // Afiliado
@@ -361,15 +363,7 @@
   }
 
   tbody {
-    display: block;
-    max-height: 400px;
-    overflow-y: auto;
-    width: 100%;
-
     tr {
-      display: table;
-      width: 100%;
-      table-layout: fixed;
       border-bottom: 1px solid $color-border;
 
       &:last-child {
@@ -384,10 +378,8 @@
         padding: 0.75rem;
         font-size: 0.9rem;
         color: $color-text;
-        overflow: hidden;
-        text-overflow: ellipsis;
-        white-space: nowrap;
-        word-break: break-word;
+        word-wrap: break-word;
+        overflow-wrap: break-word;
 
         &:nth-child(1) { width: 70px; } // Plan #
         &:nth-child(2) { width: 90px; } // Afiliado
