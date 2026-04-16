@@ -10,6 +10,8 @@ Registro de bugs detectados durante implementación del plan de auditoría (Fase
 ## Registros Activos
 
 | ID | Severidad | Fase | Descripción | Reportado | Estado |
+|----|-----------|------|-------------|-----------|--------|
+| BUG-013 | 🔴 CRÍTICO | BACKLOG-008 | Regeneración de recibos: frontend no maneja 409 response, muestra "0 recibos" | 2026-04-16 | 🔧 En solución |
 | BUG-010 | 🔴 CRÍTICO | BACKLOG-004 | POST /api/usuarios retorna "Cannot POST /api/api/usuarios" (URL duplicada) | 2026-04-16 | ✅ Verificado |
 | BUG-008 | 🔴 CRÍTICO | BACKLOG-002 | ReciboDetalleModal no abre - se actualiza plan en su lugar | 2026-04-16 | 🔧 Pendiente análisis |
 | BUG-006 | 🔴 CRÍTICO | Migrations | Downgrade en v1.0.x aún no verificado | 2026-04-15 | 🔧 Pendiente verificación |
@@ -721,6 +723,65 @@ Resultado: Sequelize no reconocía el campo y no actualizaba la contraseña en B
 
 **Archivos corregidos:**
 - `backend/src/controllers/usuariosController.js` (blanquearPassword y resetPassword)
+
+---
+
+### BUG-013: Regeneración de Recibos - Frontend No Maneja Response 409
+
+**Descripción:**
+En el flujo de regeneración de recibos (BACKLOG-008), cuando un usuario intenta generar recibos para un período que ya existe:
+1. Backend retorna HTTP 409 con `{ existe: true, cantidad: X, mensaje: "..." }`
+2. Frontend debería mostrar modal de confirmación
+3. **Pero en cambio, muestra "0 recibos fueron generados"** (como si fuera éxito con 0 recibos)
+
+**Pasos para reproducir:**
+1. Generar recibos para un período (ej: abril 2026) → exitoso
+2. Intentar generar nuevamente para el mismo período
+3. Sistema muestra: "0 recibos generados exitosamente" (mensaje incorrecto)
+4. NO muestra modal de confirmación de regeneración
+
+**Comportamiento esperado:**
+- Mostrar modal: "¿Regenerar recibos?"
+- Informar: "Ya existen X recibos para este período"
+- Botón: "Sí, Regenerar" (con advertencia roja)
+
+**Evidencia capturada:**
+```
+POST https://seagreen-skunk-116671.hostingersite.com/api/recibos/generar
+Payload: {"periodo":"2026-04-01","planes":[]}
+Response: HTTP 409
+{
+  "success": false,
+  "existe": true,
+  "cantidad": 10,
+  "mensaje": "Ya existen 10 recibos generados para el período 2026-04"
+}
+```
+
+**Causa probable:**
+1. **Frontend trata 409 como error** en vez de respuesta de negocio válida
+2. `recibosService.generar()` probablemente está tratando 409 como excepción
+3. El try/catch en `GenerarRecibosModal.handleGenerar()` captura 409 como error
+4. Se muestra mensaje de error en lugar de activar step 2 (confirmación)
+
+**Ubicación del código:**
+- Frontend: `GenerarRecibosModal.jsx` (handleGenerar method)
+- Frontend service: `recibosService.js` (generar method)
+- Backend: `recibosController.js` (generar endpoint) ✅ Funciona correctamente
+
+**Archivos a revisar:**
+- `frontend/src/pages/DashboardPage/components/GestionPlanesV1/modals/GenerarRecibosModal.jsx` (líneas 49-74)
+- `frontend/src/services/recibosService.js` (generar method)
+- `frontend/src/services/api.js` (axios interceptors - ¿está convirtiendo 409 en error?)
+
+**Severidad:** 🔴 CRÍTICO
+- Bloquea BACKLOG-008 (regeneración de recibos)
+- Backend funciona correctamente, frontend no maneja respuesta
+
+**Reportado:** 2026-04-16
+**Asociado a:** BACKLOG-008 (Registro de períodos + confirmación)
+
+**Estado:** 🔧 En solución
 
 ---
 
