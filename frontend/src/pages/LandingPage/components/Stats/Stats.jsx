@@ -5,7 +5,6 @@ const STATS = [
   { value: '100%', label: 'Web y mobile', desc: 'Acceso desde cualquier dispositivo' },
   { value: '0', label: 'Instalacion requerida', desc: 'Solo necesitas un navegador' },
   { value: '24/7', label: 'Disponibilidad', desc: 'Sistema siempre disponible' },
-  { value: 'OAuth', label: 'Acceso seguro', desc: 'Login con Google, sin passwords' },
 ];
 
 function Stats() {

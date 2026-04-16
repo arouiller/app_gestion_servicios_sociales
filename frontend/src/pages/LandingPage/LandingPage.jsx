@@ -2,10 +2,7 @@ import React, { useState, useEffect } from 'react';
 import Navbar from './components/Navbar/Navbar';
 import Hero from './components/Hero/Hero';
 import Features from './components/Features/Features';
-import HowItWorks from './components/HowItWorks/HowItWorks';
 import Stats from './components/Stats/Stats';
-import Testimonials from './components/Testimonials/Testimonials';
-import CtaBanner from './components/CtaBanner/CtaBanner';
 import Footer from './components/Footer/Footer';
 import './LandingPage.scss';
 
@@ -25,9 +22,6 @@ function LandingPage() {
         <Hero />
         <Features />
         <Stats />
-        <HowItWorks />
-        <Testimonials />
-        <CtaBanner />
       </main>
       <Footer />
     </div>
