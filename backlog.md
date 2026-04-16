@@ -20,7 +20,8 @@ Estos ítems se abordan **después** de completar todas las fases del PLAN.md.
 
 | ID | Prioridad | Estado | Descripción | Contexto / Motivo | Archivos estimados |
 |----|-----------|--------|-------------|-------------------|--------------------|
-| BACKLOG-007 | 🔴 Alta | 🔄 Desarrollado | Control de acceso por rol: usuarios comunes no ven Administración | Usuarios comunes deben tener acceso a: Búsqueda de Afiliados, Gestión de Planes, Cobradores, Obras Sociales, Servicios, Tipos de Grupo, Tipos de Plan. Deben estar excluidos de: Gestión de Usuarios, Migraciones BD. Solo admin ve la sección "Administración" | DashboardPage.jsx |
+| BACKLOG-008 | 🔴 Alta | 🔄 Desarrollado | Registro de períodos de emisión de recibos + confirmación antes de regenerar | Sistema debe registrar qué meses ya tienen recibos generados. Si usuario intenta generar para un mes existente, mostrar confirmación. Si confirma, borrar recibos antiguos y regenerar. Previene duplicación accidental de recibos | GenerarRecibosModal.jsx, recibosController.js, nueva migración (tabla de períodos) |
+| BACKLOG-007 | 🔴 Alta | ✅ Aprobado | Control de acceso por rol: usuarios comunes no ven Administración | Usuarios comunes deben tener acceso a: Búsqueda de Afiliados, Gestión de Planes, Cobradores, Obras Sociales, Servicios, Tipos de Grupo, Tipos de Plan. Deben estar excluidos de: Gestión de Usuarios, Migraciones BD. Solo admin ve la sección "Administración" | DashboardPage.jsx |
 | BACKLOG-006 | 🔴 Alta | ✅ Aprobado | Flujo de login para usuarios con password blanqueada | Implementado y probado: Checkbox "Tengo contraseña blanqueada" en LoginPage. Backend detecta password_blanqueada y retorna flag debe_cambiar_password. Frontend redirige a /cambiar-password. Flujo completo funcional y validado para onboarding de nuevos usuarios | LoginPage.jsx, authService.js, auth.js |
 | BACKLOG-005 | 🟡 Media | ✅ Completado | Mejorar columna "Cambio" en tab Historial de Cuota | Implementado y aprobado: Nueva columna que muestra tipo de cambio (Fijo/Porcentual) con valor. Lógica de inferencia de tipo por cálculo dinámico | PlanV1Modal.jsx |
 | BACKLOG-004 | 🔴 Alta | ✅ Aprobado | Panel de Gestión de Usuarios: CRUD + cambio de rol + blanqueo de contraseña | Implementado y probado: Panel CRUD completo (listar, crear, cambiar rol, blanquear contraseña). Backend: endpoints /api/usuarios, /api/usuarios/:id/rol, /api/usuarios/:id/blanquear-password. Frontend: GestionUsuarios, UsuarioFormModal, ChangePasswordRequired. Flujo: usuarios nuevos con password_blanqueada acceden a /cambiar-password. Todo funcional y validado | Múltiples (GestionUsuarios.jsx, usuariosController, usuariosService, rutas, auth.js, ChangePasswordRequired.jsx) |
@@ -29,6 +30,75 @@ Estos ítems se abordan **después** de completar todas las fases del PLAN.md.
 | BACKLOG-001 | 🟡 Media | ✅ Completado | Mejorar preview de aumento de cuotas: navegación completa + comparación antes/después | Implementado y aprobado: Tabla con alineación correcta, paginación, búsqueda y contraste antes/después. BUG-009 resuelto | BulkUpdateCuotaModal.jsx, SCSS |
 
 ## Detalles de Items
+
+### BACKLOG-008: Registro de Períodos de Emisión de Recibos + Confirmación
+
+**Descripción:**
+El sistema debe mantener un registro de los meses/períodos para los cuales ya se han generado recibos. Cuando un usuario intenta generar recibos para un período que ya existe, el sistema debe:
+1. Detectar que el período ya tiene recibos generados
+2. Mostrar un modal de confirmación informando al usuario
+3. Advertir que todos los recibos del período serán borrados y regenerados
+4. Si el usuario confirma: borrar recibos antiguos y generar nuevos
+5. Si cancela: no hacer nada
+
+**Requerimientos:**
+
+a. **Tabla de Períodos Generados**
+   - Nueva tabla: `periodos_recibos` o `recibos_periodos`
+   - Campos:
+     * id (PK)
+     * periodo (YYYY-MM) - UNIQUE
+     * fecha_generacion (DATE)
+     * cantidad_recibos (INT) - snapshot de cuántos se generaron
+     * createdAt
+
+b. **Lógica de Detección (Backend)**
+   - Endpoint POST /api/recibos/generar debe:
+     * Recibir periodo en formato YYYY-MM
+     * Consultar tabla periodos_recibos para verificar si existe
+     * Retornar: { existe: true, cantidad: X } si ya existe
+     * O { existe: false } si es nuevo
+
+c. **Modal de Confirmación (Frontend)**
+   - Si respuesta indica que período existe:
+     * Mostrar modal: "¿Regenerar recibos?"
+     * Mostrar texto: "Ya existen X recibos generados para este período"
+     * Advertencia: "Se borrarán todos los recibos y se volverán a generar"
+     * Botones: "Cancelar" | "Sí, Regenerar"
+   - Si usuario confirma: llamar nuevamente a endpoint con flag `force: true`
+
+d. **Lógica de Borrado y Regeneración (Backend)**
+   - Si `force: true` en payload:
+     * Usar transacción:
+       - DELETE FROM recibos WHERE periodo = ?
+       - DELETE FROM recibo_integrantes WHERE recibo_id IN (...)
+       - Generar nuevos recibos
+       - UPDATE/INSERT en periodos_recibos con nueva fecha_generacion
+
+e. **Tabla periodos_recibos será creada por migración**
+   - Versión: 2.0.5
+   - Incluir índice en campo periodo para búsquedas rápidas
+
+**Contexto:**
+- Actualmente, si usuario genera recibos varias veces para el mismo período, se generan duplicados
+- No hay forma de saber qué períodos ya tienen recibos
+- Mejora: auditoría + seguridad (previene datos duplicados)
+
+**Archivos a modificar/crear:**
+- Backend: `controllers/recibosController.js` (extender generar() con lógica de detección)
+- Backend: `models/PeriodoRecibos.js` (NUEVO - modelo Sequelize)
+- Backend: `routes/recibos.js` (ya existe, solo necesita endpoint actualizado)
+- Frontend: `GenerarRecibosModal.jsx` (agregar lógica de confirmación)
+- Frontend: `modals/ConfirmarRegeneracionRecibosModal.jsx` (NUEVO)
+- Migración: `1.0.6_periodos_recibos/upgrade.sql` (NUEVA)
+
+**Estimación:** 4-5 horas (backend 2h, frontend 1.5h, migración 0.5h, testing 1h)
+
+**Prioridad:** 🔴 Alta — Control de duplicación es crítico
+
+**Estado:** 🔄 Desarrollado
+
+---
 
 ### BACKLOG-007: Control de Acceso por Rol - Menú Dinámico
 
