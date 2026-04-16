@@ -11,7 +11,8 @@ Registro de bugs detectados durante implementación del plan de auditoría (Fase
 
 | ID | Severidad | Fase | Descripción | Reportado | Estado |
 |----|-----------|------|-------------|-----------|--------|
-| BUG-010 | 🔴 CRÍTICO | BACKLOG-004 | POST /api/usuarios retorna "Cannot POST /api/api/usuarios" (URL duplicada) | 2026-04-16 | 🔧 Pendiente verificación |
+| BUG-011 | 🔴 CRÍTICO | BACKLOG-004 | Migraciones no ejecutadas en producción: falta `password_blanqueada` y `tema_preferido` en tabla usuarios | 2026-04-16 | 🔧 Pendiente análisis |
+| BUG-010 | 🔴 CRÍTICO | BACKLOG-004 | POST /api/usuarios retorna "Cannot POST /api/api/usuarios" (URL duplicada) | 2026-04-16 | ✅ Verificado |
 | BUG-009 | 🟡 IMPORTANTE | BACKLOG-001 | Distribución de columnas desalineada en tabla de preview | 2026-04-16 | 🔧 Pendiente análisis |
 | BUG-008 | 🔴 CRÍTICO | BACKLOG-002 | ReciboDetalleModal no abre - se actualiza plan en su lugar | 2026-04-16 | 🔧 Pendiente análisis |
 | BUG-006 | 🔴 CRÍTICO | Migrations | Downgrade en v1.0.x aún no verificado | 2026-04-15 | 🔧 Pendiente verificación |
@@ -579,6 +580,75 @@ Patrón confirmado en otros servicios (planesService, personasService, etc.)
 - [ ] Verificar que POST se realiza a URL correcta (sin duplicación)
 - [ ] Confirmar que usuario se crea exitosamente
 - [ ] Probar otros métodos: cambiarRol, blanquearPassword, resetPassword
+
+---
+
+### BUG-011: Migraciones No Ejecutadas en Producción
+
+**Descripción:**
+Al intentar usar funcionalidades de BACKLOG-004 (Gestión de Usuarios) en producción, el servidor retorna errores de columnas desconocidas:
+1. GET /api/usuarios → "Unknown column 'password_blanqueada' in 'SELECT'"
+2. POST /api/usuarios → "Unknown column 'tema_preferido' in 'SELECT'"
+
+**Pasos para reproducir (en producción):**
+1. Ir a Dashboard → Administración → Gestión de Usuarios
+2. Error: "error al cargar usuarios"
+3. Consola muestra: Unknown column 'password_blanqueada' in 'SELECT'
+
+**Intentar crear usuario:**
+1. Clic en "➕ Nuevo Usuario"
+2. Completar email
+3. Error: "Error al crear usuario: Unknown column 'tema_preferido' in 'SELECT'"
+
+**Errores reportados:**
+```json
+{
+  "success": false,
+  "message": "Unknown column 'password_blanqueada' in 'SELECT'"
+}
+```
+
+```json
+{
+  "success": false,
+  "message": "Unknown column 'tema_preferido' in 'SELECT'"
+}
+```
+
+**URLs afectadas:**
+- GET https://seagreen-skunk-116671.hostingersite.com/api/usuarios
+- POST https://seagreen-skunk-116671.hostingersite.com/api/usuarios
+
+**Causa raíz probable:**
+- Migración 1.0.5 (`password_blanqueada`) no fue ejecutada en BD producción
+- Migración para agregar `tema_preferido` también falta en producción
+- Las migraciones están en `backend/src/migrations/versions/` pero no se ejecutaron en Hostinger
+
+**Archivos afectados:**
+- Backend: `backend/src/migrations/versions/1.0.5_password_blanqueada/upgrade.sql`
+- Backend: controladores/modelos que asumen existencia de estas columnas
+- Base de datos: tabla `usuarios` en Hostinger
+
+**Severidad:** 🔴 CRÍTICO
+- BACKLOG-004 completamente no funcional en producción
+- Bloquea cualquier intento de gestionar usuarios
+
+**Reportado:** 2026-04-16
+**Asociado a:** BACKLOG-004 (Panel de Gestión de Usuarios)
+
+**Estado:** 🔧 Pendiente análisis
+
+**Investigaciones requeridas:**
+- [ ] Verificar si las migraciones se ejecutaron en BD producción (Hostinger)
+- [ ] Revisar el sistema de migraciones en producción
+- [ ] Determinar si hay una migración para `tema_preferido` o si es un campo que falta crear
+- [ ] Analizar si necesita migración manual o si el sistema de migraciones en producción está desfasado
+- [ ] Considerar agregar nuevas migraciones si es necesario
+
+**Preguntas a responder:**
+- ¿Falta ejecutar la migración 1.0.5 en producción?
+- ¿Existe migración para `tema_preferido` o es columna que debe agregarse?
+- ¿El sistema de migraciones en Hostinger está sincronizado?
 
 ---
 
