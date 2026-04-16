@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useCallback, useMemo } from 'react';
+import React, { useState, useEffect, useCallback, useMemo, useRef } from 'react';
 import { usePlanV1Form } from '../hooks/usePlanV1Form';
 import ActionButton from '../../../../../components/ActionButton/ActionButton';
 import planesV1Service from '../../../../../services/planesV1Service';
@@ -39,13 +39,20 @@ function PlanV1Modal({ mode, planData, onClose, onSave }) {
   const [serviciosModalOpen, setServiciosModalOpen] = useState(null); // null or integrante.id
 
   // Store initial form state for change detection
-  const [initialForm] = useState(() => JSON.stringify(usePlanV1Form(planData).form));
+  const initialFormRef = useRef(null);
   const [showConfirmClose, setShowConfirmClose] = useState(false);
 
-  // Detect if form has changes
+  // Initialize and detect if form has changes
+  useEffect(() => {
+    if (initialFormRef.current === null) {
+      initialFormRef.current = JSON.stringify(form);
+    }
+  }, []);
+
   const hasChanges = useMemo(() => {
-    return JSON.stringify(form) !== initialForm;
-  }, [form, initialForm]);
+    if (!initialFormRef.current) return false;
+    return JSON.stringify(form) !== initialFormRef.current;
+  }, [form]);
 
   // Handle ESC key with confirmation if there are changes
   const handleEscapeWithChanges = useCallback(() => {
