@@ -1,9 +1,32 @@
 import React, { useState, useEffect } from 'react';
+import recibosService from '../../../../../services/recibosService';
 import './ReciboDetalleModal.scss';
 
 function ReciboDetalleModal({ reciboId, onClose, reciboData }) {
-  // reciboData should be passed from parent, or fetch by ID
-  const [recibo, setRecibo] = useState(reciboData);
+  const [recibo, setRecibo] = useState(reciboData || null);
+  const [loading, setLoading] = useState(!reciboData);
+
+  useEffect(() => {
+    if (reciboData) {
+      setRecibo(reciboData);
+      setLoading(false);
+    } else if (reciboId) {
+      loadRecibo();
+    }
+  }, [reciboId, reciboData]);
+
+  const loadRecibo = async () => {
+    try {
+      setLoading(true);
+      const data = await recibosService.getById(reciboId);
+      setRecibo(data);
+    } catch (err) {
+      console.error('Error loading recibo:', err);
+      setRecibo(null);
+    } finally {
+      setLoading(false);
+    }
+  };
 
   return (
     <>
@@ -15,6 +38,12 @@ function ReciboDetalleModal({ reciboId, onClose, reciboData }) {
         </div>
 
         <div className="recibo-detalle-modal__body">
+          {loading ? (
+            <p className="recibo-detalle-modal__loading">Cargando recibo...</p>
+          ) : !recibo ? (
+            <p className="recibo-detalle-modal__error">No se pudo cargar el recibo.</p>
+          ) : (
+            <>
           <div className="recibo-detalle-modal__field-group">
             <div className="recibo-detalle-modal__field">
               <label>Número de Recibo:</label>
@@ -71,6 +100,8 @@ function ReciboDetalleModal({ reciboId, onClose, reciboData }) {
               <p>{recibo?.fecha_emision ? new Date(recibo.fecha_emision).toLocaleDateString('es-AR') : '—'}</p>
             </div>
           </div>
+            </>
+          )}
         </div>
 
         <div className="recibo-detalle-modal__footer">
