@@ -478,13 +478,13 @@ function PlanV1Modal({ mode, planData, onClose, onSave }) {
                           <td>
                             <ActionButton
                               variant="icon"
-                              icon="✏️"
+                              icon="✎"
                               onClick={() => handleIntegranteEdit(integrante.persona_id)}
                               title="Editar"
                             />
                             <ActionButton
                               variant="icon"
-                              icon="🗑️"
+                              icon="🗑"
                               onClick={() => handleIntegranteRemove(integrante.persona_id)}
                               title="Quitar"
                             />

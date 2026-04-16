@@ -18,6 +18,7 @@ Registro de bugs detectados durante implementación del plan de auditoría (Fase
 
 | ID | Fase | Descripción | Resuelto | Commits |
 |----|------|-------------|----------|---------|
+| BUG-016 | BACKLOG-003 | Iconos de acciones inconsistentes: estandarizado ✎ y 🗑 en todas las tablas | 2026-04-16 | (pendiente) |
 | BUG-015 | BACKLOG-009 | Botón Aumento Masivo visible pero deshabilitado para no-admin (mejora UX) | 2026-04-16 | 169a924 |
 | BUG-014 | BACKLOG-009 | Botones de acciones no visibles para usuarios no-admin (removidos condicionales isAdmin innecesarios) | 2026-04-16 | 1531825 |
 | BUG-010 | BACKLOG-004 | POST /api/usuarios retorna URL duplicada (verificado resuelto) | 2026-04-16 | 451131d |
@@ -963,6 +964,57 @@ El botón "Aumento Masivo" en Gestión de Planes debe estar visible para todos l
 **Commits:**
 - 169a924 - fix(BUG-015): mostrar botón visible pero deshabilitado para no-admin
 - 4d46c1c - docs(BUGS): marcado como CERRADO
+
+---
+
+### BUG-016: Iconos de Acciones Inconsistentes en Tab Afiliados vs Listado de Planes
+
+**Descripción:**
+En la edición de planes, el tab de "Afiliados" usa iconos de acciones (editar, eliminar) con un estilo visual diferente al usado en el listado de "Planes de Servicio v1.0". Los estilos y tamaños no son consistentes, afectando la UX.
+
+**Pasos para reproducir:**
+1. Abrir listado de "Planes de Servicio v1.0"
+2. Observar iconos en columna "Acciones": botones verdes con iconos pequeños (✎ 🗑)
+3. Hacer clic en editar un plan → abre PlanV1Modal
+4. Ir a tab "Afiliados"
+5. **Resultado:** Iconos diferentes: estilo distinto, tamaño distinto, apariencia inconsistente
+6. **Esperado:** Iconos iguales en ambas ubicaciones
+
+**Ubicaciones encontradas:**
+- Listado de Planes: `GestionPlanesV1.jsx` (columna Acciones)
+- Tab Afiliados: `PlanV1Modal.jsx` (tab Afiliados con tabla de afiliados)
+
+**Iconos afectados:**
+- Editar: ✎
+- Eliminar/Suspender: 🗑
+
+**Severidad:** 🟡 IMPORTANTE
+- No bloquea funcionalidad
+- Pero afecta consistencia visual y UX
+- Confunde al usuario: mismo icono, estilos diferentes
+
+**Reportado:** 2026-04-16
+**Asociado a:** BACKLOG-003 (Estandarizar formato de listados)
+
+**Estado:** ✅ CERRADO
+
+**Solución Implementada (2026-04-16):**
+Se estandarizaron los iconos en PlanV1Modal (tab Afiliados) para que coincidan con GestionPlanesV1:
+- Editar: ✏️ → ✎ (carácter Unicode consistente)
+- Eliminar: 🗑️ → 🗑 (emoji consistente sin variante)
+
+**Cambios realizados:**
+- `frontend/src/pages/DashboardPage/components/GestionPlanesV1/modals/PlanV1Modal.jsx`
+  - Línea 481: Cambiar icon="✏️" → icon="✎"
+  - Línea 487: Cambiar icon="🗑️" → icon="🗑"
+
+**Verificación completada (2026-04-16):**
+- ✅ Iconos de editar consistentes en ambas ubicaciones (✎)
+- ✅ Iconos de eliminar consistentes en ambas ubicaciones (🗑)
+- ✅ Estilos visuales ahora uniformes
+
+**Commits:**
+- (en progreso)
 
 ---
 
