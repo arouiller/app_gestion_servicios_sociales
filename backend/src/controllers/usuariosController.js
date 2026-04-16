@@ -9,8 +9,8 @@ const jwt = require('jsonwebtoken');
 exports.list = async (req, res, next) => {
   try {
     const usuarios = await db.Usuario.findAll({
-      attributes: ['id', 'email', 'nombre', 'apellido', 'rol', 'password_blanqueada', 'createdAt'],
-      order: [['createdAt', 'DESC']],
+      attributes: ['id', 'email', 'nombre', 'apellido', 'rol', 'password_blanqueada', 'fecha_creacion'],
+      order: [['fecha_creacion', 'DESC']],
     });
 
     return res.json({
