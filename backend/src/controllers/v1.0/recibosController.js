@@ -4,13 +4,14 @@ const sequelize = require('../../config/database');
 /**
  * POST /api/recibos/generar
  * Genera recibos para planes en un período específico
- * Body: { periodo: "2026-04-01", planes: [1, 2, 3] }
+ * Body: { periodo: "2026-04-01", planes: [1, 2, 3], force: false }
  * Si planes está vacío, genera para todos los planes ACTIVO
+ * Si force=true, borra recibos antiguos del período y regenera
  */
 exports.generar = async (req, res, next) => {
   const transaction = await sequelize.transaction();
   try {
-    const { periodo, planes } = req.body;
+    const { periodo, planes, force } = req.body;
     const userId = req.user.id; // Asumiendo que auth middleware asigna esto
 
     if (!periodo) {
@@ -24,6 +25,52 @@ exports.generar = async (req, res, next) => {
     if (isNaN(periodoDate)) {
       return res.status(400).json({
         error: 'El período debe ser una fecha válida (YYYY-MM-DD)',
+      });
+    }
+
+    // Extraer YYYY-MM del período
+    const periodoYYYYMM = periodo.substring(0, 7);
+
+    // Verificar si el período ya tiene recibos generados
+    const periodoExistente = await db.PeriodosRecibos.findOne({
+      where: { periodo: periodoYYYYMM },
+      transaction,
+    });
+
+    if (periodoExistente && !force) {
+      // Período ya existe y no es regeneración forzada
+      await transaction.rollback();
+      return res.status(409).json({
+        success: false,
+        existe: true,
+        cantidad: periodoExistente.cantidad_recibos,
+        mensaje: `Ya existen ${periodoExistente.cantidad_recibos} recibos generados para el período ${periodoYYYYMM}`,
+      });
+    }
+
+    // Si force=true, borrar recibos antiguos del período
+    if (periodoExistente && force) {
+      // Obtener IDs de recibos a borrar
+      const recibosABorrar = await db.Recibo.findAll({
+        where: { periodo: periodoDate },
+        attributes: ['id'],
+        transaction,
+      });
+
+      const idsRecibos = recibosABorrar.map((r) => r.id);
+
+      // Borrar integrantes de recibos
+      if (idsRecibos.length > 0) {
+        await db.ReciboIntegrante.destroy({
+          where: { recibo_id: idsRecibos },
+          transaction,
+        });
+      }
+
+      // Borrar recibos
+      await db.Recibo.destroy({
+        where: { periodo: periodoDate },
+        transaction,
       });
     }
 
@@ -44,15 +91,17 @@ exports.generar = async (req, res, next) => {
     const recibosGenerados = [];
 
     for (const planNumero of planesAGenerar) {
-      // Verificar si ya existe recibo para este plan en este período
-      const existente = await db.Recibo.findOne({
-        where: { plan_numero: planNumero, periodo: periodoDate },
-        transaction,
-      });
+      // Verificar si ya existe recibo para este plan en este período (cuando NO es force)
+      if (!force) {
+        const existente = await db.Recibo.findOne({
+          where: { plan_numero: planNumero, periodo: periodoDate },
+          transaction,
+        });
 
-      if (existente) {
-        // Omitir sin error
-        continue;
+        if (existente) {
+          // Omitir sin error
+          continue;
+        }
       }
 
       // Obtener datos del plan con sus relaciones
@@ -124,9 +173,20 @@ exports.generar = async (req, res, next) => {
       recibosGenerados.push(recibo);
     }
 
+    // Crear o actualizar registro en periodos_recibos
+    await db.PeriodosRecibos.upsert(
+      {
+        periodo: periodoYYYYMM,
+        cantidad_recibos: recibosGenerados.length,
+        fecha_generacion: new Date(),
+      },
+      { transaction }
+    );
+
     await transaction.commit();
 
     res.status(201).json({
+      success: true,
       mensaje: `${recibosGenerados.length} recibos generados`,
       recibos: recibosGenerados,
     });
