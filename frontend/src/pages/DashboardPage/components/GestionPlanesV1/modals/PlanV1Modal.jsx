@@ -4,6 +4,7 @@ import ActionButton from '../../../../../components/ActionButton/ActionButton';
 import planesV1Service from '../../../../../services/planesV1Service';
 import planesIntegrantesService from '../../../../../services/planesIntegrantesService';
 import lookupService from '../../../../../services/lookupService';
+import recibosService from '../../../../../services/recibosService';
 import AfiladoSearchModal from './AfiladoSearchModal';
 import AfiladoEditModal from './AfiladoEditModal';
 import ReciboDetalleModal from './ReciboDetalleModal';
@@ -24,6 +25,10 @@ function PlanV1Modal({ mode, planData, onClose, onSave }) {
   const [maxAfiliadoNumber, setMaxAfiliadoNumber] = useState(null);
   const [historialCuota, setHistorialCuota] = useState([]);
   const [historialLoading, setHistorialLoading] = useState(false);
+  const [recibos, setRecibos] = useState([]);
+  const [recibosLoading, setRecibosLoading] = useState(false);
+  const [recibosPage, setRecibosPage] = useState(1);
+  const recibosPerPage = 10;
 
   // Secondary modals
   const [afiladoSearchOpen, setAfiladoSearchOpen] = useState(false);
@@ -104,6 +109,21 @@ function PlanV1Modal({ mode, planData, onClose, onSave }) {
       setHistorialCuota([]);
     } finally {
       setHistorialLoading(false);
+    }
+  };
+
+  const loadRecibos = async () => {
+    try {
+      setRecibosLoading(true);
+      const data = await recibosService.listByPlanNumero(planData.plan_numero);
+      console.log('[PlanV1Modal] Recibos:', data);
+      setRecibos(Array.isArray(data) ? data : []);
+      setRecibosPage(1);
+    } catch (err) {
+      console.error('Error loading recibos:', err);
+      setRecibos([]);
+    } finally {
+      setRecibosLoading(false);
     }
   };
 
@@ -249,11 +269,16 @@ function PlanV1Modal({ mode, planData, onClose, onSave }) {
             >
               Afiliados
             </button>
-            {(mode === 'editar' && planData?.Recibos?.length > 0) && (
+            {mode === 'editar' && (
               <button
                 type="button"
                 className={`plan-v1-modal__tab ${activeTab === 'recibos' ? 'active' : ''}`}
-                onClick={() => setActiveTab('recibos')}
+                onClick={async () => {
+                  setActiveTab('recibos');
+                  if (recibos.length === 0 && !recibosLoading) {
+                    await loadRecibos();
+                  }
+                }}
               >
                 Recibos
               </button>
@@ -476,31 +501,67 @@ function PlanV1Modal({ mode, planData, onClose, onSave }) {
             {activeTab === 'recibos' && (
               <div className="plan-v1-modal__tab-content">
                 <h4>Recibos</h4>
-                {!planData?.Recibos || planData.Recibos.length === 0 ? (
+                {recibosLoading ? (
+                  <p className="plan-v1-modal__empty">Cargando recibos...</p>
+                ) : recibos.length === 0 ? (
                   <p className="plan-v1-modal__empty">No hay recibos generados aún.</p>
                 ) : (
-                  <table className="plan-v1-modal__recibos-tabla">
-                    <thead>
-                      <tr>
-                        <th>Número de Recibo</th>
-                        <th>Período</th>
-                        <th>Monto</th>
-                      </tr>
-                    </thead>
-                    <tbody>
-                      {planData.Recibos.map((recibo) => (
-                        <tr
-                          key={recibo.id}
-                          onClick={() => setReciboDetailOpen(recibo.id)}
-                          className="plan-v1-modal__recibo-row"
-                        >
-                          <td>{recibo.id}</td>
-                          <td>{new Date(recibo.periodo).toLocaleDateString('es-AR')}</td>
-                          <td>${parseFloat(recibo.valor_cuota).toFixed(2)}</td>
+                  <>
+                    <table className="plan-v1-modal__recibos-tabla">
+                      <thead>
+                        <tr>
+                          <th>Período</th>
+                          <th>Número de Integrantes</th>
+                          <th>Valor Cuota</th>
+                          <th>Acciones</th>
                         </tr>
-                      ))}
-                    </tbody>
-                  </table>
+                      </thead>
+                      <tbody>
+                        {recibos
+                          .slice((recibosPage - 1) * recibosPerPage, recibosPage * recibosPerPage)
+                          .map((recibo) => (
+                            <tr key={recibo.id} className="plan-v1-modal__recibo-row">
+                              <td>{new Date(recibo.periodo).toLocaleDateString('es-AR', { year: 'numeric', month: '2-digit' })}</td>
+                              <td>{recibo.ReciboIntegrantes?.length || 0}</td>
+                              <td>${parseFloat(recibo.valor_cuota).toFixed(2)}</td>
+                              <td>
+                                <ActionButton
+                                  variant="icon"
+                                  icon="👁️"
+                                  onClick={() => setReciboDetailOpen(recibo.id)}
+                                  title="Ver detalle"
+                                />
+                              </td>
+                            </tr>
+                          ))}
+                      </tbody>
+                    </table>
+
+                    {/* Paginación */}
+                    {recibos.length > recibosPerPage && (
+                      <div className="plan-v1-modal__pagination">
+                        <button
+                          type="button"
+                          disabled={recibosPage === 1}
+                          onClick={() => setRecibosPage(recibosPage - 1)}
+                          className="plan-v1-modal__btn plan-v1-modal__btn--small"
+                        >
+                          ← Anterior
+                        </button>
+                        <span className="plan-v1-modal__pagination-info">
+                          Página {recibosPage} de {Math.ceil(recibos.length / recibosPerPage)}
+                        </span>
+                        <button
+                          type="button"
+                          disabled={recibosPage >= Math.ceil(recibos.length / recibosPerPage)}
+                          onClick={() => setRecibosPage(recibosPage + 1)}
+                          className="plan-v1-modal__btn plan-v1-modal__btn--small"
+                        >
+                          Siguiente →
+                        </button>
+                      </div>
+                    )}
+                  </>
                 )}
               </div>
             )}

@@ -137,21 +137,29 @@ exports.generar = async (req, res, next) => {
 };
 
 /**
- * GET /api/recibos?periodo=YYYY-MM-DD
- * Lista recibos de un período con sus integrantes
+ * GET /api/recibos?periodo=YYYY-MM-DD|plan_numero=X
+ * Lista recibos de un período o de un plan específico con sus integrantes
  */
 exports.list = async (req, res, next) => {
   try {
-    const { periodo } = req.query;
+    const { periodo, plan_numero } = req.query;
 
-    if (!periodo) {
+    const where = {};
+    if (periodo) {
+      where.periodo = periodo;
+    }
+    if (plan_numero) {
+      where.plan_numero = plan_numero;
+    }
+
+    if (!periodo && !plan_numero) {
       return res.status(400).json({
-        error: 'El parámetro periodo es requerido',
+        error: 'Se requiere al menos uno de estos parámetros: periodo o plan_numero',
       });
     }
 
     const recibos = await db.Recibo.findAll({
-      where: { periodo },
+      where,
       include: [
         {
           model: db.ReciboIntegrante,
@@ -165,7 +173,7 @@ exports.list = async (req, res, next) => {
           ],
         },
       ],
-      order: [['id', 'DESC']],
+      order: [['periodo', 'DESC'], ['id', 'DESC']],
     });
 
     res.status(200).json(recibos);

@@ -44,6 +44,20 @@ const recibosService = {
       return null;
     }
   },
+
+  /**
+   * GET /api/recibos?plan_numero=X
+   * Lista recibos de un plan específico
+   */
+  listByPlanNumero: async (planNumero) => {
+    try {
+      const response = await api.get('/recibos', { params: { plan_numero: planNumero } });
+      return response.data;
+    } catch (error) {
+      console.error('Error fetching recibos for plan:', error);
+      return [];
+    }
+  },
 };
 
 export default recibosService;

@@ -263,5 +263,39 @@
         cursor: not-allowed;
       }
     }
+
+    &--small {
+      padding: 0.375rem 0.75rem;
+      font-size: 0.8rem;
+      background-color: #6c757d;
+      color: white;
+
+      &:hover:not(:disabled) {
+        background-color: #545b62;
+      }
+
+      &:disabled {
+        opacity: 0.5;
+        cursor: not-allowed;
+      }
+    }
+  }
+
+  &__pagination {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 1rem;
+    margin-top: 1rem;
+    padding: 1rem;
+    background-color: #f8f9fa;
+    border-radius: 4px;
+  }
+
+  &__pagination-info {
+    font-size: 0.875rem;
+    color: #6c757d;
+    font-weight: 600;
+    white-space: nowrap;
   }
 }
