@@ -11,6 +11,7 @@ import ObrasSociales from './components/ObrasSociales/ObrasSociales';
 import ServiciosAdicionales from './components/ServiciosAdicionales/ServiciosAdicionales';
 import TiposDeGrupo from './components/TiposDeGrupo/TiposDeGrupo';
 import TiposDePlan from './components/TiposDePlan/TiposDePlan';
+import GestionUsuarios from './components/GestionUsuarios/GestionUsuarios';
 import './DashboardPage.scss';
 
 // ── Iconos simples (SVG inline) ──────────────────────────────────────────────
@@ -56,6 +57,7 @@ function buildMenu(isAdmin) {
       key: 'administracion',
       label: 'Administración',
       children: [
+        { key: 'gestion-usuarios', label: 'Gestión de Usuarios' },
         { key: 'migraciones-bd', label: 'Migraciones BD' },
       ],
     });
@@ -212,6 +214,7 @@ function DashboardPage() {
               <GestionPlanesV1 />
             </GestionPlanesV1ErrorBoundary>
           )}
+          {activeModule === 'gestion-usuarios' && <GestionUsuarios />}
           {activeModule === 'migraciones-bd' && <MigrationsDashboard />}
           {activeModule === 'cobradores' && <Cobradores />}
           {activeModule === 'obras-sociales' && <ObrasSociales />}

@@ -2,6 +2,7 @@ const express = require('express');
 const { verifyToken, generateToken } = require('../middleware/auth');
 const { validate, rules } = require('../middleware/validate');
 const Usuario = require('../models/Usuario');
+const { resetPassword } = require('../controllers/usuariosController');
 
 const router = express.Router();
 
@@ -214,5 +215,9 @@ router.put('/perfil', verifyToken, validate(perfilSchema), async (req, res) => {
     user: usuario.toSafeJSON(),
   });
 });
+
+// ── POST /api/auth/password-reset ───────────────────────────────────────────
+
+router.post('/password-reset', resetPassword);
 
 module.exports = router;
