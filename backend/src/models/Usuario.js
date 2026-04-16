@@ -50,6 +50,11 @@ const Usuario = sequelize.define('usuarios', {
     defaultValue: 'claro',
     allowNull: false,
   },
+  password_blanqueada: {
+    type: DataTypes.BOOLEAN,
+    defaultValue: false,
+    allowNull: false,
+  },
 }, {
   timestamps: false,
   tableName: 'usuarios',
