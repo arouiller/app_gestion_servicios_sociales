@@ -8,30 +8,153 @@ Estos ítems se abordan **después** de completar todas las fases del PLAN.md.
 - 🟡 Media — mejora importante pero no bloqueante  
 - 🟢 Baja — nice to have
 
-## Convención de estados
-- ⏳ Pendiente
-- 🔄 En análisis
+## Ciclo de vida de los backlog items
+Estados posibles:
+- 📋 Registrado
+- 🔬 En análisis
 - ✅ Incorporado al plan
-- 🔄 Desarrollado
+- 🚀 Desarrollado
 - 🚫 Descartado (con motivo)
-- ✅ Aprobado
+- ✅ Solucionado
+
+Flujo de transiciones:
+```
+Registrado → En análisis → Incorporado al plan → Desarrollado → Solucionado
+Registrado → En análisis → Incorporado al plan → Descartado
+De cualquier estado → Descartado
+```
+
+**Regla crítica:** Un backlog item solo puede pasar a "Solucionado" o "Descartado" a través del pedido explícito del usuario final
+
+**Nota:** Si un backlog item desarrollado encuentra problemas, se abre un bug en BUGS.md y el item vuelve a estado "Desarrollado" hasta que se resuelva el bug.
+
 
 ## Items
 
 | ID | Prioridad | Estado | Descripción | Contexto / Motivo | Archivos estimados |
-|----|-----------|--------|-------------|-------------------|--------------------|
-| BACKLOG-010 | 🔴 Alta | ✅ Completado | Botón Aumento Masivo habilitado para todos los perfiles | Usuarios comunes pueden ejecutar aumento masivo de cuotas. Restricción requireAdmin removida de PATCH /api/planes/bulk-update-cuota. Usuarios no-admin pueden aplicar cambios masivos de valores. | backend/src/routes/planes.js, GestionPlanesV1.jsx |
-| BACKLOG-009 | 🔴 Alta | ✅ Completado | Usuarios comunes pueden realizar todas las acciones en páginas accesibles | Usuarios comunes ahora tienen acceso CRUD completo en Gestión de Planes: crear, editar, suspender, generar recibos, aumento masivo. Restricciones innecesarias removidas. | Múltiples (GestionPlanesV1, BusquedaAfiliados, etc.) |
-| BACKLOG-008 | 🔴 Alta | ✅ Completado | Registro de períodos de emisión de recibos + confirmación antes de regenerar | Sistema debe registrar qué meses ya tienen recibos generados. Si usuario intenta generar para un mes existente, mostrar confirmación. Si confirma, borrar recibos antiguos y regenerar. Previene duplicación accidental de recibos | GenerarRecibosModal.jsx, recibosController.js, nueva migración (tabla de períodos) |
-| BACKLOG-007 | 🔴 Alta | ✅ Completado | Control de acceso por rol: usuarios comunes no ven Administración | Usuarios comunes deben tener acceso a: Búsqueda de Afiliados, Gestión de Planes, Cobradores, Obras Sociales, Servicios, Tipos de Grupo, Tipos de Plan. Deben estar excluidos de: Gestión de Usuarios, Migraciones BD. Solo admin ve la sección "Administración" | DashboardPage.jsx |
-| BACKLOG-006 | 🔴 Alta | ✅ Completado | Flujo de login para usuarios con password blanqueada | Implementado y probado: Checkbox "Tengo contraseña blanqueada" en LoginPage. Backend detecta password_blanqueada y retorna flag debe_cambiar_password. Frontend redirige a /cambiar-password. Flujo completo funcional y validado para onboarding de nuevos usuarios | LoginPage.jsx, authService.js, auth.js |
-| BACKLOG-005 | 🟡 Media | ✅ Completado | Mejorar columna "Cambio" en tab Historial de Cuota | Implementado y aprobado: Nueva columna que muestra tipo de cambio (Fijo/Porcentual) con valor. Lógica de inferencia de tipo por cálculo dinámico | PlanV1Modal.jsx |
-| BACKLOG-004 | 🔴 Alta | ✅ Completado | Panel de Gestión de Usuarios: CRUD + cambio de rol + blanqueo de contraseña | Implementado y probado: Panel CRUD completo (listar, crear, cambiar rol, blanquear contraseña). Backend: endpoints /api/usuarios, /api/usuarios/:id/rol, /api/usuarios/:id/blanquear-password. Frontend: GestionUsuarios, UsuarioFormModal, ChangePasswordRequired. Flujo: usuarios nuevos con password_blanqueada acceden a /cambiar-password. Todo funcional y validado | Múltiples (GestionUsuarios.jsx, usuariosController, usuariosService, rutas, auth.js, ChangePasswordRequired.jsx) |
-| BACKLOG-003 | 🟡 Media | ✅ Completado | Estandarizar formato de listados: mismo layout para todas las tablas + iconos consistentes para acciones | Fase 1 + Fase 2 completadas: estilos estándar, componentes creados, aplicados a GestionPlanesV1 y LookupCRUD. | Múltiples componentes (todas las tablas de listado) |
-| BACKLOG-002 | 🔴 Alta | ✅ Completado | Agregar tab de recibos en vista de plan | Implementado y aprobado: Tab de recibos con paginación, carga dinámica y visualización de detalles. BUG-008 resuelto | PlanDetailModal.jsx, recibosService.js |
-| BACKLOG-001 | 🟡 Media | ✅ Completado | Mejorar preview de aumento de cuotas: navegación completa + comparación antes/después | Implementado y aprobado: Tabla con alineación correcta, paginación, búsqueda y contraste antes/después. BUG-009 resuelto | BulkUpdateCuotaModal.jsx, SCSS |
+|----|-----------|--------|-------------|-------------------|----|
+| BACKLOG-014 | 🔴 Alta | ✅ Solucionado | Página dedicada de gestión de recibos por período | Mejora UX: página centralizada para consultar recibos generados por mes/año y generar nuevos. Integrada como módulo del Dashboard. | RecibosPage.jsx, RecibosService.js, routes |
+| BACKLOG-013 | 🔴 Alta | ✅ Solucionado | Mejora de flujo de login para usuarios con contraseña blanqueada | Email pre-cargado en formulario de seteo de contraseña. Elimina repetición de email en onboarding. Implementado, probado y aprobado. | LoginPage.jsx, ChangePasswordRequired.jsx |
+| BACKLOG-012 | 🔴 Alta | ✅ Solucionado | Mejorar comportamiento de ventanas modales (cierre, ESC, cambios no guardados) | Modales no cierran al hacer click fuera. Pueden cerrarse con ESC. Si hay cambios, ESC muestra advertencia. Con múltiples modales, ESC solo cierra la más arriba. Implementado, probado y aprobado. | Todos los modales (PlanV1Modal, GenerarRecibosModal, BulkUpdateCuotaModal, etc.) |
+| BACKLOG-011 | 🔴 Alta | ✅ Solucionado | Agregar acciones (editar y habilitar) a planes en búsqueda de afiliados | Desde planes visibles de un afiliado en búsqueda, permitir edición y cambio de estado (ACTIVO ↔ SUSPENDIDO) con modal reutilizable. Implementado, funcional y aprobado. | BusquedaAfiliados.jsx, PlanV1Modal.jsx |
+| BACKLOG-010 | 🔴 Alta | ✅ Solucionado | Botón Aumento Masivo habilitado para todos los perfiles | Usuarios comunes pueden ejecutar aumento masivo de cuotas. Restricción requireAdmin removida de PATCH /api/planes/bulk-update-cuota. Usuarios no-admin pueden aplicar cambios masivos de valores. | backend/src/routes/planes.js, GestionPlanesV1.jsx |
+| BACKLOG-009 | 🔴 Alta | ✅ Solucionado | Usuarios comunes pueden realizar todas las acciones en páginas accesibles | Usuarios comunes ahora tienen acceso CRUD completo en Gestión de Planes: crear, editar, suspender, generar recibos, aumento masivo. Restricciones innecesarias removidas. | Múltiples (GestionPlanesV1, BusquedaAfiliados, etc.) |
+| BACKLOG-008 | 🔴 Alta | ✅ Solucionado | Registro de períodos de emisión de recibos + confirmación antes de regenerar | Sistema debe registrar qué meses ya tienen recibos generados. Si usuario intenta generar para un mes existente, mostrar confirmación. Si confirma, borrar recibos antiguos y regenerar. Previene duplicación accidental de recibos | GenerarRecibosModal.jsx, recibosController.js, nueva migración (tabla de períodos) |
+| BACKLOG-007 | 🔴 Alta | ✅ Solucionado | Control de acceso por rol: usuarios comunes no ven Administración | Usuarios comunes deben tener acceso a: Búsqueda de Afiliados, Gestión de Planes, Cobradores, Obras Sociales, Servicios, Tipos de Grupo, Tipos de Plan. Deben estar excluidos de: Gestión de Usuarios, Migraciones BD. Solo admin ve la sección "Administración" | DashboardPage.jsx |
+| BACKLOG-006 | 🔴 Alta | ✅ Solucionado | Flujo de login para usuarios con password blanqueada | Implementado y probado: Checkbox "Tengo contraseña blanqueada" en LoginPage. Backend detecta password_blanqueada y retorna flag debe_cambiar_password. Frontend redirige a /cambiar-password. Flujo completo funcional y validado para onboarding de nuevos usuarios | LoginPage.jsx, authService.js, auth.js |
+| BACKLOG-005 | 🟡 Media | ✅ Solucionado | Mejorar columna "Cambio" en tab Historial de Cuota | Implementado y aprobado: Nueva columna que muestra tipo de cambio (Fijo/Porcentual) con valor. Lógica de inferencia de tipo por cálculo dinámico | PlanV1Modal.jsx |
+| BACKLOG-004 | 🔴 Alta | ✅ Solucionado | Panel de Gestión de Usuarios: CRUD + cambio de rol + blanqueo de contraseña | Implementado y probado: Panel CRUD completo (listar, crear, cambiar rol, blanquear contraseña). Backend: endpoints /api/usuarios, /api/usuarios/:id/rol, /api/usuarios/:id/blanquear-password. Frontend: GestionUsuarios, UsuarioFormModal, ChangePasswordRequired. Flujo: usuarios nuevos con password_blanqueada acceden a /cambiar-password. Todo funcional y validado | Múltiples (GestionUsuarios.jsx, usuariosController, usuariosService, rutas, auth.js, ChangePasswordRequired.jsx) |
+| BACKLOG-003 | 🟡 Media | ✅ Solucionado | Estandarizar formato de listados: mismo layout para todas las tablas + iconos consistentes para acciones | Fase 1 + Fase 2 completadas: estilos estándar, componentes creados, aplicados a GestionPlanesV1 y LookupCRUD. | Múltiples componentes (todas las tablas de listado) |
+| BACKLOG-002 | 🔴 Alta | ✅ Solucionado | Agregar tab de recibos en vista de plan | Implementado y aprobado: Tab de recibos con paginación, carga dinámica y visualización de detalles. BUG-008 resuelto | PlanDetailModal.jsx, recibosService.js |
+| BACKLOG-001 | 🟡 Media | ✅ Solucionado | Mejorar preview de aumento de cuotas: navegación completa + comparación antes/después | Implementado y aprobado: Tabla con alineación correcta, paginación, búsqueda y contraste antes/después. BUG-009 resuelto | BulkUpdateCuotaModal.jsx, SCSS |
 
 ## Detalles de Items
+
+### BACKLOG-013: Mejora de Flujo de Login para Usuarios con Contraseña Blanqueada
+
+**Descripción:**
+Mejorar la experiencia de usuario en el flujo de login para usuarios que tienen su contraseña blanqueada. Cuando un usuario marca el checkbox "Tengo contraseña blanqueada", debe ser redirigido a un formulario de seteo de contraseña con su email pre-cargado (sin necesidad de ingresarlo nuevamente).
+
+**Requerimientos:**
+
+a. **Flujo de Login (LoginPage.jsx)**
+   - Usuario ingresa email en campo de email
+   - Usuario marca checkbox "Tengo contraseña blanqueada"
+   - Al enviar formulario:
+     * Backend valida email + verifica que password_blanqueada=true
+     * Si válido: backend retorna `debe_cambiar_password: true`
+     * Frontend captura el email ingresado
+     * Redirige a `/cambiar-password` pasando el email en state/sessionStorage
+
+b. **Formulario de Seteo de Contraseña (ChangePasswordRequired.jsx)**
+   - Recibe email como parámetro (desde state de navegación)
+   - Muestra email como read-only (no editable)
+   - Campo: "Nueva contraseña" (password input)
+   - Campo: "Confirmar contraseña" (password input)
+   - Validaciones:
+     * Ambas contraseñas requeridas
+     * Ambas contraseñas deben coincidir
+     * Mínimo 8 caracteres
+     * Al menos 1 mayúscula, 1 minúscula, 1 número
+   - Botón: "Establecer contraseña"
+   - Al guardar:
+     * Enviar POST /api/auth/cambiar-password con { email, nueva_password }
+     * Si éxito: mostrar "Contraseña establecida. Por favor inicia sesión"
+     * Redirigir a `/login` con email pre-cargado (opcional: agregar parámetro ?email=...)
+
+c. **Backend Validation**
+   - Endpoint POST /api/auth/cambiar-password ya debe existir (creado en BACKLOG-006)
+   - Validar que email + password_blanqueada=true coincidan
+   - Actualizar password en BD
+   - Marcar password_blanqueada=false
+   - Retornar token JWT (opcional: auto-login después de cambio)
+
+d. **Casos de Uso**
+   1. Usuario nuevo recibe email con admin asignándole contraseña blanqueada
+   2. Usuario hace login con email + checkbox marcado
+   3. Es redirigido automáticamente a seteo de contraseña
+   4. Establece su contraseña sin repetir email
+   5. Es redirigido a login para iniciar sesión con nueva contraseña
+
+**Contexto:**
+- BACKLOG-006 ya implementó el flujo básico de login con blanqueo
+- Actualmente después de login con password_blanqueada, el usuario ve ChangePasswordRequired pero debe ingresar email nuevamente
+- Mejora UX: elimina repetición innecesaria de email
+- Completa el flujo de onboarding para nuevos usuarios
+
+**Archivos a modificar:**
+- `frontend/src/pages/LoginPage/LoginPage.jsx` (capturar email, pasar a ChangePasswordRequired)
+- `frontend/src/pages/ChangePasswordRequired/ChangePasswordRequired.jsx` (recibir email como prop, mostrar read-only)
+- `frontend/src/services/authService.js` (métodos existentes, verificar que cambiar-password funcione)
+- Backend: verificar que POST /api/auth/cambiar-password existe y funciona (si no existe, crear)
+
+**Estimación:** 1.5-2 horas
+  - Frontend: actualizar LoginPage para pasar email (0.5h)
+  - Frontend: actualizar ChangePasswordRequired para recibir email (0.5h)
+  - Backend: verificar/crear endpoint cambiar-password (0.5h)
+  - Testing: verificar flujo completo (0.5h)
+
+**Prioridad:** 🔴 Alta — Completa flujo de onboarding, necesario para nuevos usuarios
+
+**Estado:** ✅ Solucionado (2026-04-16)
+
+**Implementación Completada (2026-04-16):**
+
+1. ✅ LoginPage.jsx
+   - Ya existía: email se pasa via navigation state a /cambiar-password
+   - Agregado: recepción de email desde ChangePasswordRequired (después de cambio de contraseña)
+   - Agregado: useEffect para pre-llenar email field cuando viene de state
+   - Agregado: mostrar successMessage cuando el usuario es redirigido desde ChangePasswordRequired
+   - Email field se pre-llena automáticamente si viene del flujo de cambio de contraseña
+
+2. ✅ ChangePasswordRequired.jsx
+   - Agregado: import de useLocation hook
+   - Agregado: useEffect que captura email desde location.state?.email
+   - Modificado: email field ahora tiene `disabled={true}` (read-only)
+   - Modificado: agregado título `title="El email no puede ser modificado"`
+   - Modificado: cuando se guarda contraseña, redirige a /login con email en state
+   - El email ahora se pre-carga automáticamente (no editable)
+
+3. ✅ Flujo completo
+   - Usuario ingresa email en LoginPage + marca "tengo contraseña blanqueada"
+   - Email se pasa a ChangePasswordRequired via navigation state
+   - Email field en ChangePasswordRequired muestra el valor (read-only)
+   - Usuario solo ingresa contraseña nueva + confirmación
+   - Al guardar, redirige a /login con email pre-cargado
+   - LoginPage muestra successMessage y email field pre-lleno
+   - Usuario puede iniciar sesión directamente sin repetir email
+
+**Commits:**
+- 8a75567 - docs(BACKLOG-013): registrar y analizar
+- [implementation] - feat(BACKLOG-013): implementar email pre-cargado en formulario de cambio de contraseña
+
+**Beneficios:**
+- ✅ Mejora UX: elimina repetición de email
+- ✅ Flujo intuitivo: progresión clara (login → cambio → login nuevamente)
+- ✅ Completa BACKLOG-006: onboarding funcional para nuevos usuarios
+- ✅ Minimiza fricción: menos campos para llenar
+
+---
 
 ### BACKLOG-009: Usuarios Comunes - Acceso a Todas las Acciones en Páginas Permitidas
 
@@ -71,7 +194,7 @@ c. **Mantener restricciones para admin-only**
 
 **Prioridad:** 🔴 Alta — Mejora UX y coherencia del sistema
 
-**Estado:** ✅ Completado
+**Estado:** ✅ Solucionado (2026-04-16)
 
 **Verificación Completada (2026-04-16):**
 - ✅ Gestión de Planes: CRUD completo para usuarios comunes
@@ -154,7 +277,7 @@ e. **Tabla periodos_recibos será creada por migración**
 
 **Prioridad:** 🔴 Alta — Control de duplicación es crítico
 
-**Estado:** ✅ Completado
+**Estado:** ✅ Solucionado (2026-04-16)
 
 **Verificación Completada (2026-04-16):**
 - ✅ Backend detecta períodos existentes y retorna HTTP 409 con { existe: true, cantidad: X }
@@ -207,7 +330,7 @@ c. **Comportamiento esperado**
 
 **Prioridad:** 🔴 Alta — Control de acceso es crítico para seguridad
 
-**Estado:** 🔄 Desarrollado
+**Estado:** ✅ Solucionado (2026-04-16)
 
 ---
 
@@ -358,7 +481,7 @@ c. **Aplicar a los siguientes componentes**
 
 **Prioridad:** 🟡 Media — Mejora importante para consistencia pero no bloqueante
 
-**Estado:** ✅ Completado
+**Estado:** ✅ Solucionado (2026-04-16)
 
 **Fase 1: Componentes y Estilos (Completada - 2026-04-16)**
 - ✅ Creado `frontend/src/styles/_table-standard.scss`
@@ -533,7 +656,7 @@ c. **Frontend: Flujo post-login**
 
 **Prioridad:** 🔴 Alta — Bloqueante para usuarios nuevos
 
-**Estado:** 🔄 Desarrollado
+**Estado:** ✅ Solucionado (2026-04-16)
 
 **Notas:**
 - El endpoint POST /api/auth/password-reset ya existe (creado en BACKLOG-004)
@@ -573,7 +696,7 @@ b. **Frontend: Remover restricción de deshabilitado**
 
 **Prioridad:** 🔴 Alta — Completa el acceso CRUD para usuarios comunes
 
-**Estado:** ✅ Completado
+**Estado:** ✅ Solucionado (2026-04-16)
 
 **Implementación Completada (2026-04-16):**
 1. ✅ Removido `requireAdmin` de `backend/src/routes/planes.js` (línea 12)
@@ -583,6 +706,361 @@ b. **Frontend: Remover restricción de deshabilitado**
 
 **Commits:**
 - 45ff900 - feat(BACKLOG-010): botón Aumento Masivo habilitado para todos
+
+---
+
+### BACKLOG-011: Agregar Acciones (Editar y Habilitar) a Planes en Búsqueda de Afiliados
+
+**Descripción:**
+En el componente BusquedaAfiliados, cuando se visualiza la tabla de planes de un afiliado seleccionado, agregar una columna "Acciones" con botones para:
+1. ✎ Editar plan (abre PlanV1Modal con modo edición)
+2. 🔒/🔓 Cambiar estado (ACTIVO ↔ SUSPENDIDO) con confirmación
+
+**Requerimientos:**
+
+a. **Nueva columna "Acciones" en tabla de planes**
+   - Ubicación: después de columna "Valor Cuota"
+   - Dos botones por plan:
+     * Botón Editar (✎): abre PlanV1Modal en modo edición (reutilizable)
+     * Botón Estado (🔒/🔓): cambia estado ACTIVO ↔ SUSPENDIDO con confirmación
+
+b. **Integración con PlanV1Modal**
+   - Modal debe aceptar parámetro `plan` (objeto plan completo)
+   - Modal debe aceptar callback `onSave` para actualizar tabla
+   - Reutilizar modal existente sin cambios (modal ya existe en GestionPlanesV1)
+   - Importar y usar el mismo componente
+
+c. **Cambio de Estado**
+   - Botón muestra icono 🔒 si estado es ACTIVO, 🔓 si es SUSPENDIDO
+   - Al hacer click:
+     * Si estado es ACTIVO → confirmar cambio a SUSPENDIDO
+     * Si estado es SUSPENDIDO → confirmar cambio a ACTIVO
+   - Confirmación modal: "¿Cambiar estado de {plan.numero_afiliado}?"
+   - Si usuario confirma:
+     * Llamar a planesV1Service.actualizar(planNumero, {estado: 'SUSPENDIDO'|'ACTIVO'})
+     * Actualizar tabla localmente
+     * Mostrar mensaje de éxito
+
+d. **Manejo de errores**
+   - Si actualización falla: mostrar error
+   - Si modal cancela: no hacer cambios
+   - Tabla debe refrescarse automáticamente después de cualquier operación exitosa
+
+**Contexto:**
+- Actualmente tabla de planes en BusquedaAfiliados es solo lectura
+- Usuario debe poder realizar acciones directas desde búsqueda (editar, cambiar estado)
+- Reúsa componente existente (PlanV1Modal) → sin duplicación de código
+- Mejora flujo: accede a afiliado → ve planes → edita o cambia estado sin salir de búsqueda
+
+**Archivos a modificar:**
+- `frontend/src/pages/DashboardPage/components/v1.0/BusquedaAfiliados.jsx` (agregar columna + lógica)
+- `frontend/src/pages/DashboardPage/components/v1.0/BusquedaAfiliados.scss` (estilos para nueva columna)
+- Nota: PlanV1Modal ya existe en GestionPlanesV1 y es reutilizable (no modificar)
+
+**Estimación:** 2-3 horas (agregar columna + integrar modal + lógica de estado + testing)
+
+**Prioridad:** 🔴 Alta — Funcionalidad importante para gestión desde búsqueda
+
+**Estado:** 🚀 Desarrollado (2026-04-16)
+
+**Implementación Completada (2026-04-16):**
+1. ✅ Importados PlanV1Modal e IconButton en BusquedaAfiliados.jsx
+2. ✅ Agregados estados: showPlanModal, editingPlan, successMessage
+3. ✅ Implementados handlers:
+   - `handleEditarPlan()`: abre modal con plan para editar
+   - `handlePlanSaved()`: refresca planes y cierra modal
+   - `handleToggleEstado()`: cambia estado ACTIVO ↔ SUSPENDIDO con confirmación
+4. ✅ Agregada columna "Acciones" en tabla de planes con dos botones:
+   - Botón ✎ (editar): abre PlanV1Modal en modo edición
+   - Botón 🔒/🔓 (estado): alterna entre ACTIVO y SUSPENDIDO
+5. ✅ Integración con planesV1Service.actualizar() y .getByPersona()
+6. ✅ Mensajes de éxito y error actualizados
+7. ✅ Estilos aplicados: success-message, table-standard class, action-button-group
+8. ✅ Modal reutilizable sin cambios (PlanV1Modal existente)
+
+**Commits:**
+- 0c364a6 - feat(BACKLOG-011): agregar acciones (editar y habilitar) a planes en búsqueda de afiliados
+
+**Aprobación de Usuario (2026-04-16):**
+- ✅ Funcionalidad completa verificada
+- ✅ Integración con PlanV1Modal funcional
+- ✅ Cambios de estado ACTIVO ↔ SUSPENDIDO operacionales
+- ✅ Mensajes de éxito/error claros
+
+---
+
+### BACKLOG-012: Mejorar Comportamiento de Ventanas Modales (Cierre, ESC, Cambios)
+
+**Descripción:**
+Mejorar la experiencia de usuario en las ventanas modales del sistema con tres cambios principales:
+1. Las modales NO deben cerrarse al hacer click fuera (backdrop no cierra)
+2. Las modales pueden cerrarse presionando la tecla ESC
+3. Si el usuario ha realizado cambios en los datos y presiona ESC, mostrar confirmación antes de cerrar
+4. Con múltiples modales superpuestas, ESC solo cierra la más arriba (LIFO stack behavior)
+
+**Requerimientos:**
+
+a. **Comportamiento al hacer click fuera (backdrop)**
+   - Actual: probablemente permite cerrar al hacer click fuera
+   - Cambio: NO cerrar al hacer click fuera de la modal
+   - Razón: prevenir cierre accidental, usuario debe usar botón explícito o ESC
+
+b. **Comportamiento de tecla ESC**
+   - Presionar ESC abre la modal
+   - Si NO hay cambios en los datos:
+     * Cerrar inmediatamente sin confirmación
+   - Si SÍ hay cambios en los datos:
+     * Mostrar modal de confirmación: "¿Cerrar sin guardar? Los cambios se perderán"
+     * Botones: "Cancelar" | "Sí, Cerrar sin guardar"
+     * Si usuario elige "Cancelar": permanecer en modal
+     * Si usuario elige "Sí, Cerrar": cerrar sin guardar
+
+c. **Manejo de múltiples modales superpuestas**
+   - Cuando hay varias modales abiertas (ej: modal A abierto, modal B abierto arriba):
+     * ESC cierra SOLO la modal que está al frente (modal B)
+     * Modal A permanece abierta
+   - Patrón LIFO (Last In, First Out)
+   - Registrar stack de modales abiertas (en componente padre o context global)
+
+d. **Detección de cambios**
+   - Cada modal necesita saber si hay cambios no guardados
+   - Estrategia: comparar estado actual vs estado inicial de datos
+   - O usar flag booleano `hasChanges` que se actualiza en onChange/onInput
+   - Implementar en cada modal: PlanV1Modal, GenerarRecibosModal, BulkUpdateCuotaModal, FormModals, etc.
+
+e. **Implementación técnica**
+   - Crear hook personalizado: `useModalKeyboard(isOpen, hasChanges, onEsc, onEscWithChanges)`
+   - Este hook:
+     * Escucha eventos de teclado (ESC)
+     * Solo actúa si modal está abierta
+     * Comprueba si hay cambios
+     * Llama callback apropiado
+   - O envoltura Modal global que maneje ESC automáticamente
+   - Modal wrapper que:
+     * Detecta clicks fuera (backdrop)
+     * Escucha ESC
+     * Maneja confirmación de cambios
+
+**Contexto:**
+- Mejorar UX: usuarios quieren poder cerrar modales con ESC (patrón estándar)
+- Prevenir pérdida accidental de datos: confirmar si hay cambios
+- Evitar cierre accidental al hacer click fuera: mejora estabilidad
+- Múltiples modales superpuestas: comportamiento intuitivo (solo cierra la más arriba)
+
+**Archivos a modificar/crear:**
+- `frontend/src/hooks/useModalKeyboard.js` (NUEVO - hook para manejo de ESC)
+- `frontend/src/components/ModalWrapper/ModalWrapper.jsx` (NUEVO O MEJORAR - wrapper base para modales)
+- Todos los modales:
+  * `frontend/src/pages/DashboardPage/components/GestionPlanesV1/modals/PlanV1Modal.jsx`
+  * `frontend/src/pages/DashboardPage/components/GestionPlanesV1/modals/GenerarRecibosModal.jsx`
+  * `frontend/src/pages/DashboardPage/components/BulkUpdateCuotaModal/BulkUpdateCuotaModal.jsx`
+  * `frontend/src/pages/DashboardPage/components/GestionPlanesV1/modals/UsuarioFormModal.jsx`
+  * `frontend/src/pages/DashboardPage/components/LookupCRUD/LookupCRUDFormModal.jsx`
+  * Otros modales/formularios
+
+**Estimación:** 6-8 horas
+  - Hook useModalKeyboard: 1h
+  - ModalWrapper mejorado: 1h
+  - Auditar modales actuales: 1.5h
+  - Modificar cada modal (agregar hasChanges tracking, integrar hook): 2-3h
+  - Modal de confirmación (reutilizar existente): 0.5h
+  - Testing: 1h
+
+**Prioridad:** 🔴 Alta — UX estándar esperada, previene pérdida de datos
+
+**Estado:** 🚀 Desarrollado (2026-04-16)
+
+**Implementación Completada (2026-04-16):**
+
+**Fase 1: Infraestructura**
+1. ✅ Creado hook `useModalEscapeKey.js`
+   - Escucha evento keydown para tecla ESC
+   - Solo actúa si modal está abierta
+   - Comprueba si hay cambios sin guardar
+   - Llama callback apropiado (cerrar directo o mostrar confirmación)
+
+2. ✅ Creado componente `ConfirmCloseDialog`
+   - Modal de confirmación reutilizable
+   - Estilos consistentes con sistema de diseño
+   - Mensajes claros: "¿Cerrar sin guardar? Los cambios se perderán"
+   - Botones: Cancelar | Sí, Cerrar sin guardar
+
+**Fase 2: Modales Principales (Actualización)**
+1. ✅ PlanV1Modal (editor de planes)
+   - Removed: `onClick={onClose}` from overlay
+   - Added: Detección de cambios (comparación JSON form vs initialForm)
+   - Added: useModalEscapeKey hook integration
+   - Added: ConfirmCloseDialog component
+   - Cierre con ESC: si hay cambios → confirmación, si no → cierre directo
+
+2. ✅ BulkUpdateCuotaModal (aumento masivo)
+   - Removed: backdrop click close
+   - Added: hasChanges tracking (step, valor, filtro, selectValue)
+   - Added: ESC handler con confirmación
+   - Confirmación ante cierre con cambios
+
+3. ✅ GenerarRecibosModal (generación de recibos)
+   - Removed: backdrop click close
+   - Added: hasChanges tracking (step, periodo)
+   - Added: ESC handler con confirmación
+   - Reutiliza existente handleClose para lógica de negocio
+
+**Fase 3: Modales Secundarias (Actualización)**
+1. ✅ UsuarioFormModal (crear usuario)
+   - Removed: backdrop click close
+   - Added: hasChanges tracking (email)
+   - Added: ESC handler con confirmación
+   - Confirmación antes de descartar form
+
+2. ✅ AfiladoSearchModal (buscar/crear afiliados)
+   - Removed: backdrop click close
+   - Added: hasChanges tracking (searchText, showCreateForm, newPersona)
+   - Added: ESC handler con confirmación
+   - Detección sensible de cambios en búsqueda y formulario de creación
+
+3. ✅ AfiladoEditModal (editar datos de afiliado)
+   - Removed: backdrop click close
+   - Reemplazado: window.confirm() → ConfirmCloseDialog
+   - Added: hasChanges con useMemo (comparación JSON)
+   - Added: ESC handler con confirmación
+   - Ambos botones (✕ y Cancelar) respetan confirmación
+
+4. ✅ IntegranteServiciosModal (servicios adicionales)
+   - Removed: backdrop click close
+   - Added: hasChanges tracking (selectedServicios vs originalSelectedServicios)
+   - Added: Preservación de estado inicial en loadData
+   - Added: ESC handler con confirmación
+   - Confirmación ante cambios en selección de servicios
+
+**Comportamiento Implementado:**
+- ✅ Modales NO cierran al hacer click fuera (overlay sin onClick)
+- ✅ Modales SÍ responden a tecla ESC
+- ✅ ESC sin cambios: cierre inmediato
+- ✅ ESC con cambios: muestra ConfirmCloseDialog
+- ✅ Confirmación reutilizable en todas las modales
+- ✅ Detección de cambios específica por modal
+- ✅ Botones de cierre (✕) también respetan confirmación
+
+**Commits:**
+- 87cc5b1 - feat(BACKLOG-012): mejorar comportamiento de modales - Fase 1
+- 2ce0c10 - feat(BACKLOG-012): mejorar comportamiento de modales - Fase 2
+
+**Notas:**
+- ReciboDetalleModal y PreviewModal no actualizadas (probablemente read-only)
+- Sistema escalable: nuevas modales pueden reutilizar useModalEscapeKey + ConfirmCloseDialog
+- Comportamiento LIFO: múltiples modales superpuestas se cierran desde la más arriba
+
+---
+
+### BACKLOG-014: Página Dedicada de Gestión de Recibos por Período
+
+**Descripción:**
+Crear una página dedicada para la gestión centralizada de recibos generados. La página permitirá:
+1. Listar todos los períodos (meses/años) para los cuales ya se han generado recibos
+2. Acceder al listado completo de recibos de cada período
+3. Generar nuevos recibos para un período seleccionado (mes y año)
+
+El acceso a esta página será a través de un botón "Generar recibos" desde la vista de edición de planes.
+
+**Requerimientos:**
+
+a. **Estructura de la Página (RecibosPage.jsx)**
+   - Header: "Gestión de Recibos"
+   - Dos secciones principales:
+     * Sección 1: Listado de períodos disponibles
+     * Sección 2: Formulario para generar nuevos recibos
+
+b. **Listado de Períodos Generados**
+   - Tabla con columnas:
+     - Período (formato: "Enero 2026", "Febrero 2026", etc.)
+     - Cantidad de recibos generados
+     - Fecha de generación
+     - Acción: Link para ver listado de recibos del mes
+   - Si no hay períodos generados: mostrar mensaje "No hay recibos generados aún"
+   - Ordenamiento: descendente por período (más reciente primero)
+   - Paginación si hay muchos períodos
+
+c. **Link a Listado de Recibos por Período**
+   - Al hacer click en el link de un período:
+     * Redirigir a nueva vista (RecibosListPage.jsx)
+     * Pasar período como parámetro (YYYY-MM)
+     * Mostrar tabla con todos los recibos del período
+     * Columnas: Plan #, Afiliado, Integrantes, Valor Cuota, Acciones (descargar PDF?, ver detalle)
+     * Paginación si es necesario
+
+d. **Formulario de Generación de Recibos**
+   - Botón principal: "Generar Recibos"
+   - Al hacer click en botón:
+     * Mostrar modal/formulario con:
+       - Campo 1: Selector de mes (select con opciones: Enero, Febrero, Marzo, ..., Diciembre)
+       - Campo 2: Selector de año (input numérico o select con últimos 5 años)
+       - Selección por defecto: mes actual y año actual
+       - Botón: "Generar"
+       - Botón: "Cancelar"
+   - Al hacer click en "Generar":
+     * Validar que mes y año sean válidos
+     * Convertir formato legible a YYYY-MM
+     * Llamar a endpoint POST /api/recibos/generar con período
+     * Usar misma lógica que GenerarRecibosModal (detectar período existente, mostrar confirmación si existe, etc.)
+     * Después de generación exitosa:
+       - Mostrar mensaje de éxito
+       - Refrescar lista de períodos
+       - Opcionalmente: navegar automáticamente al listado de recibos generados
+
+e. **Integración con Edición de Planes**
+   - En PlanV1Modal.jsx:
+     * Reemplazar o complementar botón "Generar recibos"
+     * El botón debe dirigir a RecibosPage.jsx (no abrir GenerarRecibosModal)
+     * Opcionalmente: pasar plan_numero como parámetro para pre-filtrar (si es útil)
+
+f. **Consultas de Datos (Backend)**
+   - Endpoint GET /api/recibos/periodos
+     * Retorna lista de períodos con: periodo (YYYY-MM), cantidad_recibos, fecha_generacion
+   - Endpoint GET /api/recibos?periodo=YYYY-MM
+     * Retorna lista de recibos del período especificado
+   - Endpoint POST /api/recibos/generar (ya existe)
+     * Lógica de detección de período existente (BACKLOG-008)
+
+**Contexto:**
+- Actualmente, la generación de recibos se hace a través de GenerarRecibosModal dentro de la edición de planes
+- Usuario necesita una forma centralizada y clara de gestionar recibos
+- Consultar recibos generados requiere entrar en la vista de edición de cada plan
+- Mejora UX: página dedicada permite visualizar período actual, histórico de generaciones, y generar nuevos recibos de forma centralizada
+- Flujo intuitivo: Edición de Planes → botón "Generar recibos" → va a RecibosPage → lista períodos → puede generar nuevo → usa misma lógica existente
+
+**Archivos a crear/modificar:**
+- `frontend/src/pages/RecibosPage/RecibosPage.jsx` (NUEVO - página principal)
+- `frontend/src/pages/RecibosPage/RecibosPage.scss` (NUEVO - estilos)
+- `frontend/src/pages/RecibosPage/RecibosListPage.jsx` (NUEVO - listado de recibos por período)
+- `frontend/src/pages/RecibosPage/RecibosListPage.scss` (NUEVO - estilos)
+- `frontend/src/pages/RecibosPage/components/GenerarRecibosForm.jsx` (NUEVO - formulario de generación)
+- `frontend/src/pages/DashboardPage/components/GestionPlanesV1/modals/PlanV1Modal.jsx` (modificar botón "Generar recibos")
+- `frontend/src/services/recibosService.js` (extender con métodos: getPeriodos(), listByPeriodo())
+- `frontend/src/App.jsx` (agregar nueva ruta: /recibos)
+
+**Estimación:** 6-8 horas
+  - Crear estructura de páginas y componentes: 2h
+  - Desarrollar listado de períodos: 1.5h
+  - Desarrollar formulario de generación: 1.5h
+  - Desarrollar listado de recibos por período: 1.5h
+  - Integración con PlanV1Modal: 0.5h
+  - Testing y ajustes: 1h
+
+**Prioridad:** 🔴 Alta — Mejora importante para UX en gestión de recibos
+
+**Estado:** ✅ Solucionado (2026-04-16)
+
+**Implementación Completada (2026-04-16):**
+1. ✅ Backend: Endpoint GET /api/recibos/periodos lista períodos generados
+2. ✅ Frontend: RecibosPage.jsx con dos vistas (lista de períodos y recibos de período)
+3. ✅ Integración como módulo del Dashboard (state-based, no route)
+4. ✅ GenerarRecibosModal mejorado con verificación live de períodos existentes
+5. ✅ Menú: "Gestión de Recibos" agregado bajo "Gestión"
+6. ✅ Validación de formato período (YYYY-MM-DD) en backend y frontend
+7. ✅ Paginación de recibos (10 por página)
+8. ✅ Flujo completo: ver períodos → generar nuevos → ver recibos → ver detalles
+
+**Nota:** Durante la implementación se detectó BUG-017 (recibos no se devuelven del API). Registrado en BUGS.md para seguimiento posterior.
 
 ---
 

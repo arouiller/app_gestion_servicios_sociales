@@ -7,6 +7,10 @@ const recibosController = require('../controllers/v1.0/recibosController');
 // Generar recibos para un período
 router.post('/generar', verifyToken, recibosController.generar);
 
+// GET /api/recibos/periodos
+// Listar todos los períodos con recibos generados
+router.get('/periodos', verifyToken, recibosController.listPeriodos);
+
 // GET /api/recibos?periodo=YYYY-MM-DD
 // Listar recibos de un período
 router.get('/', verifyToken, recibosController.list);

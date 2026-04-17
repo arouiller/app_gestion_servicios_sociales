@@ -123,6 +123,15 @@
     border-radius: 2px;
   }
 
+  .success-message {
+    padding: 10px;
+    background-color: rgba(76, 175, 80, 0.1);
+    border-left: 4px solid #4caf50;
+    color: #4caf50;
+    margin-bottom: 15px;
+    border-radius: 2px;
+  }
+
   .no-results,
   .loading {
     padding: 20px;

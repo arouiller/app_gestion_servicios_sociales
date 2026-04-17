@@ -69,6 +69,20 @@ const recibosService = {
       return [];
     }
   },
+
+  /**
+   * GET /api/recibos/periodos
+   * Lista todos los períodos con recibos generados
+   */
+  listPeriodos: async () => {
+    try {
+      const response = await api.get('/recibos/periodos');
+      return response.data;
+    } catch (error) {
+      console.error('Error fetching periodos de recibos:', error);
+      return [];
+    }
+  },
 };
 
 export default recibosService;

@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useCallback } from 'react';
+import React, { useState, useEffect, useCallback, useMemo, useRef } from 'react';
 import { usePlanV1Form } from '../hooks/usePlanV1Form';
 import ActionButton from '../../../../../components/ActionButton/ActionButton';
 import planesV1Service from '../../../../../services/planesV1Service';
@@ -9,6 +9,8 @@ import AfiladoSearchModal from './AfiladoSearchModal';
 import AfiladoEditModal from './AfiladoEditModal';
 import ReciboDetalleModal from './ReciboDetalleModal';
 import IntegranteServiciosModal from './IntegranteServiciosModal';
+import ConfirmCloseDialog from '../../../../../components/ConfirmCloseDialog/ConfirmCloseDialog';
+import { useModalEscapeKey } from '../../../../../hooks/useModalEscapeKey';
 import './PlanV1Modal.scss';
 
 function PlanV1Modal({ mode, planData, onClose, onSave }) {
@@ -35,6 +37,39 @@ function PlanV1Modal({ mode, planData, onClose, onSave }) {
   const [afiladoEditOpen, setAfiladoEditOpen] = useState(null); // null or persona_id
   const [reciboDetailOpen, setReciboDetailOpen] = useState(null); // null or recibo id
   const [serviciosModalOpen, setServiciosModalOpen] = useState(null); // null or integrante.id
+
+  // Store initial form state for change detection
+  const initialFormRef = useRef(null);
+  const [showConfirmClose, setShowConfirmClose] = useState(false);
+
+  // Initialize and detect if form has changes
+  useEffect(() => {
+    if (initialFormRef.current === null) {
+      initialFormRef.current = JSON.stringify(form);
+    }
+  }, []);
+
+  const hasChanges = useMemo(() => {
+    if (!initialFormRef.current) return false;
+    return JSON.stringify(form) !== initialFormRef.current;
+  }, [form]);
+
+  // Handle ESC key with confirmation if there are changes
+  const handleEscapeWithChanges = useCallback(() => {
+    setShowConfirmClose(true);
+  }, []);
+
+  const handleConfirmClose = useCallback(() => {
+    setShowConfirmClose(false);
+    onClose?.();
+  }, [onClose]);
+
+  const handleCancelClose = useCallback(() => {
+    setShowConfirmClose(false);
+  }, []);
+
+  // Use ESC key handler
+  useModalEscapeKey(true, hasChanges, onClose, hasChanges ? handleEscapeWithChanges : undefined);
 
   // Load lookups and max affiliate number on mount
   useEffect(() => {
@@ -245,11 +280,22 @@ function PlanV1Modal({ mode, planData, onClose, onSave }) {
 
   return (
     <>
-      <div className="plan-v1-modal__overlay" onClick={onClose} />
+      <div className="plan-v1-modal__overlay" />
       <div className="plan-v1-modal">
         <div className="plan-v1-modal__header">
           <h3>{mode === 'crear' ? 'Nuevo Plan' : `Editar Plan: ${planData?.numero_afiliado}`}</h3>
-          <button className="plan-v1-modal__close" onClick={onClose}>✕</button>
+          <button
+            className="plan-v1-modal__close"
+            onClick={() => {
+              if (hasChanges) {
+                setShowConfirmClose(true);
+              } else {
+                onClose?.();
+              }
+            }}
+          >
+            ✕
+          </button>
         </div>
 
         <div className="plan-v1-modal__body">
@@ -500,7 +546,7 @@ function PlanV1Modal({ mode, planData, onClose, onSave }) {
             {/* Tab: Recibos */}
             {activeTab === 'recibos' && (
               <div className="plan-v1-modal__tab-content">
-                <h4>Recibos</h4>
+                <h4>Recibos del plan</h4>
                 {recibosLoading ? (
                   <p className="plan-v1-modal__empty">Cargando recibos...</p>
                 ) : recibos.length === 0 ? (
@@ -645,6 +691,14 @@ function PlanV1Modal({ mode, planData, onClose, onSave }) {
           onClose={() => setServiciosModalOpen(null)}
         />
       )}
+
+      {/* Confirmation dialog for closing with unsaved changes */}
+      <ConfirmCloseDialog
+        isOpen={showConfirmClose}
+        onConfirm={handleConfirmClose}
+        onCancel={handleCancelClose}
+        title="¿Cerrar sin guardar?"
+      />
     </>
   );
 }

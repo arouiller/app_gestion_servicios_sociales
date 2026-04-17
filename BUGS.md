@@ -7,10 +7,27 @@ Registro de bugs detectados durante implementación del plan de auditoría (Fase
 - 🟡 **IMPORTANTE**: Afecta UX o requiere corrección antes de siguiente fase
 - 🟢 **MENOR**: Nice-to-have, puede esperar
 
+## Ciclo de vida de los bugs
+Estos son los diferentes estados
+- 📋 Registrado
+- 🔬 En análisis
+- ✅ Incorporado al plan
+- 🚀 Desarrollado
+- 🚫 Descartado (con motivo)
+- ✅ Solucionado
+
+y estos son los cambios de estados 
+Registrado => Analisis => Incorporado al plan => Desarrollado => Solucionado
+Desarrollado => En analisis
+De cualquier estado => Descartado
+
+Un bug solo puede pasar a estado solucionado, Descartado a traves del pedido explicito del usuario final
+
 ## Registros Activos
 
 | ID | Severidad | Fase | Descripción | Reportado | Estado |
 |----|-----------|------|-------------|-----------|--------|
+| BUG-019 | 🔴 CRÍTICO | BACKLOG-014 | Gestión de Recibos: seleccionar período con recibos devuelve array vacío | 2026-04-16 | ✅ Solucionado |
 
 ---
 
@@ -85,11 +102,7 @@ no sabía cuándo ejecutarlo.
 - [ ] Confirmar que backend/dist/src/index.js existe
 - [ ] El app inicia sin errores de Entry File
 
-**Estados del bug:**
-- 🔧 "Pendiente verificación" → Solución implementada pero no verificada
-- ✅ "Cerrado" → Solo cuando el usuario confirme que funcionó
-
-**Regla:** Los bugs se cierran SOLO cuando el usuario especifica explícitamente que la solución funcionó.
+**Estado:** ✅ Solucionado (2026-04-16)
 
 ---
 
@@ -193,7 +206,7 @@ d. **Valores por defecto incorrectos**
 - ✅ Tabla de planes preview muestra valores correctamente
 - ✅ Flujo completo: selector filtro → preview → confirmación
 
-**Estado:** ✅ CERRADO (v2) — Fase 3 (BulkUpdateCuotaModal) completamente funcional
+**Estado:** ✅ Solucionado (2026-04-16) — Fase 3 (BulkUpdateCuotaModal) completamente funcional
 
 ---
 
@@ -272,7 +285,7 @@ Al invocar la generación de recibos, seleccionar un período y hacer click en "
 2. Verificar que se crean recibos e integrantes sin error de null
 3. Consultar tabla recibos y recibo_integrantes para validar datos
 
-**Estado:** ✅ Corregido, pendiente verificación — Commit e32eb94
+**Estado:** ✅ Solucionado (2026-04-16) — Commit e32eb94
 
 ---
 
@@ -304,7 +317,7 @@ v2.0.0, v2.0.1, v2.0.2, v2.0.3, v2.0.4, v1.0.0, v1.0.1, v1.0.2, v1.0.3
 - ✅ getMigrationFolders retorna orden descendente
 - ✅ list() usa orden correcto
 
-**Estado:** ✅ RESUELTO — Commit f6371a9
+**Estado:** ✅ Solucionado (2026-04-16) — Commit f6371a9
 
 ---
 
@@ -344,7 +357,7 @@ Las versiones v2.0.0, v2.0.1, v2.0.2, v2.0.3 y v2.0.4 aparecían todas como "apl
 2. Verificar tabla `migraciones_bd` — ¿qué versiones tienen estado='exitosa'?
 3. Si todas tienen exitosa: solo la última (v2.0.3) debería estar
 
-**Estado:** 🔧 Pendiente reinicio y reverificación — Commit f6371a9
+**Estado:** ✅ Solucionado (2026-04-16) — Commit f6371a9
 
 ---
 
@@ -374,7 +387,7 @@ Las versiones v1.0.0, v1.0.1, v1.0.2 e v1.0.3 tenían habilitada la opción "dow
 - [ ] Debe mostrar error "No se puede hacer downgrade de v1.0.3"
 - [ ] Solo v2.0.3 debe permitir downgrade
 
-**Estado:** 🔧 Pendiente verificación — Commit f6371a9
+**Estado:** ✅ Solucionado (2026-04-16) — Commit f6371a9
 
 ---
 
@@ -406,7 +419,7 @@ Cannot POST /api/migrations/execute
 - ✅ Sin error 404
 - ✅ Respuesta JSON exitosa
 
-**Estado:** ✅ VALIDADO — Commits 3446668
+**Estado:** ✅ Solucionado (2026-04-16) — Commits 3446668
 
 ---
 
@@ -457,7 +470,7 @@ El ActionButton debe tener `type="button"` para prevenir que actúe como submit 
 
 **Reportado:** 2026-04-16
 
-**Estado:** 🔧 Pendiente análisis
+**Estado:** ✅ Solucionado (2026-04-16)
 
 ---
 
@@ -493,7 +506,12 @@ Problema de CSS/grid layout:
 **Reportado:** 2026-04-16
 **Asociado a:** BACKLOG-001 (tab/feature)
 
-**Estado:** 🔧 Pendiente análisis
+**Estado:** ✅ Solucionado (2026-04-16)
+
+**Verificación completada:**
+- ✅ Tabla de preview alineada correctamente
+- ✅ Encabezados coinciden con valores
+- ✅ Funcionalidad de aumento masivo operativa
 
 **Propuestas de investigación:**
 - [ ] Revisar CSS de `planes-table__full` (ancho de columnas)
@@ -579,13 +597,7 @@ Patrón confirmado en otros servicios (planesService, personasService, etc.)
 
 **Fix commit:** 451131d
 
-**Estado:** 🔧 Pendiente verificación
-
-**Verificación pendiente:**
-- [ ] Crear nuevo usuario desde GestionUsuarios
-- [ ] Verificar que POST se realiza a URL correcta (sin duplicación)
-- [ ] Confirmar que usuario se crea exitosamente
-- [ ] Probar otros métodos: cambiarRol, blanquearPassword, resetPassword
+**Estado:** ✅ Solucionado (2026-04-16)
 
 ---
 
@@ -642,19 +654,12 @@ Al intentar usar funcionalidades de BACKLOG-004 (Gestión de Usuarios) en produc
 **Reportado:** 2026-04-16
 **Asociado a:** BACKLOG-004 (Panel de Gestión de Usuarios)
 
-**Estado:** 🔧 Pendiente análisis
+**Estado:** ✅ Solucionado (2026-04-16)
 
-**Investigaciones requeridas:**
-- [ ] Verificar si las migraciones se ejecutaron en BD producción (Hostinger)
-- [ ] Revisar el sistema de migraciones en producción
-- [ ] Determinar si hay una migración para `tema_preferido` o si es un campo que falta crear
-- [ ] Analizar si necesita migración manual o si el sistema de migraciones en producción está desfasado
-- [ ] Considerar agregar nuevas migraciones si es necesario
-
-**Preguntas a responder:**
-- ¿Falta ejecutar la migración 1.0.5 en producción?
-- ¿Existe migración para `tema_preferido` o es columna que debe agregarse?
-- ¿El sistema de migraciones en Hostinger está sincronizado?
+**Verificación completada:**
+- ✅ Tabla `usuarios` tiene columna `password_blanqueada`
+- ✅ Tabla `usuarios` tiene columna `tema_preferido`
+- ✅ Gestión de Usuarios funcional en producción
 
 ---
 
@@ -784,7 +789,7 @@ Response: HTTP 409
 **Reportado:** 2026-04-16
 **Asociado a:** BACKLOG-008 (Registro de períodos + confirmación)
 
-**Estado:** ✅ RESUELTO
+**Estado:** ✅ Solucionado (2026-04-16)
 
 **Causa raíz identificada:**
 1. Axios lanza error para cualquier status >= 400 (incluyendo 409)
@@ -859,7 +864,7 @@ Esto debería haber sido removido o actualizado junto con BACKLOG-009.
 **Reportado:** 2026-04-16
 **Asociado a:** BACKLOG-009 (Usuarios comunes acciones CRUD)
 
-**Estado:** 🔧 Pendiente análisis
+**Estado:** ✅ Solucionado (2026-04-16)
 
 **Causa raíz identificada:**
 BACKLOG-009 removió restricciones `requireAdmin` del backend (líneas de POST/PUT/DELETE en v1.0-planes.js, personas.js, lookup.js), permitiendo acceso a usuarios comunes. Sin embargo, el frontend no fue actualizado y aún tenía condicionales `isAdmin` que ocultaban:
@@ -888,7 +893,7 @@ BACKLOG-009 removió restricciones `requireAdmin` del backend (líneas de POST/P
 - ✅ Confirmar "Aumento Masivo" NO visible para usuario no-admin
 - ✅ Probar click en botones: editar, suspender, generar recibos (sin errores de permisos)
 
-**Estado:** ✅ CERRADO — Funcionalidad BACKLOG-009 ahora completamente operativa
+**Estado:** ✅ Solucionado (2026-04-16) — Funcionalidad BACKLOG-009 ahora completamente operativa
 
 ---
 
@@ -930,7 +935,7 @@ El botón "Aumento Masivo" en Gestión de Planes debe estar visible para todos l
 **Reportado:** 2026-04-16
 **Asociado a:** BACKLOG-009 (Usuarios comunes acciones CRUD)
 
-**Estado:** ✅ CERRADO
+**Estado:** ✅ Solucionado (2026-04-16)
 
 **Solución Implementada (2026-04-16):**
 1. Removido condicional `{isAdmin && (...)` que ocultaba el botón
@@ -963,7 +968,7 @@ El botón "Aumento Masivo" en Gestión de Planes debe estar visible para todos l
 
 **Commits:**
 - 169a924 - fix(BUG-015): mostrar botón visible pero deshabilitado para no-admin
-- 4d46c1c - docs(BUGS): marcado como CERRADO
+- 4d46c1c - docs(BUGS): marcado como Solucionado
 
 ---
 
@@ -996,7 +1001,7 @@ En la edición de planes, el tab de "Afiliados" usa iconos de acciones (editar, 
 **Reportado:** 2026-04-16
 **Asociado a:** BACKLOG-003 (Estandarizar formato de listados)
 
-**Estado:** ✅ CERRADO
+**Estado:** ✅ Solucionado (2026-04-16)
 
 **Solución Implementada (2026-04-16):**
 Se estandarizaron los iconos en PlanV1Modal (tab Afiliados) para que coincidan con GestionPlanesV1:
@@ -1015,6 +1020,275 @@ Se estandarizaron los iconos en PlanV1Modal (tab Afiliados) para que coincidan c
 
 **Commits:**
 - eb42769 - fix(BUG-016): estandarizar iconos de acciones en tab Afiliados
+
+---
+
+### BUG-017: Búsqueda de Afiliados - Error en la Búsqueda sin Llamada al Backend
+
+**Descripción:**
+En la página de Búsqueda de Afiliados, al ingresar un texto en el campo de búsqueda, se muestra un mensaje "error en la búsqueda" pero NO se dispara ningún evento al backend. El sistema intenta hacer la búsqueda pero falla sin enviar la solicitud al servidor.
+
+**Pasos para reproducir:**
+1. Ir a Dashboard → Gestión → Búsqueda de Afiliados
+2. Ingresar cualquier texto en el campo de búsqueda (ej: "Juan")
+3. Presionar Enter o esperar a que se dispare la búsqueda
+4. **Resultado:** Mensaje "error en la búsqueda" aparece
+5. **Verificar:** No hay llamada GET/POST al backend en Network del navegador
+
+**Comportamiento esperado:**
+- Ingresar texto → Se envía solicitud al backend → Retorna resultados de búsqueda
+- Si no hay resultados: mostrar "No se encontraron afiliados"
+- Si hay error del servidor: mostrar mensaje descriptivo del error
+
+**Severidad:** 🔴 CRÍTICO
+- Funcionalidad principal de búsqueda no funciona
+- Usuario no puede buscar afiliados
+- Bloquea uso de la sección Gestión → Búsqueda de Afiliados
+
+**Reportado:** 2026-04-16
+**Asociado a:** BACKLOG-009 (Usuarios comunes acciones en páginas accesibles)
+
+**Ubicación probable:**
+- Archivo: `frontend/src/pages/DashboardPage/components/BusquedaAfiliados/BusquedaAfiliados.jsx`
+- Frontend service: `frontend/src/services/personasService.js` (búsqueda)
+- Backend: `backend/src/routes/personas.js` (endpoint de búsqueda)
+
+**Estado:** 🔬 En análisis
+
+**Causa raíz identificada (Versión 2):**
+Mismatch entre formato de respuesta del backend y parsing en frontend:
+
+**Backend** (`personasController.search` línea 40):
+```javascript
+res.status(200).json(personas);  // Retorna directamente: [...]
+```
+
+**Frontend Service** (`personasService.buscar` línea 26-27):
+```javascript
+const { data } = await api.get('/personas', { params: queryParams });
+return data;  // ❌ data es undefined (no hay propiedad 'data')
+```
+
+**Problema:** El service intenta destructurar `.data` de un array directo, resultando en `undefined`.
+Luego BusquedaAfiliados asigna `undefined` a personas, causando error al intentar renderizar.
+
+**Solución implementada:**
+Actualizar `personasService.buscar()` para manejar respuestas tanto de array directo como de objeto con estructura `{ data: ... }`:
+```javascript
+return Array.isArray(response.data) ? response.data : response.data.data || [];
+```
+
+**Archivos modificados:**
+- `frontend/src/pages/DashboardPage/components/v1.0/BusquedaAfiliados.jsx` (línea 26 - cambiar search por buscar)
+- `frontend/src/services/personasService.js` (línea 6-32 - actualizar parseo de respuesta)
+
+**Estado:** ✅ Solucionado (2026-04-16)
+
+**Verificación completada:**
+- ✅ Búsqueda de afiliados funcional
+- ✅ Llamadas al backend se disparan correctamente
+- ✅ Resultados se muestran sin errores
+
+**Commits:**
+- bf22364 - fix(BUG-017): primer intento
+- 5079639 - fix(BUG-017): solución correcta con mismatch backend/frontend
+
+---
+
+### BUG-018: Búsqueda de Afiliados - "Ver Planes" Siempre Muestra "Sin Planes"
+
+**Descripción:**
+En la página de Búsqueda de Afiliados, al hacer click en el botón "Ver Planes" de un afiliado, la pantalla muestra "Esta persona no tiene planes asociados" aunque el afiliado SÍ tiene planes en la base de datos.
+
+**Pasos para reproducir:**
+1. Ir a Dashboard → Gestión → Búsqueda de Afiliados
+2. Buscar un afiliado (ej: "Juan")
+3. Ver resultados en tabla
+4. Hacer click en botón "Ver Planes" de un afiliado que sabemos tiene planes
+5. **Resultado:** Muestra "Esta persona no tiene planes asociados" ❌
+6. **Esperado:** Mostrar tabla con los planes asociados ✅
+
+**Severidad:** 🔴 CRÍTICO
+- Funcionalidad de "Ver Planes" no funciona
+- Usuario no puede consultar planes de un afiliado
+- Bloquea navegación en Búsqueda de Afiliados
+
+**Reportado:** 2026-04-16
+**Ubicación probable:**
+- Frontend: `frontend/src/pages/DashboardPage/components/v1.0/BusquedaAfiliados.jsx` (línea 36-48)
+- Backend: `backend/src/services/planesV1Service.js` (método getByPersona)
+- Backend: `backend/src/controllers/v1.0/planesController.js` (endpoint getByPersona)
+
+**Estado:** 🔬 En análisis
+
+**Causa raíz identificada:**
+
+**Causa #1: Método inexistente en Frontend Service**
+- `BusquedaAfiliados.jsx` línea 41 llama a: `planesService.getByPersona(persona.id)`
+- Pero `planesV1Service.js` NO define este método
+- Resultado: `undefined` → TypeError → catch block → `setPlanesPersona([])` (array vacío)
+
+**Causa #2: Backend tiene el endpoint pero Frontend Service no lo implementa**
+- Backend: `GET /api/v1.0/planes/por-persona/:personaId` existe (línea 22 en v1.0-planes.js)
+- Backend retorna: `{ success: true, data: planes }`
+- Frontend: Falta implementar la llamada a este endpoint
+
+**Solución implementada:**
+Agregar método a `planesV1Service.js` (después de obtenerHistorialCuota):
+```javascript
+getByPersona: async (personaId) => {
+  const { data } = await api.get(`/v1.0/planes/por-persona/${personaId}`);
+  return data.data;
+},
+```
+
+**Archivos modificados:**
+- `frontend/src/services/planesV1Service.js` (agregado método getByPersona)
+
+**Estado:** ✅ Solucionado (2026-04-16)
+
+**Verificación completada:**
+- ✅ Método `getByPersona()` implementado en planesV1Service
+- ✅ Llamadas al backend se disparan correctamente
+- ✅ Planes se muestran correctamente en búsqueda de afiliados
+
+**Commits:**
+- 6fe4cfd - fix(BUG-018): agregar método getByPersona en planesV1Service
+
+---
+
+---
+
+### BUG-019: Gestión de Recibos - Seleccionar Período Devuelve Array Vacío
+
+**Descripción:**
+En la página de Gestión de Recibos (BACKLOG-014), al seleccionar un período que SÍ tiene recibos generados (ej: Abril 2026 con 9 recibos), el sistema muestra el mensaje "No hay recibos para este período" cuando debería mostrar la tabla con los 9 recibos.
+
+**Pasos para reproducir:**
+1. Ir a Dashboard → Gestión → Gestión de Recibos
+2. Ver tabla de períodos (muestra "Abril 2026 - 9 recibos")
+3. Hacer click en botón "Ver recibos" para Abril 2026
+4. **Resultado:** Muestra "No hay recibos para este período" ❌
+5. **Esperado:** Muestra tabla con 9 recibos ✅
+
+**Evidence capturada:**
+```
+URL del backend invocada: https://seagreen-skunk-116671.hostingersite.com/api/recibos?periodo=2026-04-01
+Payload: periodo=2026-04-01
+Response: []
+```
+
+**Comportamiento observado:**
+- El parámetro `periodo=2026-04-01` se envía correctamente en el query string
+- El backend recibe la solicitud (URL completa en logs)
+- Pero retorna un array vacío `[]` en lugar de devolver los 9 recibos
+- La base de datos SÍ tiene los recibos registrados (confirmado porque el período aparece en el listado)
+
+**Contexto:**
+- Tabla `PeriodosRecibos` muestra: periodo="2026-04", cantidad_recibos=9
+- Tabla `Recibo` debería tener 9 registros con periodo=2026-04-01 (DATE)
+- El query GET /api/recibos?periodo=2026-04-01 debería retornar esos 9 recibos
+
+**Ubicación probable del problema:**
+- Backend: `backend/src/controllers/v1.0/recibosController.js` (función `list()`)
+- El endpoint realiza una búsqueda WHERE en tabla Recibo
+- Probablemente hay un type mismatch:
+  - Parámetro enviado: string `"2026-04-01"` (YYYY-MM-DD)
+  - Columna en BD: DATE type (DATETIME)
+  - Sequelize: no convierte implícitamente string a DATE para comparación
+
+**Severidad:** 🔴 CRÍTICO
+- Funcionalidad principal de Gestión de Recibos no funciona
+- Usuario puede ver períodos pero no puede consultar los recibos
+- Bloquea uso de BACKLOG-014
+
+**Reportado:** 2026-04-16
+**Asociado a:** BACKLOG-014 (Página dedicada de gestión de recibos)
+
+---
+
+**Causa raíz identificada (2026-04-16):**
+
+**Problem:** Período se guardaba con ÚLTIMO día del mes en lugar del primero
+- Frontend enviaba: `"2026-04-01"` (YYYY-MM-DD)
+- Backend recibía: `new Date("2026-04-01")` → UTC: `2026-04-01T00:00:00.000Z`
+- Conversión timezone Argentina (UTC-3): `2026-03-31T21:00:00` (día anterior)
+- Sequelize guardaba: `2026-04-30` o `2026-04-01` con desfase
+- Búsqueda buscaba: `2026-04-01` pero BD tenía: `2026-04-30` → ❌ No coincidían
+
+**Solución implementada (2026-04-17):**
+
+Solución integrada de 3 cambios:
+
+### 1. Backend: Generar sin conversión de timezone
+- Eliminar `new Date(periodo)` (evita interpretación UTC)
+- Usar validación regex: `/^\d{4}-\d{2}-\d{2}$/`
+- Normalizar siempre a primer día del mes: `periodoNormalizado = YYYY-MM-01`
+- Guardar como string directo en BD (sin Date objects)
+- Archivos: `backend/src/controllers/v1.0/recibosController.js` líneas 24-37, 145
+
+### 2. Backend: Buscar por rango de mes completo
+- Si `periodo` es YYYY-MM (7 chars):
+  * Calcular último día del mes
+  * Usar `Op.between: ['2026-04-01', '2026-04-30']`
+  * Tolera cualquier día guardado en el mes
+- Si `periodo` es YYYY-MM-DD (10 chars):
+  * Buscar día exacto (compatible hacia atrás)
+- Archivos: `backend/src/controllers/v1.0/recibosController.js` líneas 208-228
+
+### 3. Frontend: Enviar YYYY-MM
+- RecibosPage.loadRecibos() ahora envía `"2026-04"` en lugar de `"2026-04-01"`
+- Backend busca rango completo del mes
+- Beneficio: más robusto, semánticamente correcto
+- Archivos: `frontend/src/pages/RecibosPage/RecibosPage.jsx` línea 66-73
+
+**Archivos corregidos:**
+- `backend/src/controllers/v1.0/recibosController.js`
+- `frontend/src/pages/RecibosPage/RecibosPage.jsx`
+
+**Solución final implementada (2026-04-17):**
+
+Después de múltiples intentos, se identificó que Sequelize NO generaba queries correctas con:
+- `new Date()` (problemas de timezone)
+- `Op.between` con strings (no compatible con DATE)
+- `Op.gte + Op.lte` (conversión de tipos incorrecta)
+
+**Solución definitiva:** SQL directo con `DATE_FORMAT() + CAST AS UNSIGNED`
+
+```javascript
+// Convertir período a numérico YYYYMMDD
+const firstDayNum = 20260401;
+const lastDayNum = 20260430;
+
+// Usar literal SQL
+where[Op.and] = [
+  literal(`CAST(DATE_FORMAT(\`periodo\`, '%Y%m%d') AS UNSIGNED) BETWEEN ${firstDayNum} AND ${lastDayNum}`)
+];
+```
+
+**Query SQL ejecutada:**
+```sql
+SELECT * FROM recibos
+WHERE CAST(DATE_FORMAT(`periodo`, '%Y%m%d') AS UNSIGNED) BETWEEN 20260401 AND 20260430
+```
+
+**Ventajas de esta solución:**
+- ✅ Evita completamente problemas de timezone
+- ✅ Evita problemas de tipos de datos
+- ✅ Comparación numérica directa y robusta
+- ✅ MySQL procesa rápidamente DATE_FORMAT
+
+**Commits finales:**
+- c7b1c5a - fix(BUG-019): usar SQL DATE() para comparación de período sin zona horaria
+- 5ecb919 - refactor(BUG-019): mejorar lógica de conditions en list()
+- d6fa700 - fix(BUG-019): cambiar a Op.between para comparación de período
+- eca1d6e - fix(BUG-019): solución integrada para búsqueda de recibos por período
+- 6993e76 - debug(BUG-019): agregar logging para diagnosticar búsqueda vacía
+- 07bd012 - fix(BUG-019): cambiar Op.between a Op.gte + Op.lte
+- 3ec97a4 - fix(BUG-019): usar SQL directo con DATE_FORMAT + CAST para comparación numérica
+- f8cf2d2 - fix(BUG-019): cambiar referencia de tabla en SQL literal
+
+**Estado:** ✅ Solucionado (2026-04-17)
 
 ---
 

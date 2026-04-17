@@ -41,6 +41,12 @@ const planesV1Service = {
     const { data } = await api.get(`/v1.0/planes/${planNumero}/historial-cuota`);
     return data.data;
   },
+
+  // Obtener planes de una persona (por persona ID)
+  getByPersona: async (personaId) => {
+    const { data } = await api.get(`/v1.0/planes/por-persona/${personaId}`);
+    return data.data;
+  },
 };
 
 export default planesV1Service;

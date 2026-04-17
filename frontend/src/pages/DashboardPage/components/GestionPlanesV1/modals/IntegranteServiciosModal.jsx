@@ -1,13 +1,39 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback, useMemo } from 'react';
 import integranteServiciosService from '../../../../../services/integranteServiciosService';
+import ConfirmCloseDialog from '../../../../../components/ConfirmCloseDialog/ConfirmCloseDialog';
+import { useModalEscapeKey } from '../../../../../hooks/useModalEscapeKey';
 import './IntegranteServiciosModal.scss';
 
 function IntegranteServiciosModal({ planIntegranteId, onClose }) {
   const [servicios, setServicios] = useState([]);
   const [selectedServicios, setSelectedServicios] = useState([]);
+  const [originalSelectedServicios, setOriginalSelectedServicios] = useState([]);
   const [loading, setLoading] = useState(false);
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState(null);
+  const [showConfirmClose, setShowConfirmClose] = useState(false);
+
+  // Detect if form has changes
+  const hasChanges = useMemo(() => {
+    return JSON.stringify(selectedServicios) !== JSON.stringify(originalSelectedServicios);
+  }, [selectedServicios, originalSelectedServicios]);
+
+  // Handle ESC key with confirmation if there are changes
+  const handleEscapeWithChanges = useCallback(() => {
+    setShowConfirmClose(true);
+  }, []);
+
+  const handleConfirmClose = useCallback(() => {
+    setShowConfirmClose(false);
+    onClose?.();
+  }, [onClose]);
+
+  const handleCancelClose = useCallback(() => {
+    setShowConfirmClose(false);
+  }, []);
+
+  // Use ESC key handler
+  useModalEscapeKey(true, hasChanges, onClose, hasChanges ? handleEscapeWithChanges : undefined);
 
   useEffect(() => {
     loadData();
@@ -22,7 +48,9 @@ function IntegranteServiciosModal({ planIntegranteId, onClose }) {
 
       // Load services for this integrante
       const asignados = await integranteServiciosService.obtenerServiciosIntegrante(planIntegranteId);
-      setSelectedServicios(asignados.map(s => s.servicio_adicional_numero) || []);
+      const servicioNumbers = asignados.map(s => s.servicio_adicional_numero) || [];
+      setSelectedServicios(servicioNumbers);
+      setOriginalSelectedServicios(servicioNumbers);
     } catch (err) {
       console.error('Error loading services:', err);
       setError('Error al cargar los servicios');
@@ -71,11 +99,22 @@ function IntegranteServiciosModal({ planIntegranteId, onClose }) {
 
   return (
     <>
-      <div className="integrante-servicios-modal__overlay" onClick={onClose} />
+      <div className="integrante-servicios-modal__overlay" />
       <div className="integrante-servicios-modal">
         <div className="integrante-servicios-modal__header">
           <h3>Servicios del Integrante</h3>
-          <button className="integrante-servicios-modal__close" onClick={onClose}>✕</button>
+          <button
+            className="integrante-servicios-modal__close"
+            onClick={() => {
+              if (hasChanges) {
+                setShowConfirmClose(true);
+              } else {
+                onClose?.();
+              }
+            }}
+          >
+            ✕
+          </button>
         </div>
 
         <div className="integrante-servicios-modal__body">
@@ -112,13 +151,27 @@ function IntegranteServiciosModal({ planIntegranteId, onClose }) {
           </button>
           <button
             className="integrante-servicios-modal__btn integrante-servicios-modal__btn--secondary"
-            onClick={onClose}
+            onClick={() => {
+              if (hasChanges) {
+                setShowConfirmClose(true);
+              } else {
+                onClose?.();
+              }
+            }}
             disabled={saving}
           >
             Cancelar
           </button>
         </div>
       </div>
+
+      {/* Confirmation dialog for closing with unsaved changes */}
+      <ConfirmCloseDialog
+        isOpen={showConfirmClose}
+        onConfirm={handleConfirmClose}
+        onCancel={handleCancelClose}
+        title="¿Cerrar sin guardar?"
+      />
     </>
   );
 }

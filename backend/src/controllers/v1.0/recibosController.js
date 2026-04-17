@@ -1,5 +1,6 @@
 const db = require('../../models');
 const sequelize = require('../../config/database');
+const { Op, literal } = require('sequelize');
 
 /**
  * POST /api/recibos/generar
@@ -20,16 +21,20 @@ exports.generar = async (req, res, next) => {
       });
     }
 
-    // Convertir período a DATE
-    const periodoDate = new Date(periodo);
-    if (isNaN(periodoDate)) {
+    // Validar formato YYYY-MM-DD sin convertir a Date
+    // (evita problemas de timezone al convertir con new Date())
+    if (!/^\d{4}-\d{2}-\d{2}$/.test(periodo)) {
       return res.status(400).json({
-        error: 'El período debe ser una fecha válida (YYYY-MM-DD)',
+        error: 'El período debe estar en formato YYYY-MM-DD',
       });
     }
 
     // Extraer YYYY-MM del período
     const periodoYYYYMM = periodo.substring(0, 7);
+
+    // Asegurar que el período siempre sea el primer día del mes
+    // (para consistencia en la BD)
+    const periodoNormalizado = `${periodoYYYYMM}-01`;
 
     // Verificar si el período ya tiene recibos generados
     const periodoExistente = await db.PeriodosRecibos.findOne({
@@ -52,7 +57,7 @@ exports.generar = async (req, res, next) => {
     if (periodoExistente && force) {
       // Obtener IDs de recibos a borrar
       const recibosABorrar = await db.Recibo.findAll({
-        where: { periodo: periodoDate },
+        where: { periodo: periodoNormalizado },
         attributes: ['id'],
         transaction,
       });
@@ -69,7 +74,7 @@ exports.generar = async (req, res, next) => {
 
       // Borrar recibos
       await db.Recibo.destroy({
-        where: { periodo: periodoDate },
+        where: { periodo: periodoNormalizado },
         transaction,
       });
     }
@@ -94,7 +99,7 @@ exports.generar = async (req, res, next) => {
       // Verificar si ya existe recibo para este plan en este período (cuando NO es force)
       if (!force) {
         const existente = await db.Recibo.findOne({
-          where: { plan_numero: planNumero, periodo: periodoDate },
+          where: { plan_numero: planNumero, periodo: periodoNormalizado },
           transaction,
         });
 
@@ -137,7 +142,7 @@ exports.generar = async (req, res, next) => {
       const recibo = await db.Recibo.create(
         {
           plan_numero: planNumero,
-          periodo: periodoDate,
+          periodo: periodoNormalizado,
           numero_afiliado: plan.numero_afiliado,
           titular_apellido: titular.Persona.apellido,
           titular_nombre: titular.Persona.nombre,
@@ -205,9 +210,38 @@ exports.list = async (req, res, next) => {
     const { periodo, plan_numero } = req.query;
 
     const where = {};
+
     if (periodo) {
-      where.periodo = periodo;
+      // Soportar búsqueda por YYYY-MM (mes completo) o YYYY-MM-DD (día específico)
+      if (periodo.length === 7) {
+        // YYYY-MM: buscar rango del mes completo (01 a último día)
+        const [year, month] = periodo.split('-');
+        const firstDay = `${year}-${month}-01`;
+
+        // Calcular último día del mes
+        const lastDayOfMonth = new Date(parseInt(year), parseInt(month), 0).getDate();
+        const lastDay = `${year}-${month}-${String(lastDayOfMonth).padStart(2, '0')}`;
+
+        // Convertir a formato numérico YYYYMMDD para comparación SQL directa
+        const firstDayNum = parseInt(firstDay.replace(/-/g, ''));  // 20260401
+        const lastDayNum = parseInt(lastDay.replace(/-/g, ''));   // 20260430
+
+        console.log(`[BUG-019 DEBUG] Búsqueda por rango: ${firstDay} a ${lastDay} (${firstDayNum} a ${lastDayNum})`);
+
+        // Usar SQL directo con DATE_FORMAT + CAST para evitar problemas de timezone
+        where[Op.and] = [
+          literal(`CAST(DATE_FORMAT(\`periodo\`, '%Y%m%d') AS UNSIGNED) BETWEEN ${firstDayNum} AND ${lastDayNum}`)
+        ];
+      } else if (periodo.length === 10 && /^\d{4}-\d{2}-\d{2}$/.test(periodo)) {
+        // YYYY-MM-DD: buscar ese día específico
+        const periodoNum = parseInt(periodo.replace(/-/g, ''));
+        console.log(`[BUG-019 DEBUG] Búsqueda exacta: ${periodo} (${periodoNum})`);
+        where[Op.and] = [
+          literal(`CAST(DATE_FORMAT(\`periodo\`, '%Y%m%d') AS UNSIGNED) = ${periodoNum}`)
+        ];
+      }
     }
+
     if (plan_numero) {
       where.plan_numero = plan_numero;
     }
@@ -217,6 +251,8 @@ exports.list = async (req, res, next) => {
         error: 'Se requiere al menos uno de estos parámetros: periodo o plan_numero',
       });
     }
+
+    console.log(`[BUG-019 DEBUG] Where clause:`, JSON.stringify(where, null, 2));
 
     const recibos = await db.Recibo.findAll({
       where,
@@ -235,6 +271,11 @@ exports.list = async (req, res, next) => {
       ],
       order: [['periodo', 'DESC'], ['id', 'DESC']],
     });
+
+    console.log(`[BUG-019 DEBUG] Resultado: ${recibos.length} recibos encontrados`);
+    if (recibos.length > 0) {
+      console.log(`[BUG-019 DEBUG] Primer recibo periodo:`, recibos[0].periodo, `(tipo: ${typeof recibos[0].periodo})`);
+    }
 
     res.status(200).json(recibos);
   } catch (error) {
@@ -276,6 +317,21 @@ exports.getById = async (req, res, next) => {
     }
 
     res.status(200).json(recibo);
+  } catch (error) {
+    next(error);
+  }
+};
+
+/**
+ * GET /api/recibos/periodos
+ * Lista todos los períodos con recibos generados, ordenados descendentemente
+ */
+exports.listPeriodos = async (req, res, next) => {
+  try {
+    const periodos = await db.PeriodosRecibos.findAll({
+      order: [['periodo', 'DESC']],
+    });
+    res.status(200).json(periodos);
   } catch (error) {
     next(error);
   }

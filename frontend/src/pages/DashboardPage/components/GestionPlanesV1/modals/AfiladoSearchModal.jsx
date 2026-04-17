@@ -1,5 +1,7 @@
-import React, { useState, useEffect, useRef } from 'react';
+import React, { useState, useEffect, useRef, useCallback, useMemo } from 'react';
 import personasService from '../../../../../services/personasService';
+import ConfirmCloseDialog from '../../../../../components/ConfirmCloseDialog/ConfirmCloseDialog';
+import { useModalEscapeKey } from '../../../../../hooks/useModalEscapeKey';
 import './AfiladoSearchModal.scss';
 
 function AfiladoSearchModal({ onClose, onSelect }) {
@@ -17,6 +19,29 @@ function AfiladoSearchModal({ onClose, onSelect }) {
   });
   const [errorMessage, setErrorMessage] = useState(null);
   const searchTimeoutRef = useRef(null);
+  const [showConfirmClose, setShowConfirmClose] = useState(false);
+
+  // Detect if form has changes
+  const hasChanges = useMemo(() => {
+    return searchText !== '' || showCreateForm || Object.values(newPersona).some(v => v !== '');
+  }, [searchText, showCreateForm, newPersona]);
+
+  // Handle ESC key with confirmation if there are changes
+  const handleEscapeWithChanges = useCallback(() => {
+    setShowConfirmClose(true);
+  }, []);
+
+  const handleConfirmClose = useCallback(() => {
+    setShowConfirmClose(false);
+    onClose?.();
+  }, [onClose]);
+
+  const handleCancelClose = useCallback(() => {
+    setShowConfirmClose(false);
+  }, []);
+
+  // Use ESC key handler
+  useModalEscapeKey(true, hasChanges, onClose, hasChanges ? handleEscapeWithChanges : undefined);
 
   // Búsqueda en vivo
   useEffect(() => {
@@ -106,11 +131,22 @@ function AfiladoSearchModal({ onClose, onSelect }) {
 
   return (
     <>
-      <div className="afiliado-search-modal__overlay" onClick={onClose} />
+      <div className="afiliado-search-modal__overlay" />
       <div className="afiliado-search-modal">
         <div className="afiliado-search-modal__header">
           <h3>Buscar Afiliado</h3>
-          <button className="afiliado-search-modal__close" onClick={onClose}>✕</button>
+          <button
+            className="afiliado-search-modal__close"
+            onClick={() => {
+              if (hasChanges) {
+                setShowConfirmClose(true);
+              } else {
+                onClose?.();
+              }
+            }}
+          >
+            ✕
+          </button>
         </div>
 
         {!showCreateForm ? (
@@ -258,6 +294,14 @@ function AfiladoSearchModal({ onClose, onSelect }) {
           </div>
         )}
       </div>
+
+      {/* Confirmation dialog for closing with unsaved changes */}
+      <ConfirmCloseDialog
+        isOpen={showConfirmClose}
+        onConfirm={handleConfirmClose}
+        onCancel={handleCancelClose}
+        title="¿Cerrar sin guardar?"
+      />
     </>
   );
 }

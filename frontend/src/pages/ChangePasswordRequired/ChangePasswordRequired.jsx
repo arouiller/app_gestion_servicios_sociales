@@ -1,15 +1,24 @@
-import React, { useState } from 'react';
-import { useNavigate } from 'react-router-dom';
+import React, { useState, useEffect } from 'react';
+import { useNavigate, useLocation } from 'react-router-dom';
 import './ChangePasswordRequired.scss';
 import usuariosService from '../../services/usuariosService';
 
 export default function ChangePasswordRequired() {
   const navigate = useNavigate();
+  const location = useLocation();
   const [email, setEmail] = useState('');
   const [passwordNueva, setPasswordNueva] = useState('');
   const [passwordConfirm, setPasswordConfirm] = useState('');
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
+
+  // Obtener email del estado de navegación
+  useEffect(() => {
+    const emailFromState = location.state?.email;
+    if (emailFromState) {
+      setEmail(emailFromState);
+    }
+  }, [location.state]);
 
   const handleSubmit = async (e) => {
     e.preventDefault();
@@ -33,9 +42,12 @@ export default function ChangePasswordRequired() {
       setLoading(true);
       setError('');
       await usuariosService.resetPassword(email, passwordNueva);
-      // Redirigir a login
+      // Redirigir a login con email pre-cargado
       navigate('/login', {
-        state: { message: 'Contraseña actualizada. Por favor, inicia sesión nuevamente.' },
+        state: {
+          message: 'Contraseña actualizada. Por favor, inicia sesión nuevamente.',
+          email: email
+        },
       });
     } catch (err) {
       setError(err.response?.data?.message || 'Error al cambiar contraseña');
@@ -60,9 +72,9 @@ export default function ChangePasswordRequired() {
               id="email"
               type="email"
               value={email}
-              onChange={(e) => setEmail(e.target.value)}
               placeholder="tu@email.com"
-              disabled={loading}
+              disabled={true}
+              title="El email no puede ser modificado"
             />
           </div>
 

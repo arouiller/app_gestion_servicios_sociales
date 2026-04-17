@@ -99,6 +99,44 @@
   }
 }
 
+.periodo-selectors {
+  display: flex;
+  gap: 0.75rem;
+  align-items: center;
+
+  select {
+    flex: 2;
+    padding: 0.625rem 0.75rem;
+    border: 1px solid $color-border;
+    border-radius: 6px;
+    font-size: 0.95rem;
+    font-family: inherit;
+    background: $color-white;
+    cursor: pointer;
+
+    &:focus {
+      outline: none;
+      border-color: $color-primary;
+      box-shadow: 0 0 0 3px $color-primary-light;
+    }
+  }
+
+  input[type="number"] {
+    flex: 1;
+    padding: 0.625rem 0.75rem;
+    border: 1px solid $color-border;
+    border-radius: 6px;
+    font-size: 0.95rem;
+    font-family: inherit;
+
+    &:focus {
+      outline: none;
+      border-color: $color-primary;
+      box-shadow: 0 0 0 3px $color-primary-light;
+    }
+  }
+}
+
 .periodo-display {
   margin-top: 0.75rem;
   padding: 0.75rem;
@@ -111,6 +149,66 @@
   strong {
     color: $color-info;
     font-weight: 600;
+  }
+}
+
+.periodo-checking {
+  margin-top: 0.75rem;
+  padding: 0.75rem;
+  background: #f3f4f6;
+  border: 1px solid #e5e7eb;
+  border-radius: 6px;
+  font-size: 0.9rem;
+  color: #6b7280;
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+
+  .spinner-mini {
+    display: inline-block;
+    width: 14px;
+    height: 14px;
+    border: 2px solid #e5e7eb;
+    border-top-color: #6b7280;
+    border-radius: 50%;
+    animation: spin 0.7s linear infinite;
+  }
+}
+
+.periodo-existe-alerta {
+  margin-top: 0.75rem;
+  padding: 1rem;
+  background: #fef3c7;
+  border: 1px solid #fcd34d;
+  border-radius: 6px;
+  font-size: 0.9rem;
+
+  .alerta-icon {
+    font-size: 1.25rem;
+    margin: 0;
+    line-height: 1;
+  }
+
+  .alerta-titulo {
+    margin: 0.5rem 0 0.25rem;
+    font-weight: 600;
+    color: #92400e;
+  }
+
+  .alerta-texto {
+    margin: 0.25rem 0;
+    color: #b45309;
+
+    strong {
+      font-weight: 600;
+      color: #78350f;
+    }
+  }
+
+  .alerta-subtexto {
+    margin: 0.5rem 0 0;
+    font-size: 0.85rem;
+    color: #a16207;
   }
 }
 

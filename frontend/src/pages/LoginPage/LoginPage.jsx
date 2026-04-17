@@ -14,6 +14,7 @@ function LoginPage() {
   const [form, setForm] = useState(INITIAL_FORM);
   const [errors, setErrors] = useState({});
   const [globalError, setGlobalError] = useState('');
+  const [successMessage, setSuccessMessage] = useState('');
   const [loading, setLoading] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
   const [passwordBlanqueada, setPasswordBlanqueada] = useState(false);
@@ -22,6 +23,18 @@ function LoginPage() {
 
   // Mensaje si la sesión expiró
   const sessionExpired = new URLSearchParams(location.search).get('expired') === '1';
+
+  useEffect(() => {
+    // Pre-llenar email si viene desde ChangePasswordRequired
+    if (location.state?.email) {
+      setForm(prev => ({ ...prev, email: location.state.email }));
+    }
+    // Mostrar mensaje de éxito si viene de cambio de contraseña
+    if (location.state?.message) {
+      setSuccessMessage(location.state.message);
+      setTimeout(() => setSuccessMessage(''), 5000);
+    }
+  }, [location.state?.email]);
 
   useEffect(() => {
     if (isAuthenticated) navigate(from, { replace: true });
@@ -116,6 +129,14 @@ function LoginPage() {
             <FiAlertCircle className="auth-alert__icon" />
             <span className="auth-alert__text">{globalError}</span>
             <button className="auth-alert__close" onClick={() => setGlobalError('')}>&times;</button>
+          </div>
+        )}
+
+        {/* Mensaje de éxito */}
+        {successMessage && (
+          <div className="auth-alert auth-alert--success">
+            <span className="auth-alert__text">{successMessage}</span>
+            <button className="auth-alert__close" onClick={() => setSuccessMessage('')}>&times;</button>
           </div>
         )}
 

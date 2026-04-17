@@ -1,6 +1,8 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback, useMemo } from 'react';
 import planesService from '../../../../services/planesService';
 import lookupService from '../../../../services/lookupService';
+import ConfirmCloseDialog from '../../../../components/ConfirmCloseDialog/ConfirmCloseDialog';
+import { useModalEscapeKey } from '../../../../hooks/useModalEscapeKey';
 import './BulkUpdateCuotaModal.scss';
 
 function BulkUpdateCuotaModal({ isOpen, onClose, onSuccess }) {
@@ -21,6 +23,29 @@ function BulkUpdateCuotaModal({ isOpen, onClose, onSuccess }) {
   const [previewPage, setPreviewPage] = useState(1);
   const planesPerPage = 10;
   const [searchFilter, setSearchFilter] = useState('');
+  const [showConfirmClose, setShowConfirmClose] = useState(false);
+
+  // Detect if form has changes
+  const hasChanges = useMemo(() => {
+    return step > 1 || valor !== '' || tipoAumento !== 'porcentual' || filtro !== 'todos' || selectValue !== '';
+  }, [step, valor, tipoAumento, filtro, selectValue]);
+
+  // Handle ESC key with confirmation if there are changes
+  const handleEscapeWithChanges = useCallback(() => {
+    setShowConfirmClose(true);
+  }, []);
+
+  const handleConfirmClose = useCallback(() => {
+    setShowConfirmClose(false);
+    onClose?.();
+  }, [onClose]);
+
+  const handleCancelClose = useCallback(() => {
+    setShowConfirmClose(false);
+  }, []);
+
+  // Use ESC key handler
+  useModalEscapeKey(isOpen, hasChanges, onClose, hasChanges ? handleEscapeWithChanges : undefined);
 
   useEffect(() => {
     if (isOpen) {
@@ -213,12 +238,24 @@ function BulkUpdateCuotaModal({ isOpen, onClose, onSuccess }) {
   if (!isOpen) return null;
 
   return (
-    <div className="modal-overlay" onClick={onClose}>
-      <div className="modal-content bulk-cuota-modal" onClick={(e) => e.stopPropagation()}>
-        <div className="modal-header">
-          <h2>Aumento Masivo de Cuotas</h2>
-          <button className="modal-close" onClick={onClose}>✕</button>
-        </div>
+    <>
+      <div className="modal-overlay">
+        <div className="modal-content bulk-cuota-modal" onClick={(e) => e.stopPropagation()}>
+          <div className="modal-header">
+            <h2>Aumento Masivo de Cuotas</h2>
+            <button
+              className="modal-close"
+              onClick={() => {
+                if (hasChanges) {
+                  setShowConfirmClose(true);
+                } else {
+                  onClose?.();
+                }
+              }}
+            >
+              ✕
+            </button>
+          </div>
 
         <div className="modal-body">
           {error && (
@@ -490,8 +527,17 @@ function BulkUpdateCuotaModal({ isOpen, onClose, onSuccess }) {
             </>
           )}
         </div>
+        </div>
       </div>
-    </div>
+
+      {/* Confirmation dialog for closing with unsaved changes */}
+      <ConfirmCloseDialog
+        isOpen={showConfirmClose}
+        onConfirm={handleConfirmClose}
+        onCancel={handleCancelClose}
+        title="¿Cerrar sin guardar?"
+      />
+    </>
   );
 }
 
