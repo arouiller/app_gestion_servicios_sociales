@@ -63,7 +63,9 @@ function RecibosPage() {
   const loadRecibos = useCallback(async (periodo) => {
     setRecibosLoading(true);
     try {
-      const data = await recibosService.list(periodo);
+      // Convertir periodo de YYYY-MM a YYYY-MM-01 (formato esperado por el backend)
+      const periodoConDia = periodo.length === 7 ? `${periodo}-01` : periodo;
+      const data = await recibosService.list(periodoConDia);
       setRecibos(data || []);
       setRecibosPage(1);
     } catch (err) {
