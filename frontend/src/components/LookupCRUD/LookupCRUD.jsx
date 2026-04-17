@@ -4,6 +4,7 @@ import ErrorDisplay from '../ErrorDisplay/ErrorDisplay';
 import SearchContainer from '../SearchContainer/SearchContainer';
 import ActionButton from '../ActionButton/ActionButton';
 import IconButton from '../IconButton/IconButton';
+import ConfirmDeleteWithRefsModal from '../ConfirmDeleteWithRefsModal/ConfirmDeleteWithRefsModal';
 import '../../styles/_table-standard.scss';
 import './LookupCRUD.scss';
 
@@ -15,6 +16,15 @@ const LookupCRUD = ({ titulo, singularName, endpoint, campos }) => {
   const [editingId, setEditingId] = useState(null);
   const [formData, setFormData] = useState({});
   const [searchText, setSearchText] = useState('');
+  const [deleteModal, setDeleteModal] = useState({
+    isOpen: false,
+    registroId: null,
+    registroNombre: null,
+    referencias: 0,
+    referenciaEn: null,
+    isLoading: false,
+    error: null,
+  });
   const ITEMS_PER_PAGE = 20;
 
   const entidad = endpoint.split('/').pop();
@@ -84,17 +94,59 @@ const LookupCRUD = ({ titulo, singularName, endpoint, campos }) => {
     const nombreCampo = campos.find(c => c.name.includes('nombre') || c.name.includes('nombre'))?.name || campos[1]?.name || campos[0]?.name;
     const infoEntidad = nombreCampo ? registro[nombreCampo] : JSON.stringify(registro).substring(0, 50);
 
-    const confirmacion = `¿Estás seguro de que deseas eliminar este registro?\n\n${nombreCampo ? `${campos.find(c => c.name === nombreCampo)?.label || 'Registro'}: ${infoEntidad}` : ''}\n\nEsta acción no se puede deshacer.`;
-
-    if (window.confirm(confirmacion)) {
-      try {
-        await lookupService.delete(entidad, id);
-        await loadRegistros();
-        setError(null);
-      } catch (err) {
-        setError(err.response?.data?.error || 'Error al eliminar');
+    // Paso 1: Intenta eliminar sin forzar
+    try {
+      await lookupService.delete(entidad, id);
+      await loadRegistros();
+      setError(null);
+    } catch (err) {
+      // Paso 2: Si recibe 409 (referencias encontradas), abre modal
+      if (err.response?.status === 409) {
+        const data = err.response.data;
+        setDeleteModal({
+          isOpen: true,
+          registroId: id,
+          registroNombre: infoEntidad,
+          referencias: data.referencias || 0,
+          referenciaEn: data.referenciaEn || '',
+          isLoading: false,
+          error: null,
+        });
+      } else {
+        // Otro error: mostrar mensaje de error
+        setError(err.response?.data?.error || err.response?.data?.message || 'Error al eliminar');
       }
     }
+  };
+
+  const handleConfirmDeleteWithRefs = async () => {
+    const { registroId } = deleteModal;
+
+    // Paso 3: Si usuario confirma, enviar DELETE con force=true
+    setDeleteModal(prev => ({ ...prev, isLoading: true, error: null }));
+
+    try {
+      await lookupService.delete(entidad, registroId, { force: true });
+      await loadRegistros();
+      setDeleteModal(prev => ({ ...prev, isOpen: false }));
+      setError(null);
+    } catch (err) {
+      setDeleteModal(prev => ({
+        ...prev,
+        error: err.response?.data?.error || err.response?.data?.message || 'Error al eliminar',
+        isLoading: false,
+      }));
+    }
+  };
+
+  const handleCancelDeleteWithRefs = () => {
+    setDeleteModal(prev => ({
+      ...prev,
+      isOpen: false,
+      registroId: null,
+      error: null,
+      isLoading: false,
+    }));
   };
 
   if (loading) return <div className="lookup-crud loading">Cargando...</div>;
@@ -197,6 +249,18 @@ const LookupCRUD = ({ titulo, singularName, endpoint, campos }) => {
       )}
 
       <ErrorDisplay error={error} onClose={() => setError(null)} />
+
+      <ConfirmDeleteWithRefsModal
+        isOpen={deleteModal.isOpen}
+        entidad={entidad}
+        registroNombre={deleteModal.registroNombre}
+        referencias={deleteModal.referencias}
+        referenciaEn={deleteModal.referenciaEn}
+        onConfirm={handleConfirmDeleteWithRefs}
+        onCancel={handleCancelDeleteWithRefs}
+        isLoading={deleteModal.isLoading}
+        error={deleteModal.error}
+      />
     </div>
   );
 };
