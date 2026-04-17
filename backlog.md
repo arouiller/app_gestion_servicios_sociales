@@ -33,6 +33,7 @@ De cualquier estado → Descartado
 
 | ID | Prioridad | Estado | Descripción | Contexto / Motivo | Archivos estimados |
 |----|-----------|--------|-------------|-------------------|----|
+| BACKLOG-019 | 🔴 Alta | 📋 Registrado | Eliminar entidades lookup con asociaciones en cascada | Al eliminar cobrador/OS/servicio/tipo grupo/tipo plan, si hay asociaciones, confirmación y eliminación en cascada. No bloqueo, sino opción de proceder. | lookupController.js, LookupCRUD.jsx, migrations |
 | BACKLOG-018 | 🔴 Alta | 📋 Registrado | Centralizar manejo de respuestas del backend con success: false | Estandarizar presentación de errores. Al recibir respuesta con success: false y message, generar alerta unificada. Mejora UX y reduce duplicación de manejo de errores. | services/api.js, context/AuthContext.jsx, múltiples servicios |
 | BACKLOG-014 | 🔴 Alta | ✅ Solucionado | Página dedicada de gestión de recibos por período | Mejora UX: página centralizada para consultar recibos generados por mes/año y generar nuevos. Integrada como módulo del Dashboard. | RecibosPage.jsx, RecibosService.js, routes |
 | BACKLOG-013 | 🔴 Alta | ✅ Solucionado | Mejora de flujo de login para usuarios con contraseña blanqueada | Email pre-cargado en formulario de seteo de contraseña. Elimina repetición de email en onboarding. Implementado, probado y aprobado. | LoginPage.jsx, ChangePasswordRequired.jsx |
@@ -1392,6 +1393,257 @@ e. **Herramientas Sugeridas**
 
 **Commits:**
 - 8ee2ecb - feat(BACKLOG-017): crear documentación HTML completa del sistema
+
+---
+
+### BACKLOG-019: Eliminar Entidades Lookup con Asociaciones en Cascada
+
+**Descripción:**
+Mejorar el flujo de eliminación de entidades lookup (Cobradores, Obras Sociales, Servicios Adicionales, Tipos de Grupo, Tipos de Plan) para permitir que el usuario elimine estos registros incluso si tienen asociaciones con planes o afiliados. Actualmente, el sistema bloquea la eliminación si encuentra referencias; el cambio propuesto es:
+
+1. **Detección de asociaciones**: El sistema verifica si la entidad tiene asociaciones
+2. **Confirmación informada**: Si hay asociaciones, muestra un modal detallado que:
+   - Indica cuántos planes/afiliados están usando esta entidad
+   - Advierte que las relaciones serán eliminadas en cascada
+   - Ofrece opción de proceder o cancelar
+3. **Eliminación en cascada**: Si el usuario confirma:
+   - Se eliminan las referencias (relaciones con planes/afiliados)
+   - Se elimina la entidad
+   - Se informa del éxito al usuario
+4. **Manejo de errores**: Si algo falla durante el proceso, se informa al usuario del error ocurrido
+
+**Requerimientos:**
+
+a. **Cambio de Filosofía en Backend**
+   - Actual: DELETE rechaza si hay referencias (HTTP 409)
+   - Nuevo: DELETE acepta parámetro opcional `force=true` para eliminación en cascada
+   - Endpoint: `DELETE /api/lookup/:entidad/:id?force=true`
+   - Si `force=true`: ejecuta eliminación en cascada
+   - Si `force=false` (o no se especifica): verifica referencias y retorna 409 si hay asociaciones
+
+b. **Estructura de Respuesta para Verificación (HTTP 409)**
+   ```json
+   {
+     "success": false,
+     "error": "No se puede eliminar, está en uso",
+     "message": "Hay 5 planes usando este cobrador. ¿Deseas proceder eliminando las referencias?",
+     "referencias": 5,
+     "referenciaEn": "planes",
+     "entidad": "cobradores",
+     "entidadId": 123,
+     "sugerencia": "Puedes desactivar el registro en lugar de eliminarlo (futura mejora)"
+   }
+   ```
+
+c. **Eliminación en Cascada por Entidad**
+
+   **Cobradores:**
+   - Buscar planes que usen este cobrador
+   - Opción 1 (simple): Establecer cobrador_numero = NULL en planes (si permite NULL)
+   - Opción 2 (cascada): Eliminar planes que usan este cobrador
+   - Recomendación: Opción 1 (preservar datos), asignar a NULL o a un cobrador "genérico"
+
+   **Obras Sociales (os):**
+   - Buscar planes con os_numero = id
+   - Opción 1: Establecer os_numero = NULL
+   - Opción 2: Eliminar planes
+   - Recomendación: Opción 1 (preservar datos)
+
+   **Servicios Adicionales:**
+   - Buscar IntegranteServicio que usen servicio_adicional_numero = id
+   - Eliminar registros IntegranteServicio relacionados
+   - Los planes no se ven afectados directamente
+   - Más seguro: simple eliminación de referencias
+
+   **Tipos de Grupo (tipo_de_grupo):**
+   - Buscar planes con tipo_de_grupo_numero = id
+   - Opción 1: Establecer tipo_de_grupo_numero = NULL
+   - Opción 2: Eliminar planes
+   - Recomendación: Opción 1 (preservar datos)
+
+   **Tipos de Plan (tipo_plan):**
+   - Buscar planes con tipo_plan_numero = id
+   - Opción 1: Establecer tipo_plan_numero = NULL
+   - Opción 2: Eliminar planes
+   - Recomendación: Opción 1 (preservar datos)
+
+d. **Modal de Confirmación (Frontend)**
+   - Componente: `ConfirmDeleteWithRefsModal.jsx` (NUEVO)
+   - Muestra:
+     * Título: "¿Eliminar {nombre de entidad}?"
+     * Icono de alerta
+     * Mensaje: "Esta entidad está siendo usada por X {referencias}"
+     * Lista de referencias encontradas (si es posible): nombres de planes/afiliados
+     * Advirtencia: "Si procedes, se eliminarán las referencias. Esta acción no se puede deshacer."
+   - Botones:
+     * "Cancelar" → volver sin hacer nada
+     * "Sí, Eliminar" → llamar DELETE con `force=true`
+   - Estados:
+     * Cargando durante eliminación
+     * Éxito: mostrar mensaje y cerrar modal
+     * Error: mostrar error específico
+
+e. **Flujo en Frontend (LookupCRUD.jsx)**
+   - Usuario hace click en botón eliminar
+   - Se llama a `handleDelete(id)`
+   - Primero se intenta DELETE sin `force` → obtiene 409 con referencias
+   - Se abre modal `ConfirmDeleteWithRefsModal` mostrando detalles
+   - Si usuario cancela: no hacer nada
+   - Si usuario confirma: llamar DELETE con `?force=true`
+   - Esperar respuesta exitosa (200) y recargar lista
+   - Mostrar mensaje de éxito o error
+
+f. **Archivos a Modificar/Crear**
+
+   **Backend:**
+   - `backend/src/controllers/lookupController.js`:
+     * Modificar `exports.delete` para aceptar parámetro `force`
+     * Si `force=true`, ejecutar eliminación en cascada
+     * Lógica diferenciada por entidad
+
+   **Frontend:**
+   - `frontend/src/components/LookupCRUD/LookupCRUD.jsx`:
+     * Modificar `handleDelete` para capturar 409 y abrir modal
+     * Agregar método para DELETE con `force=true`
+   - `frontend/src/components/ConfirmDeleteWithRefsModal/ConfirmDeleteWithRefsModal.jsx` (NUEVO):
+     * Modal con detalles de referencias
+     * Botones de confirmación
+     * Manejo de estados (cargando, error, éxito)
+   - `frontend/src/components/ConfirmDeleteWithRefsModal/ConfirmDeleteWithRefsModal.scss` (NUEVO)
+   - `frontend/src/services/lookupService.js`:
+     * Extender método `delete` para aceptar parámetro `force`
+
+**Contexto:**
+- Actualmente, usuarios no pueden eliminar cobrador/OS/servicios si tienen asociaciones
+- Bloquea completamente la acción sin opción alternativa
+- Mejora UX: dar opción de proceder eliminando referencias
+- Datos más limpios: no acumula registros "huérfanos"
+- Decisión consciente: usuario debe ver qué va a pasar antes de proceder
+
+**Análisis de Implementación:**
+
+1. **Estado Actual del Backend:**
+   - lookupController.js (líneas 217-230): Verifica referencias en config.refsCheck
+   - Si encuentra referencias, retorna 409 con { error, referencias, referenciaEn }
+   - Nunca ejecuta eliminación en cascada
+   - No hay parámetro `force`
+
+2. **Cambios Backend Necesarios:**
+   - Agregar parámetro `force` a la ruta DELETE: `DELETE /api/lookup/:entidad/:id?force=true`
+   - Si `force=false` (default): mantener comportamiento actual (rechazar si hay referencias)
+   - Si `force=true`: ejecutar eliminación en cascada
+   - Lógica diferenciada por entidad:
+     ```javascript
+     if (force === true) {
+       // Ejecutar eliminación en cascada según entidad
+       switch(entidad) {
+         case 'cobradores':
+           await db.PlanV1.update({ cobrador_numero: null }, { where: { cobrador_numero: id } });
+           break;
+         case 'obras-sociales':
+           await db.PlanV1.update({ os_numero: null }, { where: { os_numero: id } });
+           break;
+         case 'servicios-adicionales':
+           await db.IntegranteServicio.destroy({ where: { servicio_adicional_numero: id } });
+           break;
+         // ... más casos
+       }
+       // Luego destruir la entidad
+       await registro.destroy();
+     }
+     ```
+
+3. **Cambios Frontend Necesarios:**
+   - LookupCRUD.jsx:
+     * En `handleDelete`: cambiar flujo a two-step (primero intenta, si 409 → abre modal)
+     * Capturar respuesta 409: `if (error.response?.status === 409)`
+     * Guardar info de referencias en state
+     * Abrir modal `ConfirmDeleteWithRefsModal` con detalles
+   - Nuevo componente `ConfirmDeleteWithRefsModal.jsx`:
+     * Props: { entidad, registroNombre, referencias, referenciaEn, onConfirm, onCancel, isLoading }
+     * Estados: normal, cargando, error
+     * En `onConfirm`: llamar a `lookupService.delete(entidad, id, { force: true })`
+
+4. **Flujo Detallado de Usuario:**
+   ```
+   Usuario hace click en botón eliminar
+   ↓
+   Aparece primer confirm simple: "¿Estás seguro?"
+   ↓
+   Usuario confirma
+   ↓
+   Frontend intenta DELETE sin force
+   ↓
+   Backend retorna 409 con detalles de referencias
+   ↓
+   Frontend abre modal con mensaje: "Hay 5 planes usando este cobrador"
+   ↓
+   Usuario elige:
+     - "Cancelar" → cierra modal, se cancela eliminación
+     - "Sí, Eliminar" → envía DELETE con ?force=true
+   ↓
+   Backend ejecuta eliminación en cascada
+   ↓
+   Frontend recibe 200 y muestra "Eliminado correctamente"
+   ↓
+   Lista se recarga automáticamente
+   ```
+
+5. **Complejidad Estimada:**
+   - Modificar lookupController.js (agregar lógica force): 2-2.5h
+     * Análisis de casos por entidad
+     * Código de eliminación en cascada
+     * Testing de cada caso
+   - Crear ConfirmDeleteWithRefsModal.jsx: 1.5h
+   - Modificar LookupCRUD.jsx (integración dos pasos): 1.5h
+   - Modificar lookupService.js (parámetro force): 0.5h
+   - Testing completo (todos los casos de referencia): 1.5-2h
+   - **Total: 7-7.5 horas**
+
+6. **Riesgos y Consideraciones:**
+   - **Data Loss**: Eliminar referencias significa perder datos de asociaciones
+     * Mitigación: Modal advierte claramente, usuario confirma conscientemente
+   - **Alternativa**: Desactivar en lugar de eliminar
+     * Mejor que cascada: agregar columna `activo=0` en lugar de DELETE
+     * Future: BACKLOG-020 para hacer entidades "inactivas" en lugar de eliminar
+   - **Validaciones**: Si eliminación parcial falla (ejemplo: DELETE plan falla), ¿qué hacer?
+     * Usar transacciones: toda la operación es atómica (TODO o NADA)
+   - **Auditoría**: Registrar quién eliminó qué y cuándo
+     * Considerar agregar columna `eliminado_por` y `fecha_eliminacion`
+
+7. **Propuesta de Desarrollo (Plan Sugerido):**
+
+   **Fase 1: Infraestructura Backend (2.5h)**
+   - Agregar parámetro `force` a ruta DELETE
+   - Crear función auxiliar `deleteWithCascade(entidad, id)`
+   - Implementar lógica por entidad (con transacciones)
+   - Testing de cada caso
+
+   **Fase 2: Modal Frontend (1.5h)**
+   - Crear `ConfirmDeleteWithRefsModal.jsx`
+   - Estilos (reutilizar ConfirmCloseDialog de BACKLOG-012)
+   - Estados: normal, cargando, error
+
+   **Fase 3: Integración Frontend (1.5h)**
+   - Modificar `handleDelete` en LookupCRUD
+   - Dos pasos: intenta → captura 409 → abre modal → confirma
+   - Manejo de errores mejorado
+
+   **Fase 4: Testing (2h)**
+   - Cada entidad: intenta eliminar con referencias
+   - Confirma en modal y verifica cascada
+   - Cancela en modal y verifica no-eliminación
+   - Errores durante cascada (mitigación)
+
+**Prioridad:** 🔴 Alta — Mejora UX en gestión de datos maestros, permite workflows más flexibles
+
+**Estado:** 📋 Registrado (2026-04-17)
+
+**Notas:**
+- Análisis e propuesta sin implementación
+- Considerar BACKLOG-020 como mejora futura: estado "inactivo" en lugar de eliminación
+- Integra bien con BACKLOG-018 (manejo centralizado de errores)
+- Requiere cuidado con transacciones para evitar estados intermedios inconsistentes
 
 ---
 
