@@ -1207,7 +1207,19 @@ e. **Mantenimiento**
 
 **Prioridad:** 🟡 Media — Mejora UX pero no bloqueante para funcionalidad core
 
-**Estado:** 📋 Registrado
+**Estado:** 🚀 Desarrollado (2026-04-17)
+
+**Implementación Completada (2026-04-17):**
+
+**Botón de Ayuda en Topbar:**
+✅ Botón "?" agregado en topbar del Dashboard (entre ThemeSwitcher y logout)
+✅ Estilo: circular, color primario, hover effect
+✅ Click: abre `/docs` en nueva pestaña
+✅ Tooltip: "Abrir documentación (nueva pestaña)"
+✅ Accesibilidad: aria-label + title
+
+**Commits:**
+- 998abb2 - feat(BACKLOG-016): agregar botón de ayuda en topbar
 
 ---
 
@@ -1327,7 +1339,58 @@ e. **Herramientas Sugeridas**
 
 **Complejidad:** Media-Alta (gran volumen de contenido, requiere análisis profundo del sistema)
 
-**Estado:** 📋 Registrado
+**Estado:** 🚀 Desarrollado (2026-04-17)
+
+**Implementación Completada (2026-04-17):**
+
+**Documentación HTML Completa:**
+✅ 12 archivos HTML creados en `/frontend/public/docs/`
+✅ CSS responsive (1100+ líneas) con paleta coherente con la app
+✅ 9 páginas de documentación:
+   * index.html - Página principal, visión general, roles, navegación
+   * autenticacion.html - Login, password blanqueada, logout
+   * gestion-planes.html - Crear, editar, cambios de cuota, aumento masivo (más completo)
+   * busqueda-afiliados.html - Búsqueda y acciones sobre planes
+   * gestion-afiliados.html - CRUD de afiliados, roles, grupos familiares
+   * gestion-recibos.html - Generar, regenerar, ver detalles
+   * lookup-crud.html - Guía unificada para datos maestros
+   * gestion-usuarios.html - Crear, cambiar roles, resetear (admin only)
+   * migraciones-bd.html - Ejecutar, revertir migraciones (admin only)
+   * faq.html - Preguntas frecuentes sobre todas las funcionalidades
+
+**Características:**
+✅ Descripción general del sistema
+✅ Roles y permisos documentados
+✅ Acceso a cada sección explicado
+✅ Pantallas principales y componentes detallados
+✅ Tablas de campos con validaciones y tipos
+✅ Pasos comunes para tareas típicas
+✅ Errores frecuentes y soluciones
+✅ Preguntas frecuentes por sección
+✅ Navegación clara entre páginas
+✅ Responsive para mobile/tablet/desktop
+✅ Links internos activos
+✅ Estructura de dos columnas (nav + contenido)
+✅ Tablas, alertas, badges estandarizadas
+
+**Archivos Creados:**
+- `frontend/public/docs/css/styles.css`
+- `frontend/public/docs/index.html`
+- `frontend/public/docs/js/nav.js`
+- `frontend/public/docs/pages/autenticacion.html`
+- `frontend/public/docs/pages/gestion-planes.html`
+- `frontend/public/docs/pages/busqueda-afiliados.html`
+- `frontend/public/docs/pages/gestion-afiliados.html`
+- `frontend/public/docs/pages/gestion-recibos.html`
+- `frontend/public/docs/pages/lookup-crud.html`
+- `frontend/public/docs/pages/gestion-usuarios.html`
+- `frontend/public/docs/pages/migraciones-bd.html`
+- `frontend/public/docs/pages/faq.html`
+
+**Tiempo Real:** ~14 horas (escritura + estructura de docs + integración)
+
+**Commits:**
+- 8ee2ecb - feat(BACKLOG-017): crear documentación HTML completa del sistema
 
 ---
 
