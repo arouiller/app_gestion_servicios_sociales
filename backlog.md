@@ -33,6 +33,7 @@ De cualquier estado → Descartado
 
 | ID | Prioridad | Estado | Descripción | Contexto / Motivo | Archivos estimados |
 |----|-----------|--------|-------------|-------------------|----|
+| BACKLOG-021 | 🔴 Alta | 📋 Registrado | Navegación automática a campo con error en PlanV1Modal | Al crear/editar plan, si falta dato o hay error del backend, UI navega automáticamente al tab y campo afectado. Mejora UX: usuario ve dónde está el problema sin búsqueda manual. | PlanV1Modal.jsx, planesController.js |
 | BACKLOG-020 | 🔴 Alta | 📋 Registrado | Auto-generación y validación de número de afiliado numérico | Campo número_afiliado es STRING con representación numérica. UI solo permite números. Sistema propone MAX+1. Validación de unicidad. | PlanV1Modal.jsx, planesV1Service.js, planesController.js |
 | BACKLOG-019 | 🔴 Alta | 🚀 Desarrollado | Eliminar entidades lookup con asociaciones en cascada | Al eliminar cobrador/OS/servicio/tipo grupo/tipo plan, si hay asociaciones, confirmación y eliminación en cascada. No bloqueo, sino opción de proceder. Implementado con migración 2.0.5. | lookupController.js, LookupCRUD.jsx, migrations, ConfirmDeleteWithRefsModal |
 | BACKLOG-018 | 🔴 Alta | 📋 Registrado | Centralizar manejo de respuestas del backend con success: false | Estandarizar presentación de errores. Al recibir respuesta con success: false y message, generar alerta unificada. Mejora UX y reduce duplicación de manejo de errores. | services/api.js, context/AuthContext.jsx, múltiples servicios |
@@ -1394,6 +1395,197 @@ e. **Herramientas Sugeridas**
 
 **Commits:**
 - 8ee2ecb - feat(BACKLOG-017): crear documentación HTML completa del sistema
+
+---
+
+### BACKLOG-021: Navegación Automática a Campo con Error en PlanV1Modal
+
+**Descripción:**
+Mejora en la experiencia de usuario al crear o editar un plan. Cuando la interfaz identifica que:
+1. **Falta algún dato**: navegar automáticamente al tab y campo que falta validación
+2. **Hay error del backend**: navegar al tab y campo que genera el error
+
+Actualmente, si hay un error de validación o respuesta del backend, se muestra un mensaje de error genérico pero el usuario debe buscar manualmente dónde está el problema. Esta mejora automátiza esa navegación.
+
+**Requerimientos:**
+
+a. **Validación Local (Datos Faltantes)**
+   - Si usuario intenta guardar sin llenar campo requerido:
+     * Identificar cuál campo falta
+     * Obtener tab asociado a ese campo
+     * Navegar automáticamente a ese tab
+     * Hacer scroll hasta el campo
+     * Mostrar error visual en el campo (rojo, highlight)
+   - Campos por tab (ejemplos):
+     * Tab "General": numero_afiliado, tipo_plan, cobrador, os, tipo_grupo
+     * Tab "Datos": telefono_1, domicilio, localidad
+     * Tab "Integrantes": tabla de integrantes (requiere al menos titular)
+     * Tab "Servicios": (opcional, pero si se agrega, servicio es obligatorio)
+
+b. **Errores del Backend**
+   - Al recibir respuesta 422 o 409 con detalles de error:
+     * Parsear el error para identificar campo afectado
+     * Si error es de campo específico: navegar a ese tab/campo
+     * Si error es genérico: navegar a tab "General"
+     * Mostrar mensaje de error en el campo o en el tab
+   - Ejemplos de errores:
+     ```json
+     {
+       "error": "Validación fallida",
+       "details": { "numero_afiliado": "Ya existe este número" }
+     }
+     // → Navegar a tab General, campo numero_afiliado, mostrar error
+     ```
+
+c. **Estructura de Mapeo Tab/Campo**
+   - Crear mapeo explícito en PlanV1Modal:
+     ```javascript
+     const FIELD_TO_TAB = {
+       numero_afiliado: 'general',
+       tipo_plan_numero: 'general',
+       cobrador_numero: 'general',
+       os_numero: 'general',
+       tipo_de_grupo_numero: 'general',
+       valor_cuota: 'general',
+       telefono_1: 'datos',
+       telefono_2: 'datos',
+       domicilio: 'datos',
+       localidad: 'datos',
+       integrantes: 'integrantes',
+       servicios: 'servicios',
+     }
+     ```
+
+d. **Flujo de Usuario Mejorado**
+
+   **Escenario 1: Datos Faltantes (validación local)**
+   ```
+   Usuario: Click "Guardar"
+   ↓
+   Validación frontend detecta: campo "domicilio" vacío
+   ↓
+   Sistema: automáticamente
+     - Navega al tab "Datos"
+     - Scroll hasta campo "Domicilio"
+     - Resalta campo en rojo
+     - Muestra: "Este campo es requerido"
+   ↓
+   Usuario ve exactamente dónde llenar
+   ```
+
+   **Escenario 2: Error del Backend**
+   ```
+   Usuario: Click "Guardar" (todos campos llenos)
+   ↓
+   POST /api/planes/1
+   ↓
+   Backend: respuesta 409
+     {
+       "error": "Número de afiliado ya existe",
+       "field": "numero_afiliado"
+     }
+   ↓
+   Sistema: automáticamente
+     - Navega al tab "General"
+     - Scroll hasta campo "Número de Afiliado"
+     - Resalta campo en rojo
+     - Muestra: "Número de afiliado ya existe"
+   ↓
+   Usuario ve exactamente dónde está el problema
+   ```
+
+e. **Cambios Técnicos en Backend**
+   - Mejorar respuestas de error para incluir campo afectado:
+     ```javascript
+     // Respuesta mejorada (en lugar de solo "error")
+     res.status(422).json({
+       success: false,
+       error: "Validación fallida",
+       field: "numero_afiliado", // ← Campo que causó error
+       message: "Número de afiliado ya existe",
+       details: { numero_afiliado: "Duplicado" }
+     });
+     ```
+
+f. **Cambios Técnicos en Frontend (PlanV1Modal.jsx)**
+   - Función auxiliar para obtener tab de un campo:
+     ```javascript
+     function getTabForField(fieldName) {
+       return FIELD_TO_TAB[fieldName] || 'general';
+     }
+     ```
+   - Función para navegar y destacar:
+     ```javascript
+     function navigateToFieldError(fieldName, errorMessage) {
+       const tab = getTabForField(fieldName);
+       setActiveTab(tab);
+       setFieldErrors(prev => ({ ...prev, [fieldName]: errorMessage }));
+       // Scroll al campo (usar ref o querySelector)
+       setTimeout(() => {
+         const element = document.querySelector(`[name="${fieldName}"]`);
+         element?.scrollIntoView({ behavior: 'smooth' });
+         element?.focus();
+       }, 100);
+     }
+     ```
+   - En manejador de errores:
+     ```javascript
+     catch (err) {
+       if (err.response?.status === 422) {
+         const field = err.response.data.field;
+         const message = err.response.data.message;
+         if (field) {
+           navigateToFieldError(field, message);
+         } else {
+           setError(message);
+         }
+       }
+     }
+     ```
+
+**Contexto:**
+- Mejora significativa en UX para formularios complejos
+- PlanV1Modal tiene múltiples tabs, usuario puede perder contexto si hay error
+- Navegación automática elimina frustración de "dónde está el error"
+- Patrón común en aplicaciones modernas: Google Forms, Jotform, etc.
+- Reducción de soporte: usuario ve inmediatamente dónde está el problema
+
+**Archivos a Modificar:**
+
+Backend:
+- `backend/src/controllers/planesController.js` (mejorar respuestas de error)
+- `backend/src/controllers/v1.0/planesController.js` (idem si existe)
+- `backend/src/routes/planes.js` (si es necesario ajustar respuestas)
+
+Frontend:
+- `frontend/src/pages/DashboardPage/components/GestionPlanesV1/modals/PlanV1Modal.jsx` (lógica de navegación)
+- `frontend/src/pages/DashboardPage/components/GestionPlanesV1/modals/PlanV1Modal.scss` (estilos para highlight/error)
+
+**Estimación:**
+
+Backend:
+- Mejora de respuestas de error: 1h
+- Testing: 0.5h
+
+Frontend:
+- Mapa de campos/tabs: 0.5h
+- Funciones de navegación y scroll: 1h
+- Integración en validación local: 1h
+- Integración en manejo de errores: 1h
+- Testing e iteración: 1h
+
+**Total: 5-6 horas**
+
+**Prioridad:** 🔴 Alta — Mejora significativa en UX para el flujo principal (creación/edición de planes)
+
+**Estado:** 📋 Registrado (2026-04-17)
+
+**Notas:**
+- Requiere coordinación entre backend y frontend para estructura de errores
+- Validación local puede ejecutarse antes de enviar al backend (mejora UX)
+- Considerar agregar indicador visual (ej: punto rojo) en tabs con errores
+- Compatible con BACKLOG-020 (auto-generación de número de afiliado)
+- Mejora complementaria a BACKLOG-018 (si se implementa manejo centralizado de errores)
 
 ---
 
