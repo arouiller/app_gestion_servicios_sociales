@@ -27,6 +27,9 @@ Un bug solo puede pasar a estado solucionado, Descartado a traves del pedido exp
 
 | ID | Severidad | Fase | Descripción | Reportado | Estado |
 |----|-----------|------|-------------|-----------|--------|
+| BUG-023 | 🔴 CRÍTICO | BACKLOG-019 | Eliminación cascada de Cobrador: error "notNull Violation: planes.cobrador_numero cannot be null" | 2026-04-17 | 📋 Registrado |
+| BUG-022 | 🔴 CRÍTICO | BACKLOG-019 | Eliminación cascada de Tipo de Plan: error "notNull Violation: planes.tipo_plan_numero cannot be null" | 2026-04-17 | 📋 Registrado |
+| BUG-021 | 🔴 CRÍTICO | BACKLOG-019 | Eliminación cascada de Tipo de Grupo: error "notNull Violation: planes.tipo_de_grupo_numero cannot be null" | 2026-04-17 | 📋 Registrado |
 | BUG-020 | 🔴 CRÍTICO | BACKLOG-019 | Eliminación cascada de OS: error "notNull Violation: planes.os_numero cannot be null" | 2026-04-17 | 📋 Registrado |
 | BUG-019 | 🔴 CRÍTICO | BACKLOG-014 | Gestión de Recibos: seleccionar período con recibos devuelve array vacío | 2026-04-16 | ✅ Solucionado |
 
@@ -1341,6 +1344,124 @@ Opciones:
    - Recompilar/reiniciar
 
 **Estado:** 📋 Registrado (2026-04-17) - Pendiente diagnóstico y solución
+
+---
+
+### BUG-021: Eliminación Cascada de Tipo de Grupo Falla con "notNull Violation"
+
+**Descripción:**
+Idéntico a BUG-020 pero para entidad "Tipos de Grupo":
+
+Al eliminar un Tipo de Grupo que está siendo utilizado en un plan, el sistema muestra correctamente el modal de confirmación. Cuando el usuario confirma la eliminación, el backend intenta ejecutar la cascada pero falla con error:
+
+```
+Error: notNull Violation: planes.tipo_de_grupo_numero cannot be null
+```
+
+**Causa Probable:**
+Misma que BUG-020: La migración 2.0.5 no fue ejecutada correctamente, o el modelo Sequelize mantiene validación `allowNull: false` en la columna `tipo_de_grupo_numero`.
+
+**Severidad:** 🔴 CRÍTICO (idéntico a BUG-020)
+
+**Reportado:** 2026-04-17
+**Asociado a:** BACKLOG-019
+
+**Columna Afectada:** `planes.tipo_de_grupo_numero`
+
+**Estado:** 📋 Registrado (2026-04-17) - Mismo diagnóstico que BUG-020
+
+---
+
+### BUG-022: Eliminación Cascada de Tipo de Plan Falla con "notNull Violation"
+
+**Descripción:**
+Idéntico a BUG-020 pero para entidad "Tipos de Plan":
+
+Al eliminar un Tipo de Plan que está siendo utilizado en un plan, el sistema muestra correctamente el modal de confirmación. Cuando el usuario confirma la eliminación, el backend intenta ejecutar la cascada pero falla con error:
+
+```
+Error: notNull Violation: planes.tipo_plan_numero cannot be null
+```
+
+**Causa Probable:**
+Misma que BUG-020: La migración 2.0.5 no fue ejecutada correctamente, o el modelo Sequelize mantiene validación `allowNull: false` en la columna `tipo_plan_numero`.
+
+**Severidad:** 🔴 CRÍTICO (idéntico a BUG-020)
+
+**Reportado:** 2026-04-17
+**Asociado a:** BACKLOG-019
+
+**Columna Afectada:** `planes.tipo_plan_numero`
+
+**Estado:** 📋 Registrado (2026-04-17) - Mismo diagnóstico que BUG-020
+
+---
+
+### BUG-023: Eliminación Cascada de Cobrador Falla con "notNull Violation"
+
+**Descripción:**
+Idéntico a BUG-020 pero para entidad "Cobradores":
+
+Al eliminar un Cobrador que está siendo utilizado en un plan, el sistema muestra correctamente el modal de confirmación. Cuando el usuario confirma la eliminación, el backend intenta ejecutar la cascada pero falla con error:
+
+```
+Error: notNull Violation: planes.cobrador_numero cannot be null
+```
+
+**Causa Probable:**
+Misma que BUG-020: La migración 2.0.5 no fue ejecutada correctamente, o el modelo Sequelize mantiene validación `allowNull: false` en la columna `cobrador_numero`.
+
+**Severidad:** 🔴 CRÍTICO (idéntico a BUG-020)
+
+**Reportado:** 2026-04-17
+**Asociado a:** BACKLOG-019
+
+**Columna Afectada:** `planes.cobrador_numero`
+
+**Estado:** 📋 Registrado (2026-04-17) - Mismo diagnóstico que BUG-020
+
+---
+
+## Análisis Consolidado de BUG-020 a BUG-023
+
+Todos los bugs (BUG-020, BUG-021, BUG-022, BUG-023) comparten:
+
+**Problema Común:**
+Eliminación cascada de entidades lookup falla porque las columnas FK en tabla `planes` siguen siendo `NOT NULL` cuando deberían ser `NULL`.
+
+**Columnas Afectadas:**
+- `planes.os_numero` (BUG-020)
+- `planes.tipo_de_grupo_numero` (BUG-021)
+- `planes.tipo_plan_numero` (BUG-022)
+- `planes.cobrador_numero` (BUG-023)
+
+**Causa Raíz Única:**
+La migración 2.0.5 (`nullable_foreign_keys`) no se ejecutó en la BD, o el modelo `PlanV1.js` no fue actualizado después de la migración.
+
+**Solución Única:**
+
+```sql
+-- Opción 1: Ejecutar migración 2.0.5 si no está aplicada
+-- Ver tabla migraciones_bd
+
+-- Opción 2: Si migración existe pero columnas aún NOT NULL, ejecutar manualmente:
+ALTER TABLE planes MODIFY COLUMN cobrador_numero INT NULL DEFAULT NULL;
+ALTER TABLE planes MODIFY COLUMN tipo_plan_numero INT NULL DEFAULT NULL;
+ALTER TABLE planes MODIFY COLUMN tipo_de_grupo_numero INT NULL DEFAULT NULL;
+ALTER TABLE planes MODIFY COLUMN os_numero INT NULL DEFAULT NULL;
+
+-- Opción 3: Actualizar modelo PlanV1.js si allowNull sigue siendo false:
+-- Cambiar en backend/src/models/PlanV1.js líneas 14-25:
+// De: allowNull: false
+// A: allowNull: true
+// Luego: reiniciar servidor (npm run dev / npm start)
+```
+
+**Recomendación:**
+1. Diagnosticar cuál es la causa (migración no ejecutada vs modelo desincronizado)
+2. Aplicar la solución correspondiente
+3. Testing: intentar eliminar una entidad de cada tipo (OS, Cobrador, Tipo Grupo, Tipo Plan)
+4. Marcar todos los bugs como solucionados cuando se resuelva la causa raíz
 
 ---
 
