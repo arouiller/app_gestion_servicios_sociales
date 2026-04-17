@@ -27,7 +27,7 @@ Un bug solo puede pasar a estado solucionado, Descartado a traves del pedido exp
 
 | ID | Severidad | Fase | Descripción | Reportado | Estado |
 |----|-----------|------|-------------|-----------|--------|
-| BUG-019 | 🔴 CRÍTICO | BACKLOG-014 | Gestión de Recibos: seleccionar período con recibos devuelve array vacío | 2026-04-16 | 🚀 Desarrollado |
+| BUG-019 | 🔴 CRÍTICO | BACKLOG-014 | Gestión de Recibos: seleccionar período con recibos devuelve array vacío | 2026-04-16 | ✅ Desarrollado |
 
 ---
 
@@ -1209,32 +1209,56 @@ Response: []
 
 **Causa raíz identificada (2026-04-16):**
 
-Type mismatch en comparación de DATE por zona horaria:
-- `new Date("2026-04-01")` en JavaScript se interpreta como UTC: `2026-04-01T00:00:00.000Z`
-- BD almacena períodos en hora local del servidor (Argentina UTC-3)
-- Sequelize comparaba: UTC ≠ hora local → sin coincidencias → retorna `[]`
+**Problem:** Período se guardaba con ÚLTIMO día del mes en lugar del primero
+- Frontend enviaba: `"2026-04-01"` (YYYY-MM-DD)
+- Backend recibía: `new Date("2026-04-01")` → UTC: `2026-04-01T00:00:00.000Z`
+- Conversión timezone Argentina (UTC-3): `2026-03-31T21:00:00` (día anterior)
+- Sequelize guardaba: `2026-04-30` o `2026-04-01` con desfase
+- Búsqueda buscaba: `2026-04-01` pero BD tenía: `2026-04-30` → ❌ No coincidían
 
-**Solución implementada (2026-04-16):**
+**Solución implementada (2026-04-17):**
 
-Cambiar función `list()` en `backend/src/controllers/v1.0/recibosController.js` para usar SQL DATE() comparison:
-- Agregar import: `const { Op } = require('sequelize');`
-- Reemplazar comparación directa de `where.periodo = periodoDate`
-- Usar: `sequelize.where(sequelize.fn('DATE', sequelize.col('periodo')), Op.eq, periodo)`
+Solución integrada de 3 cambios:
 
-Esto compara SOLO la parte YYYY-MM-DD en la BD, agnóstico a zona horaria.
+### 1. Backend: Generar sin conversión de timezone
+- Eliminar `new Date(periodo)` (evita interpretación UTC)
+- Usar validación regex: `/^\d{4}-\d{2}-\d{2}$/`
+- Normalizar siempre a primer día del mes: `periodoNormalizado = YYYY-MM-01`
+- Guardar como string directo en BD (sin Date objects)
+- Archivos: `backend/src/controllers/v1.0/recibosController.js` líneas 24-37, 145
+
+### 2. Backend: Buscar por rango de mes completo
+- Si `periodo` es YYYY-MM (7 chars):
+  * Calcular último día del mes
+  * Usar `Op.between: ['2026-04-01', '2026-04-30']`
+  * Tolera cualquier día guardado en el mes
+- Si `periodo` es YYYY-MM-DD (10 chars):
+  * Buscar día exacto (compatible hacia atrás)
+- Archivos: `backend/src/controllers/v1.0/recibosController.js` líneas 208-228
+
+### 3. Frontend: Enviar YYYY-MM
+- RecibosPage.loadRecibos() ahora envía `"2026-04"` en lugar de `"2026-04-01"`
+- Backend busca rango completo del mes
+- Beneficio: más robusto, semánticamente correcto
+- Archivos: `frontend/src/pages/RecibosPage/RecibosPage.jsx` línea 66-73
 
 **Archivos corregidos:**
-- `backend/src/controllers/v1.0/recibosController.js` (líneas 2-3, 208-224)
+- `backend/src/controllers/v1.0/recibosController.js`
+- `frontend/src/pages/RecibosPage/RecibosPage.jsx`
 
 **Verificación pendiente:**
-- [ ] Recibos generados para un período aparecen correctamente en listado
-- [ ] Búsqueda por período devuelve resultados (no array vacío)
-- [ ] Paginación funciona correctamente
+- [ ] Generar recibos para un período
+- [ ] Verificar BD: periodo = 2026-04-01 (primer día del mes)
+- [ ] Buscar recibos: enviar YYYY-MM
+- [ ] Confirmar que devuelve recibos (no array vacío)
 
 **Commits:**
 - c7b1c5a - fix(BUG-019): usar SQL DATE() para comparación de período sin zona horaria
+- 5ecb919 - refactor(BUG-019): mejorar lógica de conditions en list()
+- d6fa700 - fix(BUG-019): cambiar a Op.between para comparación de período
+- eca1d6e - fix(BUG-019): solución integrada para búsqueda de recibos por período
 
-**Estado:** 🚀 Desarrollado
+**Estado:** ✅ Desarrollado (2026-04-17)
 
 ---
 
