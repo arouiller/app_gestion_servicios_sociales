@@ -224,9 +224,11 @@ exports.list = async (req, res, next) => {
 
         console.log(`[BUG-019 DEBUG] Búsqueda por rango: ${firstDay} a ${lastDay}`);
 
-        where.periodo = {
-          [Op.between]: [firstDay, lastDay],
-        };
+        // Usar Op.gte y Op.lte en lugar de Op.between (más compatible con DATE)
+        where[Op.and] = [
+          { periodo: { [Op.gte]: firstDay } },
+          { periodo: { [Op.lte]: lastDay } }
+        ];
       } else if (periodo.length === 10 && /^\d{4}-\d{2}-\d{2}$/.test(periodo)) {
         // YYYY-MM-DD: buscar ese día específico
         console.log(`[BUG-019 DEBUG] Búsqueda exacta: ${periodo}`);
