@@ -27,6 +27,7 @@ Un bug solo puede pasar a estado solucionado, Descartado a traves del pedido exp
 
 | ID | Severidad | Fase | Descripción | Reportado | Estado |
 |----|-----------|------|-------------|-----------|--------|
+| BUG-020 | 🔴 CRÍTICO | BACKLOG-019 | Eliminación cascada de OS: error "notNull Violation: planes.os_numero cannot be null" | 2026-04-17 | 📋 Registrado |
 | BUG-019 | 🔴 CRÍTICO | BACKLOG-014 | Gestión de Recibos: seleccionar período con recibos devuelve array vacío | 2026-04-16 | ✅ Solucionado |
 
 ---
@@ -1292,4 +1293,55 @@ WHERE CAST(DATE_FORMAT(`periodo`, '%Y%m%d') AS UNSIGNED) BETWEEN 20260401 AND 20
 
 ---
 
-**Última actualización:** 2026-04-16
+### BUG-020: Eliminación Cascada de OS Falla con "notNull Violation"
+
+**Descripción:**
+Al eliminar una Obra Social (OS) que está siendo utilizada en un plan, el sistema muestra correctamente el modal de confirmación indicando que hay referencias. Cuando el usuario confirma la eliminación, el backend intenta ejecutar la cascada pero falla con error:
+
+```
+Error: notNull Violation: planes.os_numero cannot be null
+```
+
+**Flujo del Error:**
+1. Usuario: click eliminar Obra Social
+2. Sistema: detecta que hay planes usando esta OS (409 - referencias encontradas)
+3. Sistema: abre modal con mensaje "Hay 5 planes usando esta OS"
+4. Usuario: confirma "Sí, Eliminar"
+5. Frontend: envía DELETE /api/lookup/obras-sociales/1?force=true
+6. Backend: intenta UPDATE planes SET os_numero = NULL WHERE os_numero = 1
+7. Error: `notNull Violation: planes.os_numero cannot be null`
+
+**Causa Probable:**
+La migración 2.0.5 (`nullable_foreign_keys`) no fue ejecutada correctamente en la BD, o el modelo Sequelize de PlanV1 sigue teniendo la restricción `allowNull: false` en la columna `os_numero`.
+
+Opciones:
+- Opción A: Migración 2.0.5 no se ejecutó en la BD (usuario olvidó ejecutar)
+- Opción B: Migración se ejecutó pero Sequelize mantiene validación en caché
+- Opción C: Definición del modelo `PlanV1.js` tiene `allowNull: false` y no fue recompilado
+
+**Severidad:** 🔴 CRÍTICO
+- Bloquea funcionalidad de BACKLOG-019 (eliminación cascada)
+- Usuarios no pueden eliminar entidades lookup si tienen referencias
+- Modal se abre pero la acción falla
+
+**Reportado:** 2026-04-17
+**Asociado a:** BACKLOG-019 (Eliminar entidades lookup con asociaciones en cascada)
+
+**Próximos pasos para diagnóstico:**
+1. Verificar si migración 2.0.5 fue ejecutada:
+   - Revisar tabla `migraciones_bd`: ¿tiene versión `2.0.5_nullable_foreign_keys`?
+   - Si no está: ejecutar migración manualmente
+2. Si migración existe, verificar BD:
+   - `DESCRIBE planes;` → revisar columna `os_numero`
+   - ¿Tiene `null` o `Not Null`?
+3. Verificar definición de modelo:
+   - `backend/src/models/PlanV1.js` línea 22-24
+   - ¿Tiene `allowNull: false`?
+   - Si sí: cambiar a `allowNull: true`
+   - Recompilar/reiniciar
+
+**Estado:** 📋 Registrado (2026-04-17) - Pendiente diagnóstico y solución
+
+---
+
+**Última actualización:** 2026-04-17
