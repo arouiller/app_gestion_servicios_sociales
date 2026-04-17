@@ -1064,6 +1064,86 @@ f. **Consultas de Datos (Backend)**
 
 ---
 
+### BACKLOG-015: Cambiar Flujo de Adición de Afiliados - Saltar Búsqueda Inicial
+
+**Descripción:**
+Simplificar el flujo de adición de afiliados a un plan eliminando la pantalla de búsqueda inicial y abriendo directamente el formulario de creación de nuevo afiliado. Actualmente, cuando se agrega un afiliado a un plan, el sistema muestra primero un modal de búsqueda que requiere que el usuario escriba texto para buscar. Este cambio elimina ese paso intermedio y va directo a la creación.
+
+**Requerimientos:**
+
+a. **Comportamiento anterior (actual)**
+   - Usuario abre modal de adición de afiliado
+   - Ve campo de búsqueda: "Buscar por nombre, apellido o DNI..."
+   - Debe escribir algo para ver opciones
+   - Si no encuentra, luego aparece botón "+ Crear nuevo afiliado"
+   - Hace click para crear nuevo
+
+b. **Comportamiento nuevo (solicitado)**
+   - Usuario abre modal de adición de afiliado
+   - Se abre directamente el formulario de creación de nuevo afiliado
+   - Sin pantalla de búsqueda previa
+   - Llena datos y crea el afiliado inmediatamente
+
+c. **Impacto técnico**
+   - Cambio en `AfiladoSearchModal.jsx`:
+     * Remover lógica de búsqueda en vivo (state searchText, búsqueda por API)
+     * Remover componentes de búsqueda y tabla de resultados
+     * Inicializar `showCreateForm = true` por defecto
+     * Simplificar la estructura del modal
+   - El componente se convierte en un "AfiladoCreateModal" efectivamente
+   - Funcionalidad de búsqueda puede moverse a otra sección o eliminarse
+
+d. **Archivos a modificar**
+   - `frontend/src/pages/DashboardPage/components/GestionPlanesV1/modals/AfiladoSearchModal.jsx`
+   - `frontend/src/pages/DashboardPage/components/GestionPlanesV1/modals/AfiladoSearchModal.scss` (limpiar estilos no usados)
+
+**Contexto:**
+- Mejora UX: menos pasos para crear un afiliado
+- Flujo más directo: usuario sabe que viene a crear, no a buscar
+- La búsqueda de afiliados existentes puede hacerse desde GestionAfiliados si es necesario
+- Enfoque: facilitar la creación rápida de nuevos afiliados durante creación de planes
+
+**Estimación:** 1 hora (simplificar componente + testing)
+
+**Prioridad:** 🟡 Media — Mejora UX pero no bloqueante
+
+**Estado:** 🚀 Desarrollado (2026-04-17)
+
+**Implementación Completada (2026-04-17):**
+
+**Cambios realizados:**
+1. ✅ `AfiladoSearchModal.jsx`: Simplificación completa
+   - Removidos: estado `searchText`, `results`, `loading`, `showCreateForm`
+   - Removidos: `useRef`, `useEffect`, `personasService.buscar()`
+   - Removida: lógica de búsqueda en vivo con debounce
+   - Removida: tabla de resultados
+   - Removida: interfaz de búsqueda
+   - Conservado: validación y creación de afiliado
+   - Cambio: Título de "Buscar Afiliado" → "Crear Nuevo Afiliado"
+   - Cambio: Botón "Volver" → "Cancelar"
+
+2. ✅ Modal ahora abre directamente con formulario de creación
+   - Sin pasos intermedios
+   - Usuario puede crear afiliado inmediatamente
+   - Validaciones y manejo de errores intactos
+
+3. ✅ Detección de cambios y confirmación de cierre
+   - ESC key: solicita confirmación si hay cambios
+   - Botón cancelar: solicita confirmación si hay cambios
+   - Mantiene comportamiento robusto
+
+**Beneficios:**
+- ✅ Flujo directo: 1 pantalla en lugar de 2
+- ✅ UX mejorada: usuario entra con objetivo claro
+- ✅ Menos código: ~100 líneas eliminadas
+- ✅ Mejor rendimiento: sin búsquedas innecesarias
+- ✅ Interfaz más simple: enfoque en creación
+
+**Commits:**
+- feat(BACKLOG-015): cambiar flujo de adición de afiliados - eliminar búsqueda inicial
+
+---
+
 ## Items descartados
 
 | ID | Descripción | Motivo descarte |
