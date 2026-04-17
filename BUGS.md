@@ -27,7 +27,7 @@ Un bug solo puede pasar a estado solucionado, Descartado a traves del pedido exp
 
 | ID | Severidad | Fase | Descripción | Reportado | Estado |
 |----|-----------|------|-------------|-----------|--------|
-| BUG-019 | 🔴 CRÍTICO | BACKLOG-014 | Gestión de Recibos: seleccionar período con recibos devuelve array vacío | 2026-04-16 | 📋 Registrado |
+| BUG-019 | 🔴 CRÍTICO | BACKLOG-014 | Gestión de Recibos: seleccionar período con recibos devuelve array vacío | 2026-04-16 | 🚀 Desarrollado |
 
 ---
 
@@ -1205,7 +1205,36 @@ Response: []
 **Reportado:** 2026-04-16
 **Asociado a:** BACKLOG-014 (Página dedicada de gestión de recibos)
 
-**Estado:** 📋 Registrado
+---
+
+**Causa raíz identificada (2026-04-16):**
+
+Type mismatch en comparación de DATE por zona horaria:
+- `new Date("2026-04-01")` en JavaScript se interpreta como UTC: `2026-04-01T00:00:00.000Z`
+- BD almacena períodos en hora local del servidor (Argentina UTC-3)
+- Sequelize comparaba: UTC ≠ hora local → sin coincidencias → retorna `[]`
+
+**Solución implementada (2026-04-16):**
+
+Cambiar función `list()` en `backend/src/controllers/v1.0/recibosController.js` para usar SQL DATE() comparison:
+- Agregar import: `const { Op } = require('sequelize');`
+- Reemplazar comparación directa de `where.periodo = periodoDate`
+- Usar: `sequelize.where(sequelize.fn('DATE', sequelize.col('periodo')), Op.eq, periodo)`
+
+Esto compara SOLO la parte YYYY-MM-DD en la BD, agnóstico a zona horaria.
+
+**Archivos corregidos:**
+- `backend/src/controllers/v1.0/recibosController.js` (líneas 2-3, 208-224)
+
+**Verificación pendiente:**
+- [ ] Recibos generados para un período aparecen correctamente en listado
+- [ ] Búsqueda por período devuelve resultados (no array vacío)
+- [ ] Paginación funciona correctamente
+
+**Commits:**
+- c7b1c5a - fix(BUG-019): usar SQL DATE() para comparación de período sin zona horaria
+
+**Estado:** 🚀 Desarrollado
 
 ---
 
