@@ -1,0 +1,241 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Gestión de Recibos - GestSocial</title>
+    <link rel="stylesheet" href="../css/styles.css">
+</head>
+<body>
+    <div class="docs-header">
+        <h1>GestSocial - Documentación</h1>
+    </div>
+
+    <nav class="docs-nav-sidebar" id="docsNav">
+        <h3>Inicio</h3>
+        <a href="../index.html">Visión General</a>
+
+        <h3>Funcionalidad Principal</h3>
+        <a href="autenticacion.html">Autenticación</a>
+        <a href="gestion-planes.html">Gestión de Planes</a>
+        <a href="busqueda-afiliados.html">Búsqueda de Afiliados</a>
+        <a href="gestion-afiliados.html">Gestión de Afiliados</a>
+        <a href="gestion-recibos.html" class="active">Gestión de Recibos</a>
+
+        <h3>Mantenimiento</h3>
+        <a href="lookup-crud.html">Cobradores, OS, Servicios, Tipos</a>
+
+        <h3>Administración</h3>
+        <a href="gestion-usuarios.html">Gestión de Usuarios</a>
+        <a href="migraciones-bd.html">Migraciones BD</a>
+
+        <h3>Referencia</h3>
+        <a href="faq.html">Preguntas Frecuentes</a>
+    </nav>
+
+    <div class="docs-content">
+        <div class="docs-content-inner">
+            <h1>Gestión de Recibos</h1>
+
+            <p>
+                <strong>Gestión de Recibos</strong> permite generar, consultar y administrar recibos de pago
+                que se emiten a los afiliados por período (mes/año).
+            </p>
+
+            <h2>Acceso</h2>
+
+            <ol>
+                <li>Desde el Dashboard, menú izquierdo</li>
+                <li>Sección <strong>"Gestión"</strong> → <strong>"Gestión de Recibos"</strong></li>
+            </ol>
+
+            <h2>Pantalla Principal</h2>
+
+            <h3>Vista de Períodos</h3>
+
+            <p>Muestra todos los períodos (meses/años) para los que ya se han generado recibos.</p>
+
+            <table>
+                <thead>
+                    <tr>
+                        <th>Columna</th>
+                        <th>Descripción</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr>
+                        <td><strong>Período</strong></td>
+                        <td>Mes y año (ej: Abril 2026)</td>
+                    </tr>
+                    <tr>
+                        <td><strong>Cantidad</strong></td>
+                        <td>Número de recibos generados para ese período</td>
+                    </tr>
+                    <tr>
+                        <td><strong>Fecha Generación</strong></td>
+                        <td>Cuándo se generaron los recibos</td>
+                    </tr>
+                    <tr>
+                        <td><strong>Acción</strong></td>
+                        <td>Link para ver recibos del período</td>
+                    </tr>
+                </tbody>
+            </table>
+
+            <h2>Ver Recibos de un Período</h2>
+
+            <p><strong>Pasos:</strong></p>
+            <ol>
+                <li>En la tabla de períodos, haz click en el <strong>período</strong> que deseas ver</li>
+                <li>Se abrirá una tabla con todos los recibos de ese período</li>
+                <li>Verás columnas: Plan #, Afiliado, Integrantes, Valor Cuota, Acciones</li>
+            </ol>
+
+            <h3>Información del Recibo</h3>
+
+            <table>
+                <thead>
+                    <tr>
+                        <th>Campo</th>
+                        <th>Descripción</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr>
+                        <td><strong>Plan #</strong></td>
+                        <td>Número del plan</td>
+                    </tr>
+                    <tr>
+                        <td><strong>Afiliado</strong></td>
+                        <td>Nombre del titular del plan</td>
+                    </tr>
+                    <tr>
+                        <td><strong>Integrantes</strong></td>
+                        <td>Cantidad de personas en el plan</td>
+                    </tr>
+                    <tr>
+                        <td><strong>Valor Cuota</strong></td>
+                        <td>Monto del recibo</td>
+                    </tr>
+                    <tr>
+                        <td><strong>Acciones</strong></td>
+                        <td>Ver detalle, descargar (si está disponible)</td>
+                    </tr>
+                </tbody>
+            </table>
+
+            <h2>Generar Recibos</h2>
+
+            <p>
+                Genera recibos para un período específico. Se ejecuta una sola vez por período.
+            </p>
+
+            <p><strong>Pasos:</strong></p>
+            <ol>
+                <li>En la pantalla principal, haz click en <strong>"+ Generar Recibos"</strong></li>
+                <li>Se abrirá un modal</li>
+                <li>Selecciona el <strong>mes</strong> (Enero, Febrero, etc.)</li>
+                <li>Selecciona el <strong>año</strong></li>
+                <li>Haz click en <strong>"Generar"</strong></li>
+            </ol>
+
+            <div class="alert warning">
+                <strong>⚠️ Importante:</strong> Se generarán recibos solo para los planes ACTIVOS.
+                Los planes suspendidos no generarán recibos.
+            </div>
+
+            <h2>Regenerar Recibos</h2>
+
+            <p>
+                Si ya generaste recibos para un período y necesitas regenerarlos:
+            </p>
+
+            <p><strong>Pasos:</strong></p>
+            <ol>
+                <li>Intenta generar recibos para el mismo período</li>
+                <li>El sistema detectará que ya existen</li>
+                <li>Se pedirá confirmación para regenerar</li>
+                <li>Los recibos anteriores se borrarán y se crearán nuevos</li>
+            </ol>
+
+            <div class="alert error">
+                <strong>⚠️ Advertencia:</strong> Regenerar recibos borra los anteriores.
+                Esta acción es irreversible a través de la UI.
+            </div>
+
+            <h2>Ver Detalle de Recibo</h2>
+
+            <p>Haz click en el botón <strong>"👁 Ver"</strong> para ver información detallada del recibo:</p>
+
+            <ul>
+                <li>Datos del plan</li>
+                <li>Datos del afiliado</li>
+                <li>Integrantes incluidos</li>
+                <li>Servicios adicionales (si los hay)</li>
+                <li>Valor total del recibo</li>
+                <li>Fecha de emisión</li>
+            </ul>
+
+            <h2>Período de Generación</h2>
+
+            <p>
+                El período se especifica como <strong>Mes + Año</strong>.
+                Ejemplo: Abril 2026
+            </p>
+
+            <div class="alert info">
+                <strong>💡 Nota:</strong> Los recibos se generan con la cuota que tenía el plan
+                en la fecha de generación. Si cambias la cuota después, los recibos anteriores
+                no se modifican (son históricos).
+            </div>
+
+            <h2>Errores Frecuentes</h2>
+
+            <table>
+                <thead>
+                    <tr>
+                        <th>Error</th>
+                        <th>Solución</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr>
+                        <td>"Ya existen recibos para este período"</td>
+                        <td>El período ya fue procesado. Haz click en "Regenerar" si necesitas actualizar.</td>
+                    </tr>
+                    <tr>
+                        <td>"No hay planes para generar recibos"</td>
+                        <td>No hay planes activos. Asegúrate de que existan planes con estado ACTIVO.</td>
+                    </tr>
+                    <tr>
+                        <td>"Error al generar recibos"</td>
+                        <td>Problema técnico. Intenta nuevamente o contacta al administrador.</td>
+                    </tr>
+                </tbody>
+            </table>
+
+            <h2>Preguntas Frecuentes</h2>
+
+            <h3>¿Con qué frecuencia debo generar recibos?</h3>
+            <p>
+                Normalmente una vez al mes. Pero puedes generar recibos en cualquier momento
+                si lo necesitas (ej: mes anterior que faltaba).
+            </p>
+
+            <h3>¿Qué pasa si cambio la cuota después de generar recibos?</h3>
+            <p>
+                Los recibos ya generados mantienen el valor que tenían.
+                Los futuros recibos usarán la cuota nueva.
+            </p>
+
+            <h3>¿Puedo descargar recibos como PDF?</h3>
+            <p>
+                Actualmente la opción de descarga PDF no está disponible.
+                Puedes ver el detalle en pantalla.
+            </p>
+        </div>
+    </div>
+
+    <script src="../js/nav.js"></script>
+</body>
+</html>

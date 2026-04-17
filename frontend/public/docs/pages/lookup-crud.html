@@ -1,0 +1,189 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Datos Maestros - GestSocial</title>
+    <link rel="stylesheet" href="../css/styles.css">
+</head>
+<body>
+    <div class="docs-header">
+        <h1>GestSocial - Documentación</h1>
+    </div>
+
+    <nav class="docs-nav-sidebar" id="docsNav">
+        <h3>Inicio</h3>
+        <a href="../index.html">Visión General</a>
+
+        <h3>Funcionalidad Principal</h3>
+        <a href="autenticacion.html">Autenticación</a>
+        <a href="gestion-planes.html">Gestión de Planes</a>
+        <a href="busqueda-afiliados.html">Búsqueda de Afiliados</a>
+        <a href="gestion-afiliados.html">Gestión de Afiliados</a>
+        <a href="gestion-recibos.html">Gestión de Recibos</a>
+
+        <h3>Mantenimiento</h3>
+        <a href="lookup-crud.html" class="active">Cobradores, OS, Servicios, Tipos</a>
+
+        <h3>Administración</h3>
+        <a href="gestion-usuarios.html">Gestión de Usuarios</a>
+        <a href="migraciones-bd.html">Migraciones BD</a>
+
+        <h3>Referencia</h3>
+        <a href="faq.html">Preguntas Frecuentes</a>
+    </nav>
+
+    <div class="docs-content">
+        <div class="docs-content-inner">
+            <h1>Datos Maestros: Cobradores, Obras Sociales, Servicios y Tipos</h1>
+
+            <p>
+                Estas secciones permiten administrar los datos de referencia (lookups) que se usan
+                en todo el sistema: Cobradores, Obras Sociales, Servicios Adicionales, Tipos de Grupo
+                y Tipos de Plan.
+            </p>
+
+            <div class="alert info">
+                <strong>💡 Nota:</strong> Todas estas secciones siguen el mismo patrón CRUD:
+                ver listado, crear, editar, eliminar. Las instrucciones aplican a todas.
+            </div>
+
+            <h2>Acceso</h2>
+
+            <p>
+                Desde el Dashboard, menú izquierdo, sección <strong>"Gestión"</strong>, verás:
+            </p>
+            <ul>
+                <li>Cobradores</li>
+                <li>Obras Sociales</li>
+                <li>Servicios Adicionales</li>
+                <li>Tipos de Grupo</li>
+                <li>Tipos de Plan</li>
+            </ul>
+
+            <h2>Pantalla Principal (Todas)</h2>
+
+            <p>Cada sección tiene:</p>
+            <ul>
+                <li><strong>Tabla de listado:</strong> todos los elementos registrados</li>
+                <li><strong>Búsqueda:</strong> filtrar por nombre o criterio</li>
+                <li><strong>Botón "+ Nuevo":</strong> crear elemento nuevo</li>
+                <li><strong>Acciones:</strong> editar y eliminar</li>
+            </ul>
+
+            <h2>Crear un Elemento</h2>
+
+            <p><strong>Pasos:</strong></p>
+            <ol>
+                <li>Haz click en <strong>"+ Nuevo"</strong></li>
+                <li>Se abrirá un modal con un formulario</li>
+                <li>Completa los campos requeridos</li>
+                <li>Haz click en <strong>"Guardar"</strong></li>
+            </ol>
+
+            <h3>Campos Típicos</h3>
+
+            <ul>
+                <li><strong>Nombre:</strong> nombre del elemento (requerido)</li>
+                <li><strong>Descripción:</strong> información adicional (opcional)</li>
+                <li><strong>Estado:</strong> activo/inactivo (según la sección)</li>
+            </ul>
+
+            <h2>Editar un Elemento</h2>
+
+            <p><strong>Pasos:</strong></p>
+            <ol>
+                <li>En la tabla, haz click en el botón <strong>"✎ Editar"</strong></li>
+                <li>Se abrirá el modal con los datos actuales</li>
+                <li>Modifica los campos necesarios</li>
+                <li>Haz click en <strong>"Guardar"</strong></li>
+            </ol>
+
+            <h2>Eliminar un Elemento</h2>
+
+            <p><strong>Pasos:</strong></p>
+            <ol>
+                <li>En la tabla, haz click en el botón <strong>"🗑 Eliminar"</strong></li>
+                <li>Se pedirá confirmación</li>
+                <li>Confirma para eliminar</li>
+            </ol>
+
+            <div class="alert warning">
+                <strong>⚠️ Importante:</strong> Si un elemento está siendo usado (ej: una obra social
+                en un plan), puede que no se pueda eliminar. El sistema lo indicará.
+            </div>
+
+            <h2>Secciones Específicas</h2>
+
+            <h3>Cobradores</h3>
+            <p>
+                Personal encargado de cobrar cuotas. Se asignan a planes para identificar
+                quién es responsable del cobro.
+            </p>
+            <p><strong>Campo típico:</strong> Nombre del cobrador</p>
+
+            <h3>Obras Sociales</h3>
+            <p>
+                Instituciones de salud/cobertura. Cada plan debe estar asociado a una obra social.
+            </p>
+            <p><strong>Campos típicos:</strong> Nombre de la obra social, código, contacto</p>
+
+            <h3>Servicios Adicionales</h3>
+            <p>
+                Servicios extra que se pueden agregar a un plan (dentistas, oftalmólogos, psicólogos, etc.).
+                Un plan puede tener múltiples servicios.
+            </p>
+            <p><strong>Campos típicos:</strong> Nombre del servicio, descripción</p>
+
+            <h3>Tipos de Grupo</h3>
+            <p>
+                Categorías de grupos familiares (Individual, Matrimonio, Familia, etc.).
+            </p>
+            <p><strong>Campos típicos:</strong> Nombre del tipo, descripción</p>
+
+            <h3>Tipos de Plan</h3>
+            <p>
+                Categorías de planes (Plan Básico, Plan Premium, Plan Completo, etc.).
+                Cada plan debe tener un tipo.
+            </p>
+            <p><strong>Campos típicos:</strong> Nombre del tipo, descripción</p>
+
+            <h2>Errores Frecuentes</h2>
+
+            <table>
+                <thead>
+                    <tr>
+                        <th>Error</th>
+                        <th>Solución</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr>
+                        <td>"No se puede eliminar"</td>
+                        <td>El elemento está siendo usado. Revisa dónde se utiliza y actualiza.</td>
+                    </tr>
+                    <tr>
+                        <td>"El nombre ya existe"</td>
+                        <td>Ya existe un elemento con ese nombre. Intenta con otro.</td>
+                    </tr>
+                    <tr>
+                        <td>"Campo requerido"</td>
+                        <td>Completa todos los campos marcados con asterisco.</td>
+                    </tr>
+                </tbody>
+            </table>
+
+            <h2>Mejores Prácticas</h2>
+
+            <ul>
+                <li>Mantén los datos maestros actualizados y sin duplicados</li>
+                <li>Antes de eliminar, verifica que no esté siendo usado</li>
+                <li>Usa nombres claros y consistentes</li>
+                <li>Ordena alfabéticamente si es posible para facilitar búsquedas</li>
+            </ul>
+        </div>
+    </div>
+
+    <script src="../js/nav.js"></script>
+</body>
+</html>

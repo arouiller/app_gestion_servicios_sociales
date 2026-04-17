@@ -1,0 +1,215 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Búsqueda de Afiliados - GestSocial</title>
+    <link rel="stylesheet" href="../css/styles.css">
+</head>
+<body>
+    <div class="docs-header">
+        <h1>GestSocial - Documentación</h1>
+    </div>
+
+    <nav class="docs-nav-sidebar" id="docsNav">
+        <h3>Inicio</h3>
+        <a href="../index.html">Visión General</a>
+
+        <h3>Funcionalidad Principal</h3>
+        <a href="autenticacion.html">Autenticación</a>
+        <a href="gestion-planes.html">Gestión de Planes</a>
+        <a href="busqueda-afiliados.html" class="active">Búsqueda de Afiliados</a>
+        <a href="gestion-afiliados.html">Gestión de Afiliados</a>
+        <a href="gestion-recibos.html">Gestión de Recibos</a>
+
+        <h3>Mantenimiento</h3>
+        <a href="lookup-crud.html">Cobradores, OS, Servicios, Tipos</a>
+
+        <h3>Administración</h3>
+        <a href="gestion-usuarios.html">Gestión de Usuarios</a>
+        <a href="migraciones-bd.html">Migraciones BD</a>
+
+        <h3>Referencia</h3>
+        <a href="faq.html">Preguntas Frecuentes</a>
+    </nav>
+
+    <div class="docs-content">
+        <div class="docs-content-inner">
+            <h1>Búsqueda de Afiliados</h1>
+
+            <p>
+                <strong>Búsqueda de Afiliados</strong> te permite encontrar rápidamente información sobre afiliados
+                y los planes asociados a cada uno. Es útil para consultar detalles y realizar acciones en los planes
+                desde la perspectiva del afiliado.
+            </p>
+
+            <h2>Acceso</h2>
+
+            <ol>
+                <li>Desde el Dashboard, en el menú izquierdo</li>
+                <li>En la sección <strong>"Gestión"</strong>, selecciona <strong>"Búsqueda de Afiliados"</strong></li>
+                <li>Verás el buscador de afiliados</li>
+            </ol>
+
+            <h2>Pantalla Principal</h2>
+
+            <ul>
+                <li><strong>Buscador:</strong> campo de texto para buscar afiliados</li>
+                <li><strong>Tabla de resultados:</strong> afiliados encontrados</li>
+                <li><strong>Tabla de planes:</strong> planes del afiliado seleccionado</li>
+            </ul>
+
+            <h2>Buscar un Afiliado</h2>
+
+            <p><strong>Pasos:</strong></p>
+            <ol>
+                <li>En el campo de búsqueda, ingresa un criterio (nombre, apellido o DNI)</li>
+                <li>La búsqueda es en vivo: verás resultados mientras escribes</li>
+                <li>Haz click en un afiliado de la tabla para ver sus detalles</li>
+            </ol>
+
+            <div class="alert info">
+                <strong>💡 Consejo:</strong> La búsqueda es flexible. Puedes escribir solo parte del nombre
+                (ej: "Juan" o "Perez") y verás todos los resultados que coincidan.
+            </div>
+
+            <h3>Criterios de Búsqueda</h3>
+
+            <table>
+                <thead>
+                    <tr>
+                        <th>Criterio</th>
+                        <th>Ejemplo</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr>
+                        <td><strong>Nombre</strong></td>
+                        <td>"Juan" → busca todos los Juanes</td>
+                    </tr>
+                    <tr>
+                        <td><strong>Apellido</strong></td>
+                        <td>"Pérez" → busca todos los Pérez</td>
+                    </tr>
+                    <tr>
+                        <td><strong>Nombre + Apellido</strong></td>
+                        <td>"Juan Pérez" → busca Juan Pérez específicamente</td>
+                    </tr>
+                    <tr>
+                        <td><strong>DNI</strong></td>
+                        <td>"35123456" → busca por número de documento</td>
+                    </tr>
+                </tbody>
+            </table>
+
+            <h2>Ver Planes de un Afiliado</h2>
+
+            <p><strong>Pasos:</strong></p>
+            <ol>
+                <li>Busca y selecciona un afiliado</li>
+                <li>Debajo aparecerá una tabla con todos los planes del afiliado</li>
+                <li>Verás las columnas:
+                    <ul>
+                        <li>Plan #</li>
+                        <li>Tipo Plan</li>
+                        <li>Obra Social</li>
+                        <li>Valor Cuota</li>
+                        <li>Estado (ACTIVO/SUSPENDIDO)</li>
+                        <li>Acciones</li>
+                    </ul>
+                </li>
+            </ol>
+
+            <h2>Acciones sobre Planes</h2>
+
+            <h3>Ver Detalle del Plan</h3>
+            <p>
+                Haz click en el número del plan o en el botón <strong>"👁 Ver"</strong>
+                para abrir el modal con información completa del plan.
+            </p>
+
+            <h3>Editar Plan</h3>
+            <p>
+                Haz click en el botón <strong>"✎ Editar"</strong> para modificar datos del plan.
+                Se abrirá el modal de edición (igual que en Gestión de Planes).
+            </p>
+
+            <h3>Cambiar Estado del Plan</h3>
+            <p>
+                Haz click en el botón de <strong>estado 🔓/🔒</strong> para:
+            </p>
+            <ul>
+                <li>Si está <strong>ACTIVO</strong> (🔓): cambiar a SUSPENDIDO</li>
+                <li>Si está <strong>SUSPENDIDO</strong> (🔒): cambiar a ACTIVO</li>
+            </ul>
+
+            <p>Se pedirá confirmación antes de cambiar.</p>
+
+            <h2>Información del Afiliado</h2>
+
+            <p>Cuando seleccionas un afiliado, verás:</p>
+
+            <ul>
+                <li><strong>Nombre completo</strong></li>
+                <li><strong>DNI</strong></li>
+                <li><strong>Fecha de nacimiento</strong></li>
+                <li><strong>Email</strong> (si está registrado)</li>
+                <li><strong>Teléfono</strong> (si está registrado)</li>
+                <li><strong>Dirección</strong> (si está registrada)</li>
+            </ul>
+
+            <h2>Errores Frecuentes</h2>
+
+            <table>
+                <thead>
+                    <tr>
+                        <th>Error</th>
+                        <th>Causa</th>
+                        <th>Solución</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr>
+                        <td>"No se encontraron resultados"</td>
+                        <td>No hay afiliados que coincidan con tu búsqueda</td>
+                        <td>Revisa la ortografía o intenta con otros criterios de búsqueda</td>
+                    </tr>
+                    <tr>
+                        <td>"Este afiliado no tiene planes"</td>
+                        <td>El afiliado existe pero no tiene planes asignados</td>
+                        <td>Para crear un plan para este afiliado, usa Gestión de Planes</td>
+                    </tr>
+                    <tr>
+                        <td>"Error al cargar detalles"</td>
+                        <td>Problema al recuperar información</td>
+                        <td>Recarga la página e intenta nuevamente</td>
+                    </tr>
+                </tbody>
+            </table>
+
+            <h2>Preguntas Frecuentes</h2>
+
+            <h3>¿Puedo crear un nuevo afiliado desde aquí?</h3>
+            <p>
+                No. Para crear un nuevo afiliado, ve a <strong>Gestión de Afiliados</strong>
+                o usa el botón "+ Crear Afiliado" que aparece cuando buscas uno que no existe.
+            </p>
+
+            <h3>¿Cuál es la diferencia entre Búsqueda de Afiliados y Gestión de Afiliados?</h3>
+            <p>
+                <ul>
+                    <li><strong>Búsqueda:</strong> enfoque en encontrar afiliados y ver sus planes</li>
+                    <li><strong>Gestión:</strong> enfoque en CRUD de afiliados (crear, editar, eliminar)</li>
+                </ul>
+            </p>
+
+            <h3>¿Puedo cambiar el estado de un plan desde aquí?</h3>
+            <p>
+                Sí. Es una forma rápida de cambiar estado sin abrir el modal de edición completo.
+            </p>
+        </div>
+    </div>
+
+    <script src="../js/nav.js"></script>
+</body>
+</html>

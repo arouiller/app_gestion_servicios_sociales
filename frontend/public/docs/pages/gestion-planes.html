@@ -1,0 +1,445 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Gestión de Planes - GestSocial</title>
+    <link rel="stylesheet" href="../css/styles.css">
+</head>
+<body>
+    <div class="docs-header">
+        <h1>GestSocial - Documentación</h1>
+    </div>
+
+    <nav class="docs-nav-sidebar" id="docsNav">
+        <h3>Inicio</h3>
+        <a href="../index.html">Visión General</a>
+
+        <h3>Funcionalidad Principal</h3>
+        <a href="autenticacion.html">Autenticación</a>
+        <a href="gestion-planes.html" class="active">Gestión de Planes</a>
+        <a href="busqueda-afiliados.html">Búsqueda de Afiliados</a>
+        <a href="gestion-afiliados.html">Gestión de Afiliados</a>
+        <a href="gestion-recibos.html">Gestión de Recibos</a>
+
+        <h3>Mantenimiento</h3>
+        <a href="lookup-crud.html">Cobradores, OS, Servicios, Tipos</a>
+
+        <h3>Administración</h3>
+        <a href="gestion-usuarios.html">Gestión de Usuarios</a>
+        <a href="migraciones-bd.html">Migraciones BD</a>
+
+        <h3>Referencia</h3>
+        <a href="faq.html">Preguntas Frecuentes</a>
+    </nav>
+
+    <div class="docs-content">
+        <div class="docs-content-inner">
+            <h1>Gestión de Planes</h1>
+
+            <p>
+                La <strong>Gestión de Planes</strong> es el módulo central de GestSocial.
+                Aquí puedes crear, editar, suspender y administrar planes de afiliación,
+                incluyendo cambios de cuota, aumento masivo y generación de recibos.
+            </p>
+
+            <div class="alert info">
+                <strong>💡 Nota:</strong> Un "plan" es la relación entre un afiliado y sus servicios.
+                Contiene información sobre cuota, fecha de alta, obra social, etc.
+            </div>
+
+            <h2>Acceso</h2>
+
+            <p>Para acceder a Gestión de Planes:</p>
+            <ol>
+                <li>Desde el Dashboard, haz click en el menú izquierdo</li>
+                <li>En la sección <strong>"Gestión"</strong>, selecciona <strong>"Gestión de Planes"</strong></li>
+                <li>Verás una tabla con todos los planes disponibles</li>
+            </ol>
+
+            <h2>Pantalla Principal</h2>
+
+            <p>La pantalla de Gestión de Planes contiene:</p>
+
+            <ul>
+                <li><strong>Barra de búsqueda:</strong> busca planes por diferentes criterios</li>
+                <li><strong>Tabla de planes:</strong> listado de todos los planes con columnas importantes</li>
+                <li><strong>Botón "+ Nuevo Plan":</strong> crea un plan nuevo</li>
+                <li><strong>Botones de acción por plan:</strong> editar, ver detalle, suspender</li>
+            </ul>
+
+            <h3>Columnas de la Tabla</h3>
+
+            <table>
+                <thead>
+                    <tr>
+                        <th>Columna</th>
+                        <th>Descripción</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr>
+                        <td><strong>Plan #</strong></td>
+                        <td>Número único del plan (identificador)</td>
+                    </tr>
+                    <tr>
+                        <td><strong>Afiliado</strong></td>
+                        <td>Nombre completo del afiliado titular del plan</td>
+                    </tr>
+                    <tr>
+                        <td><strong>DNI</strong></td>
+                        <td>Número de documento del afiliado</td>
+                    </tr>
+                    <tr>
+                        <td><strong>Tipo Plan</strong></td>
+                        <td>Clasificación del plan (ej: Plan Básico, Plan Premium)</td>
+                    </tr>
+                    <tr>
+                        <td><strong>Obra Social</strong></td>
+                        <td>Obra social asociada al plan</td>
+                    </tr>
+                    <tr>
+                        <td><strong>Valor Cuota</strong></td>
+                        <td>Monto actual de la cuota mensual</td>
+                    </tr>
+                    <tr>
+                        <td><strong>Estado</strong></td>
+                        <td>ACTIVO o SUSPENDIDO</td>
+                    </tr>
+                    <tr>
+                        <td><strong>Acciones</strong></td>
+                        <td>Botones para editar, ver detalle, cambiar estado</td>
+                    </tr>
+                </tbody>
+            </table>
+
+            <h2>Crear un Plan Nuevo</h2>
+
+            <p><strong>Pasos:</strong></p>
+            <ol>
+                <li>Haz click en el botón <strong>"+ Nuevo Plan"</strong> en la esquina superior derecha</li>
+                <li>Se abrirá un modal con el formulario de creación</li>
+                <li>Completa todos los campos requeridos (ver tabla de campos abajo)</li>
+                <li>Haz click en <strong>"Crear Plan"</strong> para guardar</li>
+            </ol>
+
+            <h3>Campos de Creación de Plan</h3>
+
+            <table>
+                <thead>
+                    <tr>
+                        <th>Campo</th>
+                        <th>Requerido</th>
+                        <th>Tipo</th>
+                        <th>Descripción</th>
+                        <th>Validación</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr>
+                        <td><strong>Afiliado Titular</strong></td>
+                        <td><span class="badge required">Sí</span></td>
+                        <td>Búsqueda/Selector</td>
+                        <td>Persona titular del plan. Busca por nombre, apellido o DNI</td>
+                        <td>Debe ser un afiliado existente. Si no existe, crea uno nuevo con "+ Crear Afiliado"</td>
+                    </tr>
+                    <tr>
+                        <td><strong>Número de Plan</strong></td>
+                        <td><span class="badge required">Sí</span></td>
+                        <td>Número</td>
+                        <td>Identificador único del plan</td>
+                        <td>Debe ser único. No puede repetirse.</td>
+                    </tr>
+                    <tr>
+                        <td><strong>Tipo de Plan</strong></td>
+                        <td><span class="badge required">Sí</span></td>
+                        <td>Select</td>
+                        <td>Clasificación del plan (Básico, Premium, etc.)</td>
+                        <td>Selecciona de la lista disponible</td>
+                    </tr>
+                    <tr>
+                        <td><strong>Obra Social</strong></td>
+                        <td><span class="badge required">Sí</span></td>
+                        <td>Select</td>
+                        <td>Obra social del plan</td>
+                        <td>Debe existir en la lista de obras sociales</td>
+                    </tr>
+                    <tr>
+                        <td><strong>Tipo de Grupo</strong></td>
+                        <td><span class="badge required">Sí</span></td>
+                        <td>Select</td>
+                        <td>Categorización del grupo (familia, individual, etc.)</td>
+                        <td>Selecciona de la lista disponible</td>
+                    </tr>
+                    <tr>
+                        <td><strong>Cobrador</strong></td>
+                        <td><span class="badge optional">No</span></td>
+                        <td>Select</td>
+                        <td>Persona responsable de cobrar</td>
+                        <td>Opcional. Selecciona si aplicable.</td>
+                    </tr>
+                    <tr>
+                        <td><strong>Cuota Mensual</strong></td>
+                        <td><span class="badge required">Sí</span></td>
+                        <td>Número (moneda)</td>
+                        <td>Monto de la cuota mensual</td>
+                        <td>Mayor a 0. Formato: número con hasta 2 decimales</td>
+                    </tr>
+                    <tr>
+                        <td><strong>Fecha de Alta</strong></td>
+                        <td><span class="badge required">Sí</span></td>
+                        <td>Fecha</td>
+                        <td>Cuándo inicia el plan</td>
+                        <td>Fecha válida en formato YYYY-MM-DD</td>
+                    </tr>
+                    <tr>
+                        <td><strong>Fecha de Cobertura</strong></td>
+                        <td><span class="badge required">Sí</span></td>
+                        <td>Fecha</td>
+                        <td>Fecha desde la que hay cobertura activa</td>
+                        <td>Fecha válida en formato YYYY-MM-DD</td>
+                    </tr>
+                </tbody>
+            </table>
+
+            <h2>Editar un Plan</h2>
+
+            <p><strong>Pasos:</strong></p>
+            <ol>
+                <li>En la tabla, busca el plan que deseas editar</li>
+                <li>Haz click en el botón <strong>"✎ Editar"</strong> en la columna de acciones</li>
+                <li>Se abrirá el modal con los datos del plan</li>
+                <li>Modifica los campos que necesites</li>
+                <li>Haz click en <strong>"Guardar Cambios"</strong></li>
+            </ol>
+
+            <div class="alert warning">
+                <strong>⚠️ Importante:</strong> No todos los campos se pueden editar una vez creado el plan.
+                El "Número de Plan" no puede cambiar. Algunos campos pueden estar bloqueados según el estado.
+            </div>
+
+            <h2>Ver Detalles del Plan (Modal de Detalle)</h2>
+
+            <p>
+                Haz click en el <strong>número del plan</strong> o en el botón <strong>"👁 Ver Detalle"</strong>
+                para abrir el modal con información completa del plan.
+            </p>
+
+            <h3>Contenido del Modal de Detalle</h3>
+
+            <p>El modal tiene varios <strong>tabs (pestañas)</strong>:</p>
+
+            <ul>
+                <li><strong>Información:</strong> datos principales del plan</li>
+                <li><strong>Integrantes:</strong> tabla de beneficiarios/integrantes del plan</li>
+                <li><strong>Servicios Adicionales:</strong> servicios extra asociados</li>
+                <li><strong>Historial de Cuota:</strong> cambios de cuota a lo largo del tiempo</li>
+                <li><strong>Recibos:</strong> recibos generados para este plan</li>
+            </ul>
+
+            <h4>Tab Historial de Cuota</h4>
+
+            <p>Muestra todos los cambios de cuota que ha tenido el plan:</p>
+
+            <table>
+                <thead>
+                    <tr>
+                        <th>Fecha de Cambio</th>
+                        <th>Valor Anterior</th>
+                        <th>Cambio</th>
+                        <th>Valor Nuevo</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr>
+                        <td>2026-04-01</td>
+                        <td>$500</td>
+                        <td>Fijo: +$50</td>
+                        <td>$550</td>
+                    </tr>
+                    <tr>
+                        <td>2026-03-15</td>
+                        <td>$500</td>
+                        <td>Porcentual: +10%</td>
+                        <td>$550</td>
+                    </tr>
+                </tbody>
+            </table>
+
+            <h2>Cambios de Cuota</h2>
+
+            <h3>Cambio Individual (desde Modal de Edición)</h3>
+
+            <p><strong>Pasos:</strong></p>
+            <ol>
+                <li>Abre el plan para editar</li>
+                <li>Cambia el valor en el campo <strong>"Cuota Mensual"</strong></li>
+                <li>Haz click en <strong>"Guardar Cambios"</strong></li>
+                <li>El cambio se registrará automáticamente en el Historial</li>
+            </ol>
+
+            <h3>Aumento Masivo de Cuotas</h3>
+
+            <p>
+                Aplica un cambio de cuota a <strong>múltiples planes</strong> de una sola vez.
+            </p>
+
+            <p><strong>Pasos:</strong></p>
+            <ol>
+                <li>En la pantalla de Gestión de Planes, haz click en el botón <strong>"📈 Aumento Masivo"</strong></li>
+                <li>Se abrirá un modal con opciones</li>
+                <li>Selecciona el <strong>tipo de cambio:</strong>
+                    <ul>
+                        <li><strong>Fijo:</strong> suma/resta un valor fijo a todas las cuotas</li>
+                        <li><strong>Porcentual:</strong> aplica un porcentaje de aumento</li>
+                    </ul>
+                </li>
+                <li>Ingresa el <strong>valor o porcentaje</strong></li>
+                <li>Selecciona los <strong>filtros</strong> si deseas aplicar solo a algunos planes:
+                    <ul>
+                        <li>Por Tipo de Plan</li>
+                        <li>Por Obra Social</li>
+                        <li>Por Estado</li>
+                    </ul>
+                </li>
+                <li>Haz click en <strong>"Ver Preview"</strong> para verificar qué planes se verán afectados</li>
+                <li>En el preview, revisa la tabla de planes con valores nuevos</li>
+                <li>Haz click en <strong>"Confirmar Cambios"</strong> para ejecutar</li>
+            </ol>
+
+            <div class="alert warning">
+                <strong>⚠️ Advertencia:</strong> El aumento masivo es irreversible. Revisa cuidadosamente el preview antes de confirmar.
+            </div>
+
+            <h2>Suspender o Activar un Plan</h2>
+
+            <p>
+                Puedes cambiar el estado de un plan entre <strong>ACTIVO</strong> y <strong>SUSPENDIDO</strong>.
+            </p>
+
+            <p><strong>Pasos:</strong></p>
+            <ol>
+                <li>En la tabla, encuentra el plan</li>
+                <li>Observa el <strong>botón de estado</strong> en la columna "Acciones":
+                    <ul>
+                        <li>🔓 (candado abierto) = ACTIVO</li>
+                        <li>🔒 (candado cerrado) = SUSPENDIDO</li>
+                    </ul>
+                </li>
+                <li>Haz click en el botón para cambiar estado</li>
+                <li>Se pedirá confirmación</li>
+                <li>Confirma para guardar el cambio</li>
+            </ol>
+
+            <h3>Impacto de Suspender</h3>
+
+            <ul>
+                <li>El plan deja de generar nuevos recibos</li>
+                <li>No aparecerá en listados de planes activos</li>
+                <li>Se puede reactivar en cualquier momento</li>
+            </ul>
+
+            <h2>Agregar Integrantes/Beneficiarios</h2>
+
+            <p>
+                Un plan puede tener <strong>múltiples integrantes</strong> (titular + beneficiarios).
+            </p>
+
+            <p><strong>Pasos:</strong></p>
+            <ol>
+                <li>Abre el plan para editar</li>
+                <li>Vé al tab <strong>"Integrantes"</strong></li>
+                <li>Haz click en <strong>"+ Agregar Integrante"</strong></li>
+                <li>Se abre un modal para buscar o crear un nuevo afiliado</li>
+                <li>Busca un afiliado existente O crea uno nuevo</li>
+                <li>Selecciona/confirma y se agregará a la tabla de integrantes</li>
+            </ol>
+
+            <h2>Agregar Servicios Adicionales</h2>
+
+            <p>
+                Los planes pueden tener <strong>servicios adicionales</strong> (consultorios, dentistas, etc.).
+            </p>
+
+            <p><strong>Pasos:</strong></p>
+            <ol>
+                <li>Abre el plan para editar</li>
+                <li>Vé al tab <strong>"Servicios Adicionales"</strong></li>
+                <li>Haz click en <strong>"+ Agregar Servicio"</strong></li>
+                <li>Selecciona los servicios que deseas agregar</li>
+                <li>Haz click en <strong>"Guardar"</strong></li>
+            </ol>
+
+            <h2>Errores Frecuentes</h2>
+
+            <table>
+                <thead>
+                    <tr>
+                        <th>Error</th>
+                        <th>Causa</th>
+                        <th>Solución</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr>
+                        <td>"Número de plan ya existe"</td>
+                        <td>Ya hay un plan con ese número</td>
+                        <td>Verifica el número e ingresa uno diferente</td>
+                    </tr>
+                    <tr>
+                        <td>"El afiliado es requerido"</td>
+                        <td>No seleccionaste un afiliado titular</td>
+                        <td>Busca y selecciona un afiliado existente, o crea uno nuevo</td>
+                    </tr>
+                    <tr>
+                        <td>"La cuota debe ser mayor a 0"</td>
+                        <td>Ingresaste cuota de $0 o número negativo</td>
+                        <td>Ingresa un valor mayor a 0</td>
+                    </tr>
+                    <tr>
+                        <td>"No hay planes para actualizar"</td>
+                        <td>En aumento masivo, los filtros no devolvieron ningún plan</td>
+                        <td>Revisa los filtros seleccionados y ajústalos</td>
+                    </tr>
+                    <tr>
+                        <td>"Campo requerido"</td>
+                        <td>Dejaste un campo obligatorio vacío</td>
+                        <td>Completa todos los campos marcados con asterisco (*)</td>
+                    </tr>
+                </tbody>
+            </table>
+
+            <h2>Preguntas Frecuentes</h2>
+
+            <h3>¿Puedo editar el número de plan después de crear?</h3>
+            <p>
+                No. El número de plan es inmutable una vez creado.
+                Si necesitas cambiar el número, deberás crear un nuevo plan.
+            </p>
+
+            <h3>¿Cómo deshago un aumento masivo?</h3>
+            <p>
+                No hay "undo" automático. Si necesitas revertir, deberás:
+                <ul>
+                    <li>Hacer otro aumento masivo "negativo" de la misma magnitud, O</li>
+                    <li>Editar cada plan individualmente</li>
+                </ul>
+                Por eso es importante revisar el preview antes de confirmar.
+            </p>
+
+            <h3>¿Qué pasa con los recibos si cambio la cuota?</h3>
+            <p>
+                El cambio de cuota afecta a los futuros recibos que se generen.
+                Los recibos ya generados no cambian (son históricos).
+            </p>
+
+            <h3>¿Puedo recuperar un plan que suspendí?</h3>
+            <p>
+                Sí. Simplemente haz click en el botón de estado nuevamente para reactivar.
+            </p>
+        </div>
+    </div>
+
+    <script src="../js/nav.js"></script>
+</body>
+</html>
