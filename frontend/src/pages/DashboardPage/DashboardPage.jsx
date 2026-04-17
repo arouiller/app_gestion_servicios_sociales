@@ -189,6 +189,14 @@ function DashboardPage() {
             </span>
           </div>
           <ThemeSwitcher />
+          <button
+            className="dashboard__help-btn"
+            onClick={() => window.open('/docs', '_blank')}
+            title="Abrir documentación (nueva pestaña)"
+            aria-label="Abrir documentación de ayuda"
+          >
+            ?
+          </button>
           <button className="dashboard__logout-btn" onClick={logout}>
             Cerrar sesión
           </button>
