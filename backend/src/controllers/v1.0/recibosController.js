@@ -230,14 +230,14 @@ exports.list = async (req, res, next) => {
 
         // Usar SQL directo con DATE_FORMAT + CAST para evitar problemas de timezone
         where[Op.and] = [
-          literal(`CAST(DATE_FORMAT(recibos.periodo, '%Y%m%d') AS UNSIGNED) BETWEEN ${firstDayNum} AND ${lastDayNum}`)
+          literal(`CAST(DATE_FORMAT(\`periodo\`, '%Y%m%d') AS UNSIGNED) BETWEEN ${firstDayNum} AND ${lastDayNum}`)
         ];
       } else if (periodo.length === 10 && /^\d{4}-\d{2}-\d{2}$/.test(periodo)) {
         // YYYY-MM-DD: buscar ese día específico
         const periodoNum = parseInt(periodo.replace(/-/g, ''));
         console.log(`[BUG-019 DEBUG] Búsqueda exacta: ${periodo} (${periodoNum})`);
         where[Op.and] = [
-          literal(`CAST(DATE_FORMAT(recibos.periodo, '%Y%m%d') AS UNSIGNED) = ${periodoNum}`)
+          literal(`CAST(DATE_FORMAT(\`periodo\`, '%Y%m%d') AS UNSIGNED) = ${periodoNum}`)
         ];
       }
     }
