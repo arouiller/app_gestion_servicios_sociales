@@ -1,6 +1,6 @@
 const db = require('../../models');
 const sequelize = require('../../config/database');
-const { Op } = require('sequelize');
+const { Op, literal } = require('sequelize');
 
 /**
  * POST /api/recibos/generar
@@ -222,17 +222,23 @@ exports.list = async (req, res, next) => {
         const lastDayOfMonth = new Date(parseInt(year), parseInt(month), 0).getDate();
         const lastDay = `${year}-${month}-${String(lastDayOfMonth).padStart(2, '0')}`;
 
-        console.log(`[BUG-019 DEBUG] Búsqueda por rango: ${firstDay} a ${lastDay}`);
+        // Convertir a formato numérico YYYYMMDD para comparación SQL directa
+        const firstDayNum = parseInt(firstDay.replace(/-/g, ''));  // 20260401
+        const lastDayNum = parseInt(lastDay.replace(/-/g, ''));   // 20260430
 
-        // Usar Op.gte y Op.lte en lugar de Op.between (más compatible con DATE)
+        console.log(`[BUG-019 DEBUG] Búsqueda por rango: ${firstDay} a ${lastDay} (${firstDayNum} a ${lastDayNum})`);
+
+        // Usar SQL directo con DATE_FORMAT + CAST para evitar problemas de timezone
         where[Op.and] = [
-          { periodo: { [Op.gte]: firstDay } },
-          { periodo: { [Op.lte]: lastDay } }
+          literal(`CAST(DATE_FORMAT(recibos.periodo, '%Y%m%d') AS UNSIGNED) BETWEEN ${firstDayNum} AND ${lastDayNum}`)
         ];
       } else if (periodo.length === 10 && /^\d{4}-\d{2}-\d{2}$/.test(periodo)) {
         // YYYY-MM-DD: buscar ese día específico
-        console.log(`[BUG-019 DEBUG] Búsqueda exacta: ${periodo}`);
-        where.periodo = periodo;
+        const periodoNum = parseInt(periodo.replace(/-/g, ''));
+        console.log(`[BUG-019 DEBUG] Búsqueda exacta: ${periodo} (${periodoNum})`);
+        where[Op.and] = [
+          literal(`CAST(DATE_FORMAT(recibos.periodo, '%Y%m%d') AS UNSIGNED) = ${periodoNum}`)
+        ];
       }
     }
 
