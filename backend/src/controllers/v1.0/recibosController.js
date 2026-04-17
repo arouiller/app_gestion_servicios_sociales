@@ -1,5 +1,6 @@
 const db = require('../../models');
 const sequelize = require('../../config/database');
+const { Op } = require('sequelize');
 
 /**
  * POST /api/recibos/generar
@@ -206,11 +207,18 @@ exports.list = async (req, res, next) => {
 
     const where = {};
     if (periodo) {
-      // Convertir string periodo (YYYY-MM-DD) a Date para comparación correcta
-      // La columna periodo es tipo DATE en la BD
+      // Validar formato YYYY-MM-DD
       const periodoDate = new Date(periodo);
       if (!isNaN(periodoDate)) {
-        where.periodo = periodoDate;
+        // Usar SQL DATE() function para comparar solo YYYY-MM-DD
+        // Esto evita problemas de zona horaria y comparación con hora
+        where[Op.and] = [
+          sequelize.where(
+            sequelize.fn('DATE', sequelize.col('periodo')),
+            Op.eq,
+            periodo
+          ),
+        ];
       }
     }
     if (plan_numero) {
