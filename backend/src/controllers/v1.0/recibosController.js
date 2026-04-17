@@ -222,11 +222,14 @@ exports.list = async (req, res, next) => {
         const lastDayOfMonth = new Date(parseInt(year), parseInt(month), 0).getDate();
         const lastDay = `${year}-${month}-${String(lastDayOfMonth).padStart(2, '0')}`;
 
+        console.log(`[BUG-019 DEBUG] Búsqueda por rango: ${firstDay} a ${lastDay}`);
+
         where.periodo = {
           [Op.between]: [firstDay, lastDay],
         };
       } else if (periodo.length === 10 && /^\d{4}-\d{2}-\d{2}$/.test(periodo)) {
         // YYYY-MM-DD: buscar ese día específico
+        console.log(`[BUG-019 DEBUG] Búsqueda exacta: ${periodo}`);
         where.periodo = periodo;
       }
     }
@@ -240,6 +243,8 @@ exports.list = async (req, res, next) => {
         error: 'Se requiere al menos uno de estos parámetros: periodo o plan_numero',
       });
     }
+
+    console.log(`[BUG-019 DEBUG] Where clause:`, JSON.stringify(where, null, 2));
 
     const recibos = await db.Recibo.findAll({
       where,
@@ -258,6 +263,11 @@ exports.list = async (req, res, next) => {
       ],
       order: [['periodo', 'DESC'], ['id', 'DESC']],
     });
+
+    console.log(`[BUG-019 DEBUG] Resultado: ${recibos.length} recibos encontrados`);
+    if (recibos.length > 0) {
+      console.log(`[BUG-019 DEBUG] Primer recibo periodo:`, recibos[0].periodo, `(tipo: ${typeof recibos[0].periodo})`);
+    }
 
     res.status(200).json(recibos);
   } catch (error) {
