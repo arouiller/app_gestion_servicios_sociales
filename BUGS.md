@@ -27,7 +27,7 @@ Un bug solo puede pasar a estado solucionado, Descartado a traves del pedido exp
 
 | ID | Severidad | Fase | Descripción | Reportado | Estado |
 |----|-----------|------|-------------|-----------|--------|
-| BUG-019 | 🔴 CRÍTICO | BACKLOG-014 | Gestión de Recibos: seleccionar período con recibos devuelve array vacío | 2026-04-16 | ✅ Desarrollado |
+| BUG-019 | 🔴 CRÍTICO | BACKLOG-014 | Gestión de Recibos: seleccionar período con recibos devuelve array vacío | 2026-04-16 | ✅ Solucionado |
 
 ---
 
@@ -1246,19 +1246,49 @@ Solución integrada de 3 cambios:
 - `backend/src/controllers/v1.0/recibosController.js`
 - `frontend/src/pages/RecibosPage/RecibosPage.jsx`
 
-**Verificación pendiente:**
-- [ ] Generar recibos para un período
-- [ ] Verificar BD: periodo = 2026-04-01 (primer día del mes)
-- [ ] Buscar recibos: enviar YYYY-MM
-- [ ] Confirmar que devuelve recibos (no array vacío)
+**Solución final implementada (2026-04-17):**
 
-**Commits:**
+Después de múltiples intentos, se identificó que Sequelize NO generaba queries correctas con:
+- `new Date()` (problemas de timezone)
+- `Op.between` con strings (no compatible con DATE)
+- `Op.gte + Op.lte` (conversión de tipos incorrecta)
+
+**Solución definitiva:** SQL directo con `DATE_FORMAT() + CAST AS UNSIGNED`
+
+```javascript
+// Convertir período a numérico YYYYMMDD
+const firstDayNum = 20260401;
+const lastDayNum = 20260430;
+
+// Usar literal SQL
+where[Op.and] = [
+  literal(`CAST(DATE_FORMAT(\`periodo\`, '%Y%m%d') AS UNSIGNED) BETWEEN ${firstDayNum} AND ${lastDayNum}`)
+];
+```
+
+**Query SQL ejecutada:**
+```sql
+SELECT * FROM recibos
+WHERE CAST(DATE_FORMAT(`periodo`, '%Y%m%d') AS UNSIGNED) BETWEEN 20260401 AND 20260430
+```
+
+**Ventajas de esta solución:**
+- ✅ Evita completamente problemas de timezone
+- ✅ Evita problemas de tipos de datos
+- ✅ Comparación numérica directa y robusta
+- ✅ MySQL procesa rápidamente DATE_FORMAT
+
+**Commits finales:**
 - c7b1c5a - fix(BUG-019): usar SQL DATE() para comparación de período sin zona horaria
 - 5ecb919 - refactor(BUG-019): mejorar lógica de conditions en list()
 - d6fa700 - fix(BUG-019): cambiar a Op.between para comparación de período
 - eca1d6e - fix(BUG-019): solución integrada para búsqueda de recibos por período
+- 6993e76 - debug(BUG-019): agregar logging para diagnosticar búsqueda vacía
+- 07bd012 - fix(BUG-019): cambiar Op.between a Op.gte + Op.lte
+- 3ec97a4 - fix(BUG-019): usar SQL directo con DATE_FORMAT + CAST para comparación numérica
+- f8cf2d2 - fix(BUG-019): cambiar referencia de tabla en SQL literal
 
-**Estado:** ✅ Desarrollado (2026-04-17)
+**Estado:** ✅ Solucionado (2026-04-17)
 
 ---
 
