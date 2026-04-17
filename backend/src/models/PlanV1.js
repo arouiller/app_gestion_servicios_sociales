@@ -9,19 +9,19 @@ const Plan = sequelize.define('planes', {
   },
   tipo_plan_numero: {
     type: DataTypes.INTEGER,
-    allowNull: false,
+    allowNull: true,
   },
   cobrador_numero: {
     type: DataTypes.INTEGER,
-    allowNull: false,
+    allowNull: true,
   },
   tipo_de_grupo_numero: {
     type: DataTypes.INTEGER,
-    allowNull: false,
+    allowNull: true,
   },
   os_numero: {
     type: DataTypes.INTEGER,
-    allowNull: false,
+    allowNull: true,
   },
   numero_afiliado: {
     type: DataTypes.STRING(50),
