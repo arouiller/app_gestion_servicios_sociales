@@ -1144,6 +1144,193 @@ d. **Archivos a modificar**
 
 ---
 
+### BACKLOG-016: Sistema de Documentación Accesible en Ventana Separada
+
+**Descripción:**
+Implementar un sistema de documentación integrado en la aplicación que sea accesible desde cualquier pantalla. La documentación debe abrirse en una ventana separada (nueva pestaña o modal no-modal) sin interrumpir la navegación del usuario. La documentación incluirá guías sobre pantallas, funcionalidades, información requerida en formularios, y procedimientos de uso.
+
+**Requerimientos:**
+
+a. **Acceso a Documentación**
+   - Botón de ayuda visible en header/navbar de la aplicación (icono "?" o "Ayuda")
+   - El botón abre un menú desplegable con opciones de documentación
+   - Opciones: Documentación General, Guía Rápida, FAQ, Contacto Soporte
+   - O un único botón que abre documentación en ventana nueva (nueva pestaña)
+
+b. **Ventana Separada**
+   - La documentación se abre en una ventana nueva o nueva pestaña del navegador
+   - NO es un modal dentro de la aplicación (usuario mantiene la página actual visible)
+   - Permite que el usuario tenga dos ventanas: app + documentación
+   - Usuario puede consultar documentación mientras trabajaba en la app
+
+c. **Contenido de Documentación**
+   - Guía por sección/módulo (Gestión de Planes, Búsqueda de Afiliados, etc.)
+   - Para cada sección:
+     * Descripción de la funcionalidad
+     * Pantallas y componentes involucrados
+     * Campos requeridos (validaciones, formatos esperados)
+     * Pasos para realizar tareas comunes
+     * Ejemplos de uso
+     * Casos de error y soluciones
+   - Índice/tabla de contenidos
+   - Búsqueda dentro de documentación (opcional)
+
+d. **Integración con la App**
+   - Botón flotante o en navbar
+   - Al hacer click: `window.open('/docs', '_blank')` (abre en nueva pestaña)
+   - O implementar sistema de ayuda contextual (help icon en componentes)
+   - Tooltip sobre campos ayudando a explicar qué llenar
+
+e. **Mantenimiento**
+   - Documentación versión-able (v1.0.5, v1.0.6, etc.)
+   - Fácil actualización cuando cambian funcionalidades
+   - Posibilidad de agregar documentación de nuevas secciones sin recompilación
+
+**Contexto:**
+- Usuario necesita ayuda para entender cómo usar cada sección
+- Documentación en ventana separada: mejor UX que modal sobre la app
+- Reduce soporte/preguntas frecuentes
+- Facilita onboarding de nuevos usuarios
+
+**Archivos a crear/modificar:**
+- Frontend: `navbar/help-button.jsx` o ítem en navbar existente
+- Frontend: `/docs/index.html` (servir documentación estática)
+- Frontend: `/docs/pages/` (secciones de documentación en HTML)
+- Posible: `backend/src/routes/docs.js` (si documentación viene del backend)
+
+**Estimación:** 
+- Estructura de documentación: 2h
+- Implementar botón/acceso: 1h
+- Escribir documentación inicial: 8-10h (según detalle)
+- Testing: 1h
+- **Total: 12-14 horas**
+
+**Prioridad:** 🟡 Media — Mejora UX pero no bloqueante para funcionalidad core
+
+**Estado:** 📋 Registrado
+
+---
+
+### BACKLOG-017: Generar Documentación de Uso en Formato HTML
+
+**Descripción:**
+Crear documentación completa de la aplicación en formato HTML que cubra todas las pantallas, funcionalidades, campos de formularios, validaciones, y procedimientos de uso. Esta documentación será accesible a través del sistema de ayuda (BACKLOG-016) y podrá ser consultada en línea o descargada.
+
+**Requerimientos:**
+
+a. **Cobertura de Documentación**
+   - **Inicio/Visión General**: Descripción general del sistema, flujos principales
+   - **Autenticación**: Cómo hacer login, recuperar contraseña, usuarios nuevos con password blanqueada
+   - **Gestión de Planes**: 
+     * Listar, buscar, crear, editar, suspender planes
+     * Campos de cada plan: qué llenar, formatos
+     * Cambios de cuota (fijo vs porcentual)
+     * Aumento masivo de cuotas
+   - **Búsqueda de Afiliados**: Buscar, ver detalles, planes asociados
+   - **Gestión de Afiliados** (si es accesible):
+     * Crear afiliado (campos, validaciones)
+     * Editar datos
+     * Eliminar (confirmaciones)
+   - **Gestión de Cobradores**: CRUD, uso en planes
+   - **Obras Sociales, Tipos de Grupo, Tipos de Plan, Servicios Adicionales**: CRUD para cada lookup
+   - **Generación de Recibos**: 
+     * Cuándo/cómo generar
+     * Campos en recibos
+     * Ver historial de recibos
+     * Regenerar recibos existentes
+   - **Gestión de Usuarios** (admin only):
+     * Crear usuario
+     * Cambiar rol
+     * Blanquear contraseña
+   - **Migraciones BD** (admin only):
+     * Qué son migraciones
+     * Cómo ejecutarlas
+     * Historial de migraciones
+   - **FAQ**: Preguntas frecuentes y respuestas
+   - **Glosario**: Términos técnicos y de negocio
+   - **Troubleshooting**: Errores comunes y soluciones
+
+b. **Formato y Estructura HTML**
+   - Página HTML única o múltiples páginas HTML interconectadas
+   - Estructura clara: navegación, índice, breadcrumbs
+   - Responsive: funciona en desktop, tablet, mobile
+   - Estilos consistentes (CSS)
+   - Tablas de contenidos (índice)
+   - Enlaces internos (links entre secciones)
+   - Búsqueda (opcional: implementar búsqueda en documentación)
+
+c. **Contenido por Sección**
+   - Descripción: Qué es esta sección y para qué sirve
+   - Pantalla: Elementos visibles (tabla, botones, campos)
+   - Campos/Columnas: Qué es cada field, formato, validación
+   - Acciones disponibles: Crear, editar, buscar, eliminar
+   - Pasos para realizar tarea común
+   - Ejemplos: Screenshots o descripciones detalladas
+   - Casos de error: Qué pasa si algo falla, cómo solucionarlo
+   - Información requerida: Formatos de entrada, restricciones
+
+d. **Generación y Entrega**
+   - Documentación generada como archivos HTML estáticos
+   - Se sirven desde `/public/docs/` (en frontend)
+   - O generados desde backend y servidos por endpoint
+   - Versionable: docs para v1.0.5, v1.0.6, etc.
+   - Opcionalmente: generar PDF a partir del HTML
+
+e. **Herramientas Sugeridas**
+   - HTML manual + CSS (control total, flexible)
+   - O herramienta como: Markdown → HTML (vuepress, docusaurus, eleventy)
+   - Considerar: cómo mantener documentación cuando código cambia
+
+**Contexto:**
+- Documentación es crítica para usuarios sin experiencia
+- Reduce tiempo de onboarding
+- Disminuye soporte/emails de preguntas básicas
+- Mejora confianza en el sistema
+- Facilita auditoría: documentación clara de funcionalidades
+
+**Archivos a crear:**
+- `/frontend/public/docs/index.html` (página principal)
+- `/frontend/public/docs/css/styles.css` (estilos)
+- `/frontend/public/docs/pages/` (secciones de contenido):
+  * `autenticacion.html`
+  * `gestion-planes.html`
+  * `busqueda-afiliados.html`
+  * `gestion-afiliados.html`
+  * `gestión-cobradores.html`
+  * `lookup-crud.html`
+  * `generacion-recibos.html`
+  * `gestion-usuarios.html`
+  * `migraciones-bd.html`
+  * `faq.html`
+  * `glosario.html`
+  * `troubleshooting.html`
+
+**Estimación:**
+- Estructura y CSS: 2h
+- Escritura de documentación: 20-30h (según detalle y calidad)
+  * Visión general: 1h
+  * Autenticación: 1.5h
+  * Gestión de Planes: 4h (complejo)
+  * Búsqueda de Afiliados: 2h
+  * Gestión de Afiliados: 2h
+  * Lookup CRUD (4 secciones): 3h
+  * Generación de Recibos: 3h
+  * Gestión de Usuarios: 1.5h
+  * Migraciones BD: 2h
+  * FAQ: 2h
+  * Glosario: 1h
+  * Troubleshooting: 2h
+- Revisión, pruebas, ajustes: 2h
+- **Total: 24-34 horas** (depende del nivel de detalle)
+
+**Prioridad:** 🔴 Alta — Documentación es crítica para usabilidad
+
+**Complejidad:** Media-Alta (gran volumen de contenido, requiere análisis profundo del sistema)
+
+**Estado:** 📋 Registrado
+
+---
+
 ## Items descartados
 
 | ID | Descripción | Motivo descarte |
