@@ -63,9 +63,10 @@ function RecibosPage() {
   const loadRecibos = useCallback(async (periodo) => {
     setRecibosLoading(true);
     try {
-      // Convertir periodo de YYYY-MM a YYYY-MM-01 (formato esperado por el backend)
-      const periodoConDia = periodo.length === 7 ? `${periodo}-01` : periodo;
-      const data = await recibosService.list(periodoConDia);
+      // Enviar periodo como YYYY-MM (ej: "2026-04")
+      // El backend busca el rango completo del mes: 2026-04-01 a 2026-04-30
+      const periodoYYYYMM = periodo.length === 10 ? periodo.substring(0, 7) : periodo;
+      const data = await recibosService.list(periodoYYYYMM);
       setRecibos(data || []);
       setRecibosPage(1);
     } catch (err) {

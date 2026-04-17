@@ -199,7 +199,6 @@ function LoginPage() {
           {/* Checkbox contraseña blanqueada */}
           <div className="form-group form-group--checkbox">
             <label className="form-group__checkbox-label">
-              <span>Tengo contraseña blanqueada</span>
               <input
                 type="checkbox"
                 checked={passwordBlanqueada}
@@ -212,6 +211,7 @@ function LoginPage() {
                 }}
                 disabled={loading}
               />
+              <span>Tengo contraseña blanqueada</span>
             </label>
           </div>
 

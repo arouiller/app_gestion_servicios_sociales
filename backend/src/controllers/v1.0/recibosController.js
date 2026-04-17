@@ -21,16 +21,20 @@ exports.generar = async (req, res, next) => {
       });
     }
 
-    // Convertir período a DATE
-    const periodoDate = new Date(periodo);
-    if (isNaN(periodoDate)) {
+    // Validar formato YYYY-MM-DD sin convertir a Date
+    // (evita problemas de timezone al convertir con new Date())
+    if (!/^\d{4}-\d{2}-\d{2}$/.test(periodo)) {
       return res.status(400).json({
-        error: 'El período debe ser una fecha válida (YYYY-MM-DD)',
+        error: 'El período debe estar en formato YYYY-MM-DD',
       });
     }
 
     // Extraer YYYY-MM del período
     const periodoYYYYMM = periodo.substring(0, 7);
+
+    // Asegurar que el período siempre sea el primer día del mes
+    // (para consistencia en la BD)
+    const periodoNormalizado = `${periodoYYYYMM}-01`;
 
     // Verificar si el período ya tiene recibos generados
     const periodoExistente = await db.PeriodosRecibos.findOne({
@@ -53,7 +57,7 @@ exports.generar = async (req, res, next) => {
     if (periodoExistente && force) {
       // Obtener IDs de recibos a borrar
       const recibosABorrar = await db.Recibo.findAll({
-        where: { periodo: periodoDate },
+        where: { periodo: periodoNormalizado },
         attributes: ['id'],
         transaction,
       });
@@ -70,7 +74,7 @@ exports.generar = async (req, res, next) => {
 
       // Borrar recibos
       await db.Recibo.destroy({
-        where: { periodo: periodoDate },
+        where: { periodo: periodoNormalizado },
         transaction,
       });
     }
@@ -95,7 +99,7 @@ exports.generar = async (req, res, next) => {
       // Verificar si ya existe recibo para este plan en este período (cuando NO es force)
       if (!force) {
         const existente = await db.Recibo.findOne({
-          where: { plan_numero: planNumero, periodo: periodoDate },
+          where: { plan_numero: planNumero, periodo: periodoNormalizado },
           transaction,
         });
 
@@ -138,7 +142,7 @@ exports.generar = async (req, res, next) => {
       const recibo = await db.Recibo.create(
         {
           plan_numero: planNumero,
-          periodo: periodoDate,
+          periodo: periodoNormalizado,
           numero_afiliado: plan.numero_afiliado,
           titular_apellido: titular.Persona.apellido,
           titular_nombre: titular.Persona.nombre,
@@ -208,20 +212,22 @@ exports.list = async (req, res, next) => {
     const where = {};
 
     if (periodo) {
-      // Validar formato YYYY-MM-DD
-      const periodoDate = new Date(periodo);
-      if (!isNaN(periodoDate)) {
-        // Comparar rango de 24 horas para evitar problemas de zona horaria
-        // Esto funciona mejor que sequelize.where() con DATE()
-        const startOfDay = new Date(periodoDate);
-        startOfDay.setHours(0, 0, 0, 0);
+      // Soportar búsqueda por YYYY-MM (mes completo) o YYYY-MM-DD (día específico)
+      if (periodo.length === 7) {
+        // YYYY-MM: buscar rango del mes completo (01 a último día)
+        const [year, month] = periodo.split('-');
+        const firstDay = `${year}-${month}-01`;
 
-        const endOfDay = new Date(periodoDate);
-        endOfDay.setHours(23, 59, 59, 999);
+        // Calcular último día del mes
+        const lastDayOfMonth = new Date(parseInt(year), parseInt(month), 0).getDate();
+        const lastDay = `${year}-${month}-${String(lastDayOfMonth).padStart(2, '0')}`;
 
         where.periodo = {
-          [Op.between]: [startOfDay, endOfDay],
+          [Op.between]: [firstDay, lastDay],
         };
+      } else if (periodo.length === 10 && /^\d{4}-\d{2}-\d{2}$/.test(periodo)) {
+        // YYYY-MM-DD: buscar ese día específico
+        where.periodo = periodo;
       }
     }
 

@@ -8,8 +8,6 @@ function Navbar({ scrolled }) {
 
   const navLinks = [
     { label: 'Funcionalidades', href: '#features' },
-    { label: 'Cómo funciona', href: '#how-it-works' },
-    { label: 'Planes', href: '#stats' },
     { label: 'Contacto', href: '#footer' },
   ];
 
