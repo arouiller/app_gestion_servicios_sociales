@@ -33,6 +33,7 @@ De cualquier estado → Descartado
 
 | ID | Prioridad | Estado | Descripción | Contexto / Motivo | Archivos estimados |
 |----|-----------|--------|-------------|-------------------|----|
+| BACKLOG-018 | 🔴 Alta | 📋 Registrado | Centralizar manejo de respuestas del backend con success: false | Estandarizar presentación de errores. Al recibir respuesta con success: false y message, generar alerta unificada. Mejora UX y reduce duplicación de manejo de errores. | services/api.js, context/AuthContext.jsx, múltiples servicios |
 | BACKLOG-014 | 🔴 Alta | ✅ Solucionado | Página dedicada de gestión de recibos por período | Mejora UX: página centralizada para consultar recibos generados por mes/año y generar nuevos. Integrada como módulo del Dashboard. | RecibosPage.jsx, RecibosService.js, routes |
 | BACKLOG-013 | 🔴 Alta | ✅ Solucionado | Mejora de flujo de login para usuarios con contraseña blanqueada | Email pre-cargado en formulario de seteo de contraseña. Elimina repetición de email en onboarding. Implementado, probado y aprobado. | LoginPage.jsx, ChangePasswordRequired.jsx |
 | BACKLOG-012 | 🔴 Alta | ✅ Solucionado | Mejorar comportamiento de ventanas modales (cierre, ESC, cambios no guardados) | Modales no cierran al hacer click fuera. Pueden cerrarse con ESC. Si hay cambios, ESC muestra advertencia. Con múltiples modales, ESC solo cierra la más arriba. Implementado, probado y aprobado. | Todos los modales (PlanV1Modal, GenerarRecibosModal, BulkUpdateCuotaModal, etc.) |
@@ -1391,6 +1392,173 @@ e. **Herramientas Sugeridas**
 
 **Commits:**
 - 8ee2ecb - feat(BACKLOG-017): crear documentación HTML completa del sistema
+
+---
+
+### BACKLOG-018: Centralizar Manejo de Respuestas del Backend con Success: False
+
+**Descripción:**
+Implementar un sistema centralizado para manejar respuestas del backend que contienen `success: false`. Actualmente, cada servicio y componente maneja los errores de forma independiente sin un patrón unificado. Este requerimiento propone centralizar la lógica para que al recibir una respuesta con `success: false` y un campo `message`, se genere automáticamente una alerta/notificación con el detalle del error.
+
+**Requerimientos:**
+
+a. **Patrón de Respuesta Estándar (Backend)**
+   - El backend retorna respuestas con estructura:
+     ```json
+     {
+       "success": false,
+       "message": "Descripción del error",
+       "data": null,
+       "error_code": "OPTIONAL_CODE"
+     }
+     ```
+   - HTTP status puede ser 400, 409, 422, 500, etc.
+   - Campo `message` siempre contiene descripción legible para usuario
+
+b. **Interceptor en Axios (services/api.js)**
+   - Crear interceptor de respuesta que:
+     * Detecte respuestas con `success: false`
+     * Extraiga el campo `message`
+     * Dispare notificación/alerta centralizada
+     * Decida si propagar error o consumirlo según contexto
+   - Alternativa: manejador en cada servicio (menos centralizado pero más flexible)
+
+c. **Sistema de Notificaciones Integrado**
+   - Usar contexto global existente (AuthContext.jsx) o crear uno nuevo
+   - Estructura de notificación:
+     ```javascript
+     {
+       id: uuid(),
+       type: 'error' | 'warning' | 'success' | 'info',
+       message: string,
+       duration: 5000, // ms (auto-cerrar)
+       action?: { label: string, onClick: () => {} }
+     }
+     ```
+   - Mantener queue de notificaciones (múltiples simultáneamente)
+   - Componente de visualización (Toast/Alert) que se renderiza en layout global
+
+d. **Componente de Notificación (Toast/Alert)**
+   - Componente reutilizable que muestra notificaciones
+   - Ubicación: esquina inferior derecha (estándar) o top-right
+   - Estilos: rojo para error, amarillo para warning, verde para success, azul para info
+   - Auto-cierre: después de X ms (configurable)
+   - Manejo de múltiples: stack vertical, las nuevas debajo
+   - Icono: alerta, exclamación, check, etc. según tipo
+   - Botón X para cerrar manualmente
+
+e. **Integración en Frontend**
+   - Renderizar componente de Toast/Alert en App.jsx (nivel raíz)
+   - Toast consume contexto de notificaciones
+   - Servicios disparan notificaciones via contexto
+   - Componentes pueden agregar notificaciones directamente si lo necesitan
+
+f. **Casos de Uso Comunes**
+   - Crear/actualizar plan: error → "No se pudo actualizar el plan: email duplicado"
+   - Generar recibos: HTTP 409 → "Ya existen recibos para este período"
+   - Validación: error → "El campo email es requerido"
+   - Permiso denegado: HTTP 403 → "No tienes permiso para realizar esta acción"
+   - Server error: HTTP 500 → "Error del servidor. Por favor intenta más tarde"
+
+**Contexto:**
+- Actualmente hay ErrorDisplay component pero sin patrón centralizado
+- Cada servicio/componente maneja errores de forma diferente
+- Usuario recibe mensajes inconsistentes (a veces alert(), a veces en consola, a veces nada)
+- Backend retorna `message` útil pero no siempre se muestra
+- Mejora UX: notificaciones consistentes, claras y legibles
+- Reduce duplicación: un único manejador en lugar de 10-15 intentos dispersos
+
+**Análisis de Implementación:**
+
+1. **Dónde originan las respuestas del backend:**
+   - `frontend/src/services/*.js`: authService, personasService, planesV1Service, recibosService, usuariosService, lookupService
+   - Cada servicio usa `axios` configurado en `services/api.js`
+   - Axios instance tiene configuración base: base URL, headers (Authorization), timeouts
+   - Actualmente no hay interceptor global de errores
+
+2. **Cómo se manejan actualmente los errores:**
+   - En componentes: `try/catch` alrededor de llamadas a servicios
+   - Ejemplos encontrados:
+     * `GestionPlanesV1.jsx`: catch → console.error() + setError(mensaje)
+     * `PlanV1Modal.jsx`: catch → setErrorMessage(error.response?.data?.message)
+     * `BusquedaAfiliados.jsx`: catch → setErrorMessage()
+     * `GenerarRecibosModal.jsx`: HTTP 409 → showConfirmDialog()
+   - Sin patrón consistente
+   - Errores a veces no se muestran al usuario
+   - Mix de console.error, state variables, modales de confirmación
+
+3. **Cambios necesarios en services/api.js:**
+   - Agregar interceptor de respuesta:
+     ```javascript
+     api.interceptors.response.use(
+       response => {
+         if (response.data?.success === false) {
+           // Disparar notificación
+           // Decidir si rechazar o devolver
+         }
+         return response;
+       },
+       error => {
+         // Manejar errores de red, timeout, etc.
+         return Promise.reject(error);
+       }
+     );
+     ```
+   - O alternativamente: crear wrapper en cada servicio (menos invasivo)
+
+4. **Componentes de alerta existentes:**
+   - `ErrorDisplay.jsx`: probablemente existe para mostrar errores (verificar ubicación)
+   - Modales de confirmación: ConfirmCloseDialog.jsx (BACKLOG-012)
+   - CSS/SCSS para alertas: probablemente en `_colors.scss` y/o componentes específicos
+   - No hay Toast/Alert global centralizado
+
+5. **Decisiones de diseño:**
+   - **Opción A (Interceptor global)**: Más centralizado, maneja TODOS los errores automáticamente
+     * Pro: una sola ubicación, consistente
+     * Con: menos control por servicio, difícil para casos especiales (409 → confirmación)
+   - **Opción B (Wrapper en servicios)**: Más flexible, control por servicio
+     * Pro: puede decidir qué hacer con cada error (notificar vs consumir)
+     * Con: requiere cambios en todos los servicios
+   - **Opción C (Hook useAlert)**: Hook que servicios y componentes pueden usar
+     * Pro: flexible, reutilizable en componentes también
+     * Con: requiere que cada lugar lo use explícitamente
+   - **Recomendación**: Combinación de B+C: servicios con wrapper, contexto con hook para componentes
+
+6. **Archivos a modificar/crear:**
+   - `frontend/src/context/AuthContext.jsx` (extender con manejo de notificaciones)
+   - `frontend/src/context/NotificationContext.jsx` (NUEVO - si se crea contexto separado)
+   - `frontend/src/hooks/useNotification.js` (NUEVO - hook para disparar notificaciones)
+   - `frontend/src/components/Toast/Toast.jsx` (NUEVO - componente para mostrar notificaciones)
+   - `frontend/src/components/Toast/Toast.scss` (NUEVO - estilos)
+   - `frontend/src/App.jsx` (renderizar Toast component)
+   - `frontend/src/services/api.js` (agregar interceptor o lógica base)
+   - Múltiples servicios: wrapping de llamadas o integración de hook
+
+7. **Complejidad Estimada:**
+   - Crear contexto/hook de notificaciones: 1-1.5h
+   - Crear componente Toast: 1h
+   - Integrar en App.jsx: 0.5h
+   - Modificar services (auth, personas, planes, recibos, usuarios, lookup): 2-3h
+   - Modificar componentes principales que manejan errores: 1-2h
+   - Testing y ajustes: 1-1.5h
+   - **Total: 7-9 horas**
+
+8. **Riesgos y Consideraciones:**
+   - Casos especiales: HTTP 409 (período existente) requiere confirmación, no solo notificación
+   - Sensibilidad de errores: algunos deben registrarse en logs para auditoría
+   - Interfaz de usuario: decisión sobre ubicación/estilo de Toast (bottom-right vs top-right)
+   - Performance: queue de notificaciones no debe crecer infinitamente
+   - Mobile: Toast puede obstruir contenido en pantalla pequeña
+
+**Prioridad:** 🔴 Alta — Mejora UX significativa, estandarización crítica
+
+**Estado:** 📋 Registrado (2026-04-17)
+
+**Notas:**
+- Análisis registrado pero sin implementación
+- Requiere decisión técnica sobre patrón (A, B o C)
+- Puede combinarse con BACKLOG-012 (mejorar modales) para experiencia consistente
+- Considerar versionado: v1.0.x usa este patrón, migraciones futuras mejoran si es necesario
 
 ---
 
