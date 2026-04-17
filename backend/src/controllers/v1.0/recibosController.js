@@ -206,39 +206,27 @@ exports.list = async (req, res, next) => {
     const { periodo, plan_numero } = req.query;
 
     const where = {};
-    const conditions = [];
 
     if (periodo) {
       // Validar formato YYYY-MM-DD
       const periodoDate = new Date(periodo);
       if (!isNaN(periodoDate)) {
-        // Usar SQL DATE() function para comparar solo YYYY-MM-DD
-        // Esto evita problemas de zona horaria y comparación con hora
-        conditions.push(
-          sequelize.where(
-            sequelize.fn('DATE', sequelize.col('periodo')),
-            Op.eq,
-            periodo
-          )
-        );
+        // Comparar rango de 24 horas para evitar problemas de zona horaria
+        // Esto funciona mejor que sequelize.where() con DATE()
+        const startOfDay = new Date(periodoDate);
+        startOfDay.setHours(0, 0, 0, 0);
+
+        const endOfDay = new Date(periodoDate);
+        endOfDay.setHours(23, 59, 59, 999);
+
+        where.periodo = {
+          [Op.between]: [startOfDay, endOfDay],
+        };
       }
     }
 
     if (plan_numero) {
-      conditions.push({ plan_numero });
-    }
-
-    // Agrupar condiciones con AND si hay múltiples
-    if (conditions.length === 1) {
-      // Si es una condición simple (plan_numero)
-      if (conditions[0].plan_numero !== undefined) {
-        where.plan_numero = conditions[0].plan_numero;
-      } else {
-        // Si es una condición sequelize.where()
-        where[Op.and] = conditions;
-      }
-    } else if (conditions.length > 1) {
-      where[Op.and] = conditions;
+      where.plan_numero = plan_numero;
     }
 
     if (!periodo && !plan_numero) {
