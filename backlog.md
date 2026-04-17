@@ -33,7 +33,7 @@ De cualquier estado → Descartado
 
 | ID | Prioridad | Estado | Descripción | Contexto / Motivo | Archivos estimados |
 |----|-----------|--------|-------------|-------------------|----|
-| BACKLOG-014 | 🔴 Alta | 🚀 Desarrollado | Página dedicada de gestión de recibos por período | Mejora UX: página centralizada para consultar recibos generados por mes/año y generar nuevos | RecibosPage.jsx, RecibosService.js, routes |
+| BACKLOG-014 | 🔴 Alta | ✅ Solucionado | Página dedicada de gestión de recibos por período | Mejora UX: página centralizada para consultar recibos generados por mes/año y generar nuevos. Integrada como módulo del Dashboard. | RecibosPage.jsx, RecibosService.js, routes |
 | BACKLOG-013 | 🔴 Alta | ✅ Solucionado | Mejora de flujo de login para usuarios con contraseña blanqueada | Email pre-cargado en formulario de seteo de contraseña. Elimina repetición de email en onboarding. Implementado, probado y aprobado. | LoginPage.jsx, ChangePasswordRequired.jsx |
 | BACKLOG-012 | 🔴 Alta | ✅ Solucionado | Mejorar comportamiento de ventanas modales (cierre, ESC, cambios no guardados) | Modales no cierran al hacer click fuera. Pueden cerrarse con ESC. Si hay cambios, ESC muestra advertencia. Con múltiples modales, ESC solo cierra la más arriba. Implementado, probado y aprobado. | Todos los modales (PlanV1Modal, GenerarRecibosModal, BulkUpdateCuotaModal, etc.) |
 | BACKLOG-011 | 🔴 Alta | ✅ Solucionado | Agregar acciones (editar y habilitar) a planes en búsqueda de afiliados | Desde planes visibles de un afiliado en búsqueda, permitir edición y cambio de estado (ACTIVO ↔ SUSPENDIDO) con modal reutilizable. Implementado, funcional y aprobado. | BusquedaAfiliados.jsx, PlanV1Modal.jsx |
@@ -1048,7 +1048,19 @@ f. **Consultas de Datos (Backend)**
 
 **Prioridad:** 🔴 Alta — Mejora importante para UX en gestión de recibos
 
-**Estado:** 📋 Registrado (2026-04-16)
+**Estado:** ✅ Solucionado (2026-04-16)
+
+**Implementación Completada (2026-04-16):**
+1. ✅ Backend: Endpoint GET /api/recibos/periodos lista períodos generados
+2. ✅ Frontend: RecibosPage.jsx con dos vistas (lista de períodos y recibos de período)
+3. ✅ Integración como módulo del Dashboard (state-based, no route)
+4. ✅ GenerarRecibosModal mejorado con verificación live de períodos existentes
+5. ✅ Menú: "Gestión de Recibos" agregado bajo "Gestión"
+6. ✅ Validación de formato período (YYYY-MM-DD) en backend y frontend
+7. ✅ Paginación de recibos (10 por página)
+8. ✅ Flujo completo: ver períodos → generar nuevos → ver recibos → ver detalles
+
+**Nota:** Durante la implementación se detectó BUG-017 (recibos no se devuelven del API). Registrado en BUGS.md para seguimiento posterior.
 
 ---
 

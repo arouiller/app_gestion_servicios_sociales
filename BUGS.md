@@ -27,6 +27,7 @@ Un bug solo puede pasar a estado solucionado, Descartado a traves del pedido exp
 
 | ID | Severidad | Fase | Descripción | Reportado | Estado |
 |----|-----------|------|-------------|-----------|--------|
+| BUG-019 | 🔴 CRÍTICO | BACKLOG-014 | Gestión de Recibos: seleccionar período con recibos devuelve array vacío | 2026-04-16 | 📋 Registrado |
 
 ---
 
@@ -1153,6 +1154,58 @@ getByPersona: async (personaId) => {
 
 **Commits:**
 - 6fe4cfd - fix(BUG-018): agregar método getByPersona en planesV1Service
+
+---
+
+---
+
+### BUG-019: Gestión de Recibos - Seleccionar Período Devuelve Array Vacío
+
+**Descripción:**
+En la página de Gestión de Recibos (BACKLOG-014), al seleccionar un período que SÍ tiene recibos generados (ej: Abril 2026 con 9 recibos), el sistema muestra el mensaje "No hay recibos para este período" cuando debería mostrar la tabla con los 9 recibos.
+
+**Pasos para reproducir:**
+1. Ir a Dashboard → Gestión → Gestión de Recibos
+2. Ver tabla de períodos (muestra "Abril 2026 - 9 recibos")
+3. Hacer click en botón "Ver recibos" para Abril 2026
+4. **Resultado:** Muestra "No hay recibos para este período" ❌
+5. **Esperado:** Muestra tabla con 9 recibos ✅
+
+**Evidence capturada:**
+```
+URL del backend invocada: https://seagreen-skunk-116671.hostingersite.com/api/recibos?periodo=2026-04-01
+Payload: periodo=2026-04-01
+Response: []
+```
+
+**Comportamiento observado:**
+- El parámetro `periodo=2026-04-01` se envía correctamente en el query string
+- El backend recibe la solicitud (URL completa en logs)
+- Pero retorna un array vacío `[]` en lugar de devolver los 9 recibos
+- La base de datos SÍ tiene los recibos registrados (confirmado porque el período aparece en el listado)
+
+**Contexto:**
+- Tabla `PeriodosRecibos` muestra: periodo="2026-04", cantidad_recibos=9
+- Tabla `Recibo` debería tener 9 registros con periodo=2026-04-01 (DATE)
+- El query GET /api/recibos?periodo=2026-04-01 debería retornar esos 9 recibos
+
+**Ubicación probable del problema:**
+- Backend: `backend/src/controllers/v1.0/recibosController.js` (función `list()`)
+- El endpoint realiza una búsqueda WHERE en tabla Recibo
+- Probablemente hay un type mismatch:
+  - Parámetro enviado: string `"2026-04-01"` (YYYY-MM-DD)
+  - Columna en BD: DATE type (DATETIME)
+  - Sequelize: no convierte implícitamente string a DATE para comparación
+
+**Severidad:** 🔴 CRÍTICO
+- Funcionalidad principal de Gestión de Recibos no funciona
+- Usuario puede ver períodos pero no puede consultar los recibos
+- Bloquea uso de BACKLOG-014
+
+**Reportado:** 2026-04-16
+**Asociado a:** BACKLOG-014 (Página dedicada de gestión de recibos)
+
+**Estado:** 📋 Registrado
 
 ---
 
