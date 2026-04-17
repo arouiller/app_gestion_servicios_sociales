@@ -33,7 +33,7 @@ De cualquier estado → Descartado
 
 | ID | Prioridad | Estado | Descripción | Contexto / Motivo | Archivos estimados |
 |----|-----------|--------|-------------|-------------------|----|
-| BACKLOG-019 | 🔴 Alta | 📋 Registrado | Eliminar entidades lookup con asociaciones en cascada | Al eliminar cobrador/OS/servicio/tipo grupo/tipo plan, si hay asociaciones, confirmación y eliminación en cascada. No bloqueo, sino opción de proceder. | lookupController.js, LookupCRUD.jsx, migrations |
+| BACKLOG-019 | 🔴 Alta | 🚀 Desarrollado | Eliminar entidades lookup con asociaciones en cascada | Al eliminar cobrador/OS/servicio/tipo grupo/tipo plan, si hay asociaciones, confirmación y eliminación en cascada. No bloqueo, sino opción de proceder. Implementado con migración 2.0.5. | lookupController.js, LookupCRUD.jsx, migrations, ConfirmDeleteWithRefsModal |
 | BACKLOG-018 | 🔴 Alta | 📋 Registrado | Centralizar manejo de respuestas del backend con success: false | Estandarizar presentación de errores. Al recibir respuesta con success: false y message, generar alerta unificada. Mejora UX y reduce duplicación de manejo de errores. | services/api.js, context/AuthContext.jsx, múltiples servicios |
 | BACKLOG-014 | 🔴 Alta | ✅ Solucionado | Página dedicada de gestión de recibos por período | Mejora UX: página centralizada para consultar recibos generados por mes/año y generar nuevos. Integrada como módulo del Dashboard. | RecibosPage.jsx, RecibosService.js, routes |
 | BACKLOG-013 | 🔴 Alta | ✅ Solucionado | Mejora de flujo de login para usuarios con contraseña blanqueada | Email pre-cargado en formulario de seteo de contraseña. Elimina repetición de email en onboarding. Implementado, probado y aprobado. | LoginPage.jsx, ChangePasswordRequired.jsx |
@@ -1637,13 +1637,139 @@ f. **Archivos a Modificar/Crear**
 
 **Prioridad:** 🔴 Alta — Mejora UX en gestión de datos maestros, permite workflows más flexibles
 
-**Estado:** 📋 Registrado (2026-04-17)
+**Estado:** 🚀 Desarrollado (2026-04-17)
+
+**Implementación Completada (2026-04-17):**
+
+**Fase 1: Migración de Base de Datos (2.0.5)** ✅
+- Creado: `backend/src/migrations/versions/2.0.5_nullable_foreign_keys/`
+- upgrade.sql: ALTER TABLE planes MODIFY 4 columnas a NULL
+  * cobrador_numero: INT NOT NULL → INT NULL
+  * tipo_plan_numero: INT NOT NULL → INT NULL
+  * tipo_de_grupo_numero: INT NOT NULL → INT NULL
+  * os_numero: INT NOT NULL → INT NULL
+- downgrade.sql: Revertir cambios (modificar de vuelta a NOT NULL)
+- Commit: migration(2.0.5)...
+
+**Fase 2: Backend - Eliminación en Cascada** ✅
+- Modificado: `backend/src/controllers/lookupController.js`
+- Cambios en exports.delete():
+  * Agregado parámetro query `force` (true/false)
+  * Si force=false: verifica referencias, retorna 409 si existen
+  * Si force=true: ejecuta función deleteCascade() con transacción
+  * Respuesta 409 ahora incluye: message, referencias, referenciaEn, entidad
+- Función auxiliar deleteCascade(entidad, id, ref, transaction):
+  * cobradores → SET cobrador_numero = NULL en planes
+  * obras-sociales → SET os_numero = NULL en planes
+  * tipos-de-plan → SET tipo_plan_numero = NULL en planes
+  * tipos-de-grupo → SET tipo_de_grupo_numero = NULL en planes
+  * servicios-adicionales → DELETE IntegranteServicio
+  * Usa transacción para atomicidad (todo o nada)
+  * Rollback automático si cualquier paso falla
+- Commit: feat(BACKLOG-019): backend...
+
+**Fase 3: Frontend - Componentes** ✅
+- Creado: `frontend/src/components/ConfirmDeleteWithRefsModal/`
+  * ConfirmDeleteWithRefsModal.jsx: componente React
+    - Props: isOpen, entidad, registroNombre, referencias, referenciaEn, onConfirm, onCancel, isLoading, error
+    - Estados: normal (ver detalles), cargando (durante DELETE con force=true), error (si falla)
+    - Botones: Cancelar, Sí Eliminar
+    - Avisos: cantidad de referencias, qué tabla tiene referencias, acción no reversible
+  * ConfirmDeleteWithRefsModal.scss: estilos completos
+    - Modal centrado con overlay semi-transparente
+    - Animaciones de entrada/salida
+    - Colores: warning (#ffc107) para alert, danger (#dc2626) para confirmar
+    - Responsive: 90% width, max 500px
+    - Estados: normal, hover, disabled, loading
+- Commit: feat(BACKLOG-019): frontend - componente...
+
+**Fase 4: Frontend - Integración en LookupCRUD** ✅
+- Modificado: `frontend/src/components/LookupCRUD/LookupCRUD.jsx`
+  * Importado ConfirmDeleteWithRefsModal
+  * Agregados estados para gestionar modal de confirmación:
+    - deleteModal: { isOpen, registroId, registroNombre, referencias, referenciaEn, isLoading, error }
+  * Nueva lógica en handleDelete():
+    - Paso 1: Intenta DELETE sin force
+    - Si éxito: recarga lista y cierra (sin referencias)
+    - Si 409: abre modal con detalles de referencias (paso 2)
+    - Si otro error: muestra mensaje en ErrorDisplay
+  * Nueva función handleConfirmDeleteWithRefs():
+    - Paso 3: Usuario confirma en modal
+    - Envía DELETE con ?force=true (força cascada)
+    - Estado isLoading durante operación
+    - Si éxito: recarga lista y cierra modal
+    - Si error: muestra error en modal
+  * Nueva función handleCancelDeleteWithRefs():
+    - Usuario cancela: cierra modal sin hacer nada
+  * Modal renderizado con props del estado deleteModal
+- Commit: feat(BACKLOG-019): frontend - integración...
+
+**Fase 5: Servicio Frontend** ✅
+- Modificado: `frontend/src/services/lookupService.js`
+  * Método delete() ahora acepta segundo parámetro options = { force: false }
+  * Si options.force = true: añade ?force=true a URL
+  * Permite llamadas: lookupService.delete(entidad, id) o lookupService.delete(entidad, id, { force: true })
+- Commit: incluido en feat(BACKLOG-019): frontend - integración...
+
+**Flujo Completo Implementado:**
+
+```
+Usuario click en botón eliminar registro
+↓
+handleDelete(id) intenta DELETE /api/lookup/:entidad/:id (sin force)
+↓
+Si respuesta 200 (éxito):
+  → Recarga lista, cierra sin mostrar modal
+  
+Si respuesta 409 (referencias encontradas):
+  → Abre ConfirmDeleteWithRefsModal con detalles:
+    * Nombre del registro
+    * Cantidad de referencias (ej: 5)
+    * Tabla/entidad que tiene referencias (ej: "planes")
+    * Advirtencia clara
+  
+Si usuario click "Cancelar":
+  → Cierra modal sin hacer nada
+  → Lista permanece sin cambios
+  
+Si usuario click "Sí, Eliminar":
+  → Estado isLoading = true en modal
+  → handleConfirmDeleteWithRefs() envía DELETE ?force=true
+  → Backend ejecuta cascada en transacción:
+    * Actualiza FK a NULL en registros dependientes
+    * Elimina la entidad
+  → Respuesta 200 con cantidad de referencias afectadas
+  → Cierra modal y recarga lista
+  
+Si error en cascada:
+  → Muestra error en modal (rollback automático)
+  → Usuario puede reintentar o cancelar
+```
+
+**Commits Realizados:**
+- 134d4b3 - migration(2.0.5): hacer columnas FK en planes nullable...
+- 91d3e6d - feat(BACKLOG-019): backend - eliminación en cascada...
+- 8f783da - feat(BACKLOG-019): frontend - componente ConfirmDeleteWithRefsModal
+- af12670 - feat(BACKLOG-019): frontend - integración flujo dos pasos...
+
+**Testing Manual Recomendado:**
+1. Abrir página de Cobradores (u otro lookup)
+2. Crear un cobrador nuevo
+3. Crear un plan que use ese cobrador
+4. Intentar eliminar el cobrador
+   - Debe mostrar modal: "Hay 1 referencia en planes"
+5. Click "Cancelar" → modal cierra, cobrador no se elimina
+6. Intentar eliminar de nuevo
+7. Click "Sí, Eliminar" → cargando... → éxito
+8. Verificar: cobrador eliminado, plan sigue existiendo pero cobrador_numero = NULL
+9. Repetir con otros lookups (OS, tipos, servicios)
 
 **Notas:**
-- Análisis e propuesta sin implementación
-- Considerar BACKLOG-020 como mejora futura: estado "inactivo" en lugar de eliminación
+- Migración 2.0.5 debe ejecutarse antes de usar esta funcionalidad
 - Integra bien con BACKLOG-018 (manejo centralizado de errores)
-- Requiere cuidado con transacciones para evitar estados intermedios inconsistentes
+- Modal reutilizable: otros componentes pueden importarla si necesitan similar UX
+- Transacciones garantizan consistencia: si cascada falla, nada se elimina
+- Alternativa futura (BACKLOG-020): estado "inactivo" en lugar de NULL
 
 ---
 
