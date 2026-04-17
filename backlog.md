@@ -33,6 +33,7 @@ De cualquier estado → Descartado
 
 | ID | Prioridad | Estado | Descripción | Contexto / Motivo | Archivos estimados |
 |----|-----------|--------|-------------|-------------------|----|
+| BACKLOG-020 | 🔴 Alta | 📋 Registrado | Auto-generación y validación de número de afiliado numérico | Campo número_afiliado es STRING con representación numérica. UI solo permite números. Sistema propone MAX+1. Validación de unicidad. | PlanV1Modal.jsx, planesV1Service.js, planesController.js |
 | BACKLOG-019 | 🔴 Alta | 🚀 Desarrollado | Eliminar entidades lookup con asociaciones en cascada | Al eliminar cobrador/OS/servicio/tipo grupo/tipo plan, si hay asociaciones, confirmación y eliminación en cascada. No bloqueo, sino opción de proceder. Implementado con migración 2.0.5. | lookupController.js, LookupCRUD.jsx, migrations, ConfirmDeleteWithRefsModal |
 | BACKLOG-018 | 🔴 Alta | 📋 Registrado | Centralizar manejo de respuestas del backend con success: false | Estandarizar presentación de errores. Al recibir respuesta con success: false y message, generar alerta unificada. Mejora UX y reduce duplicación de manejo de errores. | services/api.js, context/AuthContext.jsx, múltiples servicios |
 | BACKLOG-014 | 🔴 Alta | ✅ Solucionado | Página dedicada de gestión de recibos por período | Mejora UX: página centralizada para consultar recibos generados por mes/año y generar nuevos. Integrada como módulo del Dashboard. | RecibosPage.jsx, RecibosService.js, routes |
@@ -1393,6 +1394,171 @@ e. **Herramientas Sugeridas**
 
 **Commits:**
 - 8ee2ecb - feat(BACKLOG-017): crear documentación HTML completa del sistema
+
+---
+
+### BACKLOG-020: Auto-generación y Validación de Número de Afiliado Numérico
+
+**Descripción:**
+Cambio en el flujo de creación de planes: el campo `numero_afiliado` es almacenado como STRING en la BD, pero tiene representación numérica (puede hacer CAST a INT sin problemas). En la interfaz de usuario se debe:
+1. Solo permitir entrada de valores numéricos (validación en input)
+2. Al crear un plan nuevo, proponer automáticamente un número: `MAX(número_afiliado) + 1`
+3. Usuario puede cambiar el número propuesto
+4. Sistema debe validar que el número no esté en uso (verificar unicidad)
+
+**Requerimientos:**
+
+a. **Campo de Entrada - Validaciones en UI**
+   - Input type="number" o text con validación regex
+   - Solo acepta dígitos (0-9)
+   - Rechaza caracteres especiales, espacios, letras
+   - Mensaje de error si contiene caracteres no-numéricos: "Solo se permiten números"
+
+b. **Auto-generación en Crear Plan**
+   - Al abrir PlanV1Modal para crear (modo = "crear"):
+     * Llamar a backend: GET /api/planes/next-numero-afiliado
+     * Backend retorna: { proximoNumero: MAX(numero_afiliado) + 1 }
+     * Frontend pre-llena el campo con este número
+     * Usuario ve: "1234" (por ejemplo) como sugerencia
+   - Campo es editable: usuario puede borrarlo y escribir otro número
+
+c. **Validación de Unicidad en Tiempo Real (Opcional)**
+   - A medida que usuario escribe, validar contra BD
+   - Debounce de 500ms para no saturar servidor
+   - Si número existe: mostrar error rojo "Este número ya está en uso"
+   - Botón de guardar se deshabilita si hay error de unicidad
+
+d. **Validación en Guardar (Obligatorio)**
+   - Backend: POST /api/planes valida numero_afiliado
+   - Si número no es numérico: retorna 422 "El número debe ser numérico"
+   - Si número ya existe: retorna 409 "Número de afiliado ya en uso"
+   - Validación con CAST a INT para verificar representación
+
+e. **Flujo en PlanV1Modal**
+   ```
+   Usuario: Click "Nuevo Plan"
+   ↓
+   Modal se abre (modo = "crear")
+   ↓
+   Frontend llama: GET /api/planes/next-numero-afiliado
+   ↓
+   Backend calcula: SELECT MAX(CAST(numero_afiliado AS INT)) + 1
+   ↓
+   Frontend: Input numero_afiliado pre-llena con "1234"
+   ↓
+   Usuario: Puede dejar 1234 o cambiar a otro número
+   ↓
+   Usuario: Click Guardar
+   ↓
+   Validación en tiempo real (si está implementada):
+     - Si error: muestra "Este número ya está en uso"
+     - Si válido: permite guardar
+   ↓
+   Frontend: POST /api/planes { numero_afiliado: "1234", ... }
+   ↓
+   Backend valida:
+     - CAST(numero_afiliado AS INT) → si falla, 422
+     - Verifica unicidad UNIQUE → si existe, 409
+   ↓
+   Si éxito: Plan creado con numero_afiliado
+   Si error: Muestra mensaje al usuario (números duplicados, inválidos)
+   ```
+
+**Contexto:**
+- Campo `numero_afiliado` actualmente tiene UNIQUE constraint en BD
+- Es VARCHAR(50) pero almacena valores numéricos
+- Mejora UX: usuario no tiene que pensar qué número asignar
+- Propuesta automática sigue el patrón common: auto-increment lógico
+- Validación numérica previene errores de entrada (letras, símbolos)
+- Validación de unicidad previene duplicados accidentales
+
+**Análisis Técnico:**
+
+1. **Estado Actual del Código:**
+   - Campo `numero_afiliado` en tabla planes: VARCHAR(50), UNIQUE
+   - PlanV1Modal.jsx: acepta cualquier string en numero_afiliado
+   - planesV1Service.js: POST /api/planes sin pre-validación numérica
+   - Backend: no hay lógica de auto-generación
+
+2. **Cambios Necesarios en Backend:**
+   - Nuevo endpoint: GET /api/planes/next-numero-afiliado
+     ```javascript
+     exports.getNextNumeroAfiliado = async (req, res, next) => {
+       const maxRecord = await db.PlanV1.findOne({
+         attributes: [
+           [db.sequelize.fn('MAX', db.sequelize.cast(
+             db.sequelize.col('numero_afiliado'), 'UNSIGNED'
+           )), 'maxValue']
+         ],
+         raw: true,
+       });
+       const proximoNumero = (maxRecord?.maxValue || 0) + 1;
+       res.json({ proximoNumero });
+     }
+     ```
+   - Mejorar validación en POST /api/planes:
+     ```javascript
+     // Validar que numero_afiliado es numérico
+     if (!/^\d+$/.test(datos.numero_afiliado)) {
+       return res.status(422).json({ error: 'número_afiliado debe ser numérico' });
+     }
+     // La UNIQUE constraint en BD se encarga del duplicado
+     ```
+
+3. **Cambios Necesarios en Frontend:**
+   - PlanV1Modal.jsx (función inicializar/crear):
+     * Si modo = "crear": llamar getNextNumeroAfiliado()
+     * Pre-llenar formData.numero_afiliado con el valor retornado
+     * Input: type="number" o text con pattern="[0-9]*"
+     * Validación: /^\d+$/ al escribir
+   - Validación en tiempo real (opcional):
+     * Hook useEffect que debounce cambios
+     * Llamar a planesV1Service.checkNumeroAfiliado(numero)
+     * Mostrar error si número existe
+     * Deshabilitar botón si hay error
+   - Manejo de errores mejorado:
+     * 409 (número duplicado): "Este número ya está en uso"
+     * 422 (número inválido): "El número debe contener solo dígitos"
+
+4. **Cambios en planesV1Service.js:**
+   - Nuevo método:
+     ```javascript
+     getNextNumeroAfiliado: async () => {
+       const response = await api.get('/planes/next-numero-afiliado');
+       return response.data.proximoNumero;
+     }
+     ```
+   - Opcional - validación en tiempo real:
+     ```javascript
+     checkNumeroAfiliado: async (numero) => {
+       const response = await api.post('/planes/check-numero-afiliado', { numero });
+       return response.data; // { existe: false } o { existe: true }
+     }
+     ```
+
+5. **Cambios en Rutas Backend:**
+   - GET /api/planes/next-numero-afiliado → controller.getNextNumeroAfiliado
+   - POST /api/planes/check-numero-afiliado (opcional) → controller.checkNumeroAfiliado
+
+6. **Complejidad Estimada:**
+   - Backend GET endpoint: 1h
+   - Backend POST validación: 0.5h
+   - Frontend modal mejorado: 1.5h
+   - Validación tiempo real (opcional): 1h
+   - Testing: 1h
+   - **Total: 4-5 horas** (sin validación tiempo real) o **5-6 horas** (con validación)
+
+**Notas de Implementación:**
+- Usar CAST en SQL para calcular máximo numérico: `CAST(numero_afiliado AS UNSIGNED)`
+- Regex validación: `/^\d+$/` (solo dígitos, sin espacios ni caracteres especiales)
+- Input HTML5: `<input type="number" />` es más restrictivo (por defecto solo números)
+- O usar `<input type="text" pattern="[0-9]*" inputMode="numeric" />`
+- Validación en tiempo real: debounce de 500ms para no saturar servidor
+- BD: UNIQUE constraint en numero_afiliado garantiza que si 2 usuarios intentan crear con mismo número simultáneamente, solo uno triunfa
+
+**Prioridad:** 🔴 Alta — Mejora UX significativa en creación de planes
+
+**Estado:** 📋 Registrado (2026-04-17)
 
 ---
 
