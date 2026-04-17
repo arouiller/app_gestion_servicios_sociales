@@ -14,7 +14,20 @@ import { useModalEscapeKey } from '../../../../../hooks/useModalEscapeKey';
 import './PlanV1Modal.scss';
 
 function PlanV1Modal({ mode, planData, onClose, onSave }) {
-  const { form, errors, handleFieldChange, addIntegrante, removeIntegrante, updateIntegranteRol, validate, reset } = usePlanV1Form(planData);
+  const { form, errors, handleFieldChange, addIntegrante, removeIntegrante, updateIntegranteRol, validate, reset, setErrors } = usePlanV1Form(planData);
+
+  // Mapeo de campos a tabs para navegación automática de errores
+  const FIELD_TO_TAB = {
+    numero_afiliado: 'datos',
+    tipo_plan_numero: 'datos',
+    cobrador_numero: 'datos',
+    os_numero: 'datos',
+    tipo_de_grupo_numero: 'datos',
+    valor_cuota: 'datos',
+    integrantes: 'afiliados',
+  };
+  const TAB_ORDER = ['datos', 'afiliados'];
+
   const [loading, setLoading] = useState(false);
   const [lookupData, setLookupData] = useState({
     tiposDeplan: [],
@@ -163,7 +176,11 @@ function PlanV1Modal({ mode, planData, onClose, onSave }) {
   };
 
   const handleGuardar = async () => {
-    if (!validate()) return;
+    const validationErrors = validate();
+    if (Object.keys(validationErrors).length > 0) {
+      navigateToFirstError(validationErrors);
+      return;
+    }
 
     setLoading(true);
     try {
@@ -225,8 +242,13 @@ function PlanV1Modal({ mode, planData, onClose, onSave }) {
 
       onSave();
     } catch (err) {
-      console.error('Error saving plan:', err);
-      alert(`Error al guardar el plan: ${err.message}`);
+      const serverErrors = err.response?.data?.errors;
+      if (serverErrors && Object.keys(serverErrors).length > 0) {
+        setErrors(serverErrors);
+        navigateToFirstError(serverErrors);
+      } else {
+        console.error('Error saving plan:', err);
+      }
     } finally {
       setLoading(false);
     }
@@ -276,6 +298,21 @@ function PlanV1Modal({ mode, planData, onClose, onSave }) {
       return;
     }
     updateIntegranteRol(personaId, newRol);
+  };
+
+  const navigateToFirstError = (errorObj) => {
+    for (const tab of TAB_ORDER) {
+      const firstErrorField = Object.keys(errorObj).find(f => FIELD_TO_TAB[f] === tab);
+      if (firstErrorField) {
+        setActiveTab(tab);
+        setTimeout(() => {
+          const el = document.getElementById(`field-${firstErrorField}`);
+          el?.scrollIntoView({ behavior: 'smooth', block: 'center' });
+          el?.focus();
+        }, 100);
+        break;
+      }
+    }
   };
 
   return (
@@ -353,7 +390,10 @@ function PlanV1Modal({ mode, planData, onClose, onSave }) {
               <div className="plan-v1-modal__field">
                 <label>Número de Afiliado *</label>
                 <input
+                  id="field-numero_afiliado"
                   type="text"
+                  inputMode="numeric"
+                  pattern="[0-9]*"
                   value={form.numero_afiliado}
                   onChange={(e) => handleFieldChange('numero_afiliado', e.target.value)}
                 />
@@ -363,6 +403,7 @@ function PlanV1Modal({ mode, planData, onClose, onSave }) {
               <div className="plan-v1-modal__field">
                 <label>Tipo de Plan *</label>
                 <select
+                  id="field-tipo_plan_numero"
                   value={form.tipo_plan_numero}
                   onChange={(e) => handleFieldChange('tipo_plan_numero', e.target.value)}
                 >
@@ -379,6 +420,7 @@ function PlanV1Modal({ mode, planData, onClose, onSave }) {
               <div className="plan-v1-modal__field">
                 <label>Cobrador *</label>
                 <select
+                  id="field-cobrador_numero"
                   value={form.cobrador_numero}
                   onChange={(e) => handleFieldChange('cobrador_numero', e.target.value)}
                 >
@@ -395,6 +437,7 @@ function PlanV1Modal({ mode, planData, onClose, onSave }) {
               <div className="plan-v1-modal__field">
                 <label>Obra Social *</label>
                 <select
+                  id="field-os_numero"
                   value={form.os_numero}
                   onChange={(e) => handleFieldChange('os_numero', e.target.value)}
                 >
@@ -411,6 +454,7 @@ function PlanV1Modal({ mode, planData, onClose, onSave }) {
               <div className="plan-v1-modal__field">
                 <label>Tipo de Grupo *</label>
                 <select
+                  id="field-tipo_de_grupo_numero"
                   value={form.tipo_de_grupo_numero}
                   onChange={(e) => handleFieldChange('tipo_de_grupo_numero', e.target.value)}
                 >
@@ -438,6 +482,7 @@ function PlanV1Modal({ mode, planData, onClose, onSave }) {
               <div className="plan-v1-modal__field">
                 <label>Valor de Cuota (ARS) *</label>
                 <input
+                  id="field-valor_cuota"
                   type="number"
                   step="0.01"
                   value={form.valor_cuota}
