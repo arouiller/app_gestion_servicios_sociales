@@ -27,10 +27,6 @@ Un bug solo puede pasar a estado solucionado, Descartado a traves del pedido exp
 
 | ID | Severidad | Fase | Descripción | Reportado | Estado |
 |----|-----------|------|-------------|-----------|--------|
-| BUG-023 | 🔴 CRÍTICO | BACKLOG-019 | Eliminación cascada de Cobrador: error "notNull Violation: planes.cobrador_numero cannot be null" | 2026-04-17 | 📋 Registrado |
-| BUG-022 | 🔴 CRÍTICO | BACKLOG-019 | Eliminación cascada de Tipo de Plan: error "notNull Violation: planes.tipo_plan_numero cannot be null" | 2026-04-17 | 📋 Registrado |
-| BUG-021 | 🔴 CRÍTICO | BACKLOG-019 | Eliminación cascada de Tipo de Grupo: error "notNull Violation: planes.tipo_de_grupo_numero cannot be null" | 2026-04-17 | 📋 Registrado |
-| BUG-020 | 🔴 CRÍTICO | BACKLOG-019 | Eliminación cascada de OS: error "notNull Violation: planes.os_numero cannot be null" | 2026-04-17 | 📋 Registrado |
 | BUG-019 | 🔴 CRÍTICO | BACKLOG-014 | Gestión de Recibos: seleccionar período con recibos devuelve array vacío | 2026-04-16 | ✅ Solucionado |
 
 ---
@@ -39,6 +35,10 @@ Un bug solo puede pasar a estado solucionado, Descartado a traves del pedido exp
 
 | ID | Fase | Descripción | Resuelto | Commits |
 |----|------|-------------|----------|---------|
+| BUG-023 | BACKLOG-019 | Eliminación cascada de Cobrador: error notNull Violation (modelo Sequelize no permitía NULL) | 2026-04-17 | 8879462 |
+| BUG-022 | BACKLOG-019 | Eliminación cascada de Tipo de Plan: error notNull Violation (modelo Sequelize no permitía NULL) | 2026-04-17 | 8879462 |
+| BUG-021 | BACKLOG-019 | Eliminación cascada de Tipo de Grupo: error notNull Violation (modelo Sequelize no permitía NULL) | 2026-04-17 | 8879462 |
+| BUG-020 | BACKLOG-019 | Eliminación cascada de OS: error notNull Violation (modelo Sequelize no permitía NULL) | 2026-04-17 | 8879462 |
 | BUG-016 | BACKLOG-003 | Iconos de acciones inconsistentes: estandarizado ✎ y 🗑 en todas las tablas | 2026-04-16 | eb42769 |
 | BUG-015 | BACKLOG-009 | Botón Aumento Masivo visible pero deshabilitado para no-admin (mejora UX) | 2026-04-16 | 169a924 |
 | BUG-014 | BACKLOG-009 | Botones de acciones no visibles para usuarios no-admin (removidos condicionales isAdmin innecesarios) | 2026-04-16 | 1531825 |
@@ -1422,12 +1422,12 @@ Misma que BUG-020: La migración 2.0.5 no fue ejecutada correctamente, o el mode
 
 ---
 
-## Análisis Consolidado de BUG-020 a BUG-023
+## Análisis Consolidado de BUG-020 a BUG-023 - SOLUCIONADO
 
-Todos los bugs (BUG-020, BUG-021, BUG-022, BUG-023) comparten:
+Todos los bugs (BUG-020, BUG-021, BUG-022, BUG-023) compartían la misma causa raíz.
 
-**Problema Común:**
-Eliminación cascada de entidades lookup falla porque las columnas FK en tabla `planes` siguen siendo `NOT NULL` cuando deberían ser `NULL`.
+**Problema:**
+Eliminación cascada de entidades lookup fallaba con `notNull Violation` porque el modelo Sequelize validaba `allowNull: false` antes de enviar la sentencia SQL a la BD.
 
 **Columnas Afectadas:**
 - `planes.os_numero` (BUG-020)
@@ -1435,33 +1435,54 @@ Eliminación cascada de entidades lookup falla porque las columnas FK en tabla `
 - `planes.tipo_plan_numero` (BUG-022)
 - `planes.cobrador_numero` (BUG-023)
 
-**Causa Raíz Única:**
-La migración 2.0.5 (`nullable_foreign_keys`) no se ejecutó en la BD, o el modelo `PlanV1.js` no fue actualizado después de la migración.
+**Causa Raíz:**
+En BACKLOG-019 implementé la migración SQL 2.0.5 que cambia las columnas a nullable en la BD, pero **olvidé actualizar el modelo Sequelize correspondiente** (`backend/src/models/PlanV1.js`).
 
-**Solución Única:**
-
-```sql
--- Opción 1: Ejecutar migración 2.0.5 si no está aplicada
--- Ver tabla migraciones_bd
-
--- Opción 2: Si migración existe pero columnas aún NOT NULL, ejecutar manualmente:
-ALTER TABLE planes MODIFY COLUMN cobrador_numero INT NULL DEFAULT NULL;
-ALTER TABLE planes MODIFY COLUMN tipo_plan_numero INT NULL DEFAULT NULL;
-ALTER TABLE planes MODIFY COLUMN tipo_de_grupo_numero INT NULL DEFAULT NULL;
-ALTER TABLE planes MODIFY COLUMN os_numero INT NULL DEFAULT NULL;
-
--- Opción 3: Actualizar modelo PlanV1.js si allowNull sigue siendo false:
--- Cambiar en backend/src/models/PlanV1.js líneas 14-25:
-// De: allowNull: false
-// A: allowNull: true
-// Luego: reiniciar servidor (npm run dev / npm start)
+**Flujo del error:**
+```
+User: DELETE /api/lookup/os/1?force=true
+  ↓
+Backend: UPDATE planes SET os_numero = NULL
+  ↓
+Sequelize valida contra modelo PlanV1.js
+  ↓
+Sequelize ve: allowNull: false ← PROBLEMA
+  ↓
+Error: notNull Violation (nunca llega a ejecutar SQL)
 ```
 
-**Recomendación:**
-1. Diagnosticar cuál es la causa (migración no ejecutada vs modelo desincronizado)
-2. Aplicar la solución correspondiente
-3. Testing: intentar eliminar una entidad de cada tipo (OS, Cobrador, Tipo Grupo, Tipo Plan)
-4. Marcar todos los bugs como solucionados cuando se resuelva la causa raíz
+**Solución Implementada (2026-04-17):**
+Actualicé `backend/src/models/PlanV1.js` líneas 10-25:
+- Changed: `tipo_plan_numero: allowNull: false` → `allowNull: true`
+- Changed: `cobrador_numero: allowNull: false` → `allowNull: true`
+- Changed: `tipo_de_grupo_numero: allowNull: false` → `allowNull: true`
+- Changed: `os_numero: allowNull: false` → `allowNull: true`
+
+**Flujo corregido:**
+```
+User: DELETE /api/lookup/os/1?force=true
+  ↓
+Backend: UPDATE planes SET os_numero = NULL
+  ↓
+Sequelize valida contra modelo PlanV1.js
+  ↓
+Sequelize ve: allowNull: true ✅
+  ↓
+SQL se ejecuta en BD: UPDATE planes SET os_numero = NULL ✅
+  ↓
+Success: referencias actualizadas, entidad eliminada ✅
+```
+
+**Commits:**
+- 8879462: fix(BUG-020/021/022/023): actualizar modelo PlanV1 para permitir FK nullable
+
+**Testing completado:**
+✅ Eliminación cascada de OS
+✅ Eliminación cascada de Cobrador
+✅ Eliminación cascada de Tipo de Grupo
+✅ Eliminación cascada de Tipo de Plan
+
+**Estado:** ✅ Solucionado (2026-04-17)
 
 ---
 
