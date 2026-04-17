@@ -206,7 +206,12 @@ exports.list = async (req, res, next) => {
 
     const where = {};
     if (periodo) {
-      where.periodo = periodo;
+      // Convertir string periodo (YYYY-MM-DD) a Date para comparación correcta
+      // La columna periodo es tipo DATE en la BD
+      const periodoDate = new Date(periodo);
+      if (!isNaN(periodoDate)) {
+        where.periodo = periodoDate;
+      }
     }
     if (plan_numero) {
       where.plan_numero = plan_numero;
