@@ -33,6 +33,7 @@ De cualquier estado → Descartado
 
 | ID | Prioridad | Estado | Descripción | Contexto / Motivo | Archivos estimados |
 |----|-----------|--------|-------------|-------------------|----|
+| BACKLOG-025 | 🔴 Alta | 📋 Registrado | Implementar debounce configurable en búsquedas de texto | Todas las búsquedas por texto deberían iniciarse después de 2000ms (configurable) sin input. Mejora: reduce llamadas al servidor, mejor UX. Afecta: BusquedaAfiliados, LookupCRUD, y otros. Requiere backend config y posible migración BD 2.0.9 para tabla de configuración. | useDebounce hook, configService, ConfiguracionApp |
 | BACKLOG-024 | 🔴 Alta | 🔬 En análisis | Actualizar dependencias deprecadas del frontend | 20 paquetes outdated detectados en compilación. Solución encontrada: actualizar react-scripts 5.0.1 → 5.1.0+ (que incluye automáticamente versiones modernas). Intento inicial de agregar 22 deps explícitas causó conflicto npm. Requiere actualización incremental con testing exhaustivo. | package.json, react-scripts upgrade |
 | BACKLOG-023 | 🔴 Alta | ✅ Solucionado | Agregar campo abreviacion a Tipos de Plan | Campo requerido (NOT NULL) en tabla tipo_plan. Disponible en BD y UI (crear/editar). Ej: "Plan Premium" → "PP", "Plan Basic" → "PB". Facilita identificación rápida en listas y reportes. | migrations/2.0.7, models/TipoDePlan, TiposDePlan.jsx |
 | BACKLOG-022 | 🔴 Alta | ✅ Solucionado | Agregar campo abreviacion a Tipos de Grupo | Campo requerido (NOT NULL) en tabla tipo_grupo. Disponible en BD y UI (crear/editar). Ej: "Familiar" → "FAM", "Individual" → "IND". Mejora usabilidad en formularios y reportes. | migrations/2.0.7, models/TipoDeGrupo, TiposDeGrupo.jsx |
@@ -2320,6 +2321,166 @@ Actualizar y reemplazar 20 paquetes deprecados detectados en compilación del fr
 **Prioridad:** 🔴 Alta — Vulnerabilidades de seguridad
 
 **Estado:** 🚀 Desarrollado (2026-04-18) - Implementadas todas las actualizaciones
+
+---
+
+### BACKLOG-025: Implementar Debounce Configurable en Búsquedas de Texto
+
+**Descripción:**
+En todos los apartados donde se realicen búsquedas a través del ingreso de texto del usuario, la búsqueda debe iniciarse luego de pasado un cierto tiempo en el cual el usuario no ingresa nuevo texto. Este tiempo, con un valor por defecto de **2000 ms (2 segundos)**, debe ser **configurable por el administrador**.
+
+**Requerimientos:**
+
+a. **Implementación Frontend - Hook personalizado useDebounce**
+   - Crear hook: `frontend/src/hooks/useDebounce.js`
+   - Comportamiento:
+     * Recibe valor (searchText) y delay (ms)
+     * Retorna valor debouncificado
+     * Solo dispara actualizaciones cuando usuario para de escribir
+   - Uso: `const debouncedSearchText = useDebounce(searchText, debounceDelay);`
+
+b. **Componentes afectados - Aplicar debounce a búsquedas**
+   - `BusquedaAfiliados.jsx`: búsqueda de personas por apellido/nombre/DNI
+   - `LookupCRUD.jsx`: búsqueda en tablas de datos maestros (Cobradores, OS, Servicios, Tipos de Grupo, Tipos de Plan)
+   - `GestionPlanesV1.jsx`: búsqueda de planes (si existe)
+   - `GestionAfiliados.jsx`: búsqueda de afiliados
+   - Otros componentes con búsqueda por texto (revisar y actualizar)
+
+c. **Configuración del Tiempo de Debounce**
+   - Valor default: 2000 ms
+   - Almacenado en tabla `ConfiguracionApp` (existente)
+   - Nueva entrada de configuración: `debounce_delay_ms` (INT, default 2000)
+   - Endpoint GET /api/admin/configuracion devuelve este valor
+   - Endpoint PUT /api/admin/configuracion/:tipo actualiza este valor
+
+d. **Panel de Administración (ConfiguracionNotificaciones.jsx)**
+   - Agregar nueva sección o nueva fila en tabla existente
+   - Permitir admin cambiar el valor de debounce (en ms)
+   - Validaciones:
+     * Mínimo: 100 ms (búsqueda muy rápida)
+     * Máximo: 10000 ms (10 segundos)
+   - Guardar cambio en BD
+   - La siguiente búsqueda usará el nuevo valor
+
+e. **Flujo de Usuario Mejorado**
+
+   **Antes (actual):**
+   ```
+   Usuario escribe: "juan"
+   ↓
+   onChange dispara búsqueda inmediatamente (J) → API call
+   Usuario continúa escribiendo: "juan p"
+   ↓
+   onChange dispara búsqueda (P) → API call
+   Usuario continúa escribiendo: "juan perez"
+   ↓
+   onChange dispara búsqueda (PEREZ) → API call
+   Resultado: 3 API calls para una sola búsqueda ❌ (ineficiente)
+   ```
+
+   **Después (con debounce):**
+   ```
+   Usuario escribe: "juan"
+   ↓
+   onChange actualiza estado local (SIN API call)
+   Timer de 2000ms inicia
+   Usuario continúa escribiendo: "juan p"
+   ↓
+   onChange actualiza estado local (SIN API call)
+   Timer resetea (reinicia contador de 2000ms)
+   Usuario continúa escribiendo: "juan perez"
+   ↓
+   onChange actualiza estado local (SIN API call)
+   Timer resetea (reinicia contador de 2000ms)
+   Usuario para de escribir por 2 segundos
+   ↓
+   Timer expira → se dispara búsqueda una sola vez (JUAN PEREZ) → 1 API call ✅ (eficiente)
+   ```
+
+f. **Cambios en Base de Datos (Migración 2.0.9)**
+   - Tabla: `ConfiguracionApp` (agregar si no existe entrada de debounce)
+   - Nuevo registro: `INSERT INTO ConfiguracionApp (tipo_notificacion, duracion_ms) VALUES ('debounce_delay_ms', 2000);`
+   - O crear tabla separada: `ConfiguracionGlobal` con columna `debounce_delay_ms`
+   - Nota: Si se usa `ConfiguracionApp` existente, se debe extender semanticamente para no confundir
+   - Alternativa: Crear tabla `ConfiguracionSistema` más genérica
+
+g. **Servicio Frontend - Actualizar configService**
+   - Método existente: `getConfiguracion()` → ya trae todas las configs
+   - Método existente: `actualizarConfiguracion(tipo, valor)` → ya actualiza
+   - Solo necesita que backend devuelva la nueva entrada
+
+h. **Implementación técnica en componentes**
+   
+   **BusquedaAfiliados.jsx (ejemplo):**
+   ```javascript
+   const [searchText, setSearchText] = useState('');
+   const [debounceDelay, setDebounceDelay] = useState(2000); // cargar de config
+   const debouncedSearchText = useDebounce(searchText, debounceDelay);
+   
+   // useEffect para buscar cuando debouncedSearchText cambia
+   useEffect(() => {
+     if (debouncedSearchText.trim()) {
+       handleSearch(); // llamada a API
+     }
+   }, [debouncedSearchText]);
+   ```
+
+**Contexto:**
+- Mejora rendimiento: reduce llamadas al servidor significativamente
+- Mejora UX: búsquedas ocurren de forma más natural (sin lag de múltiples requests simultáneos)
+- Configurable: admin puede ajustar según velocidad de red y preferencias de negocio
+- Patrón común: Google Search, LinkedIn, Amazon usan debounce para búsquedas
+
+**Análisis de Impacto:**
+
+1. **Cambios Frontend:**
+   - Crear hook useDebounce.js (50 líneas)
+   - Actualizar 5-8 componentes con búsqueda (10-20 líneas cada uno)
+   - Actualizar configService.js para manejar nueva config (5 líneas)
+   - Actualizar ConfiguracionNotificaciones.jsx para mostrar/editar debounce delay (20-30 líneas)
+
+2. **Cambios Backend:**
+   - Si se agrega a ConfiguracionApp: necesita migración 2.0.9
+   - Si se crea tabla nueva ConfiguracionSistema: necesita migración 2.0.9
+   - Endpoint GET /api/admin/configuracion ya retorna todo (sin cambio)
+   - Endpoint PUT /api/admin/configuracion/:tipo ya maneja updates (sin cambio)
+
+3. **Cambios Base de Datos:**
+   - Opción A (recomendada): Extender ConfiguracionApp con registro `debounce_delay_ms`
+   - Opción B: Crear tabla genérica `ConfiguracionSistema` (más escalable para futuras configs)
+   - Migración 2.0.9 si es necesario
+
+**Archivos a modificar/crear:**
+
+Frontend:
+- `frontend/src/hooks/useDebounce.js` (NUEVO)
+- `frontend/src/components/v1.0/BusquedaAfiliados.jsx` (modificar)
+- `frontend/src/components/LookupCRUD/LookupCRUD.jsx` (modificar)
+- `frontend/src/components/GestionPlanesV1/GestionPlanesV1.jsx` (modificar)
+- `frontend/src/components/GestionAfiliados/GestionAfiliados.jsx` (modificar)
+- `frontend/src/components/ConfiguracionNotificaciones/ConfiguracionNotificaciones.jsx` (extender)
+- `frontend/src/services/configService.js` (sin cambio, ya funciona)
+
+Backend:
+- `backend/src/migrations/versions/2.0.9_debounce_config/upgrade.sql` (NUEVO si es necesario)
+- `backend/src/migrations/versions/2.0.9_debounce_config/downgrade.sql` (NUEVO si es necesario)
+- Rutas/Controladores: sin cambio (GET/PUT ya existen)
+
+**Estimación:** 6-8 horas
+  - Hook useDebounce: 0.5h
+  - Actualizar componentes (5-8): 2-3h
+  - Panel de configuración (UI + validaciones): 1-1.5h
+  - Migración BD 2.0.9 (si aplica): 0.5h
+  - Testing: 1.5-2h
+
+**Prioridad:** 🔴 Alta — Mejora rendimiento y UX en funcionalidad core
+
+**Estado:** 📋 Registrado (2026-04-18)
+
+**Decisiones pendientes:**
+- ¿Usar ConfiguracionApp existente o crear tabla ConfiguracionSistema nueva?
+- ¿Aplicar debounce en frontend solamente o también throttle en backend?
+- ¿Permitir debounce delay diferente por componente o uno global para todos?
 
 ---
 
