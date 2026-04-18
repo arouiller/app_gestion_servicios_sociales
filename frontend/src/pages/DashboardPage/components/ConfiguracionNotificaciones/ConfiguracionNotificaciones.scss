@@ -22,13 +22,13 @@
   &__subtitle {
     margin: 0;
     font-size: 0.95rem;
-    color: var(--color-text-secondary);
+    color: var(--color-text-muted);
   }
 
   &__loading {
     padding: 2rem 1rem;
     text-align: center;
-    color: var(--color-text-secondary);
+    color: var(--color-text-muted);
     font-size: 0.95rem;
   }
 
@@ -108,7 +108,7 @@
     &:focus {
       outline: none;
       border-color: var(--color-primary);
-      box-shadow: 0 0 0 2px rgba(var(--color-primary-rgb), 0.1);
+      box-shadow: 0 0 0 2px var(--color-primary-light);
     }
 
     &:disabled {
@@ -120,7 +120,7 @@
 
   &__hint {
     font-size: 0.85rem;
-    color: var(--color-text-secondary);
+    color: var(--color-text-muted);
     font-weight: 500;
     white-space: nowrap;
   }
@@ -154,7 +154,7 @@
     min-width: 44px;
 
     &:hover:not(:disabled) {
-      background-color: var(--color-primary-hover, darken(var(--color-primary), 10%));
+      background-color: var(--color-primary-hover);
     }
 
     &:active:not(:disabled) {
