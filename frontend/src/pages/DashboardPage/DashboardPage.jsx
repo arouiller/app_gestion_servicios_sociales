@@ -1,5 +1,7 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useAuth } from '../../context/AuthContext';
+import { NotificationProvider, useNotification } from '../../context/NotificationContext';
+import NotificationToast from '../../components/NotificationToast';
 import ThemeSwitcher from '../../components/ThemeSwitcher/ThemeSwitcher';
 import DatosPersonales from './components/DatosPersonales/DatosPersonales';
 import MigrationsDashboard from './components/MigrationsDashboard/MigrationsDashboard';
@@ -13,6 +15,7 @@ import ServiciosAdicionales from './components/ServiciosAdicionales/ServiciosAdi
 import TiposDeGrupo from './components/TiposDeGrupo/TiposDeGrupo';
 import TiposDePlan from './components/TiposDePlan/TiposDePlan';
 import GestionUsuarios from './components/GestionUsuarios/GestionUsuarios';
+import configService from '../../services/configService';
 import './DashboardPage.scss';
 
 // ── Iconos simples (SVG inline) ──────────────────────────────────────────────
@@ -146,9 +149,9 @@ function Bienvenida({ user }) {
   );
 }
 
-// ── Página principal ─────────────────────────────────────────────────────────
+// ── Página principal con contenido ──────────────────────────────────────────
 
-function DashboardPage() {
+function DashboardPageContent() {
   const { user, logout } = useAuth();
   const [activeModule, setActiveModule] = useState(null);
   const [sidebarOpen, setSidebarOpen] = useState(false);
@@ -158,6 +161,7 @@ function DashboardPage() {
 
   return (
     <div className="dashboard">
+      <NotificationToast />
       {/* Topbar */}
       <header className="dashboard__topbar">
         <div className="dashboard__topbar-left">
@@ -236,4 +240,46 @@ function DashboardPage() {
   );
 }
 
-export default DashboardPage;
+// ── Componente wrapper con NotificationProvider ──────────────────────────────
+
+function DashboardPageWithNotification() {
+  const { addNotification } = useNotification();
+
+  useEffect(() => {
+    window.__notificationContext = { addNotification };
+    return () => delete window.__notificationContext;
+  }, [addNotification]);
+
+  return <DashboardPageContent />;
+}
+
+// ── Componente wrapper principal que carga configuración ─────────────────────
+
+export default function DashboardPage() {
+  const [config, setConfig] = useState(null);
+  const [loadingConfig, setLoadingConfig] = useState(true);
+
+  useEffect(() => {
+    const loadConfig = async () => {
+      try {
+        const data = await configService.getConfiguracion();
+        setConfig(data);
+      } catch (error) {
+        console.error('Error al cargar configuración:', error);
+        setConfig({});
+      } finally {
+        setLoadingConfig(false);
+      }
+    };
+
+    loadConfig();
+  }, []);
+
+  if (loadingConfig) return <div>Cargando configuración...</div>;
+
+  return (
+    <NotificationProvider config={config}>
+      <DashboardPageWithNotification />
+    </NotificationProvider>
+  );
+}
