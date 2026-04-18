@@ -15,6 +15,7 @@ import ServiciosAdicionales from './components/ServiciosAdicionales/ServiciosAdi
 import TiposDeGrupo from './components/TiposDeGrupo/TiposDeGrupo';
 import TiposDePlan from './components/TiposDePlan/TiposDePlan';
 import GestionUsuarios from './components/GestionUsuarios/GestionUsuarios';
+import ConfiguracionNotificaciones from './components/ConfiguracionNotificaciones/ConfiguracionNotificaciones';
 import configService from '../../services/configService';
 import './DashboardPage.scss';
 
@@ -60,6 +61,7 @@ function buildMenu(isAdmin) {
       label: 'Administración',
       children: [
         { key: 'gestion-usuarios', label: 'Gestión de Usuarios' },
+        { key: 'configuracion-notificaciones', label: 'Configuración Notificaciones' },
         { key: 'migraciones-bd', label: 'Migraciones BD' },
       ],
     });
@@ -227,6 +229,7 @@ function DashboardPageContent() {
           )}
           {activeModule === 'gestion-recibos' && <RecibosPage />}
           {activeModule === 'gestion-usuarios' && <GestionUsuarios />}
+          {activeModule === 'configuracion-notificaciones' && <ConfiguracionNotificaciones />}
           {activeModule === 'migraciones-bd' && <MigrationsDashboard />}
           {activeModule === 'cobradores' && <Cobradores />}
           {activeModule === 'obras-sociales' && <ObrasSociales />}
