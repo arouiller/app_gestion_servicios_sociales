@@ -33,8 +33,8 @@ De cualquier estado → Descartado
 
 | ID | Prioridad | Estado | Descripción | Contexto / Motivo | Archivos estimados |
 |----|-----------|--------|-------------|-------------------|----|
-| BACKLOG-023 | 🔴 Alta | 📋 Registrado | Agregar campo abreviacion a Tipos de Plan | Campo requerido (NOT NULL) en tabla tipo_plan. Disponible en BD y UI (crear/editar). Ej: "Plan Premium" → "PP", "Plan Basic" → "PB". Facilita identificación rápida en listas y reportes. | migrations/2.0.7, models/TipoPlan, LookupCRUD.jsx |
-| BACKLOG-022 | 🔴 Alta | 📋 Registrado | Agregar campo abreviacion a Tipos de Grupo | Campo requerido (NOT NULL) en tabla tipo_grupo. Disponible en BD y UI (crear/editar). Ej: "Familiar" → "FAM", "Individual" → "IND". Mejora usabilidad en formularios y reportes. | migrations/2.0.7, models/TipoGrupo, LookupCRUD.jsx |
+| BACKLOG-023 | 🔴 Alta | ✅ Solucionado | Agregar campo abreviacion a Tipos de Plan | Campo requerido (NOT NULL) en tabla tipo_plan. Disponible en BD y UI (crear/editar). Ej: "Plan Premium" → "PP", "Plan Basic" → "PB". Facilita identificación rápida en listas y reportes. | migrations/2.0.7, models/TipoDePlan, TiposDePlan.jsx |
+| BACKLOG-022 | 🔴 Alta | ✅ Solucionado | Agregar campo abreviacion a Tipos de Grupo | Campo requerido (NOT NULL) en tabla tipo_grupo. Disponible en BD y UI (crear/editar). Ej: "Familiar" → "FAM", "Individual" → "IND". Mejora usabilidad en formularios y reportes. | migrations/2.0.7, models/TipoDeGrupo, TiposDeGrupo.jsx |
 | BACKLOG-021 | 🔴 Alta | ✅ Solucionado | Navegación automática a campo con error en PlanV1Modal | Al crear/editar plan, si falta dato o hay error del backend, UI navega automáticamente al tab y campo afectado. Mejora UX: usuario ve dónde está el problema sin búsqueda manual. Implementado: FIELD_TO_TAB, navigateToFirstError(), validate() retorna errors object, manejo de 422/409. | PlanV1Modal.jsx, usePlanV1Form.js, planesController.js |
 | BACKLOG-020 | 🔴 Alta | ✅ Solucionado | Auto-generación y validación de número de afiliado numérico | Campo número_afiliado es STRING con representación numérica. UI solo permite números. Sistema propone MAX+1. Validación de unicidad. Implementado: validación regex /^\d+$/ en frontend y backend, inputMode="numeric", pattern="[0-9]*", regla numeric en schema, validación en crear/actualizar. | PlanV1Modal.jsx, usePlanV1Form.js, planesController.js, validate.js, v1.0-planes.js |
 | BACKLOG-019 | 🔴 Alta | ✅ Solucionado | Eliminar entidades lookup con asociaciones en cascada | Al eliminar cobrador/OS/servicio/tipo grupo/tipo plan, si hay asociaciones, confirmación y eliminación en cascada. No bloqueo, sino opción de proceder. Implementado con migración 2.0.5. | lookupController.js, LookupCRUD.jsx, migrations, ConfirmDeleteWithRefsModal |
@@ -2186,6 +2186,74 @@ Sistema centralizado de notificaciones que detecta automáticamente respuestas d
 - Requiere decisión técnica sobre patrón (A, B o C)
 - Puede combinarse con BACKLOG-012 (mejorar modales) para experiencia consistente
 - Considerar versionado: v1.0.x usa este patrón, migraciones futuras mejoran si es necesario
+
+---
+
+### BACKLOG-022 y BACKLOG-023: Agregar Campo Abreviación a Tipos de Grupo y Plan
+
+**Descripción:**
+Agregar campo `abreviacion` (VARCHAR(10), NOT NULL, UNIQUE) a las tablas `tipos_de_grupo` y `tipos_de_plan`. Campo disponible en UI para crear/editar registros. Facilita identificación rápida en listas y reportes mediante abreviaturas consistentes (ej: "FAM", "IND", "PP", "PB").
+
+**Requerimientos:**
+- Campo `abreviacion` en ambas tablas (tipos_de_grupo, tipos_de_plan)
+- NOT NULL, UNIQUE (no permitir duplicados)
+- VARCHAR(10) máximo
+- Validación en backend (trim, uppercase automático)
+- UI permite entrada y edición de abreviación
+- Validación en frontend (requerido, maxLength 10)
+
+**Implementación Completada (2026-04-17):**
+
+**Backend:**
+- ✅ Migración 2.0.7: Crea columna abreviacion en tipos_de_grupo y tipos_de_plan con índices UNIQUE
+  - Simplificada: usa ADD COLUMN + ADD UNIQUE INDEX en una sola ALTER TABLE
+  - Maneja existing rows con DEFAULT ''
+- ✅ Modelos Sequelize (TipoDeGrupo.js, TipoDePlan.js)
+  - Agregado campo abreviacion con validación notEmpty
+  - Validación unique en nivel ORM
+- ✅ Validación en lookupController.js
+  - Campos ['tipo_de_grupo_nombre', 'abreviacion'] y ['tipo_plan_nombre', 'abreviacion']
+  - Pre-procesamiento: trim() + toUpperCase() automático
+  - Manejo de SequelizeUniqueConstraintError con HTTP 409 + mensaje legible
+- ✅ Testing: Sistema genérico permite create/update/delete sin cambios adicionales
+
+**Frontend:**
+- ✅ UI en TiposDeGrupo.jsx: Agregado campo { name: 'abreviacion', label: 'Abreviación *', maxLength: 10 }
+- ✅ UI en TiposDePlan.jsx: Mismo campo y configuración
+- ✅ LookupCRUD.jsx: Soporte para propiedad maxLength en inputs
+- ✅ LookupCRUD.jsx: Auto-uppercase para campo abreviacion (toUpperCase en handleInputChange)
+
+**Commits Asociados:**
+- aa76bee - fix(migrations): simplificar migración 2.0.7 eliminando MODIFY redundante
+- 4110ecc - fix(migrations): corregir nombres de tablas (tipos_de_grupo y tipos_de_plan)
+- 76a7489 - feat(models): agregar campo abreviacion a TipoDeGrupo
+- d7d6f3b - feat(models): agregar campo abreviacion a TipoDePlan
+- 784fa19 - feat(controllers): agregar validación de abreviacion para tipos
+- fd1f8e1 - feat(ui): agregar campo abreviacion a formularios de Tipos de Grupo y Plan
+
+**Testing Manual Recomendado:**
+1. Ejecutar migración: `npm run db:migrate:up`
+2. Verificar tablas: `DESCRIBE tipos_de_grupo;` y `DESCRIBE tipos_de_plan;`
+3. Crear Tipo de Grupo: nombre "Familiar", abreviacion "FAM"
+   - Validar: aparece en lista con abreviacion en mayúsculas
+4. Crear Tipo de Plan: nombre "Plan Premium", abreviacion "pp"
+   - Validar: se auto-convierte a "PP"
+5. Intentar crear otra con abreviacion "FAM" (duplicada)
+   - Validar: error HTTP 409 "Abreviación duplicada"
+6. Editar un registro, cambiar abreviacion
+   - Validar: se actualiza correctamente
+7. Validar maxLength: intentar ingresar más de 10 caracteres
+   - Validar: campo rechaza entrada
+
+**Estado:** ✅ Solucionado (2026-04-17)
+
+**Notas:**
+- Migración simplificada usando sintaxis moderna de MySQL
+- Sistema de lookup genérico permitió agregar soporte sin hardcoding
+- Auto-uppercase mejora UX: usuario no necesita pensar en mayúsculas
+- UNIQUE constraint previene duplicados a nivel BD
+- Abreviaturas facilitan reportes y identificación en formularios largos
+- Reutilizable: mismo patrón puede aplicarse a otros tipos si es necesario
 
 ---
 
