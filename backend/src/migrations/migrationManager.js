@@ -282,7 +282,7 @@ async function getDbStats() {
       const [[{ total }]] = await sequelize.query(
         `SELECT COUNT(*) AS total FROM \`${TABLE_NAME}\``
       );
-      return { tabla: TABLE_NAME, registros: parseInt(total, 10) };
+      return { tableName: TABLE_NAME, recordCount: parseInt(total, 10) };
     })
   );
 

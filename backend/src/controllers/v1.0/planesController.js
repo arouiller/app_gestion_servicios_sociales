@@ -123,6 +123,15 @@ const crear = async (req, res, next) => {
       estado,
     } = req.body;
 
+    // Validar que el número de afiliado sea numérico
+    if (!/^\d+$/.test(String(numero_afiliado).trim())) {
+      return res.status(422).json({
+        success: false,
+        message: 'El número de afiliado debe ser numérico',
+        errors: { numero_afiliado: 'Solo se permiten números' },
+      });
+    }
+
     // Verificar que el número de afiliado sea único
     const existente = await db.PlanV1.findOne({ where: { numero_afiliado } });
     if (existente) {
@@ -166,6 +175,15 @@ const actualizar = async (req, res, next) => {
     const plan = await db.PlanV1.findByPk(planNumero);
     if (!plan) {
       return res.status(404).json({ success: false, message: 'Plan no encontrado' });
+    }
+
+    // Validar que el número de afiliado sea numérico (si se proporciona)
+    if (req.body.numero_afiliado && !/^\d+$/.test(String(req.body.numero_afiliado).trim())) {
+      return res.status(422).json({
+        success: false,
+        message: 'El número de afiliado debe ser numérico',
+        errors: { numero_afiliado: 'Solo se permiten números' },
+      });
     }
 
     // Si se intenta cambiar el número de afiliado, verificar unicidad

@@ -1,0 +1,263 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Gestión de Afiliados - GestSocial</title>
+    <link rel="stylesheet" href="../css/styles.css">
+</head>
+<body>
+    <div class="docs-header">
+        <h1>GestSocial - Documentación</h1>
+    </div>
+
+    <nav class="docs-nav-sidebar" id="docsNav">
+        <h3>Inicio</h3>
+        <a href="../index.html">Visión General</a>
+
+        <h3>Funcionalidad Principal</h3>
+        <a href="autenticacion.html">Autenticación</a>
+        <a href="gestion-planes.html">Gestión de Planes</a>
+        <a href="busqueda-afiliados.html">Búsqueda de Afiliados</a>
+        <a href="gestion-afiliados.html" class="active">Gestión de Afiliados</a>
+        <a href="gestion-recibos.html">Gestión de Recibos</a>
+
+        <h3>Mantenimiento</h3>
+        <a href="lookup-crud.html">Cobradores, OS, Servicios, Tipos</a>
+
+        <h3>Administración</h3>
+        <a href="gestion-usuarios.html">Gestión de Usuarios</a>
+        <a href="migraciones-bd.html">Migraciones BD</a>
+
+        <h3>Referencia</h3>
+        <a href="faq.html">Preguntas Frecuentes</a>
+    </nav>
+
+    <div class="docs-content">
+        <div class="docs-content-inner">
+            <h1>Gestión de Afiliados</h1>
+
+            <p>
+                <strong>Gestión de Afiliados</strong> permite crear, editar, eliminar y administrar la información personal
+                de los afiliados, incluyendo datos de contacto, roles (titular/beneficiario), y grupos familiares.
+            </p>
+
+            <h2>Acceso</h2>
+
+            <ol>
+                <li>Desde el Dashboard, menú izquierdo</li>
+                <li>Sección <strong>"Gestión"</strong> → <strong>"Gestión de Afiliados"</strong></li>
+                <li>Verás una tabla con todos los afiliados</li>
+            </ol>
+
+            <h2>Pantalla Principal</h2>
+
+            <ul>
+                <li><strong>Filtros:</strong> búsqueda por nombre/documento/email, estado, rol</li>
+                <li><strong>Tabla de afiliados:</strong> listado completo</li>
+                <li><strong>Botón "+ Nuevo Afiliado":</strong> crear nuevo</li>
+                <li><strong>Acciones:</strong> editar, eliminar por afiliado</li>
+            </ul>
+
+            <h3>Columnas de la Tabla</h3>
+
+            <table>
+                <thead>
+                    <tr>
+                        <th>Columna</th>
+                        <th>Descripción</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr>
+                        <td><strong>Nombre</strong></td>
+                        <td>Nombre + Apellido del afiliado</td>
+                    </tr>
+                    <tr>
+                        <td><strong>Documento</strong></td>
+                        <td>Tipo + Número de documento</td>
+                    </tr>
+                    <tr>
+                        <td><strong>Rol</strong></td>
+                        <td>Titular o Beneficiario</td>
+                    </tr>
+                    <tr>
+                        <td><strong>Grupo Familiar</strong></td>
+                        <td>Grupo al que pertenece (si aplica)</td>
+                    </tr>
+                    <tr>
+                        <td><strong>Email</strong></td>
+                        <td>Correo electrónico de contacto</td>
+                    </tr>
+                    <tr>
+                        <td><strong>Estado</strong></td>
+                        <td>Activo, Inactivo, Suspendido</td>
+                    </tr>
+                    <tr>
+                        <td><strong>Acciones</strong></td>
+                        <td>Editar, Eliminar</td>
+                    </tr>
+                </tbody>
+            </table>
+
+            <h2>Crear un Nuevo Afiliado</h2>
+
+            <p><strong>Pasos:</strong></p>
+            <ol>
+                <li>Haz click en <strong>"+ Nuevo Afiliado"</strong></li>
+                <li>Se abrirá un modal con el formulario</li>
+                <li>Completa los campos requeridos</li>
+                <li>Haz click en <strong>"Guardar"</strong></li>
+            </ol>
+
+            <h3>Campos de Creación</h3>
+
+            <table>
+                <thead>
+                    <tr>
+                        <th>Campo</th>
+                        <th>Requerido</th>
+                        <th>Descripción</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr>
+                        <td><strong>Nombre</strong></td>
+                        <td><span class="badge required">Sí</span></td>
+                        <td>Nombre de pila</td>
+                    </tr>
+                    <tr>
+                        <td><strong>Apellido</strong></td>
+                        <td><span class="badge required">Sí</span></td>
+                        <td>Apellido(s)</td>
+                    </tr>
+                    <tr>
+                        <td><strong>Tipo de Documento</strong></td>
+                        <td><span class="badge required">Sí</span></td>
+                        <td>DNI, CI, Pasaporte, etc.</td>
+                    </tr>
+                    <tr>
+                        <td><strong>Número de Documento</strong></td>
+                        <td><span class="badge required">Sí</span></td>
+                        <td>Número sin puntos ni espacios (mínimo 6 caracteres)</td>
+                    </tr>
+                    <tr>
+                        <td><strong>Rol</strong></td>
+                        <td><span class="badge required">Sí</span></td>
+                        <td>Titular o Beneficiario</td>
+                    </tr>
+                    <tr>
+                        <td><strong>Grupo Familiar</strong></td>
+                        <td><span class="badge required">Sí*</span></td>
+                        <td>Requerido si el rol es Beneficiario</td>
+                    </tr>
+                    <tr>
+                        <td><strong>Fecha de Nacimiento</strong></td>
+                        <td><span class="badge optional">No</span></td>
+                        <td>Fecha en formato YYYY-MM-DD</td>
+                    </tr>
+                    <tr>
+                        <td><strong>Género</strong></td>
+                        <td><span class="badge optional">No</span></td>
+                        <td>Masculino, Femenino, Otro</td>
+                    </tr>
+                    <tr>
+                        <td><strong>Email</strong></td>
+                        <td><span class="badge optional">No</span></td>
+                        <td>Correo electrónico de contacto</td>
+                    </tr>
+                    <tr>
+                        <td><strong>Teléfono</strong></td>
+                        <td><span class="badge optional">No</span></td>
+                        <td>Formato JSON: [{"tipo":"celular","numero":"1123456789"}]</td>
+                    </tr>
+                    <tr>
+                        <td><strong>Dirección, Ciudad, Provincia</strong></td>
+                        <td><span class="badge optional">No</span></td>
+                        <td>Datos de domicilio</td>
+                    </tr>
+                </tbody>
+            </table>
+
+            <h2>Editar un Afiliado</h2>
+
+            <p><strong>Pasos:</strong></p>
+            <ol>
+                <li>En la tabla, haz click en el botón <strong>"✎ Editar"</strong></li>
+                <li>Se abrirá el modal con los datos actuales</li>
+                <li>Modifica los campos necesarios</li>
+                <li>Haz click en <strong>"Guardar"</strong></li>
+            </ol>
+
+            <div class="alert warning">
+                <strong>⚠️ Nota:</strong> El rol no puede cambiar después de creación
+                (a menos que sea necesario en administración).
+            </div>
+
+            <h2>Eliminar un Afiliado</h2>
+
+            <p><strong>Pasos:</strong></p>
+            <ol>
+                <li>En la tabla, haz click en el botón <strong>"🗑 Eliminar"</strong></li>
+                <li>Se pedirá confirmación</li>
+                <li>Si el afiliado es un titular con beneficiarios, deberás asignar un nuevo titular primero</li>
+                <li>Confirma para eliminar</li>
+            </ol>
+
+            <div class="alert error">
+                <strong>⚠️ Importante:</strong> La eliminación es permanente. Asegúrate de querer eliminar el afiliado.
+            </div>
+
+            <h2>Roles: Titular vs Beneficiario</h2>
+
+            <h3>Titular</h3>
+            <ul>
+                <li>Persona principal de un grupo familiar</li>
+                <li>Puede tener planes directamente</li>
+                <li>Puede tener beneficiarios asociados</li>
+            </ul>
+
+            <h3>Beneficiario</h3>
+            <ul>
+                <li>Persona dependiente de un titular</li>
+                <li>Debe estar asociado a un grupo familiar</li>
+                <li>Normalmente son familiares (cónyuge, hijos, etc.)</li>
+            </ul>
+
+            <h2>Grupos Familiares</h2>
+
+            <p>
+                Los grupos familiares agrupan a un titular con sus beneficiarios.
+                Cada beneficiario debe tener un grupo familiar asignado.
+            </p>
+
+            <h2>Errores Frecuentes</h2>
+
+            <table>
+                <thead>
+                    <tr>
+                        <th>Error</th>
+                        <th>Solución</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr>
+                        <td>"Documento ya existe"</td>
+                        <td>Ya hay un afiliado con ese documento. Verifica el número.</td>
+                    </tr>
+                    <tr>
+                        <td>"Grupo familiar requerido"</td>
+                        <td>Si el rol es Beneficiario, debes seleccionar un grupo. Selecciona o crea uno.</td>
+                    </tr>
+                    <tr>
+                        <td>"No puedes eliminar titular con beneficiarios"</td>
+                        <td>Primero asigna un nuevo titular a los beneficiarios o elimína los beneficiarios.</td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+    </div>
+
+    <script src="../js/nav.js"></script>
+</body>
+</html>

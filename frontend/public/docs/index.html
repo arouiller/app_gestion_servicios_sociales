@@ -1,0 +1,312 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>GestSocial - Documentación</title>
+    <link rel="stylesheet" href="css/styles.css">
+    <style>
+        .docs-nav-toggle {
+            display: none;
+            position: fixed;
+            top: 15px;
+            left: 15px;
+            background: white;
+            border: 1px solid var(--color-border);
+            padding: 0.5rem 0.75rem;
+            border-radius: var(--border-radius);
+            cursor: pointer;
+            z-index: 1001;
+            font-size: 1.5rem;
+        }
+
+        @media (max-width: 768px) {
+            .docs-nav-toggle {
+                display: block;
+            }
+        }
+    </style>
+</head>
+<body>
+    <!-- Header -->
+    <div class="docs-header">
+        <h1>GestSocial - Documentación</h1>
+    </div>
+
+    <!-- Botón toggle para mobile -->
+    <button class="docs-nav-toggle" onclick="toggleNav()">☰</button>
+
+    <!-- Sidebar de Navegación -->
+    <nav class="docs-nav-sidebar" id="docsNav">
+        <h3>Inicio</h3>
+        <a href="index.html" class="active">Visión General</a>
+
+        <h3>Funcionalidad Principal</h3>
+        <a href="pages/autenticacion.html">Autenticación</a>
+        <a href="pages/gestion-planes.html">Gestión de Planes</a>
+        <a href="pages/busqueda-afiliados.html">Búsqueda de Afiliados</a>
+        <a href="pages/gestion-afiliados.html">Gestión de Afiliados</a>
+        <a href="pages/gestion-recibos.html">Gestión de Recibos</a>
+
+        <h3>Mantenimiento</h3>
+        <a href="pages/lookup-crud.html">Cobradores, OS, Servicios, Tipos</a>
+
+        <h3>Administración</h3>
+        <a href="pages/gestion-usuarios.html">Gestión de Usuarios</a>
+        <a href="pages/migraciones-bd.html">Migraciones BD</a>
+
+        <h3>Referencia</h3>
+        <a href="pages/faq.html">Preguntas Frecuentes</a>
+    </nav>
+
+    <!-- Contenido Principal -->
+    <div class="docs-content">
+        <div class="docs-content-inner">
+            <h1>Bienvenido a GestSocial</h1>
+
+            <p>
+                <strong>GestSocial</strong> es un sistema integral de gestión de planes, afiliados y servicios sociales.
+                Esta documentación te guiará sobre cómo usar cada módulo del sistema, los campos disponibles,
+                las validaciones requeridas y los pasos comunes para realizar tareas cotidianas.
+            </p>
+
+            <div class="alert info">
+                <strong>💡 Consejo:</strong> Usa la navegación a tu izquierda para acceder a la sección que necesitas.
+                En móvil, usa el botón ☰ para abrir el menú.
+            </div>
+
+            <h2>Tabla de Contenidos</h2>
+
+            <div class="toc">
+                <ul>
+                    <li><a href="#inicio">Inicio Rápido</a></li>
+                    <li><a href="#caracteristicas">Características Principales</a></li>
+                    <li><a href="#usuarios">Roles y Permisos</a></li>
+                    <li><a href="#navegacion">Navegación en la App</a></li>
+                    <li><a href="#ayuda">Obtener Ayuda</a></li>
+                </ul>
+            </div>
+
+            <h2 id="inicio">Inicio Rápido</h2>
+
+            <h3>1. Accede al Sistema</h3>
+            <ol>
+                <li>Ve a la pantalla de <strong>Login</strong></li>
+                <li>Ingresa tu <strong>email</strong> y <strong>contraseña</strong></li>
+                <li>Haz click en <strong>Iniciar Sesión</strong></li>
+                <li>Si es tu primer acceso, es posible que debas cambiar tu contraseña</li>
+            </ol>
+
+            <p>
+                <em>Para más detalles, consulta la sección <a href="pages/autenticacion.html">Autenticación</a>.</em>
+            </p>
+
+            <h3>2. Explora el Dashboard</h3>
+            <p>
+                Una vez dentro, verás el <strong>Dashboard</strong> con un menú en la izquierda.
+                El menú está organizado en dos secciones:
+            </p>
+            <ul>
+                <li><strong>Gestión:</strong> Acceso a planes, afiliados, recibos y datos maestros</li>
+                <li><strong>Administración:</strong> (solo para administradores) gestión de usuarios y migraciones</li>
+            </ul>
+
+            <h3>3. Realiza una Tarea Común</h3>
+            <p>Las tareas más comunes en GestSocial son:</p>
+            <ul>
+                <li><a href="pages/gestion-planes.html">Crear o editar un plan</a></li>
+                <li><a href="pages/busqueda-afiliados.html">Buscar un afiliado</a></li>
+                <li><a href="pages/gestion-recibos.html">Generar recibos</a></li>
+                <li><a href="pages/gestion-planes.html">Aplicar aumento masivo de cuotas</a></li>
+            </ul>
+
+            <h2 id="caracteristicas">Características Principales</h2>
+
+            <h3>Gestión de Planes</h3>
+            <p>
+                Crea, edita y administra planes de afiliación. Incluye:
+            </p>
+            <ul>
+                <li>Crear y editar planes con múltiples campos</li>
+                <li>Cambios de cuota (fijo o porcentual)</li>
+                <li>Aumento masivo de cuotas</li>
+                <li>Historial de cambios</li>
+                <li>Generación de recibos por período</li>
+            </ul>
+
+            <h3>Gestión de Afiliados</h3>
+            <p>
+                Busca, crea y edita información de afiliados y sus familias:
+            </p>
+            <ul>
+                <li>Búsqueda rápida por nombre, apellido o DNI</li>
+                <li>Crear nuevos afiliados</li>
+                <li>Editar datos personales</li>
+                <li>Gestionar grupos familiares</li>
+                <li>Ver todos los planes asociados a un afiliado</li>
+            </ul>
+
+            <h3>Generación de Recibos</h3>
+            <p>
+                Genera recibos automáticos por período mensual:
+            </p>
+            <ul>
+                <li>Selecciona período (mes y año)</li>
+                <li>Genera recibos para todos los planes activos</li>
+                <li>Regenera recibos si necesitas actualizar</li>
+                <li>Consulta historial de recibos por período</li>
+                <li>Ve detalles de cada recibo generado</li>
+            </ul>
+
+            <h3>Administración (Solo para Administradores)</h3>
+            <p>
+                Si eres administrador, accedes a:
+            </p>
+            <ul>
+                <li><strong>Gestión de Usuarios:</strong> crear usuarios, cambiar roles, resetear contraseñas</li>
+                <li><strong>Migraciones de BD:</strong> ver y ejecutar cambios en la estructura de la base de datos</li>
+            </ul>
+
+            <h2 id="usuarios">Roles y Permisos</h2>
+
+            <h3>Usuario Regular</h3>
+            <p>
+                Los usuarios regulares tienen acceso a:
+            </p>
+            <ul>
+                <li>✅ Búsqueda y gestión de afiliados</li>
+                <li>✅ Gestión completa de planes (crear, editar, suspender)</li>
+                <li>✅ Generación de recibos</li>
+                <li>✅ Gestión de datos maestros (cobradores, obras sociales, servicios, etc.)</li>
+                <li>❌ Gestión de usuarios</li>
+                <li>❌ Migraciones de BD</li>
+            </ul>
+
+            <h3>Administrador</h3>
+            <p>
+                Los administradores tienen acceso a <strong>todas las funcionalidades</strong>, incluyendo:
+            </p>
+            <ul>
+                <li>✅ Todo lo que hace un usuario regular</li>
+                <li>✅ Gestión de usuarios (crear, cambiar rol, resetear contraseñas)</li>
+                <li>✅ Migraciones de BD (ejecutar, revertir, ver historial)</li>
+            </ul>
+
+            <h2 id="navegacion">Navegación en la App</h2>
+
+            <h3>Topbar (Barra Superior)</h3>
+            <p>En la parte superior de la app encontrarás:</p>
+            <ul>
+                <li><strong>☰ Hamburger:</strong> abre/cierra el menú (en móvil)</li>
+                <li><strong>GestSocial:</strong> logo de la aplicación</li>
+                <li><strong>Avatar:</strong> información del usuario actual</li>
+                <li><strong>🎨 Tema:</strong> cambia entre modo claro y oscuro</li>
+                <li><strong>? Ayuda:</strong> abre esta documentación en una ventana nueva</li>
+                <li><strong>Salir:</strong> cierra la sesión</li>
+            </ul>
+
+            <h3>Sidebar (Menú Izquierdo)</h3>
+            <p>
+                El menú izquierdo te permite navegar entre las diferentes secciones.
+                Está organizado en grupos:
+            </p>
+            <ul>
+                <li><strong>Mi Cuenta:</strong> datos personales</li>
+                <li><strong>Gestión:</strong> funcionalidades principales del sistema</li>
+                <li><strong>Administración:</strong> (solo admin) configuración del sistema</li>
+            </ul>
+
+            <h3>Modales y Formularios</h3>
+            <p>
+                Cuando creas o editas un elemento, se abre una <strong>ventana modal (popup)</strong>.
+                Comportamientos importantes:
+            </p>
+            <ul>
+                <li>Presiona <strong>ESC</strong> para cerrar (con confirmación si hay cambios)</li>
+                <li>Haz click en <strong>✕</strong> para cerrar</li>
+                <li>Haz click en <strong>Cancelar</strong> para descartar cambios</li>
+                <li>Haz click en <strong>Guardar/Crear</strong> para confirmar los cambios</li>
+            </ul>
+
+            <h2 id="ayuda">Obtener Ayuda</h2>
+
+            <h3>Dentro de la App</h3>
+            <p>
+                Haz click en el botón <strong>?</strong> en la parte superior derecha de la app.
+                Esto abrirá esta documentación en una ventana nueva para que puedas consultarla mientras trabajas.
+            </p>
+
+            <h3>Estructura de la Documentación</h3>
+            <p>
+                Cada sección de la documentación incluye:
+            </p>
+            <ul>
+                <li><strong>Descripción General:</strong> qué es la sección y para qué sirve</li>
+                <li><strong>Acceso:</strong> cómo llegar a ella desde el menú</li>
+                <li><strong>Pantalla Principal:</strong> elementos visibles (tabla, botones, campos)</li>
+                <li><strong>Campos Disponibles:</strong> tabla con descripción de cada campo</li>
+                <li><strong>Acciones:</strong> crear, editar, buscar, eliminar, etc.</li>
+                <li><strong>Pasos Comunes:</strong> guías paso a paso para tareas típicas</li>
+                <li><strong>Errores Frecuentes:</strong> problemas comunes y soluciones</li>
+            </ul>
+
+            <h3>Preguntas Frecuentes</h3>
+            <p>
+                Consulta la sección <a href="pages/faq.html">FAQ</a> para respuestas a preguntas comunes.
+            </p>
+
+            <h3>No Encontraste lo que Buscas?</h3>
+            <p>
+                Si no encuentras la información que necesitas:
+            </p>
+            <ul>
+                <li>Usa el menú de navegación a la izquierda</li>
+                <li>Revisa la sección <a href="pages/faq.html">Preguntas Frecuentes</a></li>
+                <li>Contacta a tu administrador del sistema</li>
+            </ul>
+
+            <h2>Próximos Pasos</h2>
+            <p>
+                Elige una sección del menú para empezar:
+            </p>
+            <ul>
+                <li><a href="pages/autenticacion.html">📝 Aprender sobre Autenticación</a></li>
+                <li><a href="pages/gestion-planes.html">📋 Gestionar Planes</a></li>
+                <li><a href="pages/busqueda-afiliados.html">🔍 Buscar Afiliados</a></li>
+                <li><a href="pages/gestion-recibos.html">📄 Generar Recibos</a></li>
+                <li><a href="pages/faq.html">❓ Ver Preguntas Frecuentes</a></li>
+            </ul>
+
+            <div class="alert success">
+                <strong>✅ Listo para empezar?</strong> Navegá por los temas a tu izquierda o selecciona una de las opciones arriba.
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Toggle sidebar en mobile
+        function toggleNav() {
+            const nav = document.getElementById('docsNav');
+            nav.classList.toggle('open');
+        }
+
+        // Cerrar sidebar al hacer click en un link (mobile)
+        document.querySelectorAll('.docs-nav-sidebar a').forEach(link => {
+            link.addEventListener('click', () => {
+                const nav = document.getElementById('docsNav');
+                nav.classList.remove('open');
+            });
+        });
+
+        // Marcar link activo según la página actual
+        const currentPage = window.location.pathname.split('/').pop() || 'index.html';
+        document.querySelectorAll('.docs-nav-sidebar a').forEach(link => {
+            const href = link.getAttribute('href').split('/').pop();
+            if ((currentPage === 'docs' && href === 'index.html') ||
+                currentPage === href) {
+                link.classList.add('active');
+            }
+        });
+    </script>
+</body>
+</html>

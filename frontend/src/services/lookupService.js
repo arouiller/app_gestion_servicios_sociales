@@ -39,9 +39,14 @@ const lookupService = {
   /**
    * DELETE /api/lookup/:entidad/:id
    * Elimina un registro de lookup
+   *
+   * Parámetros opcionales:
+   * - force: boolean (default: false) - si true, ejecuta eliminación en cascada
    */
-  delete: async (entidad, id) => {
-    const response = await api.delete(`/lookup/${entidad}/${id}`);
+  delete: async (entidad, id, options = {}) => {
+    const { force = false } = options;
+    const url = force ? `/lookup/${entidad}/${id}?force=true` : `/lookup/${entidad}/${id}`;
+    const response = await api.delete(url);
     return response.data;
   },
 

@@ -12,6 +12,7 @@ const crearSchema = {
   os_numero: [rules.required('La obra social')],
   numero_afiliado: [
     rules.required('El número de afiliado'),
+    rules.numeric('El número de afiliado'),
     rules.minLength(1, 'El número de afiliado'),
     rules.maxLength(50, 'El número de afiliado'),
   ],

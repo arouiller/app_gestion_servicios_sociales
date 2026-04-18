@@ -1,0 +1,267 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Migraciones BD - GestSocial</title>
+    <link rel="stylesheet" href="../css/styles.css">
+</head>
+<body>
+    <div class="docs-header">
+        <h1>GestSocial - Documentación</h1>
+    </div>
+
+    <nav class="docs-nav-sidebar" id="docsNav">
+        <h3>Inicio</h3>
+        <a href="../index.html">Visión General</a>
+
+        <h3>Funcionalidad Principal</h3>
+        <a href="autenticacion.html">Autenticación</a>
+        <a href="gestion-planes.html">Gestión de Planes</a>
+        <a href="busqueda-afiliados.html">Búsqueda de Afiliados</a>
+        <a href="gestion-afiliados.html">Gestión de Afiliados</a>
+        <a href="gestion-recibos.html">Gestión de Recibos</a>
+
+        <h3>Mantenimiento</h3>
+        <a href="lookup-crud.html">Cobradores, OS, Servicios, Tipos</a>
+
+        <h3>Administración</h3>
+        <a href="gestion-usuarios.html">Gestión de Usuarios</a>
+        <a href="migraciones-bd.html" class="active">Migraciones BD</a>
+
+        <h3>Referencia</h3>
+        <a href="faq.html">Preguntas Frecuentes</a>
+    </nav>
+
+    <div class="docs-content">
+        <div class="docs-content-inner">
+            <h1>Migraciones de Base de Datos</h1>
+
+            <p>
+                <strong>Migraciones BD</strong> es una funcionalidad <span class="badge admin">ADMIN ONLY</span>
+                que permite aplicar cambios en la estructura de la base de datos de forma controlada.
+                Esto incluye crear tablas, agregar columnas, modificar índices, etc.
+            </p>
+
+            <h2>¿Qué es una Migración?</h2>
+
+            <p>
+                Una <strong>migración</strong> es un conjunto de cambios controlados en la base de datos.
+                Cada migración tiene:
+            </p>
+            <ul>
+                <li><strong>Versión:</strong> número único (ej: 1.0.5, 1.0.6)</li>
+                <li><strong>Descripción:</strong> qué cambios incluye</li>
+                <li><strong>Script Upgrade:</strong> cómo aplicar los cambios</li>
+                <li><strong>Script Downgrade:</strong> cómo revertir los cambios (si es posible)</li>
+            </ul>
+
+            <h2>Acceso</h2>
+
+            <ol>
+                <li>Desde el Dashboard, menú izquierdo</li>
+                <li>Sección <strong>"Administración"</strong> (solo si eres admin)</li>
+                <li>Selecciona <strong>"Migraciones BD"</strong></li>
+            </ol>
+
+            <div class="alert warning">
+                <strong>⚠️ Acceso Restringido:</strong> Solo administradores pueden acceder.
+            </div>
+
+            <h2>Pantalla Principal</h2>
+
+            <p>Verás tres secciones:</p>
+
+            <h3>1. Listado de Migraciones Disponibles</h3>
+
+            <p>
+                Muestra todas las migraciones que aún no han sido ejecutadas.
+            </p>
+
+            <table>
+                <thead>
+                    <tr>
+                        <th>Información</th>
+                        <th>Descripción</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr>
+                        <td><strong>Versión</strong></td>
+                        <td>Número de versión (ej: 1.0.6)</td>
+                    </tr>
+                    <tr>
+                        <td><strong>Descripción</strong></td>
+                        <td>Explicación de qué cambia</td>
+                    </tr>
+                    <tr>
+                        <td><strong>Estado</strong></td>
+                        <td>Pendiente (no ejecutada)</td>
+                    </tr>
+                    <tr>
+                        <td><strong>Acción</strong></td>
+                        <td>Botón para ejecutar la migración</td>
+                    </tr>
+                </tbody>
+            </table>
+
+            <h3>2. Historial de Migraciones Ejecutadas</h3>
+
+            <p>
+                Muestra todas las migraciones que ya fueron aplicadas.
+            </p>
+
+            <table>
+                <thead>
+                    <tr>
+                        <th>Información</th>
+                        <th>Descripción</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr>
+                        <td><strong>Versión</strong></td>
+                        <td>Número de versión</td>
+                    </tr>
+                    <tr>
+                        <td><strong>Descripción</strong></td>
+                        <td>Qué cambió</td>
+                    </tr>
+                    <tr>
+                        <td><strong>Fecha Ejecución</strong></td>
+                        <td>Cuándo se ejecutó</td>
+                    </tr>
+                    <tr>
+                        <td><strong>Estado</strong></td>
+                        <td>Ejecutada / Revertida</td>
+                    </tr>
+                </tbody>
+            </table>
+
+            <h2>Ejecutar una Migración</h2>
+
+            <p><strong>Pasos:</strong></p>
+            <ol>
+                <li>En el listado "Migraciones Disponibles", busca la migración que deseas ejecutar</li>
+                <li>Haz click en el botón <strong>"Ejecutar"</strong></li>
+                <li>Se pedirá confirmación</li>
+                <li>Lee la descripción de cambios y confirma</li>
+                <li>El sistema aplicará la migración</li>
+                <li>La migración aparecerá en el Historial como "Ejecutada"</li>
+            </ol>
+
+            <div class="alert warning">
+                <strong>⚠️ IMPORTANTE:</strong> Las migraciones son cambios permanentes en la BD.
+                Asegúrate de:
+                <ul>
+                    <li>Hacer backup de la BD antes de ejecutar (responsabilidad del admin del servidor)</li>
+                    <li>Leer la descripción de cambios</li>
+                    <li>Ejecutar en ambiente de testing primero si es posible</li>
+                    <li>No interrumpir la ejecución mientras está en progreso</li>
+                </ul>
+            </div>
+
+            <h2>Revertir una Migración</h2>
+
+            <p>
+                Si necesitas deshacer una migración (rollback):
+            </p>
+
+            <p><strong>Pasos:</strong></p>
+            <ol>
+                <li>En el Historial, busca la migración ejecutada</li>
+                <li>Si hay botón <strong>"Revertir"</strong>, haz click</li>
+                <li>Se pedirá confirmación</li>
+                <li>El sistema ejecutará el script de "downgrade"</li>
+                <li>La migración aparecerá como "Revertida"</li>
+            </ol>
+
+            <div class="alert warning">
+                <strong>⚠️ Advertencia:</strong> No todas las migraciones pueden revertirse
+                (ej: si eliminan datos). El sistema lo indicará.
+            </div>
+
+            <h2>Estadísticas</h2>
+
+            <p>
+                La pantalla también muestra estadísticas generales:
+            </p>
+            <ul>
+                <li>Total de migraciones disponibles</li>
+                <li>Total de migraciones ejecutadas</li>
+                <li>Versión actual del BD</li>
+                <li>Última migración ejecutada (fecha)</li>
+            </ul>
+
+            <h2>Errores Frecuentes</h2>
+
+            <table>
+                <thead>
+                    <tr>
+                        <th>Error</th>
+                        <th>Causa</th>
+                        <th>Solución</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr>
+                        <td>"Error al ejecutar migración"</td>
+                        <td>Problema técnico durante la ejecución (sintaxis SQL, permisos, etc.)</td>
+                        <td>Revisa los logs del servidor. Contacta al administrador técnico.</td>
+                    </tr>
+                    <tr>
+                        <td>"Migración ya ejecutada"</td>
+                        <td>Intentaste ejecutar una migración que ya estaba hecha</td>
+                        <td>La migración está en Historial. No necesita ejecutarse nuevamente.</td>
+                    </tr>
+                    <tr>
+                        <td>"No se puede revertir esta migración"</td>
+                        <td>La migración no tiene script de downgrade o tiene restricciones</td>
+                        <td>Esta migración no puede deshacerse. Contacta al admin.</td>
+                    </tr>
+                </tbody>
+            </table>
+
+            <h2>Preguntas Frecuentes</h2>
+
+            <h3>¿Qué pasa si falla una migración a mitad de ejecución?</h3>
+            <p>
+                El sistema intenta revertir automáticamente.
+                Si no puede, la migración queda en estado "error" y debe investigarse manualmente.
+                Contacta al administrador técnico.
+            </p>
+
+            <h3>¿Puedo ejecutar múltiples migraciones a la vez?</h3>
+            <p>
+                Se recomienda ejecutar una a la vez en orden secuencial.
+                Esto asegura que no hay conflictos y es más fácil de auditar.
+            </p>
+
+            <h3>¿Con qué frecuencia hay nuevas migraciones?</h3>
+            <p>
+                Depende del desarrollo. Cuando se agrega nueva funcionalidad,
+                es posible que haya nuevas migraciones. El sistema te notificará.
+            </p>
+
+            <h3>¿Puedo crear migraciones personalizadas?</h3>
+            <p>
+                Solo el administrador técnico del sistema puede crear nuevas migraciones.
+                Contacta al desarrollador del sistema.
+            </p>
+
+            <h2>Mejores Prácticas</h2>
+
+            <ul>
+                <li>Ejecuta migraciones en horarios con baja actividad de usuarios</li>
+                <li>Siempre haz backup antes de migrar</li>
+                <li>Lee la descripción de cada migración</li>
+                <li>Ejecuta una a la vez, en orden</li>
+                <li>Documenta cualquier error que ocurra</li>
+                <li>Comunica a los usuarios sobre cambios que afecten funcionalidad</li>
+            </ul>
+        </div>
+    </div>
+
+    <script src="../js/nav.js"></script>
+</body>
+</html>

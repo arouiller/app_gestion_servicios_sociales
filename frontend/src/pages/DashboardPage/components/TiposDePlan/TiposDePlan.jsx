@@ -10,6 +10,7 @@ const TiposDePlan = () => {
       campos={[
         { name: 'tipo_plan_numero', label: 'Número', tipo: 'numero_pk' },
         { name: 'tipo_plan_nombre', label: 'Nombre' },
+        { name: 'abreviacion', label: 'Abreviación *', maxLength: 10 },
       ]}
     />
   );

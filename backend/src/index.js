@@ -35,6 +35,7 @@ app.use('/api/auth', require('./routes/auth'));
 app.use('/api/usuarios', require('./routes/usuarios'));
 app.use('/api/migrations', require('./routes/migrations'));
 app.use('/api/planes', require('./routes/planes'));
+app.use('/api/admin', require('./routes/admin'));
 
 // Lookup (compartida por todas las versiones)
 app.use('/api/lookup', require('./routes/lookup'));

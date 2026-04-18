@@ -30,6 +30,11 @@ const rules = {
 
   match: (fieldName, label) => (val, body) =>
     val !== body[fieldName] ? `${label} no coincide` : null,
+
+  numeric: (label) => (val) =>
+    val && !/^\d+$/.test(String(val).trim())
+      ? `${label} debe contener solo números`
+      : null,
 };
 
 /**

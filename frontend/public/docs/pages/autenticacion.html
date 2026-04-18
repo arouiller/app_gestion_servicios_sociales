@@ -1,0 +1,265 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Autenticación - GestSocial</title>
+    <link rel="stylesheet" href="../css/styles.css">
+</head>
+<body>
+    <div class="docs-header">
+        <h1>GestSocial - Documentación</h1>
+    </div>
+
+    <nav class="docs-nav-sidebar" id="docsNav">
+        <h3>Inicio</h3>
+        <a href="../index.html">Visión General</a>
+
+        <h3>Funcionalidad Principal</h3>
+        <a href="autenticacion.html" class="active">Autenticación</a>
+        <a href="gestion-planes.html">Gestión de Planes</a>
+        <a href="busqueda-afiliados.html">Búsqueda de Afiliados</a>
+        <a href="gestion-afiliados.html">Gestión de Afiliados</a>
+        <a href="gestion-recibos.html">Gestión de Recibos</a>
+
+        <h3>Mantenimiento</h3>
+        <a href="lookup-crud.html">Cobradores, OS, Servicios, Tipos</a>
+
+        <h3>Administración</h3>
+        <a href="gestion-usuarios.html">Gestión de Usuarios</a>
+        <a href="migraciones-bd.html">Migraciones BD</a>
+
+        <h3>Referencia</h3>
+        <a href="faq.html">Preguntas Frecuentes</a>
+    </nav>
+
+    <div class="docs-content">
+        <div class="docs-content-inner">
+            <h1>Autenticación</h1>
+
+            <p>
+                La autenticación es el proceso de verificar tu identidad para acceder al sistema GestSocial.
+                Esta sección explica cómo usar las diferentes opciones de login disponibles.
+            </p>
+
+            <h2>Acceso</h2>
+
+            <p>
+                Para acceder a GestSocial, abre tu navegador e ingresa a la URL de la aplicación.
+                Si no estás autenticado, serás redirigido automáticamente a la <strong>pantalla de Login</strong>.
+            </p>
+
+            <h2>Pantalla de Login</h2>
+
+            <p>La pantalla de login contiene los siguientes elementos:</p>
+
+            <ul>
+                <li><strong>Email:</strong> campo para ingresar tu correo electrónico</li>
+                <li><strong>Contraseña:</strong> campo para ingresar tu contraseña</li>
+                <li><strong>Tengo contraseña blanqueada:</strong> checkbox para usuarios nuevos</li>
+                <li><strong>Iniciar Sesión:</strong> botón para completar el login</li>
+            </ul>
+
+            <h2>Opciones de Autenticación</h2>
+
+            <h3>1. Login Normal</h3>
+
+            <p><strong>Pasos:</strong></p>
+            <ol>
+                <li>Ingresa tu <strong>email</strong> en el campo "Email"</li>
+                <li>Ingresa tu <strong>contraseña</strong> en el campo "Contraseña"</li>
+                <li>Haz click en el botón <strong>"Iniciar Sesión"</strong></li>
+                <li>Si los datos son correctos, entrarás al Dashboard</li>
+            </ol>
+
+            <p><strong>Requisitos:</strong></p>
+            <ul>
+                <li>Email válido registrado en el sistema</li>
+                <li>Contraseña correcta (sensible a mayúsculas/minúsculas)</li>
+            </ul>
+
+            <h3>2. Login con Contraseña Blanqueada</h3>
+
+            <p>
+                Si es tu <strong>primer acceso</strong> o tu <strong>contraseña ha sido reseteada</strong>,
+                es posible que tengas una "contraseña blanqueada". En este caso:
+            </p>
+
+            <p><strong>Pasos:</strong></p>
+            <ol>
+                <li>Ingresa tu <strong>email</strong></li>
+                <li>Marca el checkbox <strong>"Tengo contraseña blanqueada"</strong></li>
+                <li>El campo de "Contraseña" se deshabilitará automáticamente</li>
+                <li>Haz click en <strong>"Iniciar Sesión"</strong></li>
+                <li>Serás redirigido a la pantalla <strong>"Establecer Contraseña"</strong></li>
+            </ol>
+
+            <h3>3. Establecer Contraseña</h3>
+
+            <p>
+                Cuando ingresa por primera vez con contraseña blanqueada,
+                debes establecer una nueva contraseña.
+            </p>
+
+            <p><strong>Pasos:</strong></p>
+            <ol>
+                <li>Tu <strong>email</strong> ya estará pre-cargado (no editable)</li>
+                <li>Ingresa una <strong>Nueva Contraseña</strong></li>
+                <li>Confirma la contraseña en el campo <strong>"Confirmar Contraseña"</strong></li>
+                <li>Haz click en <strong>"Establecer Contraseña"</strong></li>
+                <li>La contraseña se guardará y serás redirigido a Login</li>
+            </ol>
+
+            <p><strong>Requisitos para la contraseña:</strong></p>
+            <ul>
+                <li>Mínimo 8 caracteres</li>
+                <li>Al menos 1 mayúscula</li>
+                <li>Al menos 1 minúscula</li>
+                <li>Al menos 1 número</li>
+            </ul>
+
+            <div class="alert warning">
+                <strong>⚠️ Importante:</strong> Las dos contraseñas deben coincidir exactamente.
+            </div>
+
+            <h4>Ejemplo de Contraseña Válida:</h4>
+            <ul>
+                <li>✅ <code>MiPassword123</code></li>
+                <li>✅ <code>GestSocial2024</code></li>
+                <li>❌ <code>password123</code> (sin mayúscula)</li>
+                <li>❌ <code>PASSWORD123</code> (sin minúscula)</li>
+                <li>❌ <code>Password</code> (sin número)</li>
+                <li>❌ <code>Pass1</code> (menos de 8 caracteres)</li>
+            </ul>
+
+            <h2>Campos de Autenticación</h2>
+
+            <table>
+                <thead>
+                    <tr>
+                        <th>Campo</th>
+                        <th>Requerido</th>
+                        <th>Descripción</th>
+                        <th>Validación</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr>
+                        <td><strong>Email</strong></td>
+                        <td><span class="badge required">Sí</span></td>
+                        <td>Tu dirección de correo electrónico</td>
+                        <td>Debe ser un email válido registrado en el sistema</td>
+                    </tr>
+                    <tr>
+                        <td><strong>Contraseña</strong></td>
+                        <td><span class="badge required">Sí*</span></td>
+                        <td>Tu contraseña personal</td>
+                        <td>Sensible a mayúsculas/minúsculas. Obligatoria a menos que tengas contraseña blanqueada</td>
+                    </tr>
+                    <tr>
+                        <td><strong>Tengo contraseña blanqueada</strong></td>
+                        <td><span class="badge optional">No</span></td>
+                        <td>Checkbox para primer acceso o password reseteada</td>
+                        <td>Opcional. Si lo marcas, el campo de contraseña se desactiva</td>
+                    </tr>
+                </tbody>
+            </table>
+
+            <h2>Después del Login Exitoso</h2>
+
+            <p>Una vez autenticado exitosamente:</p>
+            <ol>
+                <li>Entrarás al <strong>Dashboard</strong></li>
+                <li>Verás el menú de navegación a la izquierda</li>
+                <li>Tu <strong>avatar</strong> aparecerá en la esquina superior derecha</li>
+                <li>Podrás acceder a todas las funcionalidades según tu rol</li>
+            </ol>
+
+            <h2>Errores Frecuentes</h2>
+
+            <table>
+                <thead>
+                    <tr>
+                        <th>Error</th>
+                        <th>Causa</th>
+                        <th>Solución</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr>
+                        <td>"Email o contraseña incorrectos"</td>
+                        <td>Email o contraseña inválidos</td>
+                        <td>Verifica que hayas ingresado correctamente tu email y contraseña. Las contraseñas son sensibles a mayúsculas.</td>
+                    </tr>
+                    <tr>
+                        <td>"Email no encontrado"</td>
+                        <td>El email no está registrado en el sistema</td>
+                        <td>Revisa que hayas ingresado el email correcto. Contacta a tu administrador si crees que debería estar registrado.</td>
+                    </tr>
+                    <tr>
+                        <td>"Contraseña blanqueada requerida" (si desmarques checkbox)</td>
+                        <td>Intentas login sin contraseña pero tu cuenta tiene password blanqueada</td>
+                        <td>Marca el checkbox "Tengo contraseña blanqueada" para saltar al formulario de establecer contraseña.</td>
+                    </tr>
+                    <tr>
+                        <td>"Las contraseñas no coinciden"</td>
+                        <td>La confirmación de contraseña no es igual a la contraseña nueva</td>
+                        <td>Revisa que ambos campos tengan exactamente el mismo valor. Ten cuidado con espacios o mayúsculas.</td>
+                    </tr>
+                    <tr>
+                        <td>"Contraseña débil"</td>
+                        <td>La contraseña no cumple con los requisitos mínimos</td>
+                        <td>Asegúrate de que tu contraseña tenga al menos 8 caracteres, una mayúscula, una minúscula y un número.</td>
+                    </tr>
+                </tbody>
+            </table>
+
+            <h2>Logout (Salir)</h2>
+
+            <p>
+                Para cerrar sesión y salir del sistema:
+            </p>
+
+            <ol>
+                <li>Haz click en el botón <strong>"Salir"</strong> en la esquina superior derecha</li>
+                <li>Serás redirigido a la pantalla de Login</li>
+                <li>Tu sesión se cerrará y tendrás que volver a autenticarte</li>
+            </ol>
+
+            <div class="alert info">
+                <strong>💡 Consejo:</strong> Si olvidas logout, tu sesión se mantendrá activa.
+                Por seguridad, es recomendable salir cuando termines de usar la aplicación,
+                especialmente en computadoras compartidas.
+            </div>
+
+            <h2>Preguntas Frecuentes sobre Autenticación</h2>
+
+            <h3>¿Qué hago si olvidé mi contraseña?</h3>
+            <p>
+                Contacta a tu administrador del sistema. Él puede resetear tu contraseña,
+                tras lo cual deberás establecer una nueva usando el flujo de "contraseña blanqueada".
+            </p>
+
+            <h3>¿Mi contraseña está segura?</h3>
+            <p>
+                Las contraseñas se transmiten de forma segura (HTTPS) y se almacenan encriptadas en la base de datos.
+                Nunca compartas tu contraseña con otros usuarios.
+            </p>
+
+            <h3>¿Qué pasa si me equivoco varias veces al ingresar mi contraseña?</h3>
+            <p>
+                Por seguridad, después de varios intentos fallidos es posible que tu cuenta se bloquee temporalmente.
+                Contacta a tu administrador si esto ocurre.
+            </p>
+
+            <h3>¿Puedo cambiar mi contraseña después de hacer login?</h3>
+            <p>
+                Actualmente, solo tu administrador puede resetear tu contraseña.
+                Si necesitas cambiarla, solicítalo a administración.
+            </p>
+        </div>
+    </div>
+
+    <script src="../js/nav.js"></script>
+</body>
+</html>

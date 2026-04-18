@@ -1,0 +1,273 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Gestión de Usuarios - GestSocial</title>
+    <link rel="stylesheet" href="../css/styles.css">
+</head>
+<body>
+    <div class="docs-header">
+        <h1>GestSocial - Documentación</h1>
+    </div>
+
+    <nav class="docs-nav-sidebar" id="docsNav">
+        <h3>Inicio</h3>
+        <a href="../index.html">Visión General</a>
+
+        <h3>Funcionalidad Principal</h3>
+        <a href="autenticacion.html">Autenticación</a>
+        <a href="gestion-planes.html">Gestión de Planes</a>
+        <a href="busqueda-afiliados.html">Búsqueda de Afiliados</a>
+        <a href="gestion-afiliados.html">Gestión de Afiliados</a>
+        <a href="gestion-recibos.html">Gestión de Recibos</a>
+
+        <h3>Mantenimiento</h3>
+        <a href="lookup-crud.html">Cobradores, OS, Servicios, Tipos</a>
+
+        <h3>Administración</h3>
+        <a href="gestion-usuarios.html" class="active">Gestión de Usuarios</a>
+        <a href="migraciones-bd.html">Migraciones BD</a>
+
+        <h3>Referencia</h3>
+        <a href="faq.html">Preguntas Frecuentes</a>
+    </nav>
+
+    <div class="docs-content">
+        <div class="docs-content-inner">
+            <h1>Gestión de Usuarios</h1>
+
+            <p>
+                <strong>Gestión de Usuarios</strong> es una funcionalidad <span class="badge admin">ADMIN ONLY</span>
+                que permite crear usuarios, cambiar sus roles y resetear contraseñas.
+            </p>
+
+            <h2>Acceso</h2>
+
+            <ol>
+                <li>Desde el Dashboard, menú izquierdo</li>
+                <li>Sección <strong>"Administración"</strong> (solo visible si eres admin)</li>
+                <li>Selecciona <strong>"Gestión de Usuarios"</strong></li>
+            </ol>
+
+            <div class="alert warning">
+                <strong>⚠️ Acceso Restringido:</strong> Solo los administradores pueden ver esta sección.
+            </div>
+
+            <h2>Pantalla Principal</h2>
+
+            <ul>
+                <li><strong>Tabla de usuarios:</strong> listado de todos los usuarios del sistema</li>
+                <li><strong>Botón "+ Nuevo Usuario":</strong> crear usuario nuevo</li>
+                <li><strong>Acciones:</strong> cambiar rol, resetear contraseña</li>
+            </ul>
+
+            <h3>Columnas de la Tabla</h3>
+
+            <table>
+                <thead>
+                    <tr>
+                        <th>Columna</th>
+                        <th>Descripción</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr>
+                        <td><strong>Email</strong></td>
+                        <td>Correo del usuario (identificador único)</td>
+                    </tr>
+                    <tr>
+                        <td><strong>Nombre</strong></td>
+                        <td>Nombre y apellido</td>
+                    </tr>
+                    <tr>
+                        <td><strong>Rol</strong></td>
+                        <td>Admin o Usuario (permiso de acceso)</td>
+                    </tr>
+                    <tr>
+                        <td><strong>Acciones</strong></td>
+                        <td>Cambiar rol, resetear contraseña</td>
+                    </tr>
+                </tbody>
+            </table>
+
+            <h2>Crear un Nuevo Usuario</h2>
+
+            <p><strong>Pasos:</strong></p>
+            <ol>
+                <li>Haz click en <strong>"+ Nuevo Usuario"</strong></li>
+                <li>Se abrirá un modal con un formulario</li>
+                <li>Ingresa el <strong>email</strong> del nuevo usuario</li>
+                <li>Haz click en <strong>"Crear"</strong></li>
+            </ol>
+
+            <div class="alert info">
+                <strong>💡 Nota:</strong> Al crear un usuario, solo se requiere el email.
+                El sistema asigna automáticamente:
+                <ul>
+                    <li>Rol: "Usuario" (no admin)</li>
+                    <li>Contraseña: blanqueada (el usuario debe establecer la suya)</li>
+                    <li>Nombre: "JOHN DOE" (temporal)</li>
+                </ul>
+            </div>
+
+            <h3>Flujo de Onboarding del Nuevo Usuario</h3>
+
+            <ol>
+                <li>Recibe un email con el enlace de acceso</li>
+                <li>Intenta acceder con su email</li>
+                <li>Marca el checkbox <strong>"Tengo contraseña blanqueada"</strong></li>
+                <li>Es redirigido a formulario de establecer contraseña</li>
+                <li>Establece una contraseña nueva (mínimo 8 caracteres, 1 mayús, 1 minús, 1 número)</li>
+                <li>Accede al sistema normalmente</li>
+            </ol>
+
+            <h2>Cambiar el Rol de un Usuario</h2>
+
+            <p><strong>Pasos:</strong></p>
+            <ol>
+                <li>En la tabla, busca el usuario</li>
+                <li>Haz click en el botón <strong>"Cambiar Rol"</strong></li>
+                <li>Se abrirá un modal con opciones</li>
+                <li>Selecciona el nuevo rol: <strong>Admin</strong> o <strong>Usuario</strong></li>
+                <li>Haz click en <strong>"Confirmar"</strong></li>
+            </ol>
+
+            <h3>Diferencias de Roles</h3>
+
+            <table>
+                <thead>
+                    <tr>
+                        <th>Funcionalidad</th>
+                        <th>Admin</th>
+                        <th>Usuario</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr>
+                        <td>Gestión de Planes</td>
+                        <td>✅ Acceso completo</td>
+                        <td>✅ Acceso completo</td>
+                    </tr>
+                    <tr>
+                        <td>Búsqueda de Afiliados</td>
+                        <td>✅</td>
+                        <td>✅</td>
+                    </tr>
+                    <tr>
+                        <td>Generación de Recibos</td>
+                        <td>✅</td>
+                        <td>✅</td>
+                    </tr>
+                    <tr>
+                        <td>Datos Maestros (Cobradores, OS, etc.)</td>
+                        <td>✅</td>
+                        <td>✅</td>
+                    </tr>
+                    <tr>
+                        <td>Gestión de Usuarios</td>
+                        <td>✅ <strong>SOLO ADMIN</strong></td>
+                        <td>❌</td>
+                    </tr>
+                    <tr>
+                        <td>Migraciones BD</td>
+                        <td>✅ <strong>SOLO ADMIN</strong></td>
+                        <td>❌</td>
+                    </tr>
+                </tbody>
+            </table>
+
+            <div class="alert warning">
+                <strong>⚠️ Importante:</strong> Cambiar un usuario a Admin le da acceso a Gestión de Usuarios
+                y Migraciones (operaciones delicadas). Hazlo solo con usuarios de confianza.
+            </div>
+
+            <h2>Resetear Contraseña</h2>
+
+            <p>
+                Si un usuario olvida su contraseña, puedes resetearla para que establezca una nueva.
+            </p>
+
+            <p><strong>Pasos:</strong></p>
+            <ol>
+                <li>En la tabla, busca el usuario</li>
+                <li>Haz click en el botón <strong>"🔑 Resetear Contraseña"</strong></li>
+                <li>Se pedirá confirmación</li>
+                <li>La contraseña será blanqueada</li>
+                <li>El usuario deberá seguir el flujo de login con "Tengo contraseña blanqueada"</li>
+            </ol>
+
+            <h2>Campos de Creación</h2>
+
+            <table>
+                <thead>
+                    <tr>
+                        <th>Campo</th>
+                        <th>Requerido</th>
+                        <th>Descripción</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr>
+                        <td><strong>Email</strong></td>
+                        <td><span class="badge required">Sí</span></td>
+                        <td>Correo electrónico del usuario (debe ser único)</td>
+                    </tr>
+                </tbody>
+            </table>
+
+            <h2>Errores Frecuentes</h2>
+
+            <table>
+                <thead>
+                    <tr>
+                        <th>Error</th>
+                        <th>Solución</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr>
+                        <td>"Email ya existe"</td>
+                        <td>Ya hay un usuario con ese email. Verifica que el email sea único.</td>
+                    </tr>
+                    <tr>
+                        <td>"Email inválido"</td>
+                        <td>El email no tiene formato válido (ej: debe tener @).</td>
+                    </tr>
+                    <tr>
+                        <td>"No puedes cambiar tu propio rol"</td>
+                        <td>No puedes downgradearte a ti mismo de admin. Otro admin debe hacerlo.</td>
+                    </tr>
+                </tbody>
+            </table>
+
+            <h2>Preguntas Frecuentes</h2>
+
+            <h3>¿Qué pasa si hago admin a alguien por error?</h3>
+            <p>
+                Otro admin puede cambiar el rol nuevamente. No hay problema.
+            </p>
+
+            <h3>¿Puedo eliminar un usuario?</h3>
+            <p>
+                Actualmente no hay funcionalidad de "eliminar usuario".
+                Los usuarios permanecen registrados. Si no deben acceder, cambia su rol o contacta al admin superior.
+            </p>
+
+            <h3>¿Cuánta contraseña es segura?</h3>
+            <p>
+                Se requiere: mínimo 8 caracteres, 1 mayúscula, 1 minúscula, 1 número.
+                Ejemplos:
+                <ul>
+                    <li>✅ GestSocial2024</li>
+                    <li>✅ MiPassword123</li>
+                    <li>❌ password (sin mayúscula)</li>
+                    <li>❌ PASSWORD (sin minúscula)</li>
+                </ul>
+            </p>
+        </div>
+    </div>
+
+    <script src="../js/nav.js"></script>
+</body>
+</html>

@@ -76,6 +76,8 @@ export const usePlanV1Form = (initialData = null) => {
 
     if (!form.numero_afiliado || form.numero_afiliado.trim() === '') {
       newErrors.numero_afiliado = 'Número de afiliado es requerido';
+    } else if (!/^\d+$/.test(String(form.numero_afiliado).trim())) {
+      newErrors.numero_afiliado = 'Solo se permiten números';
     }
     if (!form.tipo_plan_numero) {
       newErrors.tipo_plan_numero = 'Tipo de Plan es requerido';
@@ -106,7 +108,7 @@ export const usePlanV1Form = (initialData = null) => {
     }
 
     setErrors(newErrors);
-    return Object.keys(newErrors).length === 0;
+    return newErrors;
   }, [form]);
 
   const reset = useCallback(() => {
@@ -124,5 +126,6 @@ export const usePlanV1Form = (initialData = null) => {
     validate,
     reset,
     setForm, // Allow direct form updates if needed
+    setErrors,
   };
 };

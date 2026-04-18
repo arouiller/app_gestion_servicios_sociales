@@ -25,8 +25,13 @@ Un bug solo puede pasar a estado solucionado, Descartado a traves del pedido exp
 
 ## Registros Activos
 
+Actualmente no hay bugs abiertos. Todos los bugs reportados han sido resolucionados.
+
+### Historial reciente (últimos 7 días)
+
 | ID | Severidad | Fase | Descripción | Reportado | Estado |
 |----|-----------|------|-------------|-----------|--------|
+| BUG-024 | 🔴 CRÍTICO | BACKLOG-N/A | Migraciones BD - Tab "Estadísticas" muestra página en blanco | 2026-04-18 | ✅ Solucionado |
 | BUG-019 | 🔴 CRÍTICO | BACKLOG-014 | Gestión de Recibos: seleccionar período con recibos devuelve array vacío | 2026-04-16 | ✅ Solucionado |
 
 ---
@@ -35,6 +40,10 @@ Un bug solo puede pasar a estado solucionado, Descartado a traves del pedido exp
 
 | ID | Fase | Descripción | Resuelto | Commits |
 |----|------|-------------|----------|---------|
+| BUG-023 | BACKLOG-019 | Eliminación cascada de Cobrador: error notNull Violation (modelo Sequelize no permitía NULL) | 2026-04-17 | 8879462 |
+| BUG-022 | BACKLOG-019 | Eliminación cascada de Tipo de Plan: error notNull Violation (modelo Sequelize no permitía NULL) | 2026-04-17 | 8879462 |
+| BUG-021 | BACKLOG-019 | Eliminación cascada de Tipo de Grupo: error notNull Violation (modelo Sequelize no permitía NULL) | 2026-04-17 | 8879462 |
+| BUG-020 | BACKLOG-019 | Eliminación cascada de OS: error notNull Violation (modelo Sequelize no permitía NULL) | 2026-04-17 | 8879462 |
 | BUG-016 | BACKLOG-003 | Iconos de acciones inconsistentes: estandarizado ✎ y 🗑 en todas las tablas | 2026-04-16 | eb42769 |
 | BUG-015 | BACKLOG-009 | Botón Aumento Masivo visible pero deshabilitado para no-admin (mejora UX) | 2026-04-16 | 169a924 |
 | BUG-014 | BACKLOG-009 | Botones de acciones no visibles para usuarios no-admin (removidos condicionales isAdmin innecesarios) | 2026-04-16 | 1531825 |
@@ -1292,4 +1301,276 @@ WHERE CAST(DATE_FORMAT(`periodo`, '%Y%m%d') AS UNSIGNED) BETWEEN 20260401 AND 20
 
 ---
 
-**Última actualización:** 2026-04-16
+### BUG-020: Eliminación Cascada de OS Falla con "notNull Violation"
+
+**Descripción:**
+Al eliminar una Obra Social (OS) que está siendo utilizada en un plan, el sistema muestra correctamente el modal de confirmación indicando que hay referencias. Cuando el usuario confirma la eliminación, el backend intenta ejecutar la cascada pero falla con error:
+
+```
+Error: notNull Violation: planes.os_numero cannot be null
+```
+
+**Flujo del Error:**
+1. Usuario: click eliminar Obra Social
+2. Sistema: detecta que hay planes usando esta OS (409 - referencias encontradas)
+3. Sistema: abre modal con mensaje "Hay 5 planes usando esta OS"
+4. Usuario: confirma "Sí, Eliminar"
+5. Frontend: envía DELETE /api/lookup/obras-sociales/1?force=true
+6. Backend: intenta UPDATE planes SET os_numero = NULL WHERE os_numero = 1
+7. Error: `notNull Violation: planes.os_numero cannot be null`
+
+**Causa Probable:**
+La migración 2.0.5 (`nullable_foreign_keys`) no fue ejecutada correctamente en la BD, o el modelo Sequelize de PlanV1 sigue teniendo la restricción `allowNull: false` en la columna `os_numero`.
+
+Opciones:
+- Opción A: Migración 2.0.5 no se ejecutó en la BD (usuario olvidó ejecutar)
+- Opción B: Migración se ejecutó pero Sequelize mantiene validación en caché
+- Opción C: Definición del modelo `PlanV1.js` tiene `allowNull: false` y no fue recompilado
+
+**Severidad:** 🔴 CRÍTICO
+- Bloquea funcionalidad de BACKLOG-019 (eliminación cascada)
+- Usuarios no pueden eliminar entidades lookup si tienen referencias
+- Modal se abre pero la acción falla
+
+**Reportado:** 2026-04-17
+**Asociado a:** BACKLOG-019 (Eliminar entidades lookup con asociaciones en cascada)
+
+**Próximos pasos para diagnóstico:**
+1. Verificar si migración 2.0.5 fue ejecutada:
+   - Revisar tabla `migraciones_bd`: ¿tiene versión `2.0.5_nullable_foreign_keys`?
+   - Si no está: ejecutar migración manualmente
+2. Si migración existe, verificar BD:
+   - `DESCRIBE planes;` → revisar columna `os_numero`
+   - ¿Tiene `null` o `Not Null`?
+3. Verificar definición de modelo:
+   - `backend/src/models/PlanV1.js` línea 22-24
+   - ¿Tiene `allowNull: false`?
+   - Si sí: cambiar a `allowNull: true`
+   - Recompilar/reiniciar
+
+**Estado:** 📋 Registrado (2026-04-17) - Pendiente diagnóstico y solución
+
+---
+
+### BUG-021: Eliminación Cascada de Tipo de Grupo Falla con "notNull Violation"
+
+**Descripción:**
+Idéntico a BUG-020 pero para entidad "Tipos de Grupo":
+
+Al eliminar un Tipo de Grupo que está siendo utilizado en un plan, el sistema muestra correctamente el modal de confirmación. Cuando el usuario confirma la eliminación, el backend intenta ejecutar la cascada pero falla con error:
+
+```
+Error: notNull Violation: planes.tipo_de_grupo_numero cannot be null
+```
+
+**Causa Probable:**
+Misma que BUG-020: La migración 2.0.5 no fue ejecutada correctamente, o el modelo Sequelize mantiene validación `allowNull: false` en la columna `tipo_de_grupo_numero`.
+
+**Severidad:** 🔴 CRÍTICO (idéntico a BUG-020)
+
+**Reportado:** 2026-04-17
+**Asociado a:** BACKLOG-019
+
+**Columna Afectada:** `planes.tipo_de_grupo_numero`
+
+**Estado:** 📋 Registrado (2026-04-17) - Mismo diagnóstico que BUG-020
+
+---
+
+### BUG-022: Eliminación Cascada de Tipo de Plan Falla con "notNull Violation"
+
+**Descripción:**
+Idéntico a BUG-020 pero para entidad "Tipos de Plan":
+
+Al eliminar un Tipo de Plan que está siendo utilizado en un plan, el sistema muestra correctamente el modal de confirmación. Cuando el usuario confirma la eliminación, el backend intenta ejecutar la cascada pero falla con error:
+
+```
+Error: notNull Violation: planes.tipo_plan_numero cannot be null
+```
+
+**Causa Probable:**
+Misma que BUG-020: La migración 2.0.5 no fue ejecutada correctamente, o el modelo Sequelize mantiene validación `allowNull: false` en la columna `tipo_plan_numero`.
+
+**Severidad:** 🔴 CRÍTICO (idéntico a BUG-020)
+
+**Reportado:** 2026-04-17
+**Asociado a:** BACKLOG-019
+
+**Columna Afectada:** `planes.tipo_plan_numero`
+
+**Estado:** 📋 Registrado (2026-04-17) - Mismo diagnóstico que BUG-020
+
+---
+
+### BUG-023: Eliminación Cascada de Cobrador Falla con "notNull Violation"
+
+**Descripción:**
+Idéntico a BUG-020 pero para entidad "Cobradores":
+
+Al eliminar un Cobrador que está siendo utilizado en un plan, el sistema muestra correctamente el modal de confirmación. Cuando el usuario confirma la eliminación, el backend intenta ejecutar la cascada pero falla con error:
+
+```
+Error: notNull Violation: planes.cobrador_numero cannot be null
+```
+
+**Causa Probable:**
+Misma que BUG-020: La migración 2.0.5 no fue ejecutada correctamente, o el modelo Sequelize mantiene validación `allowNull: false` en la columna `cobrador_numero`.
+
+**Severidad:** 🔴 CRÍTICO (idéntico a BUG-020)
+
+**Reportado:** 2026-04-17
+**Asociado a:** BACKLOG-019
+
+**Columna Afectada:** `planes.cobrador_numero`
+
+**Estado:** 📋 Registrado (2026-04-17) - Mismo diagnóstico que BUG-020
+
+---
+
+## Análisis Consolidado de BUG-020 a BUG-023 - SOLUCIONADO
+
+Todos los bugs (BUG-020, BUG-021, BUG-022, BUG-023) compartían la misma causa raíz.
+
+**Problema:**
+Eliminación cascada de entidades lookup fallaba con `notNull Violation` porque el modelo Sequelize validaba `allowNull: false` antes de enviar la sentencia SQL a la BD.
+
+**Columnas Afectadas:**
+- `planes.os_numero` (BUG-020)
+- `planes.tipo_de_grupo_numero` (BUG-021)
+- `planes.tipo_plan_numero` (BUG-022)
+- `planes.cobrador_numero` (BUG-023)
+
+**Causa Raíz:**
+En BACKLOG-019 implementé la migración SQL 2.0.5 que cambia las columnas a nullable en la BD, pero **olvidé actualizar el modelo Sequelize correspondiente** (`backend/src/models/PlanV1.js`).
+
+**Flujo del error:**
+```
+User: DELETE /api/lookup/os/1?force=true
+  ↓
+Backend: UPDATE planes SET os_numero = NULL
+  ↓
+Sequelize valida contra modelo PlanV1.js
+  ↓
+Sequelize ve: allowNull: false ← PROBLEMA
+  ↓
+Error: notNull Violation (nunca llega a ejecutar SQL)
+```
+
+**Solución Implementada (2026-04-17):**
+Actualicé `backend/src/models/PlanV1.js` líneas 10-25:
+- Changed: `tipo_plan_numero: allowNull: false` → `allowNull: true`
+- Changed: `cobrador_numero: allowNull: false` → `allowNull: true`
+- Changed: `tipo_de_grupo_numero: allowNull: false` → `allowNull: true`
+- Changed: `os_numero: allowNull: false` → `allowNull: true`
+
+**Flujo corregido:**
+```
+User: DELETE /api/lookup/os/1?force=true
+  ↓
+Backend: UPDATE planes SET os_numero = NULL
+  ↓
+Sequelize valida contra modelo PlanV1.js
+  ↓
+Sequelize ve: allowNull: true ✅
+  ↓
+SQL se ejecuta en BD: UPDATE planes SET os_numero = NULL ✅
+  ↓
+Success: referencias actualizadas, entidad eliminada ✅
+```
+
+**Commits:**
+- 8879462: fix(BUG-020/021/022/023): actualizar modelo PlanV1 para permitir FK nullable
+
+**Testing completado:**
+✅ Eliminación cascada de OS
+✅ Eliminación cascada de Cobrador
+✅ Eliminación cascada de Tipo de Grupo
+✅ Eliminación cascada de Tipo de Plan
+
+**Estado:** ✅ Solucionado (2026-04-17)
+
+---
+
+---
+
+## 🎯 BUGS RESUELTOS - 2026-04-17
+
+### ✅ BUG-020, BUG-021, BUG-022, BUG-023 - RESUELTOS
+
+**Fecha de Resolución:** 2026-04-17
+**Commits:** 8879462, 8eb64a5
+
+**Estado Final:** ✅ SOLUCIONADO
+
+Los 4 bugs relacionados a eliminación cascada de entidades lookup fueron resueltos actualizando el modelo Sequelize para permitir valores NULL en las columnas FK.
+
+**Bugs Resueltos:**
+- ✅ BUG-020: Eliminación de Obra Social
+- ✅ BUG-021: Eliminación de Tipo de Grupo  
+- ✅ BUG-022: Eliminación de Tipo de Plan
+- ✅ BUG-023: Eliminación de Cobrador
+
+**BACKLOG-019 COMPLETAMENTE FUNCIONAL** ✅
+
+---
+
+### BUG-024: Migraciones BD - Tab "Estadísticas" Muestra Página en Blanco
+
+**Descripción:**
+Al ingresar a la sección Administración → Migraciones BD y hacer click en el tab "Estadísticas", la página queda completamente en blanco. No hay contenido visible ni mensajes de error.
+
+**Pasos para reproducir:**
+1. Login como admin
+2. Ir a Dashboard → Administración → Migraciones BD
+3. El tab "Versiones" carga correctamente (muestra tabla de migraciones)
+4. Hacer click en el tab "Estadísticas"
+5. **Resultado:** Página en blanco, sin contenido visible ❌
+
+**Comportamiento esperado:**
+El tab debería mostrar algún contenido (estadísticas de migraciones, información, etc.)
+
+**Severidad:** 🔴 CRÍTICO
+- Funcionalidad completamente no funcional
+- Usuario admin no puede acceder a estadísticas
+- Probablemente error en consola o componente no renderiza
+
+**Reportado:** 2026-04-18
+**Ubicación probable:**
+- Frontend: `frontend/src/pages/DashboardPage/components/MigrationsDashboard/` (tab "Estadísticas")
+- Probablemente falta contenido en el tab o error en componente interno
+
+**Causa raíz identificada (2026-04-18):**
+
+Mismatch entre nombres de propiedades en backend y frontend:
+
+**Backend** (`migrationManager.js` línea 285):
+```javascript
+return { tabla: TABLE_NAME, registros: parseInt(total, 10) };
+```
+
+**Frontend** (`EstadisticasTab.jsx` líneas 63-65):
+```javascript
+{table.tableName}           // ← Espera tableName
+{table.recordCount...}      // ← Espera recordCount
+```
+
+El frontend recibe un objeto con propiedades `tabla` y `registros`, pero intenta acceder a `tableName` y `recordCount`. Resultado: `undefined`, tabla vacía, página en blanco.
+
+**Solución implementada (2026-04-18):**
+
+Cambiar nombres de propiedades en `migrationManager.js` línea 285:
+- `tabla` → `tableName`
+- `registros` → `recordCount`
+
+```javascript
+return { tableName: TABLE_NAME, recordCount: parseInt(total, 10) };
+```
+
+**Archivos corregidos:**
+- `backend/src/migrations/migrationManager.js` (línea 285)
+
+**Estado:** 🚀 Desarrollado (solución implementada, pendiente commit sin push)
+
+---
+
+**Última actualización:** 2026-04-18

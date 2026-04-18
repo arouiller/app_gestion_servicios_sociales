@@ -1,0 +1,298 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Preguntas Frecuentes - GestSocial</title>
+    <link rel="stylesheet" href="../css/styles.css">
+</head>
+<body>
+    <div class="docs-header">
+        <h1>GestSocial - Documentación</h1>
+    </div>
+
+    <nav class="docs-nav-sidebar" id="docsNav">
+        <h3>Inicio</h3>
+        <a href="../index.html">Visión General</a>
+
+        <h3>Funcionalidad Principal</h3>
+        <a href="autenticacion.html">Autenticación</a>
+        <a href="gestion-planes.html">Gestión de Planes</a>
+        <a href="busqueda-afiliados.html">Búsqueda de Afiliados</a>
+        <a href="gestion-afiliados.html">Gestión de Afiliados</a>
+        <a href="gestion-recibos.html">Gestión de Recibos</a>
+
+        <h3>Mantenimiento</h3>
+        <a href="lookup-crud.html">Cobradores, OS, Servicios, Tipos</a>
+
+        <h3>Administración</h3>
+        <a href="gestion-usuarios.html">Gestión de Usuarios</a>
+        <a href="migraciones-bd.html">Migraciones BD</a>
+
+        <h3>Referencia</h3>
+        <a href="faq.html" class="active">Preguntas Frecuentes</a>
+    </nav>
+
+    <div class="docs-content">
+        <div class="docs-content-inner">
+            <h1>Preguntas Frecuentes (FAQ)</h1>
+
+            <p>
+                Aquí encontrarás respuestas a las preguntas más comunes sobre el uso de GestSocial.
+            </p>
+
+            <h2>Autenticación y Acceso</h2>
+
+            <h3>¿Qué hago si no recuerdo mi contraseña?</h3>
+            <p>
+                Contacta a tu administrador. Él puede resetear tu contraseña,
+                tras lo cual recibirás instrucciones para establecer una nueva.
+            </p>
+
+            <h3>¿Por qué no me deja ingresar si tengo la contraseña correcta?</h3>
+            <p>
+                Posibles causas:
+                <ul>
+                    <li><strong>Mayúsculas/minúsculas:</strong> Las contraseñas son sensibles. Verifica que Bloq Mayus esté apagada.</li>
+                    <li><strong>Espacios en blanco:</strong> A veces los espacios se copian sin darse cuenta. Borra y reescribe.</li>
+                    <li><strong>Email incorrecto:</strong> Verifica que el email sea exactamente el tuyo.</li>
+                    <li><strong>Cuenta bloqueada:</strong> Después de varios intentos fallidos, la cuenta se bloquea temporalmente.</li>
+                </ul>
+            </p>
+
+            <h3>¿Puedo tener la sesión abierta en múltiples dispositivos?</h3>
+            <p>
+                Sí. Puedes estar autenticado en múltiples dispositivos simultáneamente.
+                Solo necesitas tu email y contraseña en cada uno.
+            </p>
+
+            <h2>Planes y Afiliados</h2>
+
+            <h3>¿Cuál es la diferencia entre crear un plan en Gestión de Planes vs desde Búsqueda?</h3>
+            <p>
+                Son los mismos pasos. La diferencia es el flujo:
+                <ul>
+                    <li><strong>Gestión de Planes:</strong> seleccionas el afiliado dentro del formulario de creación</li>
+                    <li><strong>Búsqueda de Afiliados:</strong> primero buscas el afiliado, luego creas plan para él</li>
+                </ul>
+                El resultado es idéntico.
+            </p>
+
+            <h3>¿Puedo cambiar el número de plan después de crearlo?</h3>
+            <p>
+                No. El número de plan es inmutable. Si necesitas cambiar el número, deberás:
+                <ul>
+                    <li>Crear un nuevo plan con el número correcto</li>
+                    <li>Copiar datos (integrantes, servicios, etc.)</li>
+                    <li>Suspender el plan anterior</li>
+                </ul>
+            </p>
+
+            <h3>¿Qué pasa si elimino un afiliado que tiene planes?</h3>
+            <p>
+                El sistema te lo impedirá. Los planes usan referencias a afiliados.
+                Debes suspender o eliminar los planes primero.
+            </p>
+
+            <h3>¿Puedo reactivar un plan suspendido?</h3>
+            <p>
+                Sí. Haz click nuevamente en el botón de estado para cambiar entre ACTIVO y SUSPENDIDO.
+            </p>
+
+            <h3>¿Cómo agrego múltiples personas a un plan?</h3>
+            <p>
+                El plan tiene un "Afiliado Titular" (obligatorio) y luego puedes agregar integrantes/beneficiarios
+                en el tab "Integrantes" del modal de edición. Haz click en "+ Agregar Integrante".
+            </p>
+
+            <h2>Cuotas y Cambios</h2>
+
+            <h3>¿Cuál es la diferencia entre cambio FIJO y PORCENTUAL?</h3>
+            <p>
+                <ul>
+                    <li><strong>Fijo:</strong> suma/resta un monto exacto. Ej: +$50 → todos aumentan $50</li>
+                    <li><strong>Porcentual:</strong> aplica un porcentaje. Ej: +10% → un plan de $500 sube a $550</li>
+                </ul>
+            </p>
+
+            <h3>¿Puedo deshacer un aumento masivo?</h3>
+            <p>
+                No hay "undo" automático. Para revertir, puedes:
+                <ul>
+                    <li>Hacer otro aumento masivo con el cambio opuesto (ej: si subiste +$50, baja -$50)</li>
+                    <li>Editar cada plan individualmente</li>
+                </ul>
+                Por eso es importante revisar el preview antes de confirmar.
+            </p>
+
+            <h3>¿Los cambios de cuota afectan recibos ya generados?</h3>
+            <p>
+                No. Los recibos son históricos. Un cambio de cuota afecta a los futuros recibos que se generen.
+            </p>
+
+            <h2>Recibos</h2>
+
+            <h3>¿Con qué frecuencia debo generar recibos?</h3>
+            <p>
+                Generalmente una vez al mes. Pero puedes generar recibos en cualquier momento
+                (ej: mes anterior que faltaba).
+            </p>
+
+            <h3>¿Qué pasa si intento generar recibos para un período que ya tiene?</h3>
+            <p>
+                El sistema lo detecta y pide confirmación para regenerar.
+                Los recibos anteriores se borrarán y se crearán nuevos.
+            </p>
+
+            <h3>¿Puedo generar recibos para meses pasados?</h3>
+            <p>
+                Sí. Puedes generar recibos para cualquier mes/año que necesites.
+                Es útil si olvidaste generar para un mes anterior.
+            </p>
+
+            <h3>¿Cómo veo los detalles de un recibo?</h3>
+            <p>
+                En la lista de recibos de un período, haz click en el botón "Ver detalle" para ver información
+                completa del recibo (afiliado, integrantes, monto, fecha, etc.).
+            </p>
+
+            <h2>Datos Maestros</h2>
+
+            <h3>¿Por qué no puedo eliminar una Obra Social?</h3>
+            <p>
+                Probablemente está siendo usada en planes. El sistema lo impide para mantener integridad.
+                Identifica qué planes la usan y:
+                <ul>
+                    <li>Cambia el plan a otra obra social, O</li>
+                    <li>Marca la obra social como "inactiva" sin eliminarla</li>
+                </ul>
+            </p>
+
+            <h3>¿Cuál es el orden en que aparecen los elementos en los selectores?</h3>
+            <p>
+                Generalmente alfabético o por fecha de creación. Consulta con tu administrador si necesitas
+                cambiar el orden.
+            </p>
+
+            <h2>Administración</h2>
+
+            <h3>¿Qué pasa si elimino accidentalmente un usuario?</h3>
+            <p>
+                Actualmente no existe funcionalidad de "eliminar usuario".
+                Los usuarios se crean y permanecen en el sistema. Si no deben acceder,
+                cambia su rol o contacta al administrador.
+            </p>
+
+            <h3>¿Cuándo debo ejecutar una migración?</h3>
+            <p>
+                Tu administrador te indicará. Normalmente cuando se actualiza el sistema.
+                Las migraciones aplican cambios necesarios en la estructura de la BD.
+            </p>
+
+            <h3>¿Es seguro revertir una migración?</h3>
+            <p>
+                Depende de la migración. Algunas no pueden revertirse (especialmente si eliminan datos).
+                El sistema te indicará si es posible. Siempre haz backup antes.
+            </p>
+
+            <h2>Problemas y Errores</h2>
+
+            <h3>¿Qué hago si la app se cuelga o no responde?</h3>
+            <p>
+                <ul>
+                    <li>Intenta refrescar la página (F5 o Ctrl+R)</li>
+                    <li>Limpia el cache del navegador</li>
+                    <li>Cierra y abre nuevamente el navegador</li>
+                    <li>Si el problema persiste, contacta al administrador</li>
+                </ul>
+            </p>
+
+            <h3>¿Recibo un error "No autorizado" pero tengo acceso?</h3>
+            <p>
+                Posibles causas:
+                <ul>
+                    <li><strong>Sesión expirada:</strong> Tu sesión de login terminó. Vuelve a hacer login.</li>
+                    <li><strong>Rol insuficiente:</strong> Algunos módulos requieren rol admin. Contacta al administrador.</li>
+                    <li><strong>Problema técnico:</strong> Intenta refrescar la página.</li>
+                </ul>
+            </p>
+
+            <h3>¿Se pierden los datos si no guardo?</h3>
+            <p>
+                Sí. Los datos solo se guardan cuando haces click en "Guardar" o "Crear".
+                El modal te pedirá confirmación si intentas cerrar con cambios sin guardar.
+            </p>
+
+            <h3>¿Hay alguna forma de ver lo que cambié?</h3>
+            <p>
+                Para planes, hay un "Historial de Cuota" que muestra cambios de cuota.
+                El administrador puede ver logs técnicos de cambios. Contacta si necesitas auditoría.
+            </p>
+
+            <h2>Navegación y UI</h2>
+
+            <h3>¿Cómo cambio entre modo claro y oscuro?</h3>
+            <p>
+                En la esquina superior derecha del Dashboard, verás el botón de tema (luna/sol).
+                Haz click para cambiar entre modo claro y oscuro.
+            </p>
+
+            <h3>¿Cómo cierro el menú lateral en móvil?</h3>
+            <p>
+                Haz click en el botón "☰" (hamburguesa) en la esquina superior izquierda.
+                O haz click en un ítem del menú y se cerrará automáticamente.
+            </p>
+
+            <h3>¿Puedo usar GestSocial desde mi celular?</h3>
+            <p>
+                La interfaz es responsive y funciona en móvil.
+                Ten en cuenta que algunos formularios pueden ser más lentos en pantalla pequeña.
+                Se recomienda usar desktop para tareas complejas.
+            </p>
+
+            <h3>¿Qué es el botón "?" en la esquina superior?</h3>
+            <p>
+                Es el botón de <strong>Ayuda</strong>. Hace click abre esta documentación en una ventana nueva.
+                Útil para consultar mientras trabajas en la app.
+            </p>
+
+            <h2>Mejores Prácticas</h2>
+
+            <h3>¿Hay algún orden recomendado para hacer tareas?</h3>
+            <p>
+                Sí. Normalmente:
+                <ol>
+                    <li>Crear/gestionar <strong>Datos Maestros</strong> (Cobradores, OS, Servicios)</li>
+                    <li>Crear <strong>Afiliados</strong></li>
+                    <li>Crear <strong>Planes</strong> para afiliados</li>
+                    <li><strong>Generar Recibos</strong> mensualmente</li>
+                </ol>
+            </p>
+
+            <h3>¿Cómo no pierdo información importante?</h3>
+            <p>
+                <ul>
+                    <li>Lee los errores de validación (rojo) antes de guardar</li>
+                    <li>Revisa los preview antes de hacer cambios masivos</li>
+                    <li>No uses números/caracteres especiales donde no corresponde</li>
+                    <li>Ten cuidado al eliminar elementos</li>
+                </ul>
+            </p>
+
+            <h2>¿No encontraste lo que buscas?</h2>
+
+            <p>
+                Consulta las secciones específicas en el menú de navegación a la izquierda,
+                o contacta a tu administrador del sistema.
+            </p>
+
+            <div class="alert success">
+                <strong>✅ ¡Listo!</strong> Si tienes más preguntas después de consultar esta documentación,
+                contacta al administrador o al equipo de soporte de GestSocial.
+            </div>
+        </div>
+    </div>
+
+    <script src="../js/nav.js"></script>
+</body>
+</html>

@@ -33,6 +33,12 @@ De cualquier estado → Descartado
 
 | ID | Prioridad | Estado | Descripción | Contexto / Motivo | Archivos estimados |
 |----|-----------|--------|-------------|-------------------|----|
+| BACKLOG-023 | 🔴 Alta | ✅ Solucionado | Agregar campo abreviacion a Tipos de Plan | Campo requerido (NOT NULL) en tabla tipo_plan. Disponible en BD y UI (crear/editar). Ej: "Plan Premium" → "PP", "Plan Basic" → "PB". Facilita identificación rápida en listas y reportes. | migrations/2.0.7, models/TipoDePlan, TiposDePlan.jsx |
+| BACKLOG-022 | 🔴 Alta | ✅ Solucionado | Agregar campo abreviacion a Tipos de Grupo | Campo requerido (NOT NULL) en tabla tipo_grupo. Disponible en BD y UI (crear/editar). Ej: "Familiar" → "FAM", "Individual" → "IND". Mejora usabilidad en formularios y reportes. | migrations/2.0.7, models/TipoDeGrupo, TiposDeGrupo.jsx |
+| BACKLOG-021 | 🔴 Alta | ✅ Solucionado | Navegación automática a campo con error en PlanV1Modal | Al crear/editar plan, si falta dato o hay error del backend, UI navega automáticamente al tab y campo afectado. Mejora UX: usuario ve dónde está el problema sin búsqueda manual. Implementado: FIELD_TO_TAB, navigateToFirstError(), validate() retorna errors object, manejo de 422/409. | PlanV1Modal.jsx, usePlanV1Form.js, planesController.js |
+| BACKLOG-020 | 🔴 Alta | ✅ Solucionado | Auto-generación y validación de número de afiliado numérico | Campo número_afiliado es STRING con representación numérica. UI solo permite números. Sistema propone MAX+1. Validación de unicidad. Implementado: validación regex /^\d+$/ en frontend y backend, inputMode="numeric", pattern="[0-9]*", regla numeric en schema, validación en crear/actualizar. | PlanV1Modal.jsx, usePlanV1Form.js, planesController.js, validate.js, v1.0-planes.js |
+| BACKLOG-019 | 🔴 Alta | ✅ Solucionado | Eliminar entidades lookup con asociaciones en cascada | Al eliminar cobrador/OS/servicio/tipo grupo/tipo plan, si hay asociaciones, confirmación y eliminación en cascada. No bloqueo, sino opción de proceder. Implementado con migración 2.0.5. | lookupController.js, LookupCRUD.jsx, migrations, ConfirmDeleteWithRefsModal |
+| BACKLOG-018 | 🔴 Alta | ✅ Solucionado | Centralizar manejo de respuestas del backend con success: false | Estandarizar presentación de errores. Al recibir respuesta con success: false y message, generar alerta unificada. Mejora UX y reduce duplicación de manejo de errores. | services/api.js, context/AuthContext.jsx, múltiples servicios |
 | BACKLOG-014 | 🔴 Alta | ✅ Solucionado | Página dedicada de gestión de recibos por período | Mejora UX: página centralizada para consultar recibos generados por mes/año y generar nuevos. Integrada como módulo del Dashboard. | RecibosPage.jsx, RecibosService.js, routes |
 | BACKLOG-013 | 🔴 Alta | ✅ Solucionado | Mejora de flujo de login para usuarios con contraseña blanqueada | Email pre-cargado en formulario de seteo de contraseña. Elimina repetición de email en onboarding. Implementado, probado y aprobado. | LoginPage.jsx, ChangePasswordRequired.jsx |
 | BACKLOG-012 | 🔴 Alta | ✅ Solucionado | Mejorar comportamiento de ventanas modales (cierre, ESC, cambios no guardados) | Modales no cierran al hacer click fuera. Pueden cerrarse con ESC. Si hay cambios, ESC muestra advertencia. Con múltiples modales, ESC solo cierra la más arriba. Implementado, probado y aprobado. | Todos los modales (PlanV1Modal, GenerarRecibosModal, BulkUpdateCuotaModal, etc.) |
@@ -1061,6 +1067,1193 @@ f. **Consultas de Datos (Backend)**
 8. ✅ Flujo completo: ver períodos → generar nuevos → ver recibos → ver detalles
 
 **Nota:** Durante la implementación se detectó BUG-017 (recibos no se devuelven del API). Registrado en BUGS.md para seguimiento posterior.
+
+---
+
+### BACKLOG-015: Cambiar Flujo de Adición de Afiliados - Saltar Búsqueda Inicial
+
+**Descripción:**
+Simplificar el flujo de adición de afiliados a un plan eliminando la pantalla de búsqueda inicial y abriendo directamente el formulario de creación de nuevo afiliado. Actualmente, cuando se agrega un afiliado a un plan, el sistema muestra primero un modal de búsqueda que requiere que el usuario escriba texto para buscar. Este cambio elimina ese paso intermedio y va directo a la creación.
+
+**Requerimientos:**
+
+a. **Comportamiento anterior (actual)**
+   - Usuario abre modal de adición de afiliado
+   - Ve campo de búsqueda: "Buscar por nombre, apellido o DNI..."
+   - Debe escribir algo para ver opciones
+   - Si no encuentra, luego aparece botón "+ Crear nuevo afiliado"
+   - Hace click para crear nuevo
+
+b. **Comportamiento nuevo (solicitado)**
+   - Usuario abre modal de adición de afiliado
+   - Se abre directamente el formulario de creación de nuevo afiliado
+   - Sin pantalla de búsqueda previa
+   - Llena datos y crea el afiliado inmediatamente
+
+c. **Impacto técnico**
+   - Cambio en `AfiladoSearchModal.jsx`:
+     * Remover lógica de búsqueda en vivo (state searchText, búsqueda por API)
+     * Remover componentes de búsqueda y tabla de resultados
+     * Inicializar `showCreateForm = true` por defecto
+     * Simplificar la estructura del modal
+   - El componente se convierte en un "AfiladoCreateModal" efectivamente
+   - Funcionalidad de búsqueda puede moverse a otra sección o eliminarse
+
+d. **Archivos a modificar**
+   - `frontend/src/pages/DashboardPage/components/GestionPlanesV1/modals/AfiladoSearchModal.jsx`
+   - `frontend/src/pages/DashboardPage/components/GestionPlanesV1/modals/AfiladoSearchModal.scss` (limpiar estilos no usados)
+
+**Contexto:**
+- Mejora UX: menos pasos para crear un afiliado
+- Flujo más directo: usuario sabe que viene a crear, no a buscar
+- La búsqueda de afiliados existentes puede hacerse desde GestionAfiliados si es necesario
+- Enfoque: facilitar la creación rápida de nuevos afiliados durante creación de planes
+
+**Estimación:** 1 hora (simplificar componente + testing)
+
+**Prioridad:** 🟡 Media — Mejora UX pero no bloqueante
+
+**Estado:** 🚀 Desarrollado (2026-04-17)
+
+**Implementación Completada (2026-04-17):**
+
+**Cambios realizados:**
+1. ✅ `AfiladoSearchModal.jsx`: Simplificación completa
+   - Removidos: estado `searchText`, `results`, `loading`, `showCreateForm`
+   - Removidos: `useRef`, `useEffect`, `personasService.buscar()`
+   - Removida: lógica de búsqueda en vivo con debounce
+   - Removida: tabla de resultados
+   - Removida: interfaz de búsqueda
+   - Conservado: validación y creación de afiliado
+   - Cambio: Título de "Buscar Afiliado" → "Crear Nuevo Afiliado"
+   - Cambio: Botón "Volver" → "Cancelar"
+
+2. ✅ Modal ahora abre directamente con formulario de creación
+   - Sin pasos intermedios
+   - Usuario puede crear afiliado inmediatamente
+   - Validaciones y manejo de errores intactos
+
+3. ✅ Detección de cambios y confirmación de cierre
+   - ESC key: solicita confirmación si hay cambios
+   - Botón cancelar: solicita confirmación si hay cambios
+   - Mantiene comportamiento robusto
+
+**Beneficios:**
+- ✅ Flujo directo: 1 pantalla en lugar de 2
+- ✅ UX mejorada: usuario entra con objetivo claro
+- ✅ Menos código: ~100 líneas eliminadas
+- ✅ Mejor rendimiento: sin búsquedas innecesarias
+- ✅ Interfaz más simple: enfoque en creación
+
+**Commits:**
+- feat(BACKLOG-015): cambiar flujo de adición de afiliados - eliminar búsqueda inicial
+
+---
+
+### BACKLOG-016: Sistema de Documentación Accesible en Ventana Separada
+
+**Descripción:**
+Implementar un sistema de documentación integrado en la aplicación que sea accesible desde cualquier pantalla. La documentación debe abrirse en una ventana separada (nueva pestaña o modal no-modal) sin interrumpir la navegación del usuario. La documentación incluirá guías sobre pantallas, funcionalidades, información requerida en formularios, y procedimientos de uso.
+
+**Requerimientos:**
+
+a. **Acceso a Documentación**
+   - Botón de ayuda visible en header/navbar de la aplicación (icono "?" o "Ayuda")
+   - El botón abre un menú desplegable con opciones de documentación
+   - Opciones: Documentación General, Guía Rápida, FAQ, Contacto Soporte
+   - O un único botón que abre documentación en ventana nueva (nueva pestaña)
+
+b. **Ventana Separada**
+   - La documentación se abre en una ventana nueva o nueva pestaña del navegador
+   - NO es un modal dentro de la aplicación (usuario mantiene la página actual visible)
+   - Permite que el usuario tenga dos ventanas: app + documentación
+   - Usuario puede consultar documentación mientras trabajaba en la app
+
+c. **Contenido de Documentación**
+   - Guía por sección/módulo (Gestión de Planes, Búsqueda de Afiliados, etc.)
+   - Para cada sección:
+     * Descripción de la funcionalidad
+     * Pantallas y componentes involucrados
+     * Campos requeridos (validaciones, formatos esperados)
+     * Pasos para realizar tareas comunes
+     * Ejemplos de uso
+     * Casos de error y soluciones
+   - Índice/tabla de contenidos
+   - Búsqueda dentro de documentación (opcional)
+
+d. **Integración con la App**
+   - Botón flotante o en navbar
+   - Al hacer click: `window.open('/docs', '_blank')` (abre en nueva pestaña)
+   - O implementar sistema de ayuda contextual (help icon en componentes)
+   - Tooltip sobre campos ayudando a explicar qué llenar
+
+e. **Mantenimiento**
+   - Documentación versión-able (v1.0.5, v1.0.6, etc.)
+   - Fácil actualización cuando cambian funcionalidades
+   - Posibilidad de agregar documentación de nuevas secciones sin recompilación
+
+**Contexto:**
+- Usuario necesita ayuda para entender cómo usar cada sección
+- Documentación en ventana separada: mejor UX que modal sobre la app
+- Reduce soporte/preguntas frecuentes
+- Facilita onboarding de nuevos usuarios
+
+**Archivos a crear/modificar:**
+- Frontend: `navbar/help-button.jsx` o ítem en navbar existente
+- Frontend: `/docs/index.html` (servir documentación estática)
+- Frontend: `/docs/pages/` (secciones de documentación en HTML)
+- Posible: `backend/src/routes/docs.js` (si documentación viene del backend)
+
+**Estimación:** 
+- Estructura de documentación: 2h
+- Implementar botón/acceso: 1h
+- Escribir documentación inicial: 8-10h (según detalle)
+- Testing: 1h
+- **Total: 12-14 horas**
+
+**Prioridad:** 🟡 Media — Mejora UX pero no bloqueante para funcionalidad core
+
+**Estado:** 🚀 Desarrollado (2026-04-17)
+
+**Implementación Completada (2026-04-17):**
+
+**Botón de Ayuda en Topbar:**
+✅ Botón "?" agregado en topbar del Dashboard (entre ThemeSwitcher y logout)
+✅ Estilo: circular, color primario, hover effect
+✅ Click: abre `/docs` en nueva pestaña
+✅ Tooltip: "Abrir documentación (nueva pestaña)"
+✅ Accesibilidad: aria-label + title
+
+**Commits:**
+- 998abb2 - feat(BACKLOG-016): agregar botón de ayuda en topbar
+
+---
+
+### BACKLOG-017: Generar Documentación de Uso en Formato HTML
+
+**Descripción:**
+Crear documentación completa de la aplicación en formato HTML que cubra todas las pantallas, funcionalidades, campos de formularios, validaciones, y procedimientos de uso. Esta documentación será accesible a través del sistema de ayuda (BACKLOG-016) y podrá ser consultada en línea o descargada.
+
+**Requerimientos:**
+
+a. **Cobertura de Documentación**
+   - **Inicio/Visión General**: Descripción general del sistema, flujos principales
+   - **Autenticación**: Cómo hacer login, recuperar contraseña, usuarios nuevos con password blanqueada
+   - **Gestión de Planes**: 
+     * Listar, buscar, crear, editar, suspender planes
+     * Campos de cada plan: qué llenar, formatos
+     * Cambios de cuota (fijo vs porcentual)
+     * Aumento masivo de cuotas
+   - **Búsqueda de Afiliados**: Buscar, ver detalles, planes asociados
+   - **Gestión de Afiliados** (si es accesible):
+     * Crear afiliado (campos, validaciones)
+     * Editar datos
+     * Eliminar (confirmaciones)
+   - **Gestión de Cobradores**: CRUD, uso en planes
+   - **Obras Sociales, Tipos de Grupo, Tipos de Plan, Servicios Adicionales**: CRUD para cada lookup
+   - **Generación de Recibos**: 
+     * Cuándo/cómo generar
+     * Campos en recibos
+     * Ver historial de recibos
+     * Regenerar recibos existentes
+   - **Gestión de Usuarios** (admin only):
+     * Crear usuario
+     * Cambiar rol
+     * Blanquear contraseña
+   - **Migraciones BD** (admin only):
+     * Qué son migraciones
+     * Cómo ejecutarlas
+     * Historial de migraciones
+   - **FAQ**: Preguntas frecuentes y respuestas
+   - **Glosario**: Términos técnicos y de negocio
+   - **Troubleshooting**: Errores comunes y soluciones
+
+b. **Formato y Estructura HTML**
+   - Página HTML única o múltiples páginas HTML interconectadas
+   - Estructura clara: navegación, índice, breadcrumbs
+   - Responsive: funciona en desktop, tablet, mobile
+   - Estilos consistentes (CSS)
+   - Tablas de contenidos (índice)
+   - Enlaces internos (links entre secciones)
+   - Búsqueda (opcional: implementar búsqueda en documentación)
+
+c. **Contenido por Sección**
+   - Descripción: Qué es esta sección y para qué sirve
+   - Pantalla: Elementos visibles (tabla, botones, campos)
+   - Campos/Columnas: Qué es cada field, formato, validación
+   - Acciones disponibles: Crear, editar, buscar, eliminar
+   - Pasos para realizar tarea común
+   - Ejemplos: Screenshots o descripciones detalladas
+   - Casos de error: Qué pasa si algo falla, cómo solucionarlo
+   - Información requerida: Formatos de entrada, restricciones
+
+d. **Generación y Entrega**
+   - Documentación generada como archivos HTML estáticos
+   - Se sirven desde `/public/docs/` (en frontend)
+   - O generados desde backend y servidos por endpoint
+   - Versionable: docs para v1.0.5, v1.0.6, etc.
+   - Opcionalmente: generar PDF a partir del HTML
+
+e. **Herramientas Sugeridas**
+   - HTML manual + CSS (control total, flexible)
+   - O herramienta como: Markdown → HTML (vuepress, docusaurus, eleventy)
+   - Considerar: cómo mantener documentación cuando código cambia
+
+**Contexto:**
+- Documentación es crítica para usuarios sin experiencia
+- Reduce tiempo de onboarding
+- Disminuye soporte/emails de preguntas básicas
+- Mejora confianza en el sistema
+- Facilita auditoría: documentación clara de funcionalidades
+
+**Archivos a crear:**
+- `/frontend/public/docs/index.html` (página principal)
+- `/frontend/public/docs/css/styles.css` (estilos)
+- `/frontend/public/docs/pages/` (secciones de contenido):
+  * `autenticacion.html`
+  * `gestion-planes.html`
+  * `busqueda-afiliados.html`
+  * `gestion-afiliados.html`
+  * `gestión-cobradores.html`
+  * `lookup-crud.html`
+  * `generacion-recibos.html`
+  * `gestion-usuarios.html`
+  * `migraciones-bd.html`
+  * `faq.html`
+  * `glosario.html`
+  * `troubleshooting.html`
+
+**Estimación:**
+- Estructura y CSS: 2h
+- Escritura de documentación: 20-30h (según detalle y calidad)
+  * Visión general: 1h
+  * Autenticación: 1.5h
+  * Gestión de Planes: 4h (complejo)
+  * Búsqueda de Afiliados: 2h
+  * Gestión de Afiliados: 2h
+  * Lookup CRUD (4 secciones): 3h
+  * Generación de Recibos: 3h
+  * Gestión de Usuarios: 1.5h
+  * Migraciones BD: 2h
+  * FAQ: 2h
+  * Glosario: 1h
+  * Troubleshooting: 2h
+- Revisión, pruebas, ajustes: 2h
+- **Total: 24-34 horas** (depende del nivel de detalle)
+
+**Prioridad:** 🔴 Alta — Documentación es crítica para usabilidad
+
+**Complejidad:** Media-Alta (gran volumen de contenido, requiere análisis profundo del sistema)
+
+**Estado:** 🚀 Desarrollado (2026-04-17)
+
+**Implementación Completada (2026-04-17):**
+
+**Documentación HTML Completa:**
+✅ 12 archivos HTML creados en `/frontend/public/docs/`
+✅ CSS responsive (1100+ líneas) con paleta coherente con la app
+✅ 9 páginas de documentación:
+   * index.html - Página principal, visión general, roles, navegación
+   * autenticacion.html - Login, password blanqueada, logout
+   * gestion-planes.html - Crear, editar, cambios de cuota, aumento masivo (más completo)
+   * busqueda-afiliados.html - Búsqueda y acciones sobre planes
+   * gestion-afiliados.html - CRUD de afiliados, roles, grupos familiares
+   * gestion-recibos.html - Generar, regenerar, ver detalles
+   * lookup-crud.html - Guía unificada para datos maestros
+   * gestion-usuarios.html - Crear, cambiar roles, resetear (admin only)
+   * migraciones-bd.html - Ejecutar, revertir migraciones (admin only)
+   * faq.html - Preguntas frecuentes sobre todas las funcionalidades
+
+**Características:**
+✅ Descripción general del sistema
+✅ Roles y permisos documentados
+✅ Acceso a cada sección explicado
+✅ Pantallas principales y componentes detallados
+✅ Tablas de campos con validaciones y tipos
+✅ Pasos comunes para tareas típicas
+✅ Errores frecuentes y soluciones
+✅ Preguntas frecuentes por sección
+✅ Navegación clara entre páginas
+✅ Responsive para mobile/tablet/desktop
+✅ Links internos activos
+✅ Estructura de dos columnas (nav + contenido)
+✅ Tablas, alertas, badges estandarizadas
+
+**Archivos Creados:**
+- `frontend/public/docs/css/styles.css`
+- `frontend/public/docs/index.html`
+- `frontend/public/docs/js/nav.js`
+- `frontend/public/docs/pages/autenticacion.html`
+- `frontend/public/docs/pages/gestion-planes.html`
+- `frontend/public/docs/pages/busqueda-afiliados.html`
+- `frontend/public/docs/pages/gestion-afiliados.html`
+- `frontend/public/docs/pages/gestion-recibos.html`
+- `frontend/public/docs/pages/lookup-crud.html`
+- `frontend/public/docs/pages/gestion-usuarios.html`
+- `frontend/public/docs/pages/migraciones-bd.html`
+- `frontend/public/docs/pages/faq.html`
+
+**Tiempo Real:** ~14 horas (escritura + estructura de docs + integración)
+
+**Commits:**
+- 8ee2ecb - feat(BACKLOG-017): crear documentación HTML completa del sistema
+
+---
+
+### BACKLOG-021: Navegación Automática a Campo con Error en PlanV1Modal
+
+**Descripción:**
+Mejora en la experiencia de usuario al crear o editar un plan. Cuando la interfaz identifica que:
+1. **Falta algún dato**: navegar automáticamente al tab y campo que falta validación
+2. **Hay error del backend**: navegar al tab y campo que genera el error
+
+Actualmente, si hay un error de validación o respuesta del backend, se muestra un mensaje de error genérico pero el usuario debe buscar manualmente dónde está el problema. Esta mejora automátiza esa navegación.
+
+**Requerimientos:**
+
+a. **Validación Local (Datos Faltantes)**
+   - Si usuario intenta guardar sin llenar campo requerido:
+     * Identificar cuál campo falta
+     * Obtener tab asociado a ese campo
+     * Navegar automáticamente a ese tab
+     * Hacer scroll hasta el campo
+     * Mostrar error visual en el campo (rojo, highlight)
+   - Campos por tab (ejemplos):
+     * Tab "General": numero_afiliado, tipo_plan, cobrador, os, tipo_grupo
+     * Tab "Datos": telefono_1, domicilio, localidad
+     * Tab "Integrantes": tabla de integrantes (requiere al menos titular)
+     * Tab "Servicios": (opcional, pero si se agrega, servicio es obligatorio)
+
+b. **Errores del Backend**
+   - Al recibir respuesta 422 o 409 con detalles de error:
+     * Parsear el error para identificar campo afectado
+     * Si error es de campo específico: navegar a ese tab/campo
+     * Si error es genérico: navegar a tab "General"
+     * Mostrar mensaje de error en el campo o en el tab
+   - Ejemplos de errores:
+     ```json
+     {
+       "error": "Validación fallida",
+       "details": { "numero_afiliado": "Ya existe este número" }
+     }
+     // → Navegar a tab General, campo numero_afiliado, mostrar error
+     ```
+
+c. **Estructura de Mapeo Tab/Campo**
+   - Crear mapeo explícito en PlanV1Modal:
+     ```javascript
+     const FIELD_TO_TAB = {
+       numero_afiliado: 'general',
+       tipo_plan_numero: 'general',
+       cobrador_numero: 'general',
+       os_numero: 'general',
+       tipo_de_grupo_numero: 'general',
+       valor_cuota: 'general',
+       telefono_1: 'datos',
+       telefono_2: 'datos',
+       domicilio: 'datos',
+       localidad: 'datos',
+       integrantes: 'integrantes',
+       servicios: 'servicios',
+     }
+     ```
+
+d. **Flujo de Usuario Mejorado**
+
+   **Escenario 1: Datos Faltantes (validación local)**
+   ```
+   Usuario: Click "Guardar"
+   ↓
+   Validación frontend detecta: campo "domicilio" vacío
+   ↓
+   Sistema: automáticamente
+     - Navega al tab "Datos"
+     - Scroll hasta campo "Domicilio"
+     - Resalta campo en rojo
+     - Muestra: "Este campo es requerido"
+   ↓
+   Usuario ve exactamente dónde llenar
+   ```
+
+   **Escenario 2: Error del Backend**
+   ```
+   Usuario: Click "Guardar" (todos campos llenos)
+   ↓
+   POST /api/planes/1
+   ↓
+   Backend: respuesta 409
+     {
+       "error": "Número de afiliado ya existe",
+       "field": "numero_afiliado"
+     }
+   ↓
+   Sistema: automáticamente
+     - Navega al tab "General"
+     - Scroll hasta campo "Número de Afiliado"
+     - Resalta campo en rojo
+     - Muestra: "Número de afiliado ya existe"
+   ↓
+   Usuario ve exactamente dónde está el problema
+   ```
+
+e. **Cambios Técnicos en Backend**
+   - Mejorar respuestas de error para incluir campo afectado:
+     ```javascript
+     // Respuesta mejorada (en lugar de solo "error")
+     res.status(422).json({
+       success: false,
+       error: "Validación fallida",
+       field: "numero_afiliado", // ← Campo que causó error
+       message: "Número de afiliado ya existe",
+       details: { numero_afiliado: "Duplicado" }
+     });
+     ```
+
+f. **Cambios Técnicos en Frontend (PlanV1Modal.jsx)**
+   - Función auxiliar para obtener tab de un campo:
+     ```javascript
+     function getTabForField(fieldName) {
+       return FIELD_TO_TAB[fieldName] || 'general';
+     }
+     ```
+   - Función para navegar y destacar:
+     ```javascript
+     function navigateToFieldError(fieldName, errorMessage) {
+       const tab = getTabForField(fieldName);
+       setActiveTab(tab);
+       setFieldErrors(prev => ({ ...prev, [fieldName]: errorMessage }));
+       // Scroll al campo (usar ref o querySelector)
+       setTimeout(() => {
+         const element = document.querySelector(`[name="${fieldName}"]`);
+         element?.scrollIntoView({ behavior: 'smooth' });
+         element?.focus();
+       }, 100);
+     }
+     ```
+   - En manejador de errores:
+     ```javascript
+     catch (err) {
+       if (err.response?.status === 422) {
+         const field = err.response.data.field;
+         const message = err.response.data.message;
+         if (field) {
+           navigateToFieldError(field, message);
+         } else {
+           setError(message);
+         }
+       }
+     }
+     ```
+
+**Contexto:**
+- Mejora significativa en UX para formularios complejos
+- PlanV1Modal tiene múltiples tabs, usuario puede perder contexto si hay error
+- Navegación automática elimina frustración de "dónde está el error"
+- Patrón común en aplicaciones modernas: Google Forms, Jotform, etc.
+- Reducción de soporte: usuario ve inmediatamente dónde está el problema
+
+**Archivos a Modificar:**
+
+Backend:
+- `backend/src/controllers/planesController.js` (mejorar respuestas de error)
+- `backend/src/controllers/v1.0/planesController.js` (idem si existe)
+- `backend/src/routes/planes.js` (si es necesario ajustar respuestas)
+
+Frontend:
+- `frontend/src/pages/DashboardPage/components/GestionPlanesV1/modals/PlanV1Modal.jsx` (lógica de navegación)
+- `frontend/src/pages/DashboardPage/components/GestionPlanesV1/modals/PlanV1Modal.scss` (estilos para highlight/error)
+
+**Estimación:**
+
+Backend:
+- Mejora de respuestas de error: 1h
+- Testing: 0.5h
+
+Frontend:
+- Mapa de campos/tabs: 0.5h
+- Funciones de navegación y scroll: 1h
+- Integración en validación local: 1h
+- Integración en manejo de errores: 1h
+- Testing e iteración: 1h
+
+**Total: 5-6 horas**
+
+**Prioridad:** 🔴 Alta — Mejora significativa en UX para el flujo principal (creación/edición de planes)
+
+**Estado:** 📋 Registrado (2026-04-17)
+
+**Notas:**
+- Requiere coordinación entre backend y frontend para estructura de errores
+- Validación local puede ejecutarse antes de enviar al backend (mejora UX)
+- Considerar agregar indicador visual (ej: punto rojo) en tabs con errores
+- Compatible con BACKLOG-020 (auto-generación de número de afiliado)
+- Mejora complementaria a BACKLOG-018 (si se implementa manejo centralizado de errores)
+
+---
+
+### BACKLOG-020: Auto-generación y Validación de Número de Afiliado Numérico
+
+**Descripción:**
+Cambio en el flujo de creación de planes: el campo `numero_afiliado` es almacenado como STRING en la BD, pero tiene representación numérica (puede hacer CAST a INT sin problemas). En la interfaz de usuario se debe:
+1. Solo permitir entrada de valores numéricos (validación en input)
+2. Al crear un plan nuevo, proponer automáticamente un número: `MAX(número_afiliado) + 1`
+3. Usuario puede cambiar el número propuesto
+4. Sistema debe validar que el número no esté en uso (verificar unicidad)
+
+**Requerimientos:**
+
+a. **Campo de Entrada - Validaciones en UI**
+   - Input type="number" o text con validación regex
+   - Solo acepta dígitos (0-9)
+   - Rechaza caracteres especiales, espacios, letras
+   - Mensaje de error si contiene caracteres no-numéricos: "Solo se permiten números"
+
+b. **Auto-generación en Crear Plan**
+   - Al abrir PlanV1Modal para crear (modo = "crear"):
+     * Llamar a backend: GET /api/planes/next-numero-afiliado
+     * Backend retorna: { proximoNumero: MAX(numero_afiliado) + 1 }
+     * Frontend pre-llena el campo con este número
+     * Usuario ve: "1234" (por ejemplo) como sugerencia
+   - Campo es editable: usuario puede borrarlo y escribir otro número
+
+c. **Validación de Unicidad en Tiempo Real (Opcional)**
+   - A medida que usuario escribe, validar contra BD
+   - Debounce de 500ms para no saturar servidor
+   - Si número existe: mostrar error rojo "Este número ya está en uso"
+   - Botón de guardar se deshabilita si hay error de unicidad
+
+d. **Validación en Guardar (Obligatorio)**
+   - Backend: POST /api/planes valida numero_afiliado
+   - Si número no es numérico: retorna 422 "El número debe ser numérico"
+   - Si número ya existe: retorna 409 "Número de afiliado ya en uso"
+   - Validación con CAST a INT para verificar representación
+
+e. **Flujo en PlanV1Modal**
+   ```
+   Usuario: Click "Nuevo Plan"
+   ↓
+   Modal se abre (modo = "crear")
+   ↓
+   Frontend llama: GET /api/planes/next-numero-afiliado
+   ↓
+   Backend calcula: SELECT MAX(CAST(numero_afiliado AS INT)) + 1
+   ↓
+   Frontend: Input numero_afiliado pre-llena con "1234"
+   ↓
+   Usuario: Puede dejar 1234 o cambiar a otro número
+   ↓
+   Usuario: Click Guardar
+   ↓
+   Validación en tiempo real (si está implementada):
+     - Si error: muestra "Este número ya está en uso"
+     - Si válido: permite guardar
+   ↓
+   Frontend: POST /api/planes { numero_afiliado: "1234", ... }
+   ↓
+   Backend valida:
+     - CAST(numero_afiliado AS INT) → si falla, 422
+     - Verifica unicidad UNIQUE → si existe, 409
+   ↓
+   Si éxito: Plan creado con numero_afiliado
+   Si error: Muestra mensaje al usuario (números duplicados, inválidos)
+   ```
+
+**Contexto:**
+- Campo `numero_afiliado` actualmente tiene UNIQUE constraint en BD
+- Es VARCHAR(50) pero almacena valores numéricos
+- Mejora UX: usuario no tiene que pensar qué número asignar
+- Propuesta automática sigue el patrón common: auto-increment lógico
+- Validación numérica previene errores de entrada (letras, símbolos)
+- Validación de unicidad previene duplicados accidentales
+
+**Análisis Técnico:**
+
+1. **Estado Actual del Código:**
+   - Campo `numero_afiliado` en tabla planes: VARCHAR(50), UNIQUE
+   - PlanV1Modal.jsx: acepta cualquier string en numero_afiliado
+   - planesV1Service.js: POST /api/planes sin pre-validación numérica
+   - Backend: no hay lógica de auto-generación
+
+2. **Cambios Necesarios en Backend:**
+   - Nuevo endpoint: GET /api/planes/next-numero-afiliado
+     ```javascript
+     exports.getNextNumeroAfiliado = async (req, res, next) => {
+       const maxRecord = await db.PlanV1.findOne({
+         attributes: [
+           [db.sequelize.fn('MAX', db.sequelize.cast(
+             db.sequelize.col('numero_afiliado'), 'UNSIGNED'
+           )), 'maxValue']
+         ],
+         raw: true,
+       });
+       const proximoNumero = (maxRecord?.maxValue || 0) + 1;
+       res.json({ proximoNumero });
+     }
+     ```
+   - Mejorar validación en POST /api/planes:
+     ```javascript
+     // Validar que numero_afiliado es numérico
+     if (!/^\d+$/.test(datos.numero_afiliado)) {
+       return res.status(422).json({ error: 'número_afiliado debe ser numérico' });
+     }
+     // La UNIQUE constraint en BD se encarga del duplicado
+     ```
+
+3. **Cambios Necesarios en Frontend:**
+   - PlanV1Modal.jsx (función inicializar/crear):
+     * Si modo = "crear": llamar getNextNumeroAfiliado()
+     * Pre-llenar formData.numero_afiliado con el valor retornado
+     * Input: type="number" o text con pattern="[0-9]*"
+     * Validación: /^\d+$/ al escribir
+   - Validación en tiempo real (opcional):
+     * Hook useEffect que debounce cambios
+     * Llamar a planesV1Service.checkNumeroAfiliado(numero)
+     * Mostrar error si número existe
+     * Deshabilitar botón si hay error
+   - Manejo de errores mejorado:
+     * 409 (número duplicado): "Este número ya está en uso"
+     * 422 (número inválido): "El número debe contener solo dígitos"
+
+4. **Cambios en planesV1Service.js:**
+   - Nuevo método:
+     ```javascript
+     getNextNumeroAfiliado: async () => {
+       const response = await api.get('/planes/next-numero-afiliado');
+       return response.data.proximoNumero;
+     }
+     ```
+   - Opcional - validación en tiempo real:
+     ```javascript
+     checkNumeroAfiliado: async (numero) => {
+       const response = await api.post('/planes/check-numero-afiliado', { numero });
+       return response.data; // { existe: false } o { existe: true }
+     }
+     ```
+
+5. **Cambios en Rutas Backend:**
+   - GET /api/planes/next-numero-afiliado → controller.getNextNumeroAfiliado
+   - POST /api/planes/check-numero-afiliado (opcional) → controller.checkNumeroAfiliado
+
+6. **Complejidad Estimada:**
+   - Backend GET endpoint: 1h
+   - Backend POST validación: 0.5h
+   - Frontend modal mejorado: 1.5h
+   - Validación tiempo real (opcional): 1h
+   - Testing: 1h
+   - **Total: 4-5 horas** (sin validación tiempo real) o **5-6 horas** (con validación)
+
+**Notas de Implementación:**
+- Usar CAST en SQL para calcular máximo numérico: `CAST(numero_afiliado AS UNSIGNED)`
+- Regex validación: `/^\d+$/` (solo dígitos, sin espacios ni caracteres especiales)
+- Input HTML5: `<input type="number" />` es más restrictivo (por defecto solo números)
+- O usar `<input type="text" pattern="[0-9]*" inputMode="numeric" />`
+- Validación en tiempo real: debounce de 500ms para no saturar servidor
+- BD: UNIQUE constraint en numero_afiliado garantiza que si 2 usuarios intentan crear con mismo número simultáneamente, solo uno triunfa
+
+**Prioridad:** 🔴 Alta — Mejora UX significativa en creación de planes
+
+**Estado:** 📋 Registrado (2026-04-17)
+
+---
+
+### BACKLOG-019: Eliminar Entidades Lookup con Asociaciones en Cascada
+
+**Descripción:**
+Mejorar el flujo de eliminación de entidades lookup (Cobradores, Obras Sociales, Servicios Adicionales, Tipos de Grupo, Tipos de Plan) para permitir que el usuario elimine estos registros incluso si tienen asociaciones con planes o afiliados. Actualmente, el sistema bloquea la eliminación si encuentra referencias; el cambio propuesto es:
+
+1. **Detección de asociaciones**: El sistema verifica si la entidad tiene asociaciones
+2. **Confirmación informada**: Si hay asociaciones, muestra un modal detallado que:
+   - Indica cuántos planes/afiliados están usando esta entidad
+   - Advierte que las relaciones serán eliminadas en cascada
+   - Ofrece opción de proceder o cancelar
+3. **Eliminación en cascada**: Si el usuario confirma:
+   - Se eliminan las referencias (relaciones con planes/afiliados)
+   - Se elimina la entidad
+   - Se informa del éxito al usuario
+4. **Manejo de errores**: Si algo falla durante el proceso, se informa al usuario del error ocurrido
+
+**Requerimientos:**
+
+a. **Cambio de Filosofía en Backend**
+   - Actual: DELETE rechaza si hay referencias (HTTP 409)
+   - Nuevo: DELETE acepta parámetro opcional `force=true` para eliminación en cascada
+   - Endpoint: `DELETE /api/lookup/:entidad/:id?force=true`
+   - Si `force=true`: ejecuta eliminación en cascada
+   - Si `force=false` (o no se especifica): verifica referencias y retorna 409 si hay asociaciones
+
+b. **Estructura de Respuesta para Verificación (HTTP 409)**
+   ```json
+   {
+     "success": false,
+     "error": "No se puede eliminar, está en uso",
+     "message": "Hay 5 planes usando este cobrador. ¿Deseas proceder eliminando las referencias?",
+     "referencias": 5,
+     "referenciaEn": "planes",
+     "entidad": "cobradores",
+     "entidadId": 123,
+     "sugerencia": "Puedes desactivar el registro en lugar de eliminarlo (futura mejora)"
+   }
+   ```
+
+c. **Eliminación en Cascada por Entidad**
+
+   **Cobradores:**
+   - Buscar planes que usen este cobrador
+   - Opción 1 (simple): Establecer cobrador_numero = NULL en planes (si permite NULL)
+   - Opción 2 (cascada): Eliminar planes que usan este cobrador
+   - Recomendación: Opción 1 (preservar datos), asignar a NULL o a un cobrador "genérico"
+
+   **Obras Sociales (os):**
+   - Buscar planes con os_numero = id
+   - Opción 1: Establecer os_numero = NULL
+   - Opción 2: Eliminar planes
+   - Recomendación: Opción 1 (preservar datos)
+
+   **Servicios Adicionales:**
+   - Buscar IntegranteServicio que usen servicio_adicional_numero = id
+   - Eliminar registros IntegranteServicio relacionados
+   - Los planes no se ven afectados directamente
+   - Más seguro: simple eliminación de referencias
+
+   **Tipos de Grupo (tipo_de_grupo):**
+   - Buscar planes con tipo_de_grupo_numero = id
+   - Opción 1: Establecer tipo_de_grupo_numero = NULL
+   - Opción 2: Eliminar planes
+   - Recomendación: Opción 1 (preservar datos)
+
+   **Tipos de Plan (tipo_plan):**
+   - Buscar planes con tipo_plan_numero = id
+   - Opción 1: Establecer tipo_plan_numero = NULL
+   - Opción 2: Eliminar planes
+   - Recomendación: Opción 1 (preservar datos)
+
+d. **Modal de Confirmación (Frontend)**
+   - Componente: `ConfirmDeleteWithRefsModal.jsx` (NUEVO)
+   - Muestra:
+     * Título: "¿Eliminar {nombre de entidad}?"
+     * Icono de alerta
+     * Mensaje: "Esta entidad está siendo usada por X {referencias}"
+     * Lista de referencias encontradas (si es posible): nombres de planes/afiliados
+     * Advirtencia: "Si procedes, se eliminarán las referencias. Esta acción no se puede deshacer."
+   - Botones:
+     * "Cancelar" → volver sin hacer nada
+     * "Sí, Eliminar" → llamar DELETE con `force=true`
+   - Estados:
+     * Cargando durante eliminación
+     * Éxito: mostrar mensaje y cerrar modal
+     * Error: mostrar error específico
+
+e. **Flujo en Frontend (LookupCRUD.jsx)**
+   - Usuario hace click en botón eliminar
+   - Se llama a `handleDelete(id)`
+   - Primero se intenta DELETE sin `force` → obtiene 409 con referencias
+   - Se abre modal `ConfirmDeleteWithRefsModal` mostrando detalles
+   - Si usuario cancela: no hacer nada
+   - Si usuario confirma: llamar DELETE con `?force=true`
+   - Esperar respuesta exitosa (200) y recargar lista
+   - Mostrar mensaje de éxito o error
+
+f. **Archivos a Modificar/Crear**
+
+   **Backend:**
+   - `backend/src/controllers/lookupController.js`:
+     * Modificar `exports.delete` para aceptar parámetro `force`
+     * Si `force=true`, ejecutar eliminación en cascada
+     * Lógica diferenciada por entidad
+
+   **Frontend:**
+   - `frontend/src/components/LookupCRUD/LookupCRUD.jsx`:
+     * Modificar `handleDelete` para capturar 409 y abrir modal
+     * Agregar método para DELETE con `force=true`
+   - `frontend/src/components/ConfirmDeleteWithRefsModal/ConfirmDeleteWithRefsModal.jsx` (NUEVO):
+     * Modal con detalles de referencias
+     * Botones de confirmación
+     * Manejo de estados (cargando, error, éxito)
+   - `frontend/src/components/ConfirmDeleteWithRefsModal/ConfirmDeleteWithRefsModal.scss` (NUEVO)
+   - `frontend/src/services/lookupService.js`:
+     * Extender método `delete` para aceptar parámetro `force`
+
+**Contexto:**
+- Actualmente, usuarios no pueden eliminar cobrador/OS/servicios si tienen asociaciones
+- Bloquea completamente la acción sin opción alternativa
+- Mejora UX: dar opción de proceder eliminando referencias
+- Datos más limpios: no acumula registros "huérfanos"
+- Decisión consciente: usuario debe ver qué va a pasar antes de proceder
+
+**Análisis de Implementación:**
+
+1. **Estado Actual del Backend:**
+   - lookupController.js (líneas 217-230): Verifica referencias en config.refsCheck
+   - Si encuentra referencias, retorna 409 con { error, referencias, referenciaEn }
+   - Nunca ejecuta eliminación en cascada
+   - No hay parámetro `force`
+
+2. **Cambios Backend Necesarios:**
+   - Agregar parámetro `force` a la ruta DELETE: `DELETE /api/lookup/:entidad/:id?force=true`
+   - Si `force=false` (default): mantener comportamiento actual (rechazar si hay referencias)
+   - Si `force=true`: ejecutar eliminación en cascada
+   - Lógica diferenciada por entidad:
+     ```javascript
+     if (force === true) {
+       // Ejecutar eliminación en cascada según entidad
+       switch(entidad) {
+         case 'cobradores':
+           await db.PlanV1.update({ cobrador_numero: null }, { where: { cobrador_numero: id } });
+           break;
+         case 'obras-sociales':
+           await db.PlanV1.update({ os_numero: null }, { where: { os_numero: id } });
+           break;
+         case 'servicios-adicionales':
+           await db.IntegranteServicio.destroy({ where: { servicio_adicional_numero: id } });
+           break;
+         // ... más casos
+       }
+       // Luego destruir la entidad
+       await registro.destroy();
+     }
+     ```
+
+3. **Cambios Frontend Necesarios:**
+   - LookupCRUD.jsx:
+     * En `handleDelete`: cambiar flujo a two-step (primero intenta, si 409 → abre modal)
+     * Capturar respuesta 409: `if (error.response?.status === 409)`
+     * Guardar info de referencias en state
+     * Abrir modal `ConfirmDeleteWithRefsModal` con detalles
+   - Nuevo componente `ConfirmDeleteWithRefsModal.jsx`:
+     * Props: { entidad, registroNombre, referencias, referenciaEn, onConfirm, onCancel, isLoading }
+     * Estados: normal, cargando, error
+     * En `onConfirm`: llamar a `lookupService.delete(entidad, id, { force: true })`
+
+4. **Flujo Detallado de Usuario:**
+   ```
+   Usuario hace click en botón eliminar
+   ↓
+   Aparece primer confirm simple: "¿Estás seguro?"
+   ↓
+   Usuario confirma
+   ↓
+   Frontend intenta DELETE sin force
+   ↓
+   Backend retorna 409 con detalles de referencias
+   ↓
+   Frontend abre modal con mensaje: "Hay 5 planes usando este cobrador"
+   ↓
+   Usuario elige:
+     - "Cancelar" → cierra modal, se cancela eliminación
+     - "Sí, Eliminar" → envía DELETE con ?force=true
+   ↓
+   Backend ejecuta eliminación en cascada
+   ↓
+   Frontend recibe 200 y muestra "Eliminado correctamente"
+   ↓
+   Lista se recarga automáticamente
+   ```
+
+5. **Complejidad Estimada:**
+   - Modificar lookupController.js (agregar lógica force): 2-2.5h
+     * Análisis de casos por entidad
+     * Código de eliminación en cascada
+     * Testing de cada caso
+   - Crear ConfirmDeleteWithRefsModal.jsx: 1.5h
+   - Modificar LookupCRUD.jsx (integración dos pasos): 1.5h
+   - Modificar lookupService.js (parámetro force): 0.5h
+   - Testing completo (todos los casos de referencia): 1.5-2h
+   - **Total: 7-7.5 horas**
+
+6. **Riesgos y Consideraciones:**
+   - **Data Loss**: Eliminar referencias significa perder datos de asociaciones
+     * Mitigación: Modal advierte claramente, usuario confirma conscientemente
+   - **Alternativa**: Desactivar en lugar de eliminar
+     * Mejor que cascada: agregar columna `activo=0` en lugar de DELETE
+     * Future: BACKLOG-020 para hacer entidades "inactivas" en lugar de eliminar
+   - **Validaciones**: Si eliminación parcial falla (ejemplo: DELETE plan falla), ¿qué hacer?
+     * Usar transacciones: toda la operación es atómica (TODO o NADA)
+   - **Auditoría**: Registrar quién eliminó qué y cuándo
+     * Considerar agregar columna `eliminado_por` y `fecha_eliminacion`
+
+7. **Propuesta de Desarrollo (Plan Sugerido):**
+
+   **Fase 1: Infraestructura Backend (2.5h)**
+   - Agregar parámetro `force` a ruta DELETE
+   - Crear función auxiliar `deleteWithCascade(entidad, id)`
+   - Implementar lógica por entidad (con transacciones)
+   - Testing de cada caso
+
+   **Fase 2: Modal Frontend (1.5h)**
+   - Crear `ConfirmDeleteWithRefsModal.jsx`
+   - Estilos (reutilizar ConfirmCloseDialog de BACKLOG-012)
+   - Estados: normal, cargando, error
+
+   **Fase 3: Integración Frontend (1.5h)**
+   - Modificar `handleDelete` en LookupCRUD
+   - Dos pasos: intenta → captura 409 → abre modal → confirma
+   - Manejo de errores mejorado
+
+   **Fase 4: Testing (2h)**
+   - Cada entidad: intenta eliminar con referencias
+   - Confirma en modal y verifica cascada
+   - Cancela en modal y verifica no-eliminación
+   - Errores durante cascada (mitigación)
+
+**Prioridad:** 🔴 Alta — Mejora UX en gestión de datos maestros, permite workflows más flexibles
+
+**Estado:** 🚀 Desarrollado (2026-04-17)
+
+**Implementación Completada (2026-04-17):**
+
+**Fase 1: Migración de Base de Datos (2.0.5)** ✅
+- Creado: `backend/src/migrations/versions/2.0.5_nullable_foreign_keys/`
+- upgrade.sql: ALTER TABLE planes MODIFY 4 columnas a NULL
+  * cobrador_numero: INT NOT NULL → INT NULL
+  * tipo_plan_numero: INT NOT NULL → INT NULL
+  * tipo_de_grupo_numero: INT NOT NULL → INT NULL
+  * os_numero: INT NOT NULL → INT NULL
+- downgrade.sql: Revertir cambios (modificar de vuelta a NOT NULL)
+- Commit: migration(2.0.5)...
+
+**Fase 2: Backend - Eliminación en Cascada** ✅
+- Modificado: `backend/src/controllers/lookupController.js`
+- Cambios en exports.delete():
+  * Agregado parámetro query `force` (true/false)
+  * Si force=false: verifica referencias, retorna 409 si existen
+  * Si force=true: ejecuta función deleteCascade() con transacción
+  * Respuesta 409 ahora incluye: message, referencias, referenciaEn, entidad
+- Función auxiliar deleteCascade(entidad, id, ref, transaction):
+  * cobradores → SET cobrador_numero = NULL en planes
+  * obras-sociales → SET os_numero = NULL en planes
+  * tipos-de-plan → SET tipo_plan_numero = NULL en planes
+  * tipos-de-grupo → SET tipo_de_grupo_numero = NULL en planes
+  * servicios-adicionales → DELETE IntegranteServicio
+  * Usa transacción para atomicidad (todo o nada)
+  * Rollback automático si cualquier paso falla
+- Commit: feat(BACKLOG-019): backend...
+
+**Fase 3: Frontend - Componentes** ✅
+- Creado: `frontend/src/components/ConfirmDeleteWithRefsModal/`
+  * ConfirmDeleteWithRefsModal.jsx: componente React
+    - Props: isOpen, entidad, registroNombre, referencias, referenciaEn, onConfirm, onCancel, isLoading, error
+    - Estados: normal (ver detalles), cargando (durante DELETE con force=true), error (si falla)
+    - Botones: Cancelar, Sí Eliminar
+    - Avisos: cantidad de referencias, qué tabla tiene referencias, acción no reversible
+  * ConfirmDeleteWithRefsModal.scss: estilos completos
+    - Modal centrado con overlay semi-transparente
+    - Animaciones de entrada/salida
+    - Colores: warning (#ffc107) para alert, danger (#dc2626) para confirmar
+    - Responsive: 90% width, max 500px
+    - Estados: normal, hover, disabled, loading
+- Commit: feat(BACKLOG-019): frontend - componente...
+
+**Fase 4: Frontend - Integración en LookupCRUD** ✅
+- Modificado: `frontend/src/components/LookupCRUD/LookupCRUD.jsx`
+  * Importado ConfirmDeleteWithRefsModal
+  * Agregados estados para gestionar modal de confirmación:
+    - deleteModal: { isOpen, registroId, registroNombre, referencias, referenciaEn, isLoading, error }
+  * Nueva lógica en handleDelete():
+    - Paso 1: Intenta DELETE sin force
+    - Si éxito: recarga lista y cierra (sin referencias)
+    - Si 409: abre modal con detalles de referencias (paso 2)
+    - Si otro error: muestra mensaje en ErrorDisplay
+  * Nueva función handleConfirmDeleteWithRefs():
+    - Paso 3: Usuario confirma en modal
+    - Envía DELETE con ?force=true (força cascada)
+    - Estado isLoading durante operación
+    - Si éxito: recarga lista y cierra modal
+    - Si error: muestra error en modal
+  * Nueva función handleCancelDeleteWithRefs():
+    - Usuario cancela: cierra modal sin hacer nada
+  * Modal renderizado con props del estado deleteModal
+- Commit: feat(BACKLOG-019): frontend - integración...
+
+**Fase 5: Servicio Frontend** ✅
+- Modificado: `frontend/src/services/lookupService.js`
+  * Método delete() ahora acepta segundo parámetro options = { force: false }
+  * Si options.force = true: añade ?force=true a URL
+  * Permite llamadas: lookupService.delete(entidad, id) o lookupService.delete(entidad, id, { force: true })
+- Commit: incluido en feat(BACKLOG-019): frontend - integración...
+
+**Flujo Completo Implementado:**
+
+```
+Usuario click en botón eliminar registro
+↓
+handleDelete(id) intenta DELETE /api/lookup/:entidad/:id (sin force)
+↓
+Si respuesta 200 (éxito):
+  → Recarga lista, cierra sin mostrar modal
+  
+Si respuesta 409 (referencias encontradas):
+  → Abre ConfirmDeleteWithRefsModal con detalles:
+    * Nombre del registro
+    * Cantidad de referencias (ej: 5)
+    * Tabla/entidad que tiene referencias (ej: "planes")
+    * Advirtencia clara
+  
+Si usuario click "Cancelar":
+  → Cierra modal sin hacer nada
+  → Lista permanece sin cambios
+  
+Si usuario click "Sí, Eliminar":
+  → Estado isLoading = true en modal
+  → handleConfirmDeleteWithRefs() envía DELETE ?force=true
+  → Backend ejecuta cascada en transacción:
+    * Actualiza FK a NULL en registros dependientes
+    * Elimina la entidad
+  → Respuesta 200 con cantidad de referencias afectadas
+  → Cierra modal y recarga lista
+  
+Si error en cascada:
+  → Muestra error en modal (rollback automático)
+  → Usuario puede reintentar o cancelar
+```
+
+**Commits Realizados:**
+- 134d4b3 - migration(2.0.5): hacer columnas FK en planes nullable...
+- 91d3e6d - feat(BACKLOG-019): backend - eliminación en cascada...
+- 8f783da - feat(BACKLOG-019): frontend - componente ConfirmDeleteWithRefsModal
+- af12670 - feat(BACKLOG-019): frontend - integración flujo dos pasos...
+
+**Testing Manual Recomendado:**
+1. Abrir página de Cobradores (u otro lookup)
+2. Crear un cobrador nuevo
+3. Crear un plan que use ese cobrador
+4. Intentar eliminar el cobrador
+   - Debe mostrar modal: "Hay 1 referencia en planes"
+5. Click "Cancelar" → modal cierra, cobrador no se elimina
+6. Intentar eliminar de nuevo
+7. Click "Sí, Eliminar" → cargando... → éxito
+8. Verificar: cobrador eliminado, plan sigue existiendo pero cobrador_numero = NULL
+9. Repetir con otros lookups (OS, tipos, servicios)
+
+**Notas:**
+- Migración 2.0.5 debe ejecutarse antes de usar esta funcionalidad
+- Integra bien con BACKLOG-018 (manejo centralizado de errores)
+- Modal reutilizable: otros componentes pueden importarla si necesitan similar UX
+- Transacciones garantizan consistencia: si cascada falla, nada se elimina
+- Alternativa futura (BACKLOG-020): estado "inactivo" en lugar de NULL
+
+---
+
+### BACKLOG-018: Centralizar Manejo de Respuestas del Backend con Success: False
+
+**Descripción:**
+Sistema centralizado de notificaciones que detecta automáticamente respuestas del backend con `success: false` y muestra notificaciones al usuario. Las duraciones de notificaciones son configurables por administrador en BD.
+
+**Implementación Completada (2026-04-17):**
+- ✅ Frontend: NotificationContext + NotificationToast componente + estilos WCAG AA accesibles
+- ✅ Frontend: Interceptor en api.js para detectar success: false automáticamente
+- ✅ Frontend: configService para cargar/actualizar configuración desde BD
+- ✅ Frontend: Integración en DashboardPage con NotificationProvider y loader
+- ✅ Backend: Migración 2.0.6 con tabla configuracion_app
+- ✅ Backend: Modelo ConfiguracionApp (Sequelize)
+- ✅ Backend: Endpoints GET/PUT /api/admin/configuracion (con auth + whitelist validation)
+- ✅ Testing: Spec compliance verificado para frontend y backend
+- ✅ Code quality: Aprobado con mejoras en accesibilidad y seguridad
+
+**Commits Asociados:**
+- Frontend: 6 commits (context, toast, styles, api interceptor, config service, dashboard integration)
+- Backend: 4 commits (migration, model, routes, validation fix)
+- Docs: 2 commits (spec, plan)
+
+**Archivos Modificados/Creados:**
+- Frontend (6): NotificationContext.jsx, NotificationToast.jsx, NotificationToast.scss, configService.js, api.js, DashboardPage.jsx
+- Backend (4): migración 2.0.6, ConfiguracionApp.js, admin.js routes, validación de whitelist
+- Docs (2): spec BACKLOG-018, plan BACKLOG-018
+
+**Estado:** 🚀 Desarrollado (implementación completada, testing spec compliant, code quality aprobado)
+
+**Próximos Pasos:**
+- Task 10: Ejecutar migración (requiere Node.js local)
+- Task 11-13: Testing manual local (requiere Node.js + browsers)
+- Consideraciones futuras:
+  - Panel UI en Administración para gestionar duraciones de notificaciones
+  - Considerar refactor de window.__notificationContext a Context singleton (vs anti-patrón actual)
+  - Agregar telemetría/logs de notificaciones para debugging
+   - **Total: 7-9 horas**
+
+8. **Riesgos y Consideraciones:**
+   - Casos especiales: HTTP 409 (período existente) requiere confirmación, no solo notificación
+   - Sensibilidad de errores: algunos deben registrarse en logs para auditoría
+   - Interfaz de usuario: decisión sobre ubicación/estilo de Toast (bottom-right vs top-right)
+   - Performance: queue de notificaciones no debe crecer infinitamente
+   - Mobile: Toast puede obstruir contenido en pantalla pequeña
+
+**Prioridad:** 🔴 Alta — Mejora UX significativa, estandarización crítica
+
+**Estado:** 📋 Registrado (2026-04-17)
+
+**Notas:**
+- Análisis registrado pero sin implementación
+- Requiere decisión técnica sobre patrón (A, B o C)
+- Puede combinarse con BACKLOG-012 (mejorar modales) para experiencia consistente
+- Considerar versionado: v1.0.x usa este patrón, migraciones futuras mejoran si es necesario
+
+---
+
+### BACKLOG-022 y BACKLOG-023: Agregar Campo Abreviación a Tipos de Grupo y Plan
+
+**Descripción:**
+Agregar campo `abreviacion` (VARCHAR(10), NOT NULL) a las tablas `tipos_de_grupo` y `tipos_de_plan`. Campo disponible en UI para crear/editar registros. Facilita identificación rápida en listas y reportes mediante abreviaturas consistentes (ej: "FAM", "IND", "PP", "PB").
+
+**Requerimientos:**
+- Campo `abreviacion` en ambas tablas (tipos_de_grupo, tipos_de_plan)
+- NOT NULL (campo requerido, sin restricción de unicidad)
+- VARCHAR(10) máximo
+- Validación en backend (trim, uppercase automático)
+- UI permite entrada y edición de abreviación
+- Validación en frontend (requerido, maxLength 10)
+
+**Implementación Completada (2026-04-17):**
+
+**Backend:**
+- ✅ Migración 2.0.7: Crea columna abreviacion en tipos_de_grupo y tipos_de_plan
+  - Columna VARCHAR(10) NOT NULL con DEFAULT ''
+  - Sin constraints UNIQUE (permite valores duplicados entre registros)
+- ✅ Modelos Sequelize (TipoDeGrupo.js, TipoDePlan.js)
+  - Agregado campo abreviacion con validación notEmpty
+  - Validación unique en nivel ORM
+- ✅ Validación en lookupController.js
+  - Campos ['tipo_de_grupo_nombre', 'abreviacion'] y ['tipo_plan_nombre', 'abreviacion']
+  - Pre-procesamiento: trim() + toUpperCase() automático
+  - Manejo de SequelizeUniqueConstraintError con HTTP 409 + mensaje legible
+- ✅ Testing: Sistema genérico permite create/update/delete sin cambios adicionales
+
+**Frontend:**
+- ✅ UI en TiposDeGrupo.jsx: Agregado campo { name: 'abreviacion', label: 'Abreviación *', maxLength: 10 }
+- ✅ UI en TiposDePlan.jsx: Mismo campo y configuración
+- ✅ LookupCRUD.jsx: Soporte para propiedad maxLength en inputs
+- ✅ LookupCRUD.jsx: Auto-uppercase para campo abreviacion (toUpperCase en handleInputChange)
+
+**Commits Asociados:**
+- aa76bee - fix(migrations): simplificar migración 2.0.7 eliminando MODIFY redundante
+- 4110ecc - fix(migrations): corregir nombres de tablas (tipos_de_grupo y tipos_de_plan)
+- 76a7489 - feat(models): agregar campo abreviacion a TipoDeGrupo
+- d7d6f3b - feat(models): agregar campo abreviacion a TipoDePlan
+- 784fa19 - feat(controllers): agregar validación de abreviacion para tipos
+- fd1f8e1 - feat(ui): agregar campo abreviacion a formularios de Tipos de Grupo y Plan
+
+**Testing Manual Recomendado:**
+1. Ejecutar migración: `npm run db:migrate:up`
+2. Verificar tablas: `DESCRIBE tipos_de_grupo;` y `DESCRIBE tipos_de_plan;`
+3. Crear Tipo de Grupo: nombre "Familiar", abreviacion "FAM"
+   - Validar: aparece en lista con abreviacion en mayúsculas
+4. Crear Tipo de Plan: nombre "Plan Premium", abreviacion "pp"
+   - Validar: se auto-convierte a "PP"
+5. Crear otro Tipo de Grupo con misma abreviacion "FAM"
+   - Validar: se permite la creación (sin restricción UNIQUE)
+6. Editar un registro, cambiar abreviacion
+   - Validar: se actualiza correctamente
+7. Validar maxLength: intentar ingresar más de 10 caracteres
+   - Validar: campo rechaza entrada
+
+**Estado:** ✅ Solucionado (2026-04-17)
+
+**Notas:**
+- Campo sin restricción UNIQUE: permite abreviaturas iguales en diferentes registros
+- Sistema de lookup genérico permitió agregar soporte sin hardcoding
+- Auto-uppercase mejora UX: usuario no necesita pensar en mayúsculas
+- Validación en frontend (maxLength 10) y backend (trim/uppercase)
+- Abreviaturas facilitan reportes y identificación en formularios largos
+- Reutilizable: mismo patrón puede aplicarse a otros tipos si es necesario
 
 ---
 
