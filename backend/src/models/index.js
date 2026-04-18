@@ -10,6 +10,9 @@ const TipoDeGrupo = require('./TipoDeGrupo');
 // Users
 const Usuario = require('./Usuario');
 
+// App Configuration
+const ConfiguracionApp = require('./ConfiguracionApp');
+
 // 1.0.x Models
 const Persona = require('./Persona');
 const PlanV1 = require('./PlanV1');
@@ -30,6 +33,8 @@ const db = {
   ServicioAdicional,
   TipoDeGrupo,
   Usuario,
+  // App Configuration
+  ConfiguracionApp,
   // 1.0.x Models
   Persona,
   PlanV1,
