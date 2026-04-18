@@ -1509,4 +1509,63 @@ Los 4 bugs relacionados a eliminación cascada de entidades lookup fueron resuel
 
 ---
 
-**Última actualización:** 2026-04-17
+### BUG-024: Migraciones BD - Tab "Estadísticas" Muestra Página en Blanco
+
+**Descripción:**
+Al ingresar a la sección Administración → Migraciones BD y hacer click en el tab "Estadísticas", la página queda completamente en blanco. No hay contenido visible ni mensajes de error.
+
+**Pasos para reproducir:**
+1. Login como admin
+2. Ir a Dashboard → Administración → Migraciones BD
+3. El tab "Versiones" carga correctamente (muestra tabla de migraciones)
+4. Hacer click en el tab "Estadísticas"
+5. **Resultado:** Página en blanco, sin contenido visible ❌
+
+**Comportamiento esperado:**
+El tab debería mostrar algún contenido (estadísticas de migraciones, información, etc.)
+
+**Severidad:** 🔴 CRÍTICO
+- Funcionalidad completamente no funcional
+- Usuario admin no puede acceder a estadísticas
+- Probablemente error en consola o componente no renderiza
+
+**Reportado:** 2026-04-18
+**Ubicación probable:**
+- Frontend: `frontend/src/pages/DashboardPage/components/MigrationsDashboard/` (tab "Estadísticas")
+- Probablemente falta contenido en el tab o error en componente interno
+
+**Causa raíz identificada (2026-04-18):**
+
+Mismatch entre nombres de propiedades en backend y frontend:
+
+**Backend** (`migrationManager.js` línea 285):
+```javascript
+return { tabla: TABLE_NAME, registros: parseInt(total, 10) };
+```
+
+**Frontend** (`EstadisticasTab.jsx` líneas 63-65):
+```javascript
+{table.tableName}           // ← Espera tableName
+{table.recordCount...}      // ← Espera recordCount
+```
+
+El frontend recibe un objeto con propiedades `tabla` y `registros`, pero intenta acceder a `tableName` y `recordCount`. Resultado: `undefined`, tabla vacía, página en blanco.
+
+**Solución implementada (2026-04-18):**
+
+Cambiar nombres de propiedades en `migrationManager.js` línea 285:
+- `tabla` → `tableName`
+- `registros` → `recordCount`
+
+```javascript
+return { tableName: TABLE_NAME, recordCount: parseInt(total, 10) };
+```
+
+**Archivos corregidos:**
+- `backend/src/migrations/migrationManager.js` (línea 285)
+
+**Estado:** 🚀 Desarrollado (solución implementada, pendiente commit sin push)
+
+---
+
+**Última actualización:** 2026-04-18
