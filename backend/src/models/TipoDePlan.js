@@ -7,7 +7,6 @@ const TipoDePlan = sequelize.define('TipoDePlan', {
   abreviacion: {
     type: DataTypes.STRING(10),
     allowNull: false,
-    unique: true,
     validate: {
       notEmpty: {
         msg: 'La abreviación no puede estar vacía',
