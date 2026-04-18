@@ -25,8 +25,13 @@ Un bug solo puede pasar a estado solucionado, Descartado a traves del pedido exp
 
 ## Registros Activos
 
+Actualmente no hay bugs abiertos. Todos los bugs reportados han sido resolucionados.
+
+### Historial reciente (últimos 7 días)
+
 | ID | Severidad | Fase | Descripción | Reportado | Estado |
 |----|-----------|------|-------------|-----------|--------|
+| BUG-024 | 🔴 CRÍTICO | BACKLOG-N/A | Migraciones BD - Tab "Estadísticas" muestra página en blanco | 2026-04-18 | ✅ Solucionado |
 | BUG-019 | 🔴 CRÍTICO | BACKLOG-014 | Gestión de Recibos: seleccionar período con recibos devuelve array vacío | 2026-04-16 | ✅ Solucionado |
 
 ---
