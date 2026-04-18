@@ -1,8 +1,10 @@
-import React, { useState, useCallback } from 'react';
+import React, { useState, useCallback, useEffect } from 'react';
 import personasService from '../../../../services/personasService';
 import planesService from '../../../../services/planesV1Service';
+import configService from '../../../../services/configService';
 import PlanV1Modal from '../GestionPlanesV1/modals/PlanV1Modal';
 import IconButton from '../../../../components/IconButton/IconButton';
+import useDebounce from '../../../../hooks/useDebounce';
 import '../../../../styles/_table-standard.scss';
 import './BusquedaAfiliados.scss';
 
@@ -16,27 +18,55 @@ const BusquedaAfiliados = () => {
   const [showPlanModal, setShowPlanModal] = useState(false);
   const [editingPlan, setEditingPlan] = useState(null);
   const [successMessage, setSuccessMessage] = useState(null);
+  const [debounceDelay, setDebounceDelay] = useState(2000);
 
-  const handleSearch = useCallback(async (e) => {
-    const value = e.target.value;
-    setSearchText(value);
-    setError(null);
+  // Debouncificar el texto de búsqueda
+  const debouncedSearchText = useDebounce(searchText, debounceDelay);
 
-    if (!value.trim()) {
-      setPersonas([]);
-      return;
-    }
+  // Cargar configuración de debounce al montar
+  useEffect(() => {
+    const loadDebounceConfig = async () => {
+      try {
+        const config = await configService.getConfiguracion();
+        if (config && config.debounce_delay_ms) {
+          setDebounceDelay(config.debounce_delay_ms);
+        }
+      } catch (err) {
+        console.error('Error cargando configuración de debounce:', err);
+        // Mantener default de 2000ms si hay error
+      }
+    };
+    loadDebounceConfig();
+  }, []);
 
-    try {
-      setLoading(true);
-      const resultado = await personasService.buscar(value);
-      setPersonas(resultado);
-    } catch (err) {
-      setError('Error en la búsqueda');
-      console.error(err);
-    } finally {
-      setLoading(false);
-    }
+  // Ejecutar búsqueda cuando el texto debouncificado cambia
+  useEffect(() => {
+    const performSearch = async () => {
+      setError(null);
+
+      if (!debouncedSearchText.trim()) {
+        setPersonas([]);
+        return;
+      }
+
+      try {
+        setLoading(true);
+        const resultado = await personasService.buscar(debouncedSearchText);
+        setPersonas(resultado);
+      } catch (err) {
+        setError('Error en la búsqueda');
+        console.error(err);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    performSearch();
+  }, [debouncedSearchText]);
+
+  // Solo actualizar estado local sin hacer búsqueda
+  const handleSearch = useCallback((e) => {
+    setSearchText(e.target.value);
   }, []);
 
   const handleSelectPersona = useCallback(async (persona) => {

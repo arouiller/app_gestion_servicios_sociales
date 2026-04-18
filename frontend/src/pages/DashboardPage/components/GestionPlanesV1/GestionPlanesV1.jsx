@@ -1,6 +1,7 @@
 import React, { useCallback, useEffect, useState } from 'react';
 import { useAuth } from '../../../../context/AuthContext';
 import planesV1Service from '../../../../services/planesV1Service';
+import configService from '../../../../services/configService';
 import PlanV1Modal from './modals/PlanV1Modal';
 import BulkUpdateCuotaModal from '../BulkUpdateCuotaModal/BulkUpdateCuotaModal';
 import GenerarRecibosModal from './modals/GenerarRecibosModal';
@@ -8,6 +9,7 @@ import SearchContainer from '../../../../components/SearchContainer/SearchContai
 import ActionButton from '../../../../components/ActionButton/ActionButton';
 import IconButton from '../../../../components/IconButton/IconButton';
 import StatusBadge from '../../../../components/StatusBadge/StatusBadge';
+import useDebounce from '../../../../hooks/useDebounce';
 import '../../../../styles/_table-standard.scss';
 import './GestionPlanesV1.scss';
 
@@ -26,8 +28,28 @@ function GestionPlanesV1() {
   const [planEditando, setPlanEditando] = useState(null);
   const [filtros, setFiltros] = useState({ estado: '', cobrador: '', obraSocial: '' });
   const [searchText, setSearchText] = useState('');
+  const [debounceDelay, setDebounceDelay] = useState(2000);
   const [bulkUpdateModalOpen, setBulkUpdateModalOpen] = useState(false);
   const [generarRecibosModalOpen, setGenerarRecibosModalOpen] = useState(false);
+
+  // Debouncificar el texto de búsqueda
+  const debouncedSearchText = useDebounce(searchText, debounceDelay);
+
+  // Cargar configuración de debounce al montar
+  useEffect(() => {
+    const loadDebounceConfig = async () => {
+      try {
+        const config = await configService.getConfiguracion();
+        if (config && config.debounce_delay_ms) {
+          setDebounceDelay(config.debounce_delay_ms);
+        }
+      } catch (err) {
+        console.error('Error cargando configuración de debounce:', err);
+        // Mantener default de 2000ms si hay error
+      }
+    };
+    loadDebounceConfig();
+  }, []);
 
   // Cargar planes sin usar filtros como dependencia inicial
   useEffect(() => {
@@ -120,7 +142,7 @@ function GestionPlanesV1() {
   // Filtrar planes por búsqueda
   const planesFiltered = planes
     .filter(plan => {
-      const searchLower = searchText.toLowerCase();
+      const searchLower = debouncedSearchText.toLowerCase();
       return (
         plan.numero_afiliado?.toLowerCase().includes(searchLower) ||
         plan.TipoDePlan?.tipo_plan_nombre?.toLowerCase().includes(searchLower) ||

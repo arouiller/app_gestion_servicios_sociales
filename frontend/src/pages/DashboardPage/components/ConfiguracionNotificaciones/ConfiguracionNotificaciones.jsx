@@ -86,6 +86,24 @@ export default function ConfiguracionNotificaciones() {
       return;
     }
 
+    // Validaciones específicas para debounce_delay_ms
+    if (type === 'debounce_delay_ms') {
+      if (newValue < 100) {
+        setErrors((prev) => ({
+          ...prev,
+          [type]: 'El tiempo mínimo es 100 ms',
+        }));
+        return;
+      }
+      if (newValue > 10000) {
+        setErrors((prev) => ({
+          ...prev,
+          [type]: 'El tiempo máximo es 10000 ms',
+        }));
+        return;
+      }
+    }
+
     try {
       setSaving((prev) => ({ ...prev, [type]: true }));
       await configService.actualizarConfiguracion(type, newValue);
@@ -191,6 +209,78 @@ export default function ConfiguracionNotificaciones() {
         <p>
           💡 <strong>Tip:</strong> Los cambios se aplicarán a nuevas notificaciones. Las notificaciones
           visibles actualmente continuarán con su duración original.
+        </p>
+      </div>
+
+      {/* Sección: Configuración de Búsquedas */}
+      <div className="configuracion-notificaciones__header" style={{ marginTop: '2rem' }}>
+        <h2>Configuración de Búsquedas</h2>
+        <p className="configuracion-notificaciones__subtitle">
+          Ajusta los tiempos de espera para las búsquedas por texto
+        </p>
+      </div>
+
+      <div className="configuracion-notificaciones__table-wrapper">
+        <table className="configuracion-notificaciones__table table-standard">
+          <thead>
+            <tr>
+              <th>Función</th>
+              <th>Descripción</th>
+              <th>Tiempo (ms)</th>
+              <th>Acciones</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td>
+                <span className="configuracion-notificaciones__tipo-badge" style={{ backgroundColor: '#e3f2fd', color: '#1976d2', borderLeftColor: '#1976d2' }}>
+                  <span className="configuracion-notificaciones__icon">🔍</span>
+                  Debounce de Búsquedas
+                </span>
+              </td>
+              <td>Tiempo a esperar sin escribir antes de ejecutar la búsqueda</td>
+              <td className="configuracion-notificaciones__duration-cell">
+                <div className="configuracion-notificaciones__duration-group">
+                  <input
+                    type="number"
+                    min="100"
+                    max="10000"
+                    step="100"
+                    className="configuracion-notificaciones__duration-input"
+                    value={values.debounce_delay_ms || 2000}
+                    onChange={(e) => handleChange('debounce_delay_ms', e.target.value)}
+                    disabled={saving.debounce_delay_ms}
+                  />
+                  <span className="configuracion-notificaciones__hint">
+                    ({msToSeconds(values.debounce_delay_ms || 2000)}s)
+                  </span>
+                </div>
+                {errors.debounce_delay_ms && (
+                  <span className="configuracion-notificaciones__error">
+                    {errors.debounce_delay_ms}
+                  </span>
+                )}
+              </td>
+              <td className="configuracion-notificaciones__actions">
+                <button
+                  className="configuracion-notificaciones__btn-save"
+                  onClick={() => handleSave('debounce_delay_ms')}
+                  disabled={saving.debounce_delay_ms}
+                  title={saving.debounce_delay_ms ? 'Guardando...' : 'Guardar configuración'}
+                >
+                  {saving.debounce_delay_ms ? '⏳' : '💾'}
+                </button>
+              </td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+
+      <div className="configuracion-notificaciones__info">
+        <p>
+          💡 <strong>Tip:</strong> El debounce evita realizar búsquedas mientras el usuario está escribiendo.
+          La búsqueda se ejecutará cuando el usuario haya dejado de escribir por el tiempo especificado.
+          Valores recomendados: 1000-3000 ms.
         </p>
       </div>
     </div>

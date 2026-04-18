@@ -1,10 +1,12 @@
 import React, { useEffect, useState } from 'react';
 import lookupService from '../../services/lookupService';
+import configService from '../../services/configService';
 import ErrorDisplay from '../ErrorDisplay/ErrorDisplay';
 import SearchContainer from '../SearchContainer/SearchContainer';
 import ActionButton from '../ActionButton/ActionButton';
 import IconButton from '../IconButton/IconButton';
 import ConfirmDeleteWithRefsModal from '../ConfirmDeleteWithRefsModal/ConfirmDeleteWithRefsModal';
+import useDebounce from '../../hooks/useDebounce';
 import '../../styles/_table-standard.scss';
 import './LookupCRUD.scss';
 
@@ -16,6 +18,7 @@ const LookupCRUD = ({ titulo, singularName, endpoint, campos }) => {
   const [editingId, setEditingId] = useState(null);
   const [formData, setFormData] = useState({});
   const [searchText, setSearchText] = useState('');
+  const [debounceDelay, setDebounceDelay] = useState(2000);
   const [deleteModal, setDeleteModal] = useState({
     isOpen: false,
     registroId: null,
@@ -28,6 +31,25 @@ const LookupCRUD = ({ titulo, singularName, endpoint, campos }) => {
   const ITEMS_PER_PAGE = 20;
 
   const entidad = endpoint.split('/').pop();
+
+  // Debouncificar el texto de búsqueda
+  const debouncedSearchText = useDebounce(searchText, debounceDelay);
+
+  // Cargar configuración de debounce al montar
+  useEffect(() => {
+    const loadDebounceConfig = async () => {
+      try {
+        const config = await configService.getConfiguracion();
+        if (config && config.debounce_delay_ms) {
+          setDebounceDelay(config.debounce_delay_ms);
+        }
+      } catch (err) {
+        console.error('Error cargando configuración de debounce:', err);
+        // Mantener default de 2000ms si hay error
+      }
+    };
+    loadDebounceConfig();
+  }, []);
 
   // Cargar lista
   useEffect(() => {
@@ -157,7 +179,7 @@ const LookupCRUD = ({ titulo, singularName, endpoint, campos }) => {
 
   const registrosFiltered = registros
     .filter(registro => {
-      const searchLower = searchText.toLowerCase();
+      const searchLower = debouncedSearchText.toLowerCase();
       return Object.values(registro).some(val =>
         String(val).toLowerCase().includes(searchLower)
       );
