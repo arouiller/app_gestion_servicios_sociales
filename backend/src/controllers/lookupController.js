@@ -13,7 +13,7 @@ const ENTIDADES = {
   'tipos-de-plan': {
     model: db.TipoDePlan,
     pkField: 'tipo_plan_numero',
-    campos: ['tipo_plan_nombre'],
+    campos: ['tipo_plan_nombre', 'abreviacion'],
     refsCheck: [{ model: db.PlanV1, fk: 'tipo_plan_numero' }],
   },
   'obras-sociales': {
@@ -31,7 +31,7 @@ const ENTIDADES = {
   'tipos-de-grupo': {
     model: db.TipoDeGrupo,
     pkField: 'tipo_de_grupo_numero',
-    campos: ['tipo_de_grupo_nombre'],
+    campos: ['tipo_de_grupo_nombre', 'abreviacion'],
     refsCheck: [{ model: db.PlanV1, fk: 'tipo_de_grupo_numero' }],
   },
 };
@@ -117,6 +117,11 @@ exports.create = async (req, res, next) => {
       datos[config.pkField] = (maxRecord?.maxValue || 0) + 1;
     }
 
+    // Procesar abreviacion si existe (trim y uppercase)
+    if (datos.abreviacion) {
+      datos.abreviacion = datos.abreviacion.trim().toUpperCase();
+    }
+
     // Asegurar timestamps
     datos.fecha_creacion = new Date();
     datos.fecha_actualizacion = new Date();
@@ -125,6 +130,13 @@ exports.create = async (req, res, next) => {
 
     res.status(201).json(nuevoRegistro);
   } catch (error) {
+    // Manejar error de unique constraint para abreviacion
+    if (error.name === 'SequelizeUniqueConstraintError') {
+      return res.status(409).json({
+        error: 'Abreviación duplicada',
+        message: 'Esta abreviación ya existe',
+      });
+    }
     next(error);
   }
 };
@@ -175,6 +187,11 @@ exports.update = async (req, res, next) => {
       });
     }
 
+    // Procesar abreviacion si existe (trim y uppercase)
+    if (datos.abreviacion) {
+      datos.abreviacion = datos.abreviacion.trim().toUpperCase();
+    }
+
     // Actualizar fecha_actualizacion y campos
     datos.fecha_actualizacion = new Date();
 
@@ -182,6 +199,13 @@ exports.update = async (req, res, next) => {
 
     res.status(200).json(registro);
   } catch (error) {
+    // Manejar error de unique constraint para abreviacion
+    if (error.name === 'SequelizeUniqueConstraintError') {
+      return res.status(409).json({
+        error: 'Abreviación duplicada',
+        message: 'Esta abreviación ya existe',
+      });
+    }
     next(error);
   }
 };
