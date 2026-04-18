@@ -1,6 +1,6 @@
 const express = require('express');
 const { ConfiguracionApp } = require('../models');
-const { requireAdmin } = require('../middleware/auth');
+const { verifyToken, requireAdmin } = require('../middleware/auth');
 
 const router = express.Router();
 
@@ -22,7 +22,7 @@ router.get('/configuracion', async (req, res) => {
 });
 
 // PUT /api/admin/configuracion/:tipo
-router.put('/configuracion/:tipo', requireAdmin, async (req, res) => {
+router.put('/configuracion/:tipo', verifyToken, requireAdmin, async (req, res) => {
   try {
     const { duracion_ms } = req.body;
 
