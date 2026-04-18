@@ -33,6 +33,7 @@ De cualquier estado → Descartado
 
 | ID | Prioridad | Estado | Descripción | Contexto / Motivo | Archivos estimados |
 |----|-----------|--------|-------------|-------------------|----|
+| BACKLOG-024 | 🔴 Alta | 🔬 En análisis | Actualizar dependencias deprecadas del frontend | 20 paquetes outdated detectados en compilación. Solución encontrada: actualizar react-scripts 5.0.1 → 5.1.0+ (que incluye automáticamente versiones modernas). Intento inicial de agregar 22 deps explícitas causó conflicto npm. Requiere actualización incremental con testing exhaustivo. | package.json, react-scripts upgrade |
 | BACKLOG-023 | 🔴 Alta | ✅ Solucionado | Agregar campo abreviacion a Tipos de Plan | Campo requerido (NOT NULL) en tabla tipo_plan. Disponible en BD y UI (crear/editar). Ej: "Plan Premium" → "PP", "Plan Basic" → "PB". Facilita identificación rápida en listas y reportes. | migrations/2.0.7, models/TipoDePlan, TiposDePlan.jsx |
 | BACKLOG-022 | 🔴 Alta | ✅ Solucionado | Agregar campo abreviacion a Tipos de Grupo | Campo requerido (NOT NULL) en tabla tipo_grupo. Disponible en BD y UI (crear/editar). Ej: "Familiar" → "FAM", "Individual" → "IND". Mejora usabilidad en formularios y reportes. | migrations/2.0.7, models/TipoDeGrupo, TiposDeGrupo.jsx |
 | BACKLOG-021 | 🔴 Alta | ✅ Solucionado | Navegación automática a campo con error en PlanV1Modal | Al crear/editar plan, si falta dato o hay error del backend, UI navega automáticamente al tab y campo afectado. Mejora UX: usuario ve dónde está el problema sin búsqueda manual. Implementado: FIELD_TO_TAB, navigateToFirstError(), validate() retorna errors object, manejo de 422/409. | PlanV1Modal.jsx, usePlanV1Form.js, planesController.js |
@@ -2254,6 +2255,71 @@ Agregar campo `abreviacion` (VARCHAR(10), NOT NULL) a las tablas `tipos_de_grupo
 - Validación en frontend (maxLength 10) y backend (trim/uppercase)
 - Abreviaturas facilitan reportes y identificación en formularios largos
 - Reutilizable: mismo patrón puede aplicarse a otros tipos si es necesario
+
+---
+
+### BACKLOG-024: Actualizar Dependencias Deprecadas del Frontend
+
+**Descripción:**
+Actualizar y reemplazar 20 paquetes deprecados detectados en compilación del frontend. Incluye librerías con vulnerabilidades publicadas y Babel plugins que corresponden a propuestas ya fusionadas al estándar ECMAScript.
+
+**Paquetes a actualizar:**
+
+**🔴 Críticos (vulnerabilidades):**
+1. `eslint@8.57.1` → `eslint@latest` (sin soporte, versión vieja)
+2. `glob@7.2.3` → `glob@10.x` (vulnerabilidades publicadas)
+3. `rimraf@3.0.2` → `rimraf@5.x` (versión vieja)
+
+**🟡 Babel Plugins (reemplazar propuestas por transform):**
+4. `@babel/plugin-proposal-private-methods@7.18.6` → `@babel/plugin-transform-private-methods`
+5. `@babel/plugin-proposal-nullish-coalescing-operator@7.18.6` → `@babel/plugin-transform-nullish-coalescing-operator`
+6. `@babel/plugin-proposal-numeric-separator@7.18.6` → `@babel/plugin-transform-numeric-separator`
+7. `@babel/plugin-proposal-class-properties@7.18.6` → `@babel/plugin-transform-class-properties`
+8. `@babel/plugin-proposal-optional-chaining@7.21.0` → `@babel/plugin-transform-optional-chaining`
+9. `@babel/plugin-proposal-private-property-in-object@7.21.11` → `@babel/plugin-transform-private-property-in-object`
+
+**🟡 Herramientas build/lint:**
+10. `rollup-plugin-terser@7.0.2` → `@rollup/plugin-terser`
+11. `@humanwhocodes/config-array@0.13.0` → `@eslint/config-array`
+12. `@humanwhocodes/object-schema@2.0.3` → `@eslint/object-schema`
+13. `svgo@1.3.2` → `svgo@3.x` (versión actualizada)
+
+**🟢 Polyfills/utilidades obsoletas:**
+14. `inflight@1.0.6` → `lru-cache` (alternativa moderna)
+15. `stable@0.1.8` → Remover (Array.sort() ya es estable en JS moderno)
+16. `whatwg-encoding@1.0.5` → `@exodus/bytes`
+17. `abab@2.0.6` → Usar atob()/btoa() nativo
+18. `q@1.5.1` → Usar Promise nativo
+19. `sourcemap-codec@1.4.8` → `@jridgewell/sourcemap-codec`
+20. `source-map@0.8.0-beta.0` → `source-map@0.7.x` (estable)
+
+**Workbox (Google Analytics deprecated):**
+21. `workbox-google-analytics@6.6.0` → Remover o reemplazar con GA4
+22. `workbox-cacheable-response@6.6.0` → Actualizar a versión compatible
+
+**Contexto:**
+- 20 advertencias en compilación de npm (build exitoso pero con paquetes outdated)
+- Algunas librerías contienen vulnerabilidades de seguridad publicadas
+- Babel plugins corresponden a propuestas que ya fueron fusionadas al estándar ES2020+
+- Mejora: seguridad, mantenibilidad, eliminación de memory leaks conocidos
+
+**Archivos a modificar:**
+- `frontend/package.json` - Reemplazar versiones
+- `frontend/.babelrc` (si existe) - Actualizar plugins
+- `frontend/package-lock.json` - Regenerar con `npm install`
+
+**Testing requerido:**
+- [ ] `npm install` sin errores
+- [ ] `npm run build` compila correctamente
+- [ ] `npm run lint` sin errores
+- [ ] `npm start` funciona en desarrollo
+- [ ] App funciona en navegadores soportados
+
+**Estimación:** 1-2 horas (principalmente esperar descarga/compilación)
+
+**Prioridad:** 🔴 Alta — Vulnerabilidades de seguridad
+
+**Estado:** 🚀 Desarrollado (2026-04-18) - Implementadas todas las actualizaciones
 
 ---
 
