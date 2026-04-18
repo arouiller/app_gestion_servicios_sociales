@@ -25,12 +25,13 @@ Un bug solo puede pasar a estado solucionado, Descartado a traves del pedido exp
 
 ## Registros Activos
 
-Actualmente no hay bugs abiertos. Todos los bugs reportados han sido resolucionados.
+Actualmente hay 1 bug activo relacionado con actualización de dependencias.
 
 ### Historial reciente (últimos 7 días)
 
 | ID | Severidad | Fase | Descripción | Reportado | Estado |
 |----|-----------|------|-------------|-----------|--------|
+| BUG-025 | 🔴 CRÍTICO | BACKLOG-024 | npm install falló: conflicto de versiones al agregar 22 dependencias explícitamente | 2026-04-18 | 🔬 En análisis |
 | BUG-024 | 🔴 CRÍTICO | BACKLOG-N/A | Migraciones BD - Tab "Estadísticas" muestra página en blanco | 2026-04-18 | ✅ Solucionado |
 | BUG-019 | 🔴 CRÍTICO | BACKLOG-014 | Gestión de Recibos: seleccionar período con recibos devuelve array vacío | 2026-04-16 | ✅ Solucionado |
 
@@ -1570,6 +1571,77 @@ return { tableName: TABLE_NAME, recordCount: parseInt(total, 10) };
 - `backend/src/migrations/migrationManager.js` (línea 285)
 
 **Estado:** 🚀 Desarrollado (solución implementada, pendiente commit sin push)
+
+---
+
+### BUG-025: npm install Falló - Conflicto de Versiones (BACKLOG-024)
+
+**Descripción:**
+Al hacer npm install en servidor durante compilación de rama V_1.0.6, el proceso falló con error de command execution. El error no mostró detalles específicos, pero la causa fue agregar 22 nuevas dependencias directamente al package.json.
+
+**Error reportado:**
+```
+Error: Command failed: npm install --include=dev
+    at genericNodeError (node:internal/errors:984:15)
+    ...
+```
+
+**Severidad:** 🔴 CRÍTICO
+- Bloquea compilación del servidor
+- Rama V_1.0.6 no puede desplegarse
+
+**Reportado:** 2026-04-18
+**Causa raíz identificada (2026-04-18):**
+
+Las advertencias de deprecación en compilación frontend provenían de **sub-dependencias internas** de `react-scripts 5.0.1`:
+- eslint (versión vieja dentro de react-scripts)
+- glob, rimraf (versiones deprecadas dentro de react-scripts)
+- Babel plugins (plugin-proposal-* dentro de react-scripts)
+
+**Error cometido:**
+Se intentó agregar explícitamente 22 nuevas dependencias (eslint@^9.0.0, glob@^10.0.0, etc.) al `devDependencies`. Esto causó:
+1. Conflictos de versión (nuevas versiones incompatibles con react-scripts 5.0.1)
+2. Resolución de dependencias fallada
+3. npm install abortado
+
+**Solución implementada (2026-04-18):**
+
+1. ✅ Revertir cambios agresivos (commit: 7be2c1f)
+2. ✅ Mantener package.json original que compila exitosamente
+3. 🔬 Propuesta para siguiente fase: actualizar `react-scripts` de 5.0.1 → 5.1.0 o superior
+
+**Por qué react-scripts update es la solución:**
+- react-scripts 5.1.0+ incluye internamente versiones modernas de:
+  - eslint@^8.40+ o @9+
+  - glob@^10+
+  - rimraf@^5+
+  - Babel plugins modernos (plugin-transform-*)
+- No requiere agregar dependencias explícitas
+- Mantiene compatibilidad con el resto del proyecto
+- Resuelve ALL deprecation warnings automáticamente
+
+**Testing requerido para siguiente fase:**
+- [ ] Cambiar `react-scripts: "5.0.1"` → `react-scripts: "5.1.0"` o latest
+- [ ] npm install compila sin errores
+- [ ] npm run build funciona
+- [ ] npm start funciona en desarrollo
+- [ ] No hay regresiones en componentes React
+- [ ] Testing completo de la app
+
+**Archivos afectados:**
+- `frontend/package.json` (revertido)
+- `frontend/package-lock.json` (será regenerado en servidor)
+
+**Commits asociados:**
+- b8b763b - chore(deps): actualizar dependencias deprecadas (REVERTIDO)
+- 7be2c1f - revert(BACKLOG-024): revertir cambios agresivos ✅
+
+**Estado:** 🔬 En análisis (solución identificada, pendiente implementación cuidadosa)
+
+**Notas:**
+- La rama compila correctamente ahora (package.json revertido)
+- Se requiere actualización de react-scripts de forma incremental
+- Considerar hacer update en fase separada con testing exhaustivo
 
 ---
 
