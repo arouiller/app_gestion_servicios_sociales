@@ -65,7 +65,11 @@ const LookupCRUD = ({ titulo, singularName, endpoint, campos }) => {
   };
 
   const handleInputChange = (e) => {
-    const { name, value } = e.target;
+    let { name, value } = e.target;
+    // Uppercase abreviacion field automatically
+    if (name === 'abreviacion') {
+      value = value.toUpperCase();
+    }
     setFormData(prev => ({ ...prev, [name]: value }));
   };
 
@@ -236,6 +240,7 @@ const LookupCRUD = ({ titulo, singularName, endpoint, campos }) => {
                   name={campo.name}
                   value={formData[campo.name] || ''}
                   onChange={handleInputChange}
+                  maxLength={campo.maxLength}
                   required={true}
                 />
               </div>
