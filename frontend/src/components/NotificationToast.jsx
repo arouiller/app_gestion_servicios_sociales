@@ -13,11 +13,12 @@ function NotificationToast() {
           className={`notification-toast notification-${notification.type}`}
         >
           <div className="notification-content">
-            <span className="notification-icon">
+            <span className="notification-icon" aria-hidden="true">
               {notification.type === 'error' && '❌'}
               {notification.type === 'success' && '✅'}
               {notification.type === 'warning' && '⚠️'}
               {notification.type === 'info' && 'ℹ️'}
+              {!['error', 'success', 'warning', 'info'].includes(notification.type) && '📝'}
             </span>
             <span className="notification-message">{notification.message}</span>
           </div>
