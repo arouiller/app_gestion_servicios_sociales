@@ -4,6 +4,9 @@ const { requireAdmin } = require('../middleware/auth');
 
 const router = express.Router();
 
+// Tipos de notificación válidos
+const VALID_TYPES = ['error', 'warning', 'success', 'info'];
+
 // GET /api/admin/configuracion
 router.get('/configuracion', requireAdmin, async (req, res) => {
   try {
@@ -27,6 +30,14 @@ router.put('/configuracion/:tipo', requireAdmin, async (req, res) => {
       return res.status(400).json({
         success: false,
         message: 'duracion_ms debe ser un número >= 0',
+      });
+    }
+
+    // Validar que tipo_notificacion sea válido
+    if (!VALID_TYPES.includes(req.params.tipo)) {
+      return res.status(400).json({
+        success: false,
+        message: `Tipo de notificación inválido. Valores permitidos: ${VALID_TYPES.join(', ')}`,
       });
     }
 
