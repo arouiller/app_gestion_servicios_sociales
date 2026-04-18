@@ -2192,11 +2192,11 @@ Sistema centralizado de notificaciones que detecta automáticamente respuestas d
 ### BACKLOG-022 y BACKLOG-023: Agregar Campo Abreviación a Tipos de Grupo y Plan
 
 **Descripción:**
-Agregar campo `abreviacion` (VARCHAR(10), NOT NULL, UNIQUE) a las tablas `tipos_de_grupo` y `tipos_de_plan`. Campo disponible en UI para crear/editar registros. Facilita identificación rápida en listas y reportes mediante abreviaturas consistentes (ej: "FAM", "IND", "PP", "PB").
+Agregar campo `abreviacion` (VARCHAR(10), NOT NULL) a las tablas `tipos_de_grupo` y `tipos_de_plan`. Campo disponible en UI para crear/editar registros. Facilita identificación rápida en listas y reportes mediante abreviaturas consistentes (ej: "FAM", "IND", "PP", "PB").
 
 **Requerimientos:**
 - Campo `abreviacion` en ambas tablas (tipos_de_grupo, tipos_de_plan)
-- NOT NULL, UNIQUE (no permitir duplicados)
+- NOT NULL (campo requerido, sin restricción de unicidad)
 - VARCHAR(10) máximo
 - Validación en backend (trim, uppercase automático)
 - UI permite entrada y edición de abreviación
@@ -2205,9 +2205,9 @@ Agregar campo `abreviacion` (VARCHAR(10), NOT NULL, UNIQUE) a las tablas `tipos_
 **Implementación Completada (2026-04-17):**
 
 **Backend:**
-- ✅ Migración 2.0.7: Crea columna abreviacion en tipos_de_grupo y tipos_de_plan con índices UNIQUE
-  - Simplificada: usa ADD COLUMN + ADD UNIQUE INDEX en una sola ALTER TABLE
-  - Maneja existing rows con DEFAULT ''
+- ✅ Migración 2.0.7: Crea columna abreviacion en tipos_de_grupo y tipos_de_plan
+  - Columna VARCHAR(10) NOT NULL con DEFAULT ''
+  - Sin constraints UNIQUE (permite valores duplicados entre registros)
 - ✅ Modelos Sequelize (TipoDeGrupo.js, TipoDePlan.js)
   - Agregado campo abreviacion con validación notEmpty
   - Validación unique en nivel ORM
@@ -2238,8 +2238,8 @@ Agregar campo `abreviacion` (VARCHAR(10), NOT NULL, UNIQUE) a las tablas `tipos_
    - Validar: aparece en lista con abreviacion en mayúsculas
 4. Crear Tipo de Plan: nombre "Plan Premium", abreviacion "pp"
    - Validar: se auto-convierte a "PP"
-5. Intentar crear otra con abreviacion "FAM" (duplicada)
-   - Validar: error HTTP 409 "Abreviación duplicada"
+5. Crear otro Tipo de Grupo con misma abreviacion "FAM"
+   - Validar: se permite la creación (sin restricción UNIQUE)
 6. Editar un registro, cambiar abreviacion
    - Validar: se actualiza correctamente
 7. Validar maxLength: intentar ingresar más de 10 caracteres
@@ -2248,10 +2248,10 @@ Agregar campo `abreviacion` (VARCHAR(10), NOT NULL, UNIQUE) a las tablas `tipos_
 **Estado:** ✅ Solucionado (2026-04-17)
 
 **Notas:**
-- Migración simplificada usando sintaxis moderna de MySQL
+- Campo sin restricción UNIQUE: permite abreviaturas iguales en diferentes registros
 - Sistema de lookup genérico permitió agregar soporte sin hardcoding
 - Auto-uppercase mejora UX: usuario no necesita pensar en mayúsculas
-- UNIQUE constraint previene duplicados a nivel BD
+- Validación en frontend (maxLength 10) y backend (trim/uppercase)
 - Abreviaturas facilitan reportes y identificación en formularios largos
 - Reutilizable: mismo patrón puede aplicarse a otros tipos si es necesario
 
