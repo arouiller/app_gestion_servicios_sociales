@@ -19,6 +19,7 @@ const LookupCRUD = ({ titulo, singularName, endpoint, campos }) => {
   const [formData, setFormData] = useState({});
   const [searchText, setSearchText] = useState('');
   const [debounceDelay, setDebounceDelay] = useState(2000);
+  const [forceSearchNow, setForceSearchNow] = useState(false);
   const [deleteModal, setDeleteModal] = useState({
     isOpen: false,
     registroId: null,
@@ -177,14 +178,27 @@ const LookupCRUD = ({ titulo, singularName, endpoint, campos }) => {
 
   if (loading) return <div className="lookup-crud loading">Cargando...</div>;
 
+  // Usar searchText inmediatamente si se presionó Enter, si no usar debouncedSearchText
+  const effectiveSearchText = forceSearchNow ? searchText : debouncedSearchText;
+
   const registrosFiltered = registros
     .filter(registro => {
-      const searchLower = debouncedSearchText.toLowerCase();
+      const searchLower = effectiveSearchText.toLowerCase();
       return Object.values(registro).some(val =>
         String(val).toLowerCase().includes(searchLower)
       );
     })
     .slice(0, ITEMS_PER_PAGE);
+
+  // Manejar tecla Enter para búsqueda inmediata (sin debounce)
+  const handleSearchKeyDown = (e) => {
+    if (e.key === 'Enter') {
+      e.preventDefault();
+      setForceSearchNow(true);
+      // Resetear forceSearchNow después de que se renderice
+      setTimeout(() => setForceSearchNow(false), 0);
+    }
+  };
 
   const sinResultados = registros.length === 0;
 
@@ -199,9 +213,10 @@ const LookupCRUD = ({ titulo, singularName, endpoint, campos }) => {
 
       {registros.length > 0 && (
         <SearchContainer
-          placeholder={`Buscar ${titulo.toLowerCase()}...`}
+          placeholder={`Buscar ${titulo.toLowerCase()}... (presiona Enter para buscar inmediatamente)`}
           value={searchText}
           onChange={setSearchText}
+          onKeyDown={handleSearchKeyDown}
           count={registrosFiltered.length}
           maxItems={ITEMS_PER_PAGE}
         />

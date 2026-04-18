@@ -4,8 +4,8 @@ const { verifyToken, requireAdmin } = require('../middleware/auth');
 
 const router = express.Router();
 
-// Tipos de notificación válidos
-const VALID_TYPES = ['error', 'warning', 'success', 'info'];
+// Tipos de notificación y configuración válidos
+const VALID_TYPES = ['error', 'warning', 'success', 'info', 'debounce_delay_ms'];
 
 // GET /api/admin/configuracion - Público (lectura de configuración)
 router.get('/configuracion', async (req, res) => {

@@ -29,6 +29,7 @@ function GestionPlanesV1() {
   const [filtros, setFiltros] = useState({ estado: '', cobrador: '', obraSocial: '' });
   const [searchText, setSearchText] = useState('');
   const [debounceDelay, setDebounceDelay] = useState(2000);
+  const [forceSearchNow, setForceSearchNow] = useState(false);
   const [bulkUpdateModalOpen, setBulkUpdateModalOpen] = useState(false);
   const [generarRecibosModalOpen, setGenerarRecibosModalOpen] = useState(false);
 
@@ -139,10 +140,13 @@ function GestionPlanesV1() {
 
   console.log('[GestionPlanesV1] Rendering component. Planes count:', planes.length, 'Error:', error);
 
+  // Usar searchText inmediatamente si se presionó Enter, si no usar debouncedSearchText
+  const effectiveSearchText = forceSearchNow ? searchText : debouncedSearchText;
+
   // Filtrar planes por búsqueda
   const planesFiltered = planes
     .filter(plan => {
-      const searchLower = debouncedSearchText.toLowerCase();
+      const searchLower = effectiveSearchText.toLowerCase();
       return (
         plan.numero_afiliado?.toLowerCase().includes(searchLower) ||
         plan.TipoDePlan?.tipo_plan_nombre?.toLowerCase().includes(searchLower) ||
@@ -152,6 +156,16 @@ function GestionPlanesV1() {
       );
     })
     .slice(0, ITEMS_PER_PAGE);
+
+  // Manejar tecla Enter para búsqueda inmediata (sin debounce)
+  const handleSearchKeyDown = (e) => {
+    if (e.key === 'Enter') {
+      e.preventDefault();
+      setForceSearchNow(true);
+      // Resetear forceSearchNow después de que se renderice
+      setTimeout(() => setForceSearchNow(false), 0);
+    }
+  };
 
   return (
     <div className="gestion-planes-v1">
@@ -178,9 +192,10 @@ function GestionPlanesV1() {
 
       {planes.length > 0 && (
         <SearchContainer
-          placeholder="Buscar por número de afiliado, tipo de plan, cobrador u obra social..."
+          placeholder="Buscar por número de afiliado, tipo de plan, cobrador u obra social... (presiona Enter para buscar inmediatamente)"
           value={searchText}
           onChange={setSearchText}
+          onKeyDown={handleSearchKeyDown}
           count={planesFiltered.length}
           maxItems={ITEMS_PER_PAGE}
         />

@@ -39,35 +39,44 @@ const BusquedaAfiliados = () => {
     loadDebounceConfig();
   }, []);
 
+  // Función para ejecutar búsqueda
+  const performSearch = useCallback(async (textToSearch) => {
+    setError(null);
+
+    if (!textToSearch.trim()) {
+      setPersonas([]);
+      return;
+    }
+
+    try {
+      setLoading(true);
+      const resultado = await personasService.buscar(textToSearch);
+      setPersonas(resultado);
+    } catch (err) {
+      setError('Error en la búsqueda');
+      console.error(err);
+    } finally {
+      setLoading(false);
+    }
+  }, []);
+
   // Ejecutar búsqueda cuando el texto debouncificado cambia
   useEffect(() => {
-    const performSearch = async () => {
-      setError(null);
+    performSearch(debouncedSearchText);
+  }, [debouncedSearchText, performSearch]);
 
-      if (!debouncedSearchText.trim()) {
-        setPersonas([]);
-        return;
-      }
-
-      try {
-        setLoading(true);
-        const resultado = await personasService.buscar(debouncedSearchText);
-        setPersonas(resultado);
-      } catch (err) {
-        setError('Error en la búsqueda');
-        console.error(err);
-      } finally {
-        setLoading(false);
-      }
-    };
-
-    performSearch();
-  }, [debouncedSearchText]);
-
-  // Solo actualizar estado local sin hacer búsqueda
+  // Manejar cambio de input y tecla Enter
   const handleSearch = useCallback((e) => {
     setSearchText(e.target.value);
   }, []);
+
+  const handleKeyDown = useCallback((e) => {
+    // Si presiona Enter, ejecutar búsqueda inmediatamente
+    if (e.key === 'Enter') {
+      e.preventDefault();
+      performSearch(searchText);
+    }
+  }, [searchText, performSearch]);
 
   const handleSelectPersona = useCallback(async (persona) => {
     setSelectedPersona(persona);
@@ -145,9 +154,10 @@ const BusquedaAfiliados = () => {
       <div className="search-box">
         <input
           type="text"
-          placeholder="Buscar por apellido, nombre o número de documento..."
+          placeholder="Buscar por apellido, nombre o número de documento... (presiona Enter para buscar inmediatamente)"
           value={searchText}
           onChange={handleSearch}
+          onKeyDown={handleKeyDown}
           disabled={loading}
         />
       </div>

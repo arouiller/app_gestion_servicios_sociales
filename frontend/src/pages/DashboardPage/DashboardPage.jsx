@@ -61,7 +61,7 @@ function buildMenu(isAdmin) {
       label: 'Administración',
       children: [
         { key: 'gestion-usuarios', label: 'Gestión de Usuarios' },
-        { key: 'configuracion-notificaciones', label: 'Configuración Notificaciones' },
+        { key: 'configuracion-notificaciones', label: 'Configuración UI' },
         { key: 'migraciones-bd', label: 'Migraciones BD' },
       ],
     });
