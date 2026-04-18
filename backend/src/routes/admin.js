@@ -7,8 +7,8 @@ const router = express.Router();
 // Tipos de notificación válidos
 const VALID_TYPES = ['error', 'warning', 'success', 'info'];
 
-// GET /api/admin/configuracion
-router.get('/configuracion', requireAdmin, async (req, res) => {
+// GET /api/admin/configuracion - Público (lectura de configuración)
+router.get('/configuracion', async (req, res) => {
   try {
     const config = await ConfiguracionApp.findAll();
     const configObj = {};
