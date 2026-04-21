@@ -2593,12 +2593,17 @@ c. **Backend**
 
 **Prioridad:** 🟡 Media — Mejora consistencia visual y UX, pero no afecta funcionalidad core
 
-**Estado:** 📋 Registrado (2026-04-21)
+**Estado:** ✅ Solucionado (2026-04-21)
 
-**Decisiones pendientes:**
-- ¿Cambiar tipo de dato en BD de INT a VARCHAR(5)? (Opción A: migración 2.0.10, Opción B: solo application layer)
-- ¿Formatear números existentes en la BD o solo nuevos?
-- ¿Incluir formato en APIs/responses o dejar a frontend?
+**Implementación Completada (2026-04-21):**
+1. ✅ Crear `frontend/src/utils/formatters.js` con función `formatNumeroAfiliado()`
+2. ✅ Aplicar en 10 componentes: GestionPlanesV1, BusquedaAfiliados, PlanV1Modal (título), RecibosPage, PlanesPorCobrador, ListadoPlanes, GenerarRecibosModal, ReciboDetalleModal, BulkUpdateCuotaModal
+3. ✅ Formato reutilizable con `padStart(5, '0')`
+4. ✅ Los inputs de edición NO formateados (usuario ingresa sin ceros)
+5. ✅ Búsqueda flexible mantiene compatibilidad (buscar números sin ceros)
+
+**Commit:**
+- 2056052 - feat(BACKLOG-026): formatear numero_afiliado a 5 dígitos
 
 ---
 
@@ -2706,14 +2711,16 @@ d. **Búsqueda y filtros:**
 
 **Prioridad:** 🔴 Alta — Es el punto de entrada principal, mejora UX significativamente
 
-**Estado:** 📋 Registrado (2026-04-21)
+**Estado:** ✅ Solucionado (2026-04-21)
 
-**Decisiones pendientes:**
-- ¿Opción A (Router), B (estado inicial) o C (useEffect)?
-- ¿Mostrar todos los planes o aplicar paginación?
-- ¿Incluir filtro por estado en vista principal?
-- ¿Mostrar solo planes activos o todos incluyendo suspendidos?
-- ¿Límite máximo de planes mostrados antes de mostrar paginación?
+**Implementación Completada (2026-04-21):**
+1. ✅ Cambiar `useState(null)` → `useState('gestion-planes-v1')` en DashboardPage.jsx línea 158
+2. ✅ Login redirige directamente a tabla de planes (sin página en blanco)
+3. ✅ Menú lateral permanece funcional para navegar a otros módulos
+4. ✅ GestionPlanesV1 se monta automáticamente como módulo inicial
+
+**Commit:**
+- 74b3c84 - feat(BACKLOG-027): configurar gestion-planes-v1 como módulo inicial
 
 ---
 
@@ -2900,14 +2907,18 @@ Frontend:
 
 **Prioridad:** 🟡 Media — Nueva característica que amplía modelo de datos, requiere cambios transversales
 
-**Estado:** 📋 Registrado (2026-04-21)
+**Estado:** ✅ Solucionado (2026-04-21)
 
-**Decisiones pendientes:**
-- ¿Zona es visible en todos los listados o solo en formularios de edición?
-- ¿Permitir filtrar planes por zona del afiliado titular?
-- ¿Zona debe ser editable después de crear el afiliado?
-- ¿Mostrar zona en búsqueda de afiliados como columna adicional?
-- ¿Validación: zona es obligatoria en integrantes/planes o solo en afiliado?
+**Implementación Completada (2026-04-21):**
+1. ✅ Crear migración 2.0.10: `backend/src/migrations/versions/2.0.10_zona_personas/upgrade.sql` y downgrade.sql
+2. ✅ Modelo Sequelize: agregar atributo `zona` a `backend/src/models/Persona.js`
+3. ✅ Formateo utility: agregar `formatZona()` a `frontend/src/utils/formatters.js`
+4. ✅ Formulario creación: agregar campo zona a `AfiladoSearchModal.jsx` con validación 0-99
+5. ✅ Formulario edición: agregar campo zona a `AfiladoEditModal.jsx` con validación 0-99
+6. ✅ Visualización: agregar columna Zona a `BusquedaAfiliados.jsx` tabla de personas
+
+**Commit:**
+- 280b110 - feat(BACKLOG-028): agregar campo zona a afiliados (personas)
 
 ---
 
