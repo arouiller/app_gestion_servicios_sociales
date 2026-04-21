@@ -16,6 +16,7 @@ import TiposDeGrupo from './components/TiposDeGrupo/TiposDeGrupo';
 import TiposDePlan from './components/TiposDePlan/TiposDePlan';
 import GestionUsuarios from './components/GestionUsuarios/GestionUsuarios';
 import ConfiguracionNotificaciones from './components/ConfiguracionNotificaciones/ConfiguracionNotificaciones';
+import GestionBugs from './components/GestionBugs/GestionBugs';
 import configService from '../../services/configService';
 import './DashboardPage.scss';
 
@@ -45,6 +46,7 @@ function buildMenu(isAdmin) {
         { key: 'busqueda-afiliados', label: 'Búsqueda de Afiliados' },
         { key: 'gestion-planes-v1', label: 'Gestión de Planes' },
         { key: 'gestion-recibos', label: 'Gestión de Recibos' },
+        { key: 'gestion-bugs', label: 'Gestión de Bugs' },
         { key: 'cobradores', label: 'Cobradores' },
         { key: 'obras-sociales', label: 'Obras Sociales' },
         { key: 'servicios-adicionales', label: 'Servicios Adicionales' },
@@ -228,6 +230,7 @@ function DashboardPageContent() {
             </GestionPlanesV1ErrorBoundary>
           )}
           {activeModule === 'gestion-recibos' && <RecibosPage />}
+          {activeModule === 'gestion-bugs' && <GestionBugs />}
           {activeModule === 'gestion-usuarios' && <GestionUsuarios />}
           {activeModule === 'configuracion-notificaciones' && <ConfiguracionNotificaciones />}
           {activeModule === 'migraciones-bd' && <MigrationsDashboard />}
