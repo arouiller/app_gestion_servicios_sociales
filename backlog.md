@@ -2717,6 +2717,200 @@ d. **Búsqueda y filtros:**
 
 ---
 
+### BACKLOG-028: Agregar Campo Zona a Afiliados (Personas)
+
+**Descripción:**
+Ampliar el modelo de datos de afiliados (Persona) agregando un nuevo campo numérico "Zona" de 2 dígitos. Este campo será obligatorio con valor por defecto 0, y debe mostrarse formateado con ceros a la izquierda (00-99). El cambio impacta en toda la arquitectura: base de datos, backend, y todas las interfaces visuales que muestren o editen afiliados.
+
+**Requerimientos:**
+
+a. **Estructura del Campo (BD)**
+   - Nombre: `zona`
+   - Tipo: TINYINT UNSIGNED (0-99) o INT
+   - Default: 0
+   - Nullable: NO
+   - Ubicación tabla: tabla `personas`
+   - Rango válido: 0-99 (2 dígitos)
+   - Formato display: siempre con padding a 2 dígitos (00, 01, 02, ..., 99)
+
+b. **Formato Visual**
+   - Input: permitir 1-2 dígitos (validar 0-99)
+   - Display: mostrar siempre con 2 dígitos formateados (00, 01, etc.)
+   - Búsqueda: permitir búsqueda sin ceros (buscar "5" encuentra zona "05")
+   - Listados: mostrar formateado (ejemplo: "Zona: 05")
+
+c. **Validaciones**
+   - Rango: 0-99 (validar en frontend y backend)
+   - Obligatorio: siempre presente (default 0)
+   - Tipo numérico: solo dígitos 0-9
+
+d. **Flujo de Usuario**
+   - Al crear afiliado: mostrar campo Zona con default "00"
+   - Al editar afiliado: mostrar zona actual, permitir cambio
+   - Al buscar afiliados: permitir filtrar por zona
+   - Al crear plan: mostrar zona del afiliado titular
+
+**Impacto Técnico - Base de Datos:**
+
+1. **Migración 2.0.11 (NUEVA)**
+   - upgrade.sql:
+     ```sql
+     ALTER TABLE personas ADD COLUMN zona TINYINT UNSIGNED NOT NULL DEFAULT 0;
+     ```
+   - downgrade.sql:
+     ```sql
+     ALTER TABLE personas DROP COLUMN zona;
+     ```
+   - Considerar: para datos existentes, zona será 0 para todos
+
+2. **Modelo Sequelize (Persona.js)**
+   - Agregar atributo:
+     ```js
+     zona: {
+       type: DataTypes.INTEGER,
+       allowNull: false,
+       defaultValue: 0,
+       validate: { min: 0, max: 99 }
+     }
+     ```
+
+**Impacto Técnico - Backend:**
+
+1. **Controllers (planesController.js, personasController.js)**
+   - Validación de zona en create/update (0-99)
+   - Retornar zona en responses
+   - Permitir filtrar por zona en búsquedas
+
+2. **Routes**
+   - POST /api/personas: aceptar zona en body
+   - PUT /api/personas/:id: aceptar zona en body
+   - GET /api/personas: retornar zona en responses
+
+3. **Responses API**
+   - Todos los endpoints que retornan persona incluir zona
+   - Ejemplo: `{ id, nombre, apellido, ... zona, ... }`
+
+**Impacto Técnico - Frontend (CRÍTICO - muchos componentes):**
+
+1. **Componentes de creación/edición de afiliados (5):**
+   - `AfiladoSearchModal.jsx` (buscar + crear afiliados)
+   - `AfiladoEditModal.jsx` (editar datos de afiliado)
+   - `AfiladoFormModal.jsx` (si existe)
+   - PlanV1Modal.jsx (si permite crear afiliados inline)
+   - Formularios de creación general de personas
+
+2. **Componentes de visualización (8):**
+   - `BusquedaAfiliados.jsx` (tabla de personas)
+   - `ListadoPlanes.jsx` (mostrar zona del titular)
+   - `GestionPlanesV1.jsx` (tabla de planes - mostrar zona titular)
+   - `PlanesPorCobrador.jsx` (tabla planes - zona)
+   - `PersonasPage.jsx` (si existe)
+   - `ReciboDetalleModal.jsx` (mostrar zona)
+   - `IntegranteServiciosModal.jsx` (si muestra datos integrante)
+   - Otros listados con personas
+
+3. **Barra de búsqueda y filtros (3):**
+   - Permitir filtrar por zona en BusquedaAfiliados
+   - Permitir filtrar por zona en LookupCRUD (si se agrega)
+   - Implementar búsqueda flexible: "5" encuentra "05"
+
+4. **Hooks/Utilities (2):**
+   - `usePlanV1Form.js`: incluir zona en validación de integrantes
+   - Crear `formatZona()` en utils/formatters.js para reutilización
+
+5. **Servicios (1):**
+   - `personasService.js`: actualizar métodos create/update/search
+
+**Flujo de Creación de Afiliado (Ejemplo):**
+```
+Usuario abre modal "Agregar Afiliado" en un plan
+↓
+Mostrar formulario con campos:
+  - Nombre (requerido)
+  - Apellido (requerido)
+  - Tipo de Documento
+  - Número de Documento
+  - Fecha de Nacimiento
+  - Zona (NUEVO) [input 0-99, default "00"]
+  ↓
+Usuario ingresa zona "5"
+↓
+onBlur: formatear a "05" en el input
+↓
+Click "Guardar"
+↓
+POST /api/personas { nombre, apellido, ..., zona: 5 }
+↓
+Backend valida 0 <= zona <= 99
+↓
+Backend guarda con zona = 5
+↓
+Respuesta: { id, nombre, apellido, ..., zona: 5 }
+↓
+Frontend formatea: "Zona: 05" en display
+```
+
+**Decisiones de Diseño:**
+
+1. **¿Donde aparece el campo zona?**
+   - ✅ Obligatorio: Formularios de creación/edición de afiliados
+   - ⚠️ Opcional: Tablas/listados (mostrar si hay espacio)
+   - ⚠️ Filtro: Permitir búsqueda/filtro por zona
+
+2. **¿Formato de entrada vs salida?**
+   - Input: permitir 1-2 dígitos (usuario escribe "5" o "05")
+   - onBlur: formatear a 2 dígitos ("05")
+   - Display: siempre "05"
+   - API: guardar como INT 5, retornar como INT 5
+
+3. **¿Migración backwards compatible?**
+   - ✅ DEFAULT 0: datos existentes obtendrán zona 0
+   - ⚠️ No nullable: todas las personas tendrán zona asignada
+
+**Archivos a crear/modificar:**
+
+Backend:
+- `backend/src/migrations/versions/2.0.11_zona_personas/upgrade.sql` (NUEVO)
+- `backend/src/migrations/versions/2.0.11_zona_personas/downgrade.sql` (NUEVO)
+- `backend/src/models/Persona.js` (agregar atributo zona)
+- `backend/src/controllers/personasController.js` (validar zona)
+- `backend/src/controllers/planesController.js` (incluir zona en responses)
+
+Frontend:
+- `frontend/src/utils/formatters.js` (agregar formatZona)
+- `frontend/src/components/AfiladoSearchModal.jsx` (agregar campo zona)
+- `frontend/src/components/AfiladoEditModal.jsx` (agregar campo zona)
+- `frontend/src/components/BusquedaAfiliados.jsx` (mostrar zona en tabla)
+- `frontend/src/pages/DashboardPage/components/GestionPlanesV1/GestionPlanesV1.jsx` (mostrar zona)
+- `frontend/src/pages/DashboardPage/components/v1.0/ListadoPlanes.jsx` (mostrar zona)
+- `frontend/src/pages/DashboardPage/components/v1.0/PlanesPorCobrador.jsx` (mostrar zona)
+- `frontend/src/pages/DashboardPage/components/GestionPlanesV1/hooks/usePlanV1Form.js` (validar zona integrantes)
+- `frontend/src/services/personasService.js` (actualizar métodos)
+- `frontend/src/components/ReciboDetalleModal.jsx` (mostrar zona)
+- Otros listados/componentes que muestren personas
+
+**Estimación:** 8-12 horas
+  - Migración BD + modelo: 0.5h
+  - Backend (controllers/routes): 1h
+  - Formatter utility: 0.5h
+  - Formularios afiliados (2-3 componentes): 2-3h
+  - Listados y tablas (5-8 componentes): 2-3h
+  - Búsqueda/filtros: 1-1.5h
+  - Testing y ajustes: 1.5-2h
+
+**Prioridad:** 🟡 Media — Nueva característica que amplía modelo de datos, requiere cambios transversales
+
+**Estado:** 📋 Registrado (2026-04-21)
+
+**Decisiones pendientes:**
+- ¿Zona es visible en todos los listados o solo en formularios de edición?
+- ¿Permitir filtrar planes por zona del afiliado titular?
+- ¿Zona debe ser editable después de crear el afiliado?
+- ¿Mostrar zona en búsqueda de afiliados como columna adicional?
+- ¿Validación: zona es obligatoria en integrantes/planes o solo en afiliado?
+
+---
+
 ## Items descartados
 
 | ID | Descripción | Motivo descarte |
