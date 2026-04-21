@@ -27,4 +27,24 @@
     background-color: $color-bg-light;
     color: $color-text-muted;
   }
+
+  &--registrado {
+    background-color: $color-info-bg;
+    color: $color-info;
+  }
+
+  &--desarrollado {
+    background-color: $color-warning-bg;
+    color: $color-warning;
+  }
+
+  &--desestimado {
+    background-color: $color-danger-bg;
+    color: $color-danger;
+  }
+
+  &--cerrado {
+    background-color: $color-bg-light;
+    color: $color-text-muted;
+  }
 }
