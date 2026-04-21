@@ -1,5 +1,6 @@
 import React, { useState, useCallback, useMemo } from 'react';
 import personasService from '../../../../../services/personasService';
+import { formatZona } from '../../../../../utils/formatters';
 import ConfirmCloseDialog from '../../../../../components/ConfirmCloseDialog/ConfirmCloseDialog';
 import { useModalEscapeKey } from '../../../../../hooks/useModalEscapeKey';
 import './AfiladoSearchModal.scss';
@@ -12,6 +13,7 @@ function AfiladoSearchModal({ onClose, onSelect }) {
     numero_documento: '',
     fecha_nacimiento: '',
     fecha_cobertura: '',
+    zona: 0,
   });
   const [errorMessage, setErrorMessage] = useState(null);
   const [loading, setLoading] = useState(false);
@@ -165,6 +167,22 @@ function AfiladoSearchModal({ onClose, onSelect }) {
                 value={newPersona.fecha_cobertura}
                 onChange={(e) => setNewPersona({ ...newPersona, fecha_cobertura: e.target.value })}
               />
+            </div>
+            <div className="afiliado-search-modal__field">
+              <label>Zona</label>
+              <input
+                type="number"
+                min="0"
+                max="99"
+                value={newPersona.zona}
+                onChange={(e) => setNewPersona({ ...newPersona, zona: parseInt(e.target.value) || 0 })}
+                onBlur={(e) => {
+                  const val = parseInt(e.target.value) || 0;
+                  setNewPersona({ ...newPersona, zona: Math.max(0, Math.min(99, val)) });
+                }}
+                placeholder="00"
+              />
+              <small>{formatZona(newPersona.zona)}</small>
             </div>
           </div>
 

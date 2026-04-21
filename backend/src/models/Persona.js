@@ -9,6 +9,7 @@ const Persona = sequelize.define('Persona', {
   numero_documento: { type: DataTypes.STRING(20), allowNull: false, unique: true },
   fecha_nacimiento: { type: DataTypes.DATE, allowNull: false },
   fecha_cobertura: { type: DataTypes.DATE, allowNull: false },
+  zona: { type: DataTypes.INTEGER, allowNull: false, defaultValue: 0 },
   fecha_creacion: { type: DataTypes.DATE, allowNull: false, defaultValue: DataTypes.NOW },
   fecha_actualizacion: { type: DataTypes.DATE, allowNull: false, defaultValue: DataTypes.NOW },
 }, { tableName: 'personas', timestamps: false });

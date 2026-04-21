@@ -1,5 +1,6 @@
 import React, { useState, useEffect, useCallback, useMemo } from 'react';
 import personasService from '../../../../../services/personasService';
+import { formatZona } from '../../../../../utils/formatters';
 import ConfirmCloseDialog from '../../../../../components/ConfirmCloseDialog/ConfirmCloseDialog';
 import { useModalEscapeKey } from '../../../../../hooks/useModalEscapeKey';
 import './AfiladoEditModal.scss';
@@ -14,6 +15,7 @@ function AfiladoEditModal({ personaId, personaData, onClose, onSave }) {
     numero_documento: '',
     fecha_nacimiento: '',
     fecha_cobertura: '',
+    zona: 0,
   });
   const [showConfirmClose, setShowConfirmClose] = useState(false);
 
@@ -61,6 +63,7 @@ function AfiladoEditModal({ personaId, personaData, onClose, onSave }) {
         numero_documento: String(personaData.numero_documento || ''),
         fecha_nacimiento: formatDate(personaData.fecha_nacimiento),
         fecha_cobertura: formatDate(personaData.fecha_cobertura),
+        zona: personaData.zona ?? 0,
       };
 
       setForm(formData);
@@ -158,6 +161,22 @@ function AfiladoEditModal({ personaId, personaData, onClose, onSave }) {
                 value={form.fecha_cobertura}
                 onChange={(e) => handleChange('fecha_cobertura', e.target.value)}
               />
+            </div>
+            <div className="afiliado-edit-modal__field">
+              <label>Zona</label>
+              <input
+                type="number"
+                min="0"
+                max="99"
+                value={form.zona}
+                onChange={(e) => handleChange('zona', parseInt(e.target.value) || 0)}
+                onBlur={(e) => {
+                  const val = parseInt(e.target.value) || 0;
+                  handleChange('zona', Math.max(0, Math.min(99, val)));
+                }}
+                placeholder="00"
+              />
+              <small>{formatZona(form.zona)}</small>
             </div>
           </div>
         </div>
