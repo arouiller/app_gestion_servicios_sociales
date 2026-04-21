@@ -507,7 +507,6 @@ function PlanV1Modal({ mode, planData, onClose, onSave }) {
                   }}
                   placeholder="00"
                 />
-                <small>{formatZona(form.zona)}</small>
               </div>
 
               <div className="plan-v1-modal__field">
