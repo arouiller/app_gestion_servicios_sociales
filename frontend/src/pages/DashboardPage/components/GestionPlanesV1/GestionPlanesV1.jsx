@@ -153,7 +153,8 @@ function GestionPlanesV1() {
         plan.TipoDePlan?.tipo_plan_nombre?.toLowerCase().includes(searchLower) ||
         plan.Cobrador?.cobrador_apellido?.toLowerCase().includes(searchLower) ||
         plan.Cobrador?.cobrador_nombre?.toLowerCase().includes(searchLower) ||
-        plan.ObraSocial?.os_nombre?.toLowerCase().includes(searchLower)
+        plan.ObraSocial?.os_nombre?.toLowerCase().includes(searchLower) ||
+        String(plan.zona || 0).padStart(2, '0').includes(searchLower)
       );
     })
     .slice(0, ITEMS_PER_PAGE);
