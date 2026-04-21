@@ -33,6 +33,7 @@ De cualquier estado → Descartado
 
 | ID | Prioridad | Estado | Descripción | Contexto / Motivo | Archivos estimados |
 |----|-----------|--------|-------------|-------------------|----|
+| BACKLOG-029 | 🟡 Media | ✅ Solucionado | Sistema de Gestión de Bugs (Reportes de Problemas) | Sistema centralizado de reporte y gestión de bugs donde usuarios pueden registrar problemas con editor de texto enriquecido (Quill) y soporte de imágenes. Flujo de estados controlado por admin (REGISTRADO → DESARROLLADO/DESESTIMADO → CERRADO). Números únicos auto-generados (BUG-0001, BUG-0002, etc.). | migrations/2.0.11, bugsController.js, routes/v1.0/bugs.js, bugsService.js, GestionBugs.jsx, BugFormModal.jsx, BugDetalleModal.jsx, StatusBadge.scss |
 | BACKLOG-025 | 🔴 Alta | 📋 Registrado | Implementar debounce configurable en búsquedas de texto | Todas las búsquedas por texto deberían iniciarse después de 2000ms (configurable) sin input. Mejora: reduce llamadas al servidor, mejor UX. Afecta: BusquedaAfiliados, LookupCRUD, y otros. Requiere backend config y posible migración BD 2.0.9 para tabla de configuración. | useDebounce hook, configService, ConfiguracionApp |
 | BACKLOG-024 | 🔴 Alta | 🔬 En análisis | Actualizar dependencias deprecadas del frontend | 20 paquetes outdated detectados en compilación. Solución encontrada: actualizar react-scripts 5.0.1 → 5.1.0+ (que incluye automáticamente versiones modernas). Intento inicial de agregar 22 deps explícitas causó conflicto npm. Requiere actualización incremental con testing exhaustivo. | package.json, react-scripts upgrade |
 | BACKLOG-023 | 🔴 Alta | ✅ Solucionado | Agregar campo abreviacion a Tipos de Plan | Campo requerido (NOT NULL) en tabla tipo_plan. Disponible en BD y UI (crear/editar). Ej: "Plan Premium" → "PP", "Plan Basic" → "PB". Facilita identificación rápida en listas y reportes. | migrations/2.0.7, models/TipoDePlan, TiposDePlan.jsx |
@@ -3137,14 +3138,71 @@ Frontend (modificar):
 
 **Prioridad:** 🟡 Media — Sistema de reporte útil pero no bloqueante para core
 
-**Estado:** 📋 Registrado (2026-04-21)
+**Estado:** ✅ Solucionado (2026-04-21)
 
-**Notas / Consideraciones pendientes:**
-- Decisiones de diseño requieren validación del usuario antes de análisis detallado
-- Librería de editor de texto enriquecido debe evaluarse (Quill vs TinyMCE vs otros)
-- Gestión de archivos (upload de imágenes) requiere estrategia clara
-- Rate limiting recomendado para prevenir spam
-- Solicitar confirmación del usuario sobre accesibilidad de bugs (quién ve qué)
+**Implementación:**
+
+**Backend:**
+- ✅ Migración 2.0.11: tabla bugs con id, numero (UNIQUE), usuario_id, titulo, descripcion (LONGTEXT), estado (ENUM), fecha_creacion, fecha_actualizacion
+- ✅ Modelo Bug.js con beforeSave hook actualizando fecha_actualizacion
+- ✅ Registro de modelo en models/index.js con asociación a Usuario
+- ✅ Controller bugsController.js con 4 handlers:
+  - `listar()`: GET /api/v1.0/bugs con filtros estado, usuario_id y búsqueda full-text en titulo/descripcion
+  - `obtener()`: GET /api/v1.0/bugs/:id con include Usuario
+  - `crear()`: POST /api/v1.0/bugs - genera número secuencial BUG-XXXX, estado inicial REGISTRADO, captura usuario_id de JWT
+  - `cambiarEstado()`: PUT /api/v1.0/bugs/:id/estado - solo admin, valida transiciones (REGISTRADO→DESARROLLADO/DESESTIMADO, luego→CERRADO, CERRADO read-only)
+- ✅ Routes v1.0/bugs.js con endpoints protegidos por verifyToken y requireAdmin según corresponda
+
+**Frontend:**
+- ✅ react-quill instalado en package.json (v2.0.0-beta.2)
+- ✅ Service bugsService.js con métodos listar(), obtener(), crear(), cambiarEstado()
+- ✅ Componente GestionBugs.jsx: listado paginado (15 items/page) con tabla mostrando número, título, reportado por, fecha, estado
+  - Filtro por estado (select)
+  - Búsqueda debounced en título/descripción/usuario
+  - Acciones: ver detalle
+- ✅ Modal BugFormModal.jsx:
+  - Campo título (opcional)
+  - Editor ReactQuill para descripción (requerida)
+  - Toolbar: bold, italic, underline, listas ordenadas/bullets, imágenes
+  - Validación: descripción no vacía
+  - Change detection con ConfirmCloseDialog
+- ✅ Modal BugDetalleModal.jsx:
+  - Muestra: número, reportado por, fecha, estado
+  - Título (si existe)
+  - Descripción HTML renderizada con dangerouslySetInnerHTML
+  - Admin-only: botones de transición de estado según estado actual
+  - Transiciones visibles: REGISTRADO→Marcar Desarrollado + Desestimar, DESARROLLADO→Cerrar Bug, DESESTIMADO→Cerrar Bug, CERRADO→read-only
+- ✅ Integración en DashboardPage.jsx:
+  - Importado GestionBugs
+  - Agregado 'gestion-bugs' al menú bajo sección Gestión
+  - Render condicional: `{activeModule === 'gestion-bugs' && <GestionBugs />}`
+- ✅ StatusBadge.scss: agregados estilos para 4 estados:
+  - --registrado: color info
+  - --desarrollado: color warning
+  - --desestimado: color danger
+  - --cerrado: color muted
+
+**Decisiones implementadas:**
+- Todos los usuarios ven todos los bugs (transparencia total en entorno interno)
+- Solo admin puede cambiar estado
+- Números formato BUG-XXXX (secuencial de 4 dígitos)
+- Sin tabla de auditoría en v1 (solo estado actual, sin historial de cambios)
+- Sin notificaciones por email (usuario verifica manualmente)
+- Sin rate limiting en v1
+- Editor Quill con imágenes embebidas como base64
+
+**Commits:**
+- e3b4502 feat(bugs): agregar migración 2.0.11 para tabla bugs
+- e0b328b feat(bugs): agregar modelo Bug y registrar en models/index.js
+- 02da8a4 feat(bugs): agregar controller bugsController.js con 4 handlers
+- a6ceeb5 feat(bugs): agregar routes/v1.0-bugs.js con 4 endpoints
+- c222aac feat(bugs): montar rutas de bugs en index.js
+- fb15bdb feat(bugs): instalar react-quill para editor de texto enriquecido
+- d4d29c8 feat(bugs): agregar bugsService.js
+- 0fd78c5 feat(bugs): agregar GestionBugs.jsx - listado con filtros y paginación
+- 283e56b feat(bugs): agregar modales BugFormModal y BugDetalleModal
+- 94f3c99 style(StatusBadge): agregar estilos para estados de bugs
+- 425f06c feat(bugs): integrar módulo de bugs en DashboardPage
 
 ---
 
