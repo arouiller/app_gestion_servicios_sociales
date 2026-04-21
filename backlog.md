@@ -2484,6 +2484,114 @@ Backend:
 
 ---
 
+### BACKLOG-026: Formatear Número de Afiliado a 5 Dígitos
+
+**Descripción:**
+En todos los sitios donde se muestre o edite el número de afiliado, debe mostrarse con exactamente 5 dígitos. Si el número tiene menos de 5 dígitos, se debe completar con ceros a la izquierda (ej: 123 → 00123).
+
+**Requerimientos:**
+
+a. **Visualización (display)**
+   - En tablas que muestren planes (GestionPlanesV1, BusquedaAfiliados, RecibosPage)
+   - En modales de edición (PlanV1Modal)
+   - En confirmaciones y mensajes de alerta
+   - En detalles de recibos
+   - En cualquier lista o vista que muestre número_afiliado
+
+b. **Edición (input)**
+   - Campo de input en PlanV1Modal debe aceptar números de 1-5 dígitos
+   - Al guardar, validar y formatear a 5 dígitos antes de enviar a backend
+   - Mostrar hint/placeholder indicando formato (ej: "Ej: 00123")
+
+c. **Backend**
+   - Al guardar en BD: convertir a 5 dígitos (INT → LPAD en SQL o validación en Node)
+   - Al retornar en APIs: retornar siempre formateado a 5 dígitos
+   - En consultas/filtros: permitir búsqueda sin ceros (ej: buscar "123" debe encontrar "00123")
+
+**Impacto de Implementación:**
+
+**Frontend (19 archivos afectados):**
+1. **Componentes de visualización (6):**
+   - `GestionPlanesV1.jsx` (línea 224: `<td>{plan.numero_afiliado}</td>`)
+   - `BusquedaAfiliados.jsx` (línea 240: mostrar en tabla de planes)
+   - `RecibosPage.jsx` (mostrar en lista de recibos)
+   - `ReciboDetalleModal.jsx` (mostrar en detalle)
+   - `ListadoPlanes.jsx` (mostrar en tabla)
+   - `PlanesPorCobrador.jsx` (mostrar en tabla)
+
+2. **Componentes de edición (2):**
+   - `PlanV1Modal.jsx` (línea 397: input + validación al guardar)
+   - `usePlanV1Form.js` (hook de validación)
+
+3. **Mensajes y confirmaciones (2):**
+   - `GestionPlanesV1.jsx` (línea 112: confirmación de suspensión)
+   - `BusquedaAfiliados.jsx` (línea 124-125: confirmación de cambio de estado)
+
+4. **Modal de generación de recibos (1):**
+   - `GenerarRecibosModal.jsx`
+
+5. **Tabla de actualización masiva (1):**
+   - `BulkUpdateCuotaModal.jsx`
+
+**Solución técnica (2 opciones):**
+
+**Opción A: Formatter utility (RECOMENDADA)**
+   - Crear función `formatAfiliado(numero)` en `frontend/src/utils/formatters.js`
+   - Usar en todos los puntos de visualización: `{formatAfiliado(plan.numero_afiliado)}`
+   - En edición: usar `formatAfiliado()` en onChange y onBlur
+   - Centralizado, reutilizable, fácil de mantener
+
+**Opción B: Computed property**
+   - En cada componente, crear `const displayNumero = String(numero).padStart(5, '0')`
+   - Repetir en cada lugar donde se use
+   - Más disperso pero funcional
+
+**Backend (3 archivos):**
+1. **Modelo:**
+   - `PlanV1.js`: agregar getter/setter o validación
+
+2. **Controllers (v1.0):**
+   - `planesController.js`: validación al crear/actualizar
+   - `recibosController.js`: validación al generar recibos
+
+3. **Migraciones/Seed:**
+   - Evaluar si datos existentes necesitan formateo
+   - Si hay datos sin formato, crear migración 2.0.10 para formatear
+
+**Base de Datos:**
+- Opción A: Cambiar tipo de dato `numero_afiliado` de INT a VARCHAR(5) con ZEROFILL
+  * Requiere migración para conversión de tipo
+  * Más robusto, datos siempre formateados
+  
+- Opción B: Mantener INT, formatear en application layer
+  * Menos invasivo, no requiere migración
+  * Riesgo: si se accede BD directamente, no está garantizado el formato
+
+**Testing:**
+- Crear planes con números 1-5 dígitos y verificar visualización
+- Editar número de afiliado y confirmar formato guardado
+- Búsqueda: buscar "123" debe encontrar plan "00123"
+- Recibos: verificar formato en documentos generados
+- APIs: verificar que todas las responses retornen formateado
+
+**Estimación:** 4-6 horas
+  - Crear formatter utility: 0.5h
+  - Actualizar componentes frontend (12-15 puntos): 2-3h
+  - Actualizar backend (validación): 0.5h
+  - Decisión y migración BD (si aplica): 0.5h
+  - Testing: 1-1.5h
+
+**Prioridad:** 🟡 Media — Mejora consistencia visual y UX, pero no afecta funcionalidad core
+
+**Estado:** 📋 Registrado (2026-04-21)
+
+**Decisiones pendientes:**
+- ¿Cambiar tipo de dato en BD de INT a VARCHAR(5)? (Opción A: migración 2.0.10, Opción B: solo application layer)
+- ¿Formatear números existentes en la BD o solo nuevos?
+- ¿Incluir formato en APIs/responses o dejar a frontend?
+
+---
+
 ## Items descartados
 
 | ID | Descripción | Motivo descarte |
