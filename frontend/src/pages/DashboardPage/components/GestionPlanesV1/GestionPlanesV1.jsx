@@ -212,11 +212,11 @@ function GestionPlanesV1() {
             <thead>
               <tr>
                 <th>Número de Afiliado</th>
+                <th>Zona</th>
                 <th>Tipo de Plan</th>
                 <th>Cobrador</th>
                 <th>Obra Social</th>
                 <th>Estado</th>
-                <th>Zona</th>
                 <th>Acciones</th>
               </tr>
             </thead>
@@ -224,13 +224,13 @@ function GestionPlanesV1() {
               {planesFiltered.map((plan) => (
                 <tr key={plan.plan_numero}>
                   <td>{formatNumeroAfiliado(plan.numero_afiliado)}</td>
+                  <td>{formatZona(plan.zona)}</td>
                   <td>{plan.TipoDePlan?.tipo_plan_nombre || '—'}</td>
                   <td>{plan.Cobrador?.cobrador_apellido}, {plan.Cobrador?.cobrador_nombre}</td>
                   <td>{plan.ObraSocial?.os_nombre || '—'}</td>
                   <td>
                     <StatusBadge status={plan.estado} />
                   </td>
-                  <td>{formatZona(plan.zona)}</td>
                   <td className="table-actions">
                     <div className="action-button-group">
                       <IconButton
