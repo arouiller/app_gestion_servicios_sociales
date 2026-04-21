@@ -5,7 +5,7 @@ import configService from '../../../../services/configService';
 import PlanV1Modal from '../GestionPlanesV1/modals/PlanV1Modal';
 import IconButton from '../../../../components/IconButton/IconButton';
 import useDebounce from '../../../../hooks/useDebounce';
-import { formatNumeroAfiliado, formatZona } from '../../../../utils/formatters';
+import { formatNumeroAfiliado } from '../../../../utils/formatters';
 import '../../../../styles/_table-standard.scss';
 import './BusquedaAfiliados.scss';
 
@@ -176,7 +176,6 @@ const BusquedaAfiliados = () => {
               <th>Tipo Doc</th>
               <th>Nro Doc</th>
               <th>Fecha Nac</th>
-              <th>Zona</th>
               <th>Acción</th>
             </tr>
           </thead>
@@ -188,7 +187,6 @@ const BusquedaAfiliados = () => {
                 <td>{persona.tipo_documento}</td>
                 <td>{persona.numero_documento}</td>
                 <td>{new Date(persona.fecha_nacimiento).toLocaleDateString()}</td>
-                <td>{formatZona(persona.zona)}</td>
                 <td>
                   <button
                     className="btn-ver"
