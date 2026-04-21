@@ -22,6 +22,7 @@ const HistorialCuota = require('./HistorialCuota');
 const Recibo = require('./Recibo');
 const ReciboIntegrante = require('./ReciboIntegrante');
 const PeriodosRecibos = require('./PeriodosRecibos');
+const Bug = require('./Bug');
 
 // Initialize all models
 const db = {
@@ -44,6 +45,7 @@ const db = {
   Recibo,
   ReciboIntegrante,
   PeriodosRecibos,
+  Bug,
 };
 
 // Define associations for 1.0.x
@@ -87,6 +89,10 @@ if (db.Recibo && db.Usuario) {
 }
 if (db.Recibo && db.ReciboIntegrante) {
   db.Recibo.hasMany(db.ReciboIntegrante, { foreignKey: 'recibo_id', onDelete: 'CASCADE' });
+}
+// Bug associations
+if (db.Bug && db.Usuario) {
+  db.Bug.belongsTo(db.Usuario, { foreignKey: 'usuario_id', as: 'usuario' });
 }
 
 module.exports = db;
