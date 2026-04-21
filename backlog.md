@@ -2592,6 +2592,121 @@ c. **Backend**
 
 ---
 
+### BACKLOG-027: Página Principal - Listado de Planes al Login
+
+**Descripción:**
+Al ingresar al sitio y autenticarse (post-login), la página principal debe mostrar directamente el listado de todos los planes, sin necesidad de navegar por el menú. Este listado será el punto de entrada por defecto, mejorando la UX al dar acceso rápido a la funcionalidad más utilizada.
+
+**Requerimientos:**
+
+a. **Flujo de navegación:**
+   - Usuario hace login exitoso
+   - Redirect automático a página principal de planes (en lugar de página en blanco o panel neutro)
+   - El menú lateral permanece disponible para navegar a otras secciones
+
+b. **Contenido de la página:**
+   - Listado tabular de todos los planes
+   - Columnas: Número de Afiliado | Apellido | Nombre | Acciones
+   - Mostrar formateado: numero_afiliado con 5 dígitos (relacionado a BACKLOG-026)
+   - Nombre y apellido del titular (Persona asociada al plan)
+   - Paginación o scroll infinito (máximo 20-50 planes por vista)
+
+c. **Acciones (botones en tabla):**
+   - Botón "Editar": abre PlanV1Modal en modo edición
+   - Botón "Eliminar/Suspender": abre confirmación de eliminación (similar a GestionPlanesV1 actual)
+   - Opcionales: ver detalles, generar recibos (desde panel de planes)
+
+d. **Búsqueda y filtros:**
+   - Barra de búsqueda para filtrar por numero_afiliado, nombre o apellido (BACKLOG-025: debounce aplicado)
+   - Opcional: filtros por estado (Activo/Suspendido)
+
+**Impacto Técnico:**
+
+**Frontend (3 archivos, cambio mínimo):**
+
+1. **App.jsx (ruta por defecto)**
+   - Cambiar ruta raíz `/` para redirigir a `/dashboard` o `/planes`
+   - O: mantener `/dashboard` como default, hacer `/` → `/dashboard`
+   - Ubicación actual: `frontend/src/App.jsx` (rutas React Router)
+
+2. **DashboardPage.jsx (estado inicial)**
+   - Cambiar `useState(activeModule)` inicial de `null`/`undefined` a `'gestion-planes-v1'`
+   - Lógica actual: lee props o parámetros URL para determinar módulo activo
+   - Solución simple: agregar `const [activeModule, setActiveModule] = useState('gestion-planes-v1');`
+   - Ubicación: `frontend/src/pages/DashboardPage/DashboardPage.jsx` (línea ~??)
+
+3. **GestionPlanesV1.jsx (ya existe, sin cambios)**
+   - Componente ya implementado y funcional
+   - Ya carga datos, búsqueda, acciones (editar, suspender)
+   - Solo necesita ser módulo inicial
+   - Ubicación: `frontend/src/pages/DashboardPage/components/GestionPlanesV1/GestionPlanesV1.jsx`
+
+**Backend (sin cambios):**
+   - API GET `/api/planes-v1` ya retorna todos los planes con relaciones (Persona, TipoDePlan, etc)
+   - No hay nuevos endpoints necesarios
+   - Controllers/routes existentes suficientes
+
+**Arquitectura - Decisión: ¿Cómo hacer el redirect?**
+
+**Opción A: Redirect en Router (RECOMENDADA)**
+   ```js
+   // App.jsx
+   <Routes>
+     <Route path="/" element={<Navigate to="/dashboard" replace />} />
+     <Route path="/dashboard" element={<DashboardPage defaultModule="gestion-planes-v1" />} />
+   </Routes>
+   ```
+   - ✅ Limpio, explícito
+   - ✅ Maneja raíz `/` correctamente
+   - ✅ No rompe otras rutas
+   - ⚠️ Requiere pasar prop a DashboardPage
+
+**Opción B: Estado inicial en DashboardPage (SIMPLE)**
+   ```js
+   const [activeModule, setActiveModule] = useState('gestion-planes-v1');
+   ```
+   - ✅ Más simple, una línea
+   - ✅ Cero cambios en App.jsx
+   - ⚠️ Menos flexible para rutas futuras
+   - ⚠️ Si hay URL params, puede no sincronizar correctamente
+
+**Opción C: useEffect + navegación condicional**
+   - En DashboardPage, si activeModule es null, navegar a gestion-planes-v1
+   - ✅ Flexibilidad
+   - ⚠️ Lógica adicional
+
+**Relaciones con otros requerimientos:**
+- **BACKLOG-026 (formato afiliado):** Listado debe mostrar numero_afiliado formateado a 5 dígitos
+- **BACKLOG-025 (debounce):** Búsqueda ya implementada con debounce configurable
+
+**Testing:**
+- Login → Verificar redirect automático a planes (no página en blanco)
+- Tabla visible con todos los planes
+- Columnas correctas: numero_afiliado (5 dígitos), apellido, nombre
+- Búsqueda funciona (debounce + Enter)
+- Botones editar/suspender funcionan
+- Navegación a otros módulos sigue siendo posible (menú)
+- No rompe autenticación ni cierre de sesión
+
+**Estimación:** 1-2 horas (bajo esfuerzo)
+  - Cambiar estado inicial: 0.25h
+  - Opcional: redirect en Router: 0.5h
+  - Testing flujo completo (login → planes): 0.5h
+  - Verificar no rompe otras funcionalidades: 0.5h
+
+**Prioridad:** 🔴 Alta — Es el punto de entrada principal, mejora UX significativamente
+
+**Estado:** 📋 Registrado (2026-04-21)
+
+**Decisiones pendientes:**
+- ¿Opción A (Router), B (estado inicial) o C (useEffect)?
+- ¿Mostrar todos los planes o aplicar paginación?
+- ¿Incluir filtro por estado en vista principal?
+- ¿Mostrar solo planes activos o todos incluyendo suspendidos?
+- ¿Límite máximo de planes mostrados antes de mostrar paginación?
+
+---
+
 ## Items descartados
 
 | ID | Descripción | Motivo descarte |
