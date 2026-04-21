@@ -2475,12 +2475,22 @@ Backend:
 
 **Prioridad:** 🔴 Alta — Mejora rendimiento y UX en funcionalidad core
 
-**Estado:** 📋 Registrado (2026-04-18)
+**Estado:** ✅ Solucionado (2026-04-21)
 
-**Decisiones pendientes:**
-- ¿Usar ConfiguracionApp existente o crear tabla ConfiguracionSistema nueva?
-- ¿Aplicar debounce en frontend solamente o también throttle en backend?
-- ¿Permitir debounce delay diferente por componente o uno global para todos?
+**Implementación Completada (2026-04-21):**
+1. ✅ Hook useDebounce.js: custom hook con setTimeout y cleanup
+2. ✅ ConfiguracionApp extendida: debounce_delay_ms con default 2000ms
+3. ✅ Migración 2.0.9: inserta configuración en BD
+4. ✅ Frontend (3 componentes): BusquedaAfiliados, LookupCRUD, GestionPlanesV1
+5. ✅ Panel admin: ConfiguracionNotificaciones con sección de búsquedas configurable (100-10000ms)
+6. ✅ Validación backend: VALID_TYPES en admin.js incluye debounce_delay_ms
+7. ✅ Enter key enhancement: búsqueda inmediata sin esperar debounce en todos los componentes
+8. ✅ Menú renombrado: "Configuración Notificaciones" → "Configuración UI"
+
+**Commits relacionados:**
+- f6217d8 - feat(configuracion): permitir debounce_delay_ms en endpoint
+- 87cc5b1 - feat(BACKLOG-025): implementar debounce configurable
+- (y commits anteriores del setup)
 
 ---
 
