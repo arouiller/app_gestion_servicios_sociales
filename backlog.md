@@ -2927,6 +2927,227 @@ Frontend:
 
 ---
 
+### BACKLOG-029: Sistema de Gestión de Bugs (Reportes de Problemas)
+
+**Descripción:**
+Implementar un sistema centralizado de reporte y gestión de bugs donde usuarios pueden registrar problemas encontrados con un campo de texto enriquecido (con soporte para imágenes). Los bugs tienen un número único asignado automáticamente por el sistema y flujo de estados (REGISTRADO → DESARROLLADO/DESESTIMADO/CERRADO) controlado por administradores.
+
+**Requerimientos:**
+
+a. **Registro de Bug (por cualquier usuario)**
+   - Acceso: interfaz en menú principal o módulo dedicado
+   - Campo de texto enriquecido: soporte HTML, imágenes, formatos (negrita, cursiva, listas, etc.)
+   - Validación: descripción requerida, mínimo 20 caracteres
+   - Estado inicial: "REGISTRADO" (asignado automáticamente)
+   - Número único: autoincremento, formato: BUGS-0001, BUGS-0002, etc.
+   - Metadatos capturados:
+     - ID de usuario que reporta
+     - Fecha/hora de creación
+     - Campo de reproducción (optional): pasos para reproducir, navegador, versión app, etc.
+
+b. **Gestión de Estado (solo admin)**
+   - Estados posibles: REGISTRADO → DESARROLLADO, REGISTRADO → DESESTIMADO, DESARROLLADO → CERRADO, DESESTIMADO → CERRADO
+   - Cada cambio registra: quién cambió, cuándo, motivo (campo de texto)
+   - Vista admin: botones para cambiar estado con modal de confirmación
+   - Auditoría: historial de cambios de estado visible
+
+c. **Listado de Bugs**
+   - Tabla paginada con: número, resumen (primeras 100 chars), usuario, fecha, estado, acciones
+   - Filtros: por estado, por usuario creador, por rango de fechas
+   - Búsqueda: texto completo en descripción
+   - Ordenamiento: por fecha (desc default), por estado, por usuario
+   - Indicadores visuales: color según estado
+
+d. **Visualización de Detalle**
+   - Descripción HTML completa con imágenes
+   - Información de creador, fecha, estado actual
+   - Historial de cambios de estado (timestamps, admin que cambió, motivo)
+   - Si es admin: botones para cambiar estado
+   - Links relacionados: ninguno por ahora (future: enlazar con tickets, PRs, etc.)
+
+**Impacto Técnico - Base de Datos:**
+
+1. **Nueva tabla: `bugs`**
+   ```sql
+   bugs (
+     id: INT AUTO_INCREMENT PRIMARY KEY,
+     numero: VARCHAR(20) UNIQUE NOT NULL,  -- BUGS-0001, BUGS-0002, etc.
+     usuario_id: INT NOT NULL FK personas.id,
+     titulo: VARCHAR(255),  -- optional resumen
+     descripcion: LONGTEXT NOT NULL,  -- HTML enriquecido
+     pasos_reproduccion: LONGTEXT,  -- optional
+     estado: ENUM('REGISTRADO','DESARROLLADO','DESESTIMADO','CERRADO') DEFAULT 'REGISTRADO',
+     fecha_creacion: TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+     fecha_actualizacion: TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+     navegador_user_agent: VARCHAR(500),  -- optional, capturado en frontend
+     url_origen: VARCHAR(500),  -- optional
+     version_app: VARCHAR(50),  -- optional
+     indice: INT UNIQUE NOT NULL AUTO_INCREMENT  -- para generar número BUGS-XXXX
+   )
+   ```
+
+2. **Tabla de auditoría: `bugs_historial_cambios`**
+   ```sql
+   bugs_historial_cambios (
+     id: INT AUTO_INCREMENT PRIMARY KEY,
+     bug_id: INT NOT NULL FK bugs.id,
+     estado_anterior: ENUM(...),
+     estado_nuevo: ENUM(...),
+     admin_id: INT NOT NULL FK personas.id,  -- admin que realizó el cambio
+     motivo: LONGTEXT,  -- descripción del cambio/cierre
+     fecha_cambio: TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+   )
+   ```
+
+3. **Índices:**
+   - PRIMARY KEY (id)
+   - UNIQUE (numero)
+   - INDEX (usuario_id)
+   - INDEX (estado)
+   - INDEX (fecha_creacion)
+
+**Impacto Técnico - Backend:**
+
+1. **Modelo Sequelize:**
+   - `Bug.js` con relaciones a Usuario (creador)
+   - `BugHistorialCambio.js` con relaciones a Bug y Usuario (admin)
+
+2. **Controller: `bugsController.js`**
+   - `crear(req, res)`: POST /api/bugs → crear bug nuevo, generar número secuencial
+   - `listar(req, res)`: GET /api/bugs → listar bugs con filtros, paginación, búsqueda
+   - `obtener(req, res)`: GET /api/bugs/:id → detalle bug + historial cambios
+   - `cambiarEstado(req, res)`: PUT /api/bugs/:id/estado → cambiar estado (admin only)
+     - Validar transiciones de estado permitidas
+     - Registrar en tabla de auditoría
+     - Notificar a usuario que reportó (opcional: email)
+
+3. **Routes:**
+   - GET `/api/bugs` → admin: todos, usuario: solo los suyos (o públicos si aplica)
+   - GET `/api/bugs/:id` → detail completo
+   - POST `/api/bugs` → crear (cualquier usuario autenticado)
+   - PUT `/api/bugs/:id/estado` → cambiar estado (admin only)
+   - Protección: auth middleware en todas las rutas
+
+4. **Middleware:**
+   - Validación de transiciones de estado (solo cambios permitidos)
+   - Sanitización de HTML en descripción (prevenir XSS)
+   - Rate limiting en crear bug (ej: 5 bugs/hora/usuario para evitar spam)
+
+**Impacto Técnico - Frontend:**
+
+1. **Componentes nuevos:**
+   - `BugsPage.jsx`: página principal con listado
+   - `BugForm.jsx` / `BugReportModal.jsx`: modal o página para registrar bug
+   - `BugDetailModal.jsx`: modal o página de detalle
+   - `BugStateChangeModal.jsx`: modal para admin cambiar estado
+   - `BugList.jsx`: tabla con filtros, búsqueda, paginación
+   - `BugFilters.jsx`: componente de filtros
+
+2. **Editor de texto enriquecido:**
+   - Opciones: Quill, TinyMCE, CKEditor, slate
+   - Criterios de selección:
+     - Soporte de imágenes (embed o upload)
+     - Lightweight
+     - Fácil integración React
+     - Sanitización de HTML (XSS prevention)
+   - Consideraciones de upload de imágenes:
+     - ¿Guardar en BD como base64? (no escalable)
+     - ¿Guardar en carpeta `public/uploads/bugs/`? (más simple, requiere gestión de archivos)
+     - ¿Usar CDN externo? (no en Hostinger shared hosting)
+     - Recomendación: carpeta local con límite de tamaño/cantidad
+
+3. **Estados visuales:**
+   - Badge/color por estado:
+     - REGISTRADO: gris
+     - DESARROLLADO: amarillo
+     - DESESTIMADO: rojo
+     - CERRADO: verde
+
+4. **Acceso:**
+   - Menú principal: opción "Reportar Bug" o "Gestión de Bugs"
+   - Dashboard: módulo "Bugs" similar a Planes, Recibos, etc.
+
+**Decisiones de Diseño (pendientes):**
+
+1. **¿Quién puede ver los bugs?**
+   - Opción A: Solo admin ve todos, usuarios ven los suyos
+   - Opción B: Todos ven todos los bugs (transparencia total)
+   - Opción C: Usuarios ven bugs CERRADOS/DESARROLLADOS, admin ve todos
+   - Recomendación: Opción A (privacidad, menos ruido para usuarios)
+
+2. **¿Qué desencadena cambio de estado?**
+   - Solo admin manual (actual)
+   - ¿Implementar auto-cierre después de N días? (future)
+   - ¿Workflow: REGISTRADO → REVISADO → ASIGNADO → DESARROLLADO? (más complejo, out-of-scope)
+
+3. **¿Imágenes en descripción?**
+   - Upload (requiere gestión de carpetas)
+   - Embed URL externa (más simple)
+   - Copy-paste como base64 (pesado)
+   - Recomendación: Upload local, límite 2MB/imagen, máx 3 imágenes/bug
+
+4. **¿Notificaciones?**
+   - Email a usuario cuando estado cambia? (requiere config de mail)
+   - Notificación en app? (requiere sistema de notificaciones)
+   - Recomendación: v1 sin notificaciones, usuario verifica manualmente
+
+5. **¿Cierre automático?**
+   - Bugs CERRADOS después de 30 días sin actividad? (future)
+   - Bugs DESESTIMADOS después de 90 días? (future)
+   - v1: solo cierre manual
+
+6. **¿Búsqueda full-text?**
+   - Implementar FULLTEXT index en MySQL para búsqueda rápida
+   - Or: búsqueda simple LIKE en descripción
+   - Recomendación: LIKE para v1
+
+**Archivos a crear/modificar:**
+
+Backend (nuevos):
+- `backend/src/migrations/versions/2.0.11_bugs_system/upgrade.sql`
+- `backend/src/migrations/versions/2.0.11_bugs_system/downgrade.sql`
+- `backend/src/models/Bug.js`
+- `backend/src/models/BugHistorialCambio.js`
+- `backend/src/controllers/bugsController.js`
+- `backend/src/routes/bugs.js`
+
+Frontend (nuevos):
+- `frontend/src/pages/BugsPage/BugsPage.jsx`
+- `frontend/src/pages/BugsPage/BugsPage.scss`
+- `frontend/src/pages/BugsPage/components/BugList.jsx`
+- `frontend/src/pages/BugsPage/components/BugFilters.jsx`
+- `frontend/src/pages/BugsPage/modals/BugReportModal.jsx`
+- `frontend/src/pages/BugsPage/modals/BugDetailModal.jsx`
+- `frontend/src/pages/BugsPage/modals/BugStateChangeModal.jsx`
+- `frontend/src/services/bugsService.js`
+
+Frontend (modificar):
+- `frontend/src/App.jsx`: agregar ruta /bugs
+- `frontend/src/pages/DashboardPage/DashboardPage.jsx`: agregar módulo bugs al menú
+- `frontend/src/context/AuthContext.jsx`: si se requieren permisos específicos
+
+**Estimación:**
+- Migración BD + modelos: 1h
+- Backend (controller, routes, validaciones): 3-4h
+- Editor de texto enriquecido (investigación + integración): 2-3h
+- Frontend (componentes, modales, listado, filtros): 4-5h
+- Servicios y integración API: 1-2h
+- Testing y ajustes: 2-3h
+- **Total: 13-18 horas**
+
+**Prioridad:** 🟡 Media — Sistema de reporte útil pero no bloqueante para core
+
+**Estado:** 📋 Registrado (2026-04-21)
+
+**Notas / Consideraciones pendientes:**
+- Decisiones de diseño requieren validación del usuario antes de análisis detallado
+- Librería de editor de texto enriquecido debe evaluarse (Quill vs TinyMCE vs otros)
+- Gestión de archivos (upload de imágenes) requiere estrategia clara
+- Rate limiting recomendado para prevenir spam
+- Solicitar confirmación del usuario sobre accesibilidad de bugs (quién ve qué)
+
+---
+
 ## Items descartados
 
 | ID | Descripción | Motivo descarte |
