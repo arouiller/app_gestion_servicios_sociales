@@ -2,7 +2,7 @@ import React, { useCallback, useEffect, useState } from 'react';
 import { useAuth } from '../../../../context/AuthContext';
 import planesV1Service from '../../../../services/planesV1Service';
 import configService from '../../../../services/configService';
-import { formatNumeroAfiliado } from '../../../../utils/formatters';
+import { formatNumeroAfiliado, formatZona } from '../../../../utils/formatters';
 import PlanV1Modal from './modals/PlanV1Modal';
 import BulkUpdateCuotaModal from '../BulkUpdateCuotaModal/BulkUpdateCuotaModal';
 import GenerarRecibosModal from './modals/GenerarRecibosModal';
@@ -216,6 +216,7 @@ function GestionPlanesV1() {
                 <th>Cobrador</th>
                 <th>Obra Social</th>
                 <th>Estado</th>
+                <th>Zona</th>
                 <th>Acciones</th>
               </tr>
             </thead>
@@ -229,6 +230,7 @@ function GestionPlanesV1() {
                   <td>
                     <StatusBadge status={plan.estado} />
                   </td>
+                  <td>{formatZona(plan.zona)}</td>
                   <td className="table-actions">
                     <div className="action-button-group">
                       <IconButton

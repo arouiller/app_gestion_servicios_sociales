@@ -10,6 +10,7 @@ const INITIAL_FORM = {
   valor_cuota: '',
   domicilio: '',
   telefono_1: '',
+  zona: 0,
   integrantes: [], // Array of { persona_id, persona, rol }
 };
 
@@ -26,6 +27,7 @@ export const usePlanV1Form = (initialData = null) => {
           valor_cuota: initialData.valor_cuota ? String(initialData.valor_cuota) : '',
           domicilio: initialData.domicilio || '',
           telefono_1: initialData.telefono_1 || '',
+          zona: initialData.zona ?? 0,
           integrantes: initialData.PlanIntegrantes || [],
         }
       : INITIAL_FORM

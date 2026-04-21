@@ -1,7 +1,7 @@
 import React, { useState, useEffect, useCallback, useMemo, useRef } from 'react';
 import { usePlanV1Form } from '../hooks/usePlanV1Form';
 import ActionButton from '../../../../../components/ActionButton/ActionButton';
-import { formatNumeroAfiliado } from '../../../../../utils/formatters';
+import { formatNumeroAfiliado, formatZona } from '../../../../../utils/formatters';
 import planesV1Service from '../../../../../services/planesV1Service';
 import planesIntegrantesService from '../../../../../services/planesIntegrantesService';
 import lookupService from '../../../../../services/lookupService';
@@ -195,6 +195,7 @@ function PlanV1Modal({ mode, planData, onClose, onSave }) {
         valor_cuota: parseFloat(form.valor_cuota),
         domicilio: form.domicilio || null,
         telefono_1: form.telefono_1 || null,
+        zona: parseInt(form.zona) || 0,
       };
 
       if (mode === 'crear') {
@@ -490,6 +491,23 @@ function PlanV1Modal({ mode, planData, onClose, onSave }) {
                   onChange={(e) => handleFieldChange('valor_cuota', e.target.value)}
                 />
                 {errors.valor_cuota && <span className="plan-v1-modal__error">{errors.valor_cuota}</span>}
+              </div>
+
+              <div className="plan-v1-modal__field">
+                <label>Zona</label>
+                <input
+                  type="number"
+                  min="0"
+                  max="99"
+                  value={form.zona}
+                  onChange={(e) => handleFieldChange('zona', parseInt(e.target.value) || 0)}
+                  onBlur={(e) => {
+                    const val = parseInt(e.target.value) || 0;
+                    handleFieldChange('zona', Math.max(0, Math.min(99, val)));
+                  }}
+                  placeholder="00"
+                />
+                <small>{formatZona(form.zona)}</small>
               </div>
 
               <div className="plan-v1-modal__field">
