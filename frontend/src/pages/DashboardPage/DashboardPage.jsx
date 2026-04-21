@@ -155,7 +155,7 @@ function Bienvenida({ user }) {
 
 function DashboardPageContent() {
   const { user, logout } = useAuth();
-  const [activeModule, setActiveModule] = useState(null);
+  const [activeModule, setActiveModule] = useState('gestion-planes-v1');
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const menu = buildMenu(user?.rol === 'admin');
 
