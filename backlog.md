@@ -2724,10 +2724,10 @@ d. **Búsqueda y filtros:**
 
 ---
 
-### BACKLOG-028: Agregar Campo Zona a Afiliados (Personas)
+### BACKLOG-028: Agregar Campo Zona a Planes
 
 **Descripción:**
-Ampliar el modelo de datos de afiliados (Persona) agregando un nuevo campo numérico "Zona" de 2 dígitos. Este campo será obligatorio con valor por defecto 0, y debe mostrarse formateado con ceros a la izquierda (00-99). El cambio impacta en toda la arquitectura: base de datos, backend, y todas las interfaces visuales que muestren o editen afiliados.
+Ampliar el modelo de datos de planes agregando un nuevo campo numérico "Zona" de 2 dígitos. Este campo será obligatorio con valor por defecto 0, y debe mostrarse formateado con ceros a la izquierda (00-99). El cambio impacta en el backend (modelo y controller de planes) y en las interfaces de edición y visualización de planes. Zona pertenece al plan, no al afiliado.
 
 **Requerimientos:**
 
@@ -2909,16 +2909,21 @@ Frontend:
 
 **Estado:** ✅ Solucionado (2026-04-21)
 
-**Implementación Completada (2026-04-21):**
-1. ✅ Crear migración 2.0.10: `backend/src/migrations/versions/2.0.10_zona_personas/upgrade.sql` y downgrade.sql
-2. ✅ Modelo Sequelize: agregar atributo `zona` a `backend/src/models/Persona.js`
-3. ✅ Formateo utility: agregar `formatZona()` a `frontend/src/utils/formatters.js`
-4. ✅ Formulario creación: agregar campo zona a `AfiladoSearchModal.jsx` con validación 0-99
-5. ✅ Formulario edición: agregar campo zona a `AfiladoEditModal.jsx` con validación 0-99
-6. ✅ Visualización: agregar columna Zona a `BusquedaAfiliados.jsx` tabla de personas
+**Implementación Completada (2026-04-21) - Corrección:**
+1. ✅ Migración 2.0.10 corregida: `backend/src/migrations/versions/2.0.10_zona_planes/` (renombrada, ahora agrega zona a tabla `planes`, no `personas`)
+2. ✅ Modelo Sequelize: removido `zona` de `backend/src/models/Persona.js`, agregado a `backend/src/models/PlanV1.js`
+3. ✅ Backend controller: agregado `zona` a destructuring y creación en `planesController.js::crear()`, agregado a `camposPermitidos` en `actualizar()`
+4. ✅ Frontend form state: agregado `zona: 0` a `INITIAL_FORM` e inicialización en `usePlanV1Form.js`
+5. ✅ Frontend form field: agregado campo zona en `PlanV1Modal.jsx` tab "Datos Generales" con validación 0-99 y formatZona preview
+6. ✅ Frontend visualización: agregada columna Zona a tabla de planes en `GestionPlanesV1.jsx`
+7. ✅ Frontend limpieza: removido campo zona de `AfiladoSearchModal.jsx`, `AfiladoEditModal.jsx`, y columna Zona de `BusquedaAfiliados.jsx`
+8. ✅ Formatter utility: reutilización de `formatZona()` ya existente en `frontend/src/utils/formatters.js`
 
-**Commit:**
-- 280b110 - feat(BACKLOG-028): agregar campo zona a afiliados (personas)
+**Commits:**
+- 424b5ba - refactor(BACKLOG-028): corregir migración - zona en planes, no en personas
+- 9fc89c7 - refactor(BACKLOG-028): quitar zona de Persona, agregar a PlanV1 y controller
+- 74f6468 - refactor(BACKLOG-028): agregar campo zona al formulario y tabla de planes
+- 89c85cb - refactor(BACKLOG-028): quitar zona de formularios y tabla de afiliados
 
 ---
 
