@@ -1,5 +1,6 @@
 import React, { useState, useEffect, useCallback, useMemo } from 'react';
 import recibosService from '../../../../../services/recibosService';
+import { formatNumeroAfiliado } from '../../../../../utils/formatters';
 import ConfirmCloseDialog from '../../../../../components/ConfirmCloseDialog/ConfirmCloseDialog';
 import { useModalEscapeKey } from '../../../../../hooks/useModalEscapeKey';
 import './GenerarRecibosModal.scss';
@@ -327,7 +328,7 @@ function GenerarRecibosModal({ isOpen, onClose, onSuccess }) {
                     {recibosGenerados.slice(0, 10).map((recibo) => (
                       <div key={recibo.id} className="recibos-table__row">
                         <div>{recibo.id}</div>
-                        <div>{recibo.numero_afiliado}</div>
+                        <div>{formatNumeroAfiliado(recibo.numero_afiliado)}</div>
                         <div>{recibo.titular_apellido}, {recibo.titular_nombre}</div>
                         <div>${Number(recibo.valor_cuota).toFixed(2)}</div>
                       </div>

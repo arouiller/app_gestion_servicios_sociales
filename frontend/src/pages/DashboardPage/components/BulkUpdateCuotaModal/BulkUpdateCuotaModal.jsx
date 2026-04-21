@@ -1,6 +1,7 @@
 import React, { useState, useEffect, useCallback, useMemo } from 'react';
 import planesService from '../../../../services/planesService';
 import lookupService from '../../../../services/lookupService';
+import { formatNumeroAfiliado } from '../../../../utils/formatters';
 import ConfirmCloseDialog from '../../../../components/ConfirmCloseDialog/ConfirmCloseDialog';
 import { useModalEscapeKey } from '../../../../hooks/useModalEscapeKey';
 import './BulkUpdateCuotaModal.scss';
@@ -419,7 +420,7 @@ function BulkUpdateCuotaModal({ isOpen, onClose, onSuccess }) {
                             return (
                               <tr key={plan.plan_numero}>
                                 <td>{plan.plan_numero}</td>
-                                <td>{plan.numero_afiliado}</td>
+                                <td>{formatNumeroAfiliado(plan.numero_afiliado)}</td>
                                 <td>${Number(plan.valor_cuota || 0).toFixed(2)}</td>
                                 <td>
                                   {tipoAumento === 'porcentual'

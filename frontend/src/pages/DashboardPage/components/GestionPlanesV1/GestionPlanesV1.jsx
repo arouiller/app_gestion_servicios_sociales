@@ -2,6 +2,7 @@ import React, { useCallback, useEffect, useState } from 'react';
 import { useAuth } from '../../../../context/AuthContext';
 import planesV1Service from '../../../../services/planesV1Service';
 import configService from '../../../../services/configService';
+import { formatNumeroAfiliado } from '../../../../utils/formatters';
 import PlanV1Modal from './modals/PlanV1Modal';
 import BulkUpdateCuotaModal from '../BulkUpdateCuotaModal/BulkUpdateCuotaModal';
 import GenerarRecibosModal from './modals/GenerarRecibosModal';
@@ -109,7 +110,7 @@ function GestionPlanesV1() {
   };
 
   const handleSuspenderPlan = async (plan) => {
-    if (!window.confirm(`¿Estás seguro de que querés suspender el plan ${plan.numero_afiliado}?`)) {
+    if (!window.confirm(`¿Estás seguro de que querés suspender el plan ${formatNumeroAfiliado(plan.numero_afiliado)}?`)) {
       return;
     }
 
@@ -221,7 +222,7 @@ function GestionPlanesV1() {
             <tbody>
               {planesFiltered.map((plan) => (
                 <tr key={plan.plan_numero}>
-                  <td>{plan.numero_afiliado}</td>
+                  <td>{formatNumeroAfiliado(plan.numero_afiliado)}</td>
                   <td>{plan.TipoDePlan?.tipo_plan_nombre || '—'}</td>
                   <td>{plan.Cobrador?.cobrador_apellido}, {plan.Cobrador?.cobrador_nombre}</td>
                   <td>{plan.ObraSocial?.os_nombre || '—'}</td>

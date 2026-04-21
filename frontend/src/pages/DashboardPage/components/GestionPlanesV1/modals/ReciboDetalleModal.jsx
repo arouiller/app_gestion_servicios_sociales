@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import recibosService from '../../../../../services/recibosService';
+import { formatNumeroAfiliado } from '../../../../../utils/formatters';
 import './ReciboDetalleModal.scss';
 
 function ReciboDetalleModal({ reciboId, onClose, reciboData }) {
@@ -55,7 +56,7 @@ function ReciboDetalleModal({ reciboId, onClose, reciboData }) {
             </div>
             <div className="recibo-detalle-modal__field">
               <label>Número de Afiliado:</label>
-              <p>{recibo?.numero_afiliado}</p>
+              <p>{formatNumeroAfiliado(recibo?.numero_afiliado)}</p>
             </div>
           </div>
 

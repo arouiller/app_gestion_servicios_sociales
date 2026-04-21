@@ -1,6 +1,7 @@
 import React, { useState, useEffect, useCallback, useMemo, useRef } from 'react';
 import { usePlanV1Form } from '../hooks/usePlanV1Form';
 import ActionButton from '../../../../../components/ActionButton/ActionButton';
+import { formatNumeroAfiliado } from '../../../../../utils/formatters';
 import planesV1Service from '../../../../../services/planesV1Service';
 import planesIntegrantesService from '../../../../../services/planesIntegrantesService';
 import lookupService from '../../../../../services/lookupService';
@@ -320,7 +321,7 @@ function PlanV1Modal({ mode, planData, onClose, onSave }) {
       <div className="plan-v1-modal__overlay" />
       <div className="plan-v1-modal">
         <div className="plan-v1-modal__header">
-          <h3>{mode === 'crear' ? 'Nuevo Plan' : `Editar Plan: ${planData?.numero_afiliado}`}</h3>
+          <h3>{mode === 'crear' ? 'Nuevo Plan' : `Editar Plan: ${formatNumeroAfiliado(planData?.numero_afiliado)}`}</h3>
           <button
             className="plan-v1-modal__close"
             onClick={() => {

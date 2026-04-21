@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import lookupService from '../../../../services/lookupService';
 import planesService from '../../../../services/planesV1Service';
+import { formatNumeroAfiliado } from '../../../../utils/formatters';
 import './PlanesPorCobrador.scss';
 
 const PlanesPorCobrador = () => {
@@ -92,7 +93,7 @@ const PlanesPorCobrador = () => {
           <tbody>
             {planes.map((plan) => (
               <tr key={plan.plan_numero}>
-                <td>{plan.numero_afiliado}</td>
+                <td>{formatNumeroAfiliado(plan.numero_afiliado)}</td>
                 <td>{plan.TipoDePlan?.tipo_plan_nombre || 'N/A'}</td>
                 <td>{plan.ObraSocial?.os_nombre || 'N/A'}</td>
                 <td>{plan.TipoDeGrupo?.tipo_de_grupo_nombre || 'N/A'}</td>

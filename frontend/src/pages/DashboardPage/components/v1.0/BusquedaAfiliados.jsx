@@ -5,6 +5,7 @@ import configService from '../../../../services/configService';
 import PlanV1Modal from '../GestionPlanesV1/modals/PlanV1Modal';
 import IconButton from '../../../../components/IconButton/IconButton';
 import useDebounce from '../../../../hooks/useDebounce';
+import { formatNumeroAfiliado } from '../../../../utils/formatters';
 import '../../../../styles/_table-standard.scss';
 import './BusquedaAfiliados.scss';
 
@@ -121,8 +122,8 @@ const BusquedaAfiliados = () => {
   const handleToggleEstado = useCallback(async (plan) => {
     const nuevoEstado = plan.estado === 'ACTIVO' ? 'SUSPENDIDO' : 'ACTIVO';
     const mensaje = plan.estado === 'ACTIVO'
-      ? `¿Estás seguro de que querés suspender el plan ${plan.numero_afiliado}?`
-      : `¿Estás seguro de que querés activar el plan ${plan.numero_afiliado}?`;
+      ? `¿Estás seguro de que querés suspender el plan ${formatNumeroAfiliado(plan.numero_afiliado)}?`
+      : `¿Estás seguro de que querés activar el plan ${formatNumeroAfiliado(plan.numero_afiliado)}?`;
 
     if (!window.confirm(mensaje)) {
       return;
@@ -237,7 +238,7 @@ const BusquedaAfiliados = () => {
                 <tbody>
                   {planesPersona.map((plan) => (
                     <tr key={plan.plan_numero}>
-                      <td>{plan.numero_afiliado}</td>
+                      <td>{formatNumeroAfiliado(plan.numero_afiliado)}</td>
                       <td>{plan.TipoDePlan?.tipo_plan_nombre || 'N/A'}</td>
                       <td>{plan.ObraSocial?.os_nombre || 'N/A'}</td>
                       <td>{plan.estado}</td>

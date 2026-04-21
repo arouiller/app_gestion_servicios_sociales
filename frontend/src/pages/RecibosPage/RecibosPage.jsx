@@ -1,5 +1,6 @@
 import React, { useState, useEffect, useCallback, useMemo } from 'react';
 import recibosService from '../../services/recibosService';
+import { formatNumeroAfiliado } from '../../utils/formatters';
 import GenerarRecibosModal from '../DashboardPage/components/GestionPlanesV1/modals/GenerarRecibosModal';
 import ReciboDetalleModal from '../DashboardPage/components/GestionPlanesV1/modals/ReciboDetalleModal';
 import './RecibosPage.scss';
@@ -223,7 +224,7 @@ function RecibosPage() {
                     {recibosDisplayed.map((recibo, idx) => (
                       <tr key={idx}>
                         <td>{recibo.id}</td>
-                        <td>{recibo.numero_afiliado}</td>
+                        <td>{formatNumeroAfiliado(recibo.numero_afiliado)}</td>
                         <td>{recibo.titular_apellido}, {recibo.titular_nombre}</td>
                         <td>{recibo.obra_social || '-'}</td>
                         <td>${Number(recibo.valor_cuota).toFixed(2)}</td>
