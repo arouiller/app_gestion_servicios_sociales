@@ -1,0 +1,2 @@
+ALTER TABLE bugs DROP FOREIGN KEY fk_bugs_usuario;
+DROP TABLE IF EXISTS bugs;
