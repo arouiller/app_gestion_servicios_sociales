@@ -6,7 +6,9 @@ import SearchContainer from '../SearchContainer/SearchContainer';
 import ActionButton from '../ActionButton/ActionButton';
 import IconButton from '../IconButton/IconButton';
 import ConfirmDeleteWithRefsModal from '../ConfirmDeleteWithRefsModal/ConfirmDeleteWithRefsModal';
+import Pagination from '../Pagination/Pagination';
 import useDebounce from '../../hooks/useDebounce';
+import usePagination from '../../hooks/usePagination';
 import '../../styles/_table-standard.scss';
 import './LookupCRUD.scss';
 
@@ -29,7 +31,6 @@ const LookupCRUD = ({ titulo, singularName, endpoint, campos }) => {
     isLoading: false,
     error: null,
   });
-  const ITEMS_PER_PAGE = 20;
 
   const entidad = endpoint.split('/').pop();
 
@@ -176,8 +177,6 @@ const LookupCRUD = ({ titulo, singularName, endpoint, campos }) => {
     }));
   };
 
-  if (loading) return <div className="lookup-crud loading">Cargando...</div>;
-
   // Usar searchText inmediatamente si se presionó Enter, si no usar debouncedSearchText
   const effectiveSearchText = forceSearchNow ? searchText : debouncedSearchText;
 
@@ -187,8 +186,16 @@ const LookupCRUD = ({ titulo, singularName, endpoint, campos }) => {
       return Object.values(registro).some(val =>
         String(val).toLowerCase().includes(searchLower)
       );
-    })
-    .slice(0, ITEMS_PER_PAGE);
+    });
+
+  const pagination = usePagination(registrosFiltered, 15);
+
+  // Reiniciar paginación cuando se filtra
+  useEffect(() => {
+    pagination.resetPage();
+  }, [effectiveSearchText]);
+
+  if (loading) return <div className="lookup-crud loading">Cargando...</div>;
 
   // Manejar tecla Enter para búsqueda inmediata (sin debounce)
   const handleSearchKeyDown = (e) => {
@@ -218,7 +225,7 @@ const LookupCRUD = ({ titulo, singularName, endpoint, campos }) => {
           onChange={setSearchText}
           onKeyDown={handleSearchKeyDown}
           count={registrosFiltered.length}
-          maxItems={ITEMS_PER_PAGE}
+          maxItems={registrosFiltered.length}
         />
       )}
 
@@ -238,7 +245,7 @@ const LookupCRUD = ({ titulo, singularName, endpoint, campos }) => {
             </tr>
           </thead>
           <tbody>
-            {registrosFiltered.map(registro => (
+            {pagination.paginatedItems.map(registro => (
               <tr key={Object.values(registro)[0]}>
                 {campos.map(campo => (
                   <td key={campo.name}>{registro[campo.name]}</td>
@@ -263,6 +270,17 @@ const LookupCRUD = ({ titulo, singularName, endpoint, campos }) => {
           </tbody>
           </table>
         </div>
+      )}
+
+      {pagination.showPagination && (
+        <Pagination
+          currentPage={pagination.currentPage}
+          totalPages={pagination.totalPages}
+          totalItems={pagination.totalItems}
+          itemsPerPage={pagination.itemsPerPage}
+          onPageChange={pagination.handleChangePage}
+          onItemsPerPageChange={pagination.handleChangeItemsPerPage}
+        />
       )}
 
       {showForm && (
