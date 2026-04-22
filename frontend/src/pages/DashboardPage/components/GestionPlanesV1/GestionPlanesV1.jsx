@@ -72,8 +72,6 @@ function GestionPlanesV1() {
     cargar();
   }, []);
 
-  const pagination = usePagination(planesFiltered, 15);
-
   const cargar = useCallback(async () => {
     setError(null);
     setLoading(true);
@@ -88,6 +86,30 @@ function GestionPlanesV1() {
       setLoading(false);
     }
   }, [filtros]);
+
+  // Usar searchText inmediatamente si se presionó Enter, si no usar debouncedSearchText
+  const effectiveSearchText = forceSearchNow ? searchText : debouncedSearchText;
+
+  // Filtrar planes por búsqueda
+  const planesFiltered = planes
+    .filter(plan => {
+      const searchLower = effectiveSearchText.toLowerCase();
+      return (
+        plan.numero_afiliado?.toLowerCase().includes(searchLower) ||
+        plan.TipoDePlan?.tipo_plan_nombre?.toLowerCase().includes(searchLower) ||
+        plan.Cobrador?.cobrador_apellido?.toLowerCase().includes(searchLower) ||
+        plan.Cobrador?.cobrador_nombre?.toLowerCase().includes(searchLower) ||
+        plan.ObraSocial?.os_nombre?.toLowerCase().includes(searchLower) ||
+        String(plan.zona || 0).padStart(2, '0').includes(searchLower)
+      );
+    });
+
+  const pagination = usePagination(planesFiltered, 15);
+
+  // Reiniciar paginación cuando se filtra
+  useEffect(() => {
+    pagination.resetPage();
+  }, [effectiveSearchText, filtros]);
 
   const mostrarMensaje = (texto, tipo = 'success') => {
     if (tipo === 'success') {
@@ -142,28 +164,6 @@ function GestionPlanesV1() {
   }
 
   console.log('[GestionPlanesV1] Rendering component. Planes count:', planes.length, 'Error:', error);
-
-  // Usar searchText inmediatamente si se presionó Enter, si no usar debouncedSearchText
-  const effectiveSearchText = forceSearchNow ? searchText : debouncedSearchText;
-
-  // Filtrar planes por búsqueda
-  const planesFiltered = planes
-    .filter(plan => {
-      const searchLower = effectiveSearchText.toLowerCase();
-      return (
-        plan.numero_afiliado?.toLowerCase().includes(searchLower) ||
-        plan.TipoDePlan?.tipo_plan_nombre?.toLowerCase().includes(searchLower) ||
-        plan.Cobrador?.cobrador_apellido?.toLowerCase().includes(searchLower) ||
-        plan.Cobrador?.cobrador_nombre?.toLowerCase().includes(searchLower) ||
-        plan.ObraSocial?.os_nombre?.toLowerCase().includes(searchLower) ||
-        String(plan.zona || 0).padStart(2, '0').includes(searchLower)
-      );
-    });
-
-  // Reiniciar paginación cuando se filtra
-  useEffect(() => {
-    pagination.resetPage();
-  }, [effectiveSearchText, filtros]);
 
   // Manejar tecla Enter para búsqueda inmediata (sin debounce)
   const handleSearchKeyDown = (e) => {
