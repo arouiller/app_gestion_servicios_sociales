@@ -10,6 +10,8 @@ import './BugFormModal.scss';
 const INITIAL_FORM = {
   titulo: '',
   descripcion: '',
+  tipo: 'BUG',
+  version: '',
 };
 
 function BugFormModal({ onClose, onSave }) {
@@ -42,6 +44,14 @@ function BugFormModal({ onClose, onSave }) {
     setForm((prev) => ({ ...prev, descripcion: value }));
   };
 
+  const handleTipoChange = (e) => {
+    setForm((prev) => ({ ...prev, tipo: e.target.value }));
+  };
+
+  const handleVersionChange = (e) => {
+    setForm((prev) => ({ ...prev, version: e.target.value }));
+  };
+
   const handleConfirmClose = () => {
     setShowConfirmClose(false);
     onClose();
@@ -64,6 +74,8 @@ function BugFormModal({ onClose, onSave }) {
       await bugsService.crear({
         titulo: form.titulo.trim() || null,
         descripcion: form.descripcion,
+        tipo: form.tipo,
+        version: form.version.trim() || null,
       });
       onSave();
     } catch (err) {
@@ -111,7 +123,31 @@ function BugFormModal({ onClose, onSave }) {
               />
             </div>
 
-            <div className="bug-form-modal__field">
+            <div className="bug-form-modal__fields-row">
+              <div className="bug-form-modal__field">
+                <label className="bug-form-modal__label">Tipo *</label>
+                <select
+                  className="bug-form-modal__select"
+                  value={form.tipo}
+                  onChange={handleTipoChange}
+                >
+                  <option value="BUG">Bug</option>
+                  <option value="REQUERIMIENTO">Requerimiento</option>
+                </select>
+              </div>
+              <div className="bug-form-modal__field">
+                <label className="bug-form-modal__label">Versión (opcional)</label>
+                <input
+                  type="text"
+                  className="bug-form-modal__input"
+                  value={form.version}
+                  onChange={handleVersionChange}
+                  placeholder="ej: 1.0.6"
+                />
+              </div>
+            </div>
+
+            <div className="bug-form-modal__field bug-form-modal__field--full">
               <label className="bug-form-modal__label">Descripción *</label>
               <ReactQuill
                 theme="snow"

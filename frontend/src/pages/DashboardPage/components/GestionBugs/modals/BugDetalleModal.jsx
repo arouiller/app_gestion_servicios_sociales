@@ -11,12 +11,14 @@ function BugDetalleModal({ bugId, onClose, onEstadoChanged }) {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   const [changingEstado, setChangingEstado] = useState(false);
+  const [versionEdit, setVersionEdit] = useState('');
 
   useEffect(() => {
     const cargarBug = async () => {
       try {
         const data = await bugsService.obtener(bugId);
         setBug(data);
+        setVersionEdit(data.version || '');
       } catch (err) {
         setError(err.response?.data?.message || 'Error al cargar bug');
       } finally {
@@ -46,8 +48,9 @@ function BugDetalleModal({ bugId, onClose, onEstadoChanged }) {
     setChangingEstado(true);
     setError(null);
     try {
-      const data = await bugsService.cambiarEstado(bugId, nuevoEstado);
+      const data = await bugsService.cambiarEstado(bugId, nuevoEstado, versionEdit || undefined);
       setBug(data);
+      setVersionEdit(data.version || '');
       onEstadoChanged();
     } catch (err) {
       setError(err.response?.data?.message || 'Error al cambiar estado');
@@ -106,7 +109,32 @@ function BugDetalleModal({ bugId, onClose, onEstadoChanged }) {
                 {new Date(bug.fecha_creacion).toLocaleDateString('es-AR')}
               </span>
             </div>
+            <div className="bug-detalle-modal__info-item">
+              <span className="bug-detalle-modal__info-label">Tipo:</span>
+              <span className="bug-detalle-modal__info-value">
+                {bug.tipo}
+              </span>
+            </div>
           </div>
+
+          {isAdmin && (
+            <div className="bug-detalle-modal__version-edit">
+              <label className="bug-detalle-modal__version-label">Versión</label>
+              <input
+                type="text"
+                className="bug-detalle-modal__version-input"
+                value={versionEdit}
+                onChange={(e) => setVersionEdit(e.target.value)}
+                placeholder="ej: 1.0.6"
+              />
+            </div>
+          )}
+          {!isAdmin && bug.version && (
+            <div className="bug-detalle-modal__version-display">
+              <span className="bug-detalle-modal__version-label">Versión:</span>
+              <span className="bug-detalle-modal__version-value">{bug.version}</span>
+            </div>
+          )}
 
           {bug.titulo && (
             <div className="bug-detalle-modal__titulo">
