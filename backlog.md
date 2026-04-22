@@ -33,7 +33,7 @@ De cualquier estado → Descartado
 
 | ID | Prioridad | Estado | Descripción | Contexto / Motivo | Archivos estimados |
 |----|-----------|--------|-------------|-------------------|----|
-| BACKLOG-030 | 🟢 Baja | 📋 Registrado | Modificar sección de Soporte en Footer (WhatsApp + Email) | Mejorar accesibilidad del contacto directo en landing page. Reemplazar "Contacto" por link WhatsApp (+54 11 3355 2955) y agregar link de Email (alejandro.rouiller@gmail.com). Facilita soporte rápido para usuarios. | Footer.jsx, Footer.scss |
+| BACKLOG-030 | 🟢 Baja | ✅ Solucionado | Modificar sección de Soporte en Footer (WhatsApp + Email) | Mejorar accesibilidad del contacto directo en landing page. Reemplazar "Contacto" por link WhatsApp (+54 11 3355 2955) y agregar link de Email (alejandro.rouiller@gmail.com). Facilita soporte rápido para usuarios. | Footer.jsx, Footer.scss |
 | BACKLOG-029 | 🟡 Media | ✅ Solucionado | Sistema de Gestión de Bugs (Reportes de Problemas) | Sistema centralizado de reporte y gestión de bugs donde usuarios pueden registrar problemas con editor de texto enriquecido (Quill) y soporte de imágenes. Flujo de estados controlado por admin (REGISTRADO → DESARROLLADO/DESESTIMADO → CERRADO). Números únicos auto-generados (BUG-0001, BUG-0002, etc.). | migrations/2.0.11, bugsController.js, routes/v1.0/bugs.js, bugsService.js, GestionBugs.jsx, BugFormModal.jsx, BugDetalleModal.jsx, StatusBadge.scss |
 | BACKLOG-025 | 🔴 Alta | ✅ Solucionado | Implementar debounce configurable en búsquedas de texto | Todas las búsquedas por texto deberían iniciarse después de 2000ms (configurable) sin input. Mejora: reduce llamadas al servidor, mejor UX. Afecta: BusquedaAfiliados, LookupCRUD, y otros. Requiere backend config y posible migración BD 2.0.9 para tabla de configuración. | useDebounce hook, configService, ConfiguracionApp |
 | BACKLOG-024 | 🔴 Alta | 🔬 En análisis | Actualizar dependencias deprecadas del frontend | 20 paquetes outdated detectados en compilación. Solución encontrada: actualizar react-scripts 5.0.1 → 5.1.0+ (que incluye automáticamente versiones modernas). Intento inicial de agregar 22 deps explícitas causó conflicto npm. Requiere actualización incremental con testing exhaustivo. | package.json, react-scripts upgrade |
@@ -2960,6 +2960,14 @@ Facilita contacto rápido y directo de usuarios con soporte mediante canales mod
 - WhatsApp link formato: `https://wa.me/+541133552955` (estándar internacional)
 - Email link formato: `mailto:alejandro.rouiller@gmail.com` (RFC estándar)
 - Sin validación adicional, links son directo a herramientas externas
+- WhatsApp link abre en nueva pestaña (target="_blank", rel="noopener noreferrer")
+
+**Implementación:**
+- ✅ Footer.jsx: reemplazado link "Contacto" por "WhatsApp" + agregado link "Email"
+- ✅ Sección "Soporte" con 3 links: Documentación, WhatsApp, Email
+
+**Commits:**
+- 31ac91a - feat(footer): agregar links WhatsApp y Email en seccion Soporte
 
 ---
 
