@@ -33,6 +33,7 @@ De cualquier estado → Descartado
 
 | ID | Prioridad | Estado | Descripción | Contexto / Motivo | Archivos estimados |
 |----|-----------|--------|-------------|-------------------|----|
+| BACKLOG-031 | 🔴 Alta | 📋 Registrado | Implementar paginación en listados (>10 registros) | Todos los listados (planes, afiliados, cobradores, obras sociales, servicios adicionales, tipos de grupo, tipos de plan) deben paginar cuando excedan 10 registros. Mejora UX y performance. Requiere componente de paginación reutilizable y actualización de servicios backend. | GestionPlanesV1.jsx, BusquedaAfiliados.jsx, LookupCRUD.jsx, Pagination.jsx, múltiples servicios |
 | BACKLOG-030 | 🟢 Baja | ✅ Solucionado | Modificar sección de Soporte en Footer (WhatsApp + Email) | Mejorar accesibilidad del contacto directo en landing page. Reemplazar "Contacto" por link WhatsApp (+54 11 3355 2955) y agregar link de Email (alejandro.rouiller@gmail.com). Facilita soporte rápido para usuarios. | Footer.jsx, Footer.scss |
 | BACKLOG-029 | 🟡 Media | ✅ Solucionado | Sistema de Gestión de Bugs (Reportes de Problemas) | Sistema centralizado de reporte y gestión de bugs donde usuarios pueden registrar problemas con editor de texto enriquecido (Quill) y soporte de imágenes. Flujo de estados controlado por admin (REGISTRADO → DESARROLLADO/DESESTIMADO → CERRADO). Números únicos auto-generados (BUG-0001, BUG-0002, etc.). | migrations/2.0.11, bugsController.js, routes/v1.0/bugs.js, bugsService.js, GestionBugs.jsx, BugFormModal.jsx, BugDetalleModal.jsx, StatusBadge.scss |
 | BACKLOG-025 | 🔴 Alta | ✅ Solucionado | Implementar debounce configurable en búsquedas de texto | Todas las búsquedas por texto deberían iniciarse después de 2000ms (configurable) sin input. Mejora: reduce llamadas al servidor, mejor UX. Afecta: BusquedaAfiliados, LookupCRUD, y otros. Requiere backend config y posible migración BD 2.0.9 para tabla de configuración. | useDebounce hook, configService, ConfiguracionApp |
@@ -2926,6 +2927,100 @@ Frontend:
 - 9fc89c7 - refactor(BACKLOG-028): quitar zona de Persona, agregar a PlanV1 y controller
 - 74f6468 - refactor(BACKLOG-028): agregar campo zona al formulario y tabla de planes
 - 89c85cb - refactor(BACKLOG-028): quitar zona de formularios y tabla de afiliados
+
+---
+
+### BACKLOG-031: Implementar Paginación en Listados (>10 registros)
+
+**Descripción:**
+Todos los listados de datos (planes, afiliados, cobradores, obras sociales, servicios adicionales, tipos de grupo, tipos de plan, bugs) deben mostrar paginación cuando el número total de registros exceda 10 elementos. La paginación debe ser con componente reutilizable, manejo de estado por página, y controles visuales intuitivos.
+
+**Análisis de Diseño:**
+
+a. **Estado actual (problemas identificados):**
+   - GestionPlanesV1.jsx: `.slice(0, ITEMS_PER_PAGE)` mostrando solo primeros 20 registros, sin navegación
+   - LookupCRUD.jsx: `.slice(0, ITEMS_PER_PAGE)` mostrando solo primeros 20 registros, sin navegación
+   - BusquedaAfiliados.jsx: sin paginación, carga todos los resultados
+   - GestionBugs.jsx: `.slice()` basado en índice con paginación hardcodeada
+   - Problema: usuarios no pueden acceder a registros más allá del límite sin scroll masivo o búsqueda
+   - UX pobre: sin indicación de cuántos registros totales hay
+
+b. **Solución propuesta:**
+
+   **Componente Pagination.jsx** (nuevo, reutilizable):
+   ```
+   Props: currentPage, totalPages, totalItems, itemsPerPage, onPageChange
+   Renderiza:
+   - Texto info: "Mostrando X-Y de Z registros"
+   - Botón "Anterior" (disabled si page=1)
+   - Links números de página (1 2 3 ... N)
+   - Botón "Siguiente" (disabled si page=totalPages)
+   - Select "Items per page" (10, 20, 50)
+   Evento: onPageChange(newPage, newItemsPerPage)
+   ```
+
+   **Hook usePagination.js** (nuevo):
+   ```
+   Estado: currentPage, itemsPerPage
+   Calcula: totalPages = Math.ceil(totalItems / itemsPerPage)
+   Retorna: paginatedItems, currentPage, totalPages, handleChangePage, handleChangeItemsPerPage
+   Validación: page siempre >= 1 y <= totalPages
+   ```
+
+   **Actualizar componentes principales:**
+   - GestionPlanesV1.jsx:
+     * Integrar usePagination hook
+     * Mostrar Pagination si planes.length > 10
+     * Usar paginatedItems en lugar de slice(0, 20)
+     * Default ITEMS_PER_PAGE = 15 (entre 10 y 20)
+   
+   - LookupCRUD.jsx:
+     * Integrar usePagination hook
+     * Mostrar Pagination si registros.length > 10
+     * Usar paginatedItems en lugar de slice(0, 20)
+     * Default ITEMS_PER_PAGE = 15
+   
+   - BusquedaAfiliados.jsx:
+     * Integrar usePagination hook si no tiene
+     * Agregar Pagination
+     * Default ITEMS_PER_PAGE = 15
+   
+   - GestionBugs.jsx:
+     * Mantener lógica existente pero mejorar con componente Pagination
+     * Default ITEMS_PER_PAGE = 15
+
+c. **Criterio de activación:**
+   - Si totalItems > 10: mostrar Pagination
+   - Si totalItems <= 10: no mostrar Pagination (toda tabla en una página)
+
+d. **Estilos:**
+   - Componente Pagination.scss con BEM
+   - Centrado en footer de tabla
+   - Botones deshabilitados con opacidad
+   - Números activos resaltados
+   - Select de items con estilos consistentes
+
+e. **Comportamiento:**
+   - Al cambiar filtro/búsqueda: resetear a página 1
+   - Al cambiar items per page: resetear a página 1
+   - Validación: si estoy en página 5 pero ahora hay solo 3 páginas, ir a última
+   - Performance: filtrado en cliente (ya funciona así), paginación post-filtrado
+
+**Archivos a modificar:**
+1. Crear: frontend/src/components/Pagination/Pagination.jsx (nuevo)
+2. Crear: frontend/src/hooks/usePagination.js (nuevo)
+3. Crear: frontend/src/components/Pagination/Pagination.scss (nuevo)
+4. Modificar: GestionPlanesV1.jsx
+5. Modificar: LookupCRUD.jsx
+6. Modificar: BusquedaAfiliados.jsx (si no tiene paginación)
+7. Modificar: GestionBugs.jsx
+
+**Decisiones de diseño:**
+- Default ITEMS_PER_PAGE = 15 (visible sin scroll en mayoría de pantallas)
+- Opciones en select: [10, 15, 20, 50] (usuarios pueden elegir)
+- Números de página máximo 7 visibles (1 2 3 4 5 6 7) luego "... N"
+- Mantener búsqueda/filtros activos al cambiar página
+- Sin paginación en servidor: se hace en cliente (dato pequeño)
 
 ---
 
