@@ -16,8 +16,10 @@ const bugsService = {
     return data.data;
   },
 
-  cambiarEstado: async (id, estado) => {
-    const { data } = await api.put(`/v1.0/bugs/${id}/estado`, { estado });
+  cambiarEstado: async (id, estado, version) => {
+    const payload = { estado };
+    if (version !== undefined) payload.version = version;
+    const { data } = await api.put(`/v1.0/bugs/${id}/estado`, payload);
     return data.data;
   },
 };
