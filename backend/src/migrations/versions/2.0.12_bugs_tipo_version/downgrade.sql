@@ -1,0 +1,3 @@
+ALTER TABLE bugs
+DROP COLUMN version,
+DROP COLUMN tipo;
