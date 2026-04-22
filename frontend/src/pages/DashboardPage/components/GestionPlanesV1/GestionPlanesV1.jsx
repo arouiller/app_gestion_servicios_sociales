@@ -33,24 +33,28 @@ function GestionPlanesV1() {
   const [forceSearchNow, setForceSearchNow] = useState(false);
   const [bulkUpdateModalOpen, setBulkUpdateModalOpen] = useState(false);
   const [generarRecibosModalOpen, setGenerarRecibosModalOpen] = useState(false);
+  const [configItemsPerPage, setConfigItemsPerPage] = useState(null);
 
   // Debouncificar el texto de búsqueda
   const debouncedSearchText = useDebounce(searchText, debounceDelay);
 
-  // Cargar configuración de debounce al montar
+  // Cargar configuración al montar
   useEffect(() => {
-    const loadDebounceConfig = async () => {
+    const loadConfig = async () => {
       try {
         const config = await configService.getConfiguracion();
         if (config && config.debounce_delay_ms) {
           setDebounceDelay(config.debounce_delay_ms);
         }
+        if (config && config.items_per_page) {
+          setConfigItemsPerPage(config.items_per_page);
+        }
       } catch (err) {
-        console.error('Error cargando configuración de debounce:', err);
-        // Mantener default de 2000ms si hay error
+        console.error('Error cargando configuración:', err);
+        // Mantener defaults si hay error
       }
     };
-    loadDebounceConfig();
+    loadConfig();
   }, []);
 
   // Cargar planes sin usar filtros como dependencia inicial
@@ -104,7 +108,7 @@ function GestionPlanesV1() {
       );
     });
 
-  const pagination = usePagination(planesFiltered, 15);
+  const pagination = usePagination(planesFiltered, 15, configItemsPerPage);
 
   // Reiniciar paginación cuando se filtra
   useEffect(() => {

@@ -22,33 +22,37 @@ const BusquedaAfiliados = () => {
   const [editingPlan, setEditingPlan] = useState(null);
   const [successMessage, setSuccessMessage] = useState(null);
   const [debounceDelay, setDebounceDelay] = useState(2000);
+  const [configItemsPerPage, setConfigItemsPerPage] = useState(null);
 
   // Debouncificar el texto de búsqueda
   const debouncedSearchText = useDebounce(searchText, debounceDelay);
 
-  // Paginación para la lista de personas
-  const pagination = usePagination(personas, 15);
-
-  // Resetear paginación cuando se busca
+  // Cargar configuración al montar
   useEffect(() => {
-    pagination.resetPage();
-  }, [debouncedSearchText]);
-
-  // Cargar configuración de debounce al montar
-  useEffect(() => {
-    const loadDebounceConfig = async () => {
+    const loadConfig = async () => {
       try {
         const config = await configService.getConfiguracion();
         if (config && config.debounce_delay_ms) {
           setDebounceDelay(config.debounce_delay_ms);
         }
+        if (config && config.items_per_page) {
+          setConfigItemsPerPage(config.items_per_page);
+        }
       } catch (err) {
-        console.error('Error cargando configuración de debounce:', err);
-        // Mantener default de 2000ms si hay error
+        console.error('Error cargando configuración:', err);
+        // Mantener defaults si hay error
       }
     };
-    loadDebounceConfig();
+    loadConfig();
   }, []);
+
+  // Paginación para la lista de personas
+  const pagination = usePagination(personas, 15, configItemsPerPage);
+
+  // Resetear paginación cuando se busca
+  useEffect(() => {
+    pagination.resetPage();
+  }, [debouncedSearchText]);
 
   // Función para ejecutar búsqueda
   const performSearch = useCallback(async (textToSearch) => {

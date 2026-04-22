@@ -283,6 +283,78 @@ export default function ConfiguracionNotificaciones() {
           Valores recomendados: 1000-3000 ms.
         </p>
       </div>
+
+      {/* Sección: Configuración UI */}
+      <div className="configuracion-notificaciones__header" style={{ marginTop: '2rem' }}>
+        <h2>Configuración UI</h2>
+        <p className="configuracion-notificaciones__subtitle">
+          Ajusta parámetros de la interfaz de usuario
+        </p>
+      </div>
+
+      <div className="configuracion-notificaciones__table-wrapper">
+        <table className="configuracion-notificaciones__table table-standard">
+          <thead>
+            <tr>
+              <th>Parámetro</th>
+              <th>Descripción</th>
+              <th>Valor</th>
+              <th>Acciones</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td>
+                <span className="configuracion-notificaciones__tipo-badge" style={{ backgroundColor: '#f3e5f5', color: '#7b1fa2', borderLeftColor: '#7b1fa2' }}>
+                  <span className="configuracion-notificaciones__icon">📊</span>
+                  Items por página
+                </span>
+              </td>
+              <td>Cantidad de registros mostrados en listados (planes, afiliados, bugs, etc.)</td>
+              <td className="configuracion-notificaciones__duration-cell">
+                <div className="configuracion-notificaciones__duration-group">
+                  <input
+                    type="number"
+                    min="5"
+                    max="100"
+                    step="5"
+                    className="configuracion-notificaciones__duration-input"
+                    value={values.items_per_page || 15}
+                    onChange={(e) => handleChange('items_per_page', e.target.value)}
+                    disabled={saving.items_per_page}
+                  />
+                  <span className="configuracion-notificaciones__hint">
+                    (registros por página)
+                  </span>
+                </div>
+                {errors.items_per_page && (
+                  <span className="configuracion-notificaciones__error">
+                    {errors.items_per_page}
+                  </span>
+                )}
+              </td>
+              <td className="configuracion-notificaciones__actions">
+                <button
+                  className="configuracion-notificaciones__btn-save"
+                  onClick={() => handleSave('items_per_page')}
+                  disabled={saving.items_per_page}
+                  title={saving.items_per_page ? 'Guardando...' : 'Guardar configuración'}
+                >
+                  {saving.items_per_page ? '⏳' : '💾'}
+                </button>
+              </td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+
+      <div className="configuracion-notificaciones__info">
+        <p>
+          💡 <strong>Tip:</strong> Define cuántos registros se muestran por página en los listados.
+          Rango permitido: 5-100. Valores recomendados: 10-20. Los cambios se aplicarán
+          inmediatamente al recargar los listados.
+        </p>
+      </div>
     </div>
   );
 }

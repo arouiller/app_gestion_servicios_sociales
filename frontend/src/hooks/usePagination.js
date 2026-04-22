@@ -1,8 +1,9 @@
 import { useState, useMemo } from 'react';
 
-function usePagination(items, defaultItemsPerPage = 15) {
+function usePagination(items, defaultItemsPerPage = 15, configItemsPerPage = null) {
   const [currentPage, setCurrentPage] = useState(1);
-  const [itemsPerPage, setItemsPerPage] = useState(defaultItemsPerPage);
+  // Usar configItemsPerPage si está disponible, sino usar defaultItemsPerPage
+  const [itemsPerPage, setItemsPerPage] = useState(configItemsPerPage || defaultItemsPerPage);
 
   const totalItems = Array.isArray(items) ? items.length : 0;
   const totalPages = Math.ceil(totalItems / itemsPerPage) || 1;

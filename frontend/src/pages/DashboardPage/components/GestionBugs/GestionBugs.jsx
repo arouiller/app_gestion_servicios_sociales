@@ -1,5 +1,6 @@
 import React, { useCallback, useEffect, useState } from 'react';
 import bugsService from '../../../../services/bugsService';
+import configService from '../../../../services/configService';
 import SearchContainer from '../../../../components/SearchContainer/SearchContainer';
 import ActionButton from '../../../../components/ActionButton/ActionButton';
 import IconButton from '../../../../components/IconButton/IconButton';
@@ -23,8 +24,24 @@ function GestionBugs() {
   const [filtroEstado, setFiltroEstado] = useState('');
   const [searchText, setSearchText] = useState('');
   const [forceSearchNow, setForceSearchNow] = useState(false);
+  const [configItemsPerPage, setConfigItemsPerPage] = useState(null);
 
   const debouncedSearchText = useDebounce(searchText, 2000);
+
+  // Cargar configuración al montar
+  useEffect(() => {
+    const loadConfig = async () => {
+      try {
+        const config = await configService.getConfiguracion();
+        if (config && config.items_per_page) {
+          setConfigItemsPerPage(config.items_per_page);
+        }
+      } catch (err) {
+        console.error('Error cargando configuración:', err);
+      }
+    };
+    loadConfig();
+  }, []);
 
   const cargar = useCallback(async () => {
     setError(null);
@@ -89,7 +106,7 @@ function GestionBugs() {
       );
     });
 
-  const pagination = usePagination(bugsFiltered, 15);
+  const pagination = usePagination(bugsFiltered, 15, configItemsPerPage);
 
   // Reiniciar paginación cuando se filtra
   useEffect(() => {

@@ -22,6 +22,7 @@ const LookupCRUD = ({ titulo, singularName, endpoint, campos }) => {
   const [searchText, setSearchText] = useState('');
   const [debounceDelay, setDebounceDelay] = useState(2000);
   const [forceSearchNow, setForceSearchNow] = useState(false);
+  const [configItemsPerPage, setConfigItemsPerPage] = useState(null);
   const [deleteModal, setDeleteModal] = useState({
     isOpen: false,
     registroId: null,
@@ -37,20 +38,23 @@ const LookupCRUD = ({ titulo, singularName, endpoint, campos }) => {
   // Debouncificar el texto de búsqueda
   const debouncedSearchText = useDebounce(searchText, debounceDelay);
 
-  // Cargar configuración de debounce al montar
+  // Cargar configuración al montar
   useEffect(() => {
-    const loadDebounceConfig = async () => {
+    const loadConfig = async () => {
       try {
         const config = await configService.getConfiguracion();
         if (config && config.debounce_delay_ms) {
           setDebounceDelay(config.debounce_delay_ms);
         }
+        if (config && config.items_per_page) {
+          setConfigItemsPerPage(config.items_per_page);
+        }
       } catch (err) {
-        console.error('Error cargando configuración de debounce:', err);
-        // Mantener default de 2000ms si hay error
+        console.error('Error cargando configuración:', err);
+        // Mantener defaults si hay error
       }
     };
-    loadDebounceConfig();
+    loadConfig();
   }, []);
 
   // Cargar lista
@@ -188,7 +192,7 @@ const LookupCRUD = ({ titulo, singularName, endpoint, campos }) => {
       );
     });
 
-  const pagination = usePagination(registrosFiltered, 15);
+  const pagination = usePagination(registrosFiltered, 15, configItemsPerPage);
 
   // Reiniciar paginación cuando se filtra
   useEffect(() => {
