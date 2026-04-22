@@ -109,11 +109,7 @@ function GestionPlanesV1() {
     });
 
   const pagination = usePagination(planesFiltered, 15, configItemsPerPage);
-
-  // Reiniciar paginación cuando se filtra
-  useEffect(() => {
-    pagination.resetPage();
-  }, [effectiveSearchText, filtros]);
+  // El hook usePagination ahora resetea automáticamente cuando items.length cambia
 
   const mostrarMensaje = (texto, tipo = 'success') => {
     if (tipo === 'success') {

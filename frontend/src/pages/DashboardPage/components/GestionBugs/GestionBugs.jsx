@@ -107,11 +107,7 @@ function GestionBugs() {
     });
 
   const pagination = usePagination(bugsFiltered, 15, configItemsPerPage);
-
-  // Reiniciar paginación cuando se filtra
-  useEffect(() => {
-    pagination.resetPage();
-  }, [effectiveSearchText, filtroEstado]);
+  // El hook usePagination ahora resetea automáticamente cuando items.length cambia
 
   if (loading) {
     return <div className="gestion-bugs__loading">Cargando bugs...</div>;

@@ -193,11 +193,7 @@ const LookupCRUD = ({ titulo, singularName, endpoint, campos }) => {
     });
 
   const pagination = usePagination(registrosFiltered, 15, configItemsPerPage);
-
-  // Reiniciar paginación cuando se filtra
-  useEffect(() => {
-    pagination.resetPage();
-  }, [effectiveSearchText]);
+  // El hook usePagination ahora resetea automáticamente cuando items.length cambia
 
   if (loading) return <div className="lookup-crud loading">Cargando...</div>;
 

@@ -48,11 +48,7 @@ const BusquedaAfiliados = () => {
 
   // Paginación para la lista de personas
   const pagination = usePagination(personas, 15, configItemsPerPage);
-
-  // Resetear paginación cuando se busca
-  useEffect(() => {
-    pagination.resetPage();
-  }, [debouncedSearchText]);
+  // El hook usePagination ahora resetea automáticamente cuando items.length cambia
 
   // Función para ejecutar búsqueda
   const performSearch = useCallback(async (textToSearch) => {
