@@ -24,6 +24,15 @@ const Bug = sequelize.define('bugs', {
     type: DataTypes.TEXT('long'),
     allowNull: false,
   },
+  tipo: {
+    type: DataTypes.ENUM('BUG', 'REQUERIMIENTO'),
+    allowNull: false,
+    defaultValue: 'BUG',
+  },
+  version: {
+    type: DataTypes.STRING(50),
+    allowNull: true,
+  },
   estado: {
     type: DataTypes.ENUM('REGISTRADO', 'DESARROLLADO', 'DESESTIMADO', 'CERRADO'),
     allowNull: false,

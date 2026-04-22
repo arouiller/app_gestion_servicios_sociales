@@ -59,7 +59,7 @@ const obtener = async (req, res, next) => {
 
 const crear = async (req, res, next) => {
   try {
-    const { titulo, descripcion } = req.body;
+    const { titulo, descripcion, tipo, version } = req.body;
 
     if (!descripcion || descripcion.trim().length === 0) {
       return res.status(422).json({
@@ -81,6 +81,8 @@ const crear = async (req, res, next) => {
       usuario_id: req.userId,
       titulo: titulo || null,
       descripcion,
+      tipo: tipo || 'BUG',
+      version: version || null,
       estado: 'REGISTRADO',
     });
 
@@ -108,7 +110,7 @@ const crear = async (req, res, next) => {
 const cambiarEstado = async (req, res, next) => {
   try {
     const { id } = req.params;
-    const { estado } = req.body;
+    const { estado, version } = req.body;
 
     if (!estado) {
       return res.status(422).json({
@@ -137,7 +139,10 @@ const cambiarEstado = async (req, res, next) => {
       });
     }
 
-    await bug.update({ estado });
+    const updateData = { estado };
+    if (version !== undefined) updateData.version = version;
+
+    await bug.update(updateData);
 
     const bugActualizado = await db.Bug.findByPk(id, {
       include: [
