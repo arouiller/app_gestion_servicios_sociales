@@ -33,6 +33,7 @@ De cualquier estado → Descartado
 
 | ID | Prioridad | Estado | Descripción | Contexto / Motivo | Archivos estimados |
 |----|-----------|--------|-------------|-------------------|----|
+| BACKLOG-030 | 🟢 Baja | 📋 Registrado | Modificar sección de Soporte en Footer (WhatsApp + Email) | Mejorar accesibilidad del contacto directo en landing page. Reemplazar "Contacto" por link WhatsApp (+54 11 3355 2955) y agregar link de Email (alejandro.rouiller@gmail.com). Facilita soporte rápido para usuarios. | Footer.jsx, Footer.scss |
 | BACKLOG-029 | 🟡 Media | ✅ Solucionado | Sistema de Gestión de Bugs (Reportes de Problemas) | Sistema centralizado de reporte y gestión de bugs donde usuarios pueden registrar problemas con editor de texto enriquecido (Quill) y soporte de imágenes. Flujo de estados controlado por admin (REGISTRADO → DESARROLLADO/DESESTIMADO → CERRADO). Números únicos auto-generados (BUG-0001, BUG-0002, etc.). | migrations/2.0.11, bugsController.js, routes/v1.0/bugs.js, bugsService.js, GestionBugs.jsx, BugFormModal.jsx, BugDetalleModal.jsx, StatusBadge.scss |
 | BACKLOG-025 | 🔴 Alta | ✅ Solucionado | Implementar debounce configurable en búsquedas de texto | Todas las búsquedas por texto deberían iniciarse después de 2000ms (configurable) sin input. Mejora: reduce llamadas al servidor, mejor UX. Afecta: BusquedaAfiliados, LookupCRUD, y otros. Requiere backend config y posible migración BD 2.0.9 para tabla de configuración. | useDebounce hook, configService, ConfiguracionApp |
 | BACKLOG-024 | 🔴 Alta | 🔬 En análisis | Actualizar dependencias deprecadas del frontend | 20 paquetes outdated detectados en compilación. Solución encontrada: actualizar react-scripts 5.0.1 → 5.1.0+ (que incluye automáticamente versiones modernas). Intento inicial de agregar 22 deps explícitas causó conflicto npm. Requiere actualización incremental con testing exhaustivo. | package.json, react-scripts upgrade |
@@ -2925,6 +2926,40 @@ Frontend:
 - 9fc89c7 - refactor(BACKLOG-028): quitar zona de Persona, agregar a PlanV1 y controller
 - 74f6468 - refactor(BACKLOG-028): agregar campo zona al formulario y tabla de planes
 - 89c85cb - refactor(BACKLOG-028): quitar zona de formularios y tabla de afiliados
+
+---
+
+### BACKLOG-030: Modificar Sección de Soporte en Footer (WhatsApp + Email)
+
+**Descripción:**
+Mejorar la accesibilidad del contacto directo en la landing page. Reemplazar el link "Contacto" con un link directo a WhatsApp (+54 11 3355 2955) y agregar un nuevo link de Email (alejandro.rouiller@gmail.com) en la sección "Soporte" del Footer.
+
+**Requerimientos:**
+
+a. **Cambios en componente Footer (frontend/src/pages/LandingPage/components/Footer/Footer.jsx)**
+   - Sección "Soporte" contiene:
+     - Link "Documentación" (existente, mantener)
+     - Reemplazar "Contacto" por "WhatsApp": URL debe abrir chat de WhatsApp con número +54 11 3355 2955
+       * Usar deep link: `https://wa.me/+541133552955` o `whatsapp://send?phone=+541133552955`
+       * Validar funcionalidad en desktop y mobile
+     - Agregar nuevo link "Email": abre cliente de email del usuario
+       * Usar mailto link: `mailto:alejandro.rouiller@gmail.com`
+
+b. **Estilos (posiblemente Footer.scss)**
+   - Mantener consistencia visual con links existentes
+   - No requiere cambios de styling, solo revisión si es necesario
+
+**Contexto:**
+Facilita contacto rápido y directo de usuarios con soporte mediante canales modernos (WhatsApp para chat instantáneo, Email como alternativa formal). Mejora UX en landing page y accesibilidad del soporte.
+
+**Archivos estimados:**
+- Footer.jsx (cambio principal)
+- Footer.scss (revisión, posiblemente sin cambios)
+
+**Decisiones:**
+- WhatsApp link formato: `https://wa.me/+541133552955` (estándar internacional)
+- Email link formato: `mailto:alejandro.rouiller@gmail.com` (RFC estándar)
+- Sin validación adicional, links son directo a herramientas externas
 
 ---
 
