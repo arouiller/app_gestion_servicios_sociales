@@ -4,13 +4,13 @@ import SearchContainer from '../../../../components/SearchContainer/SearchContai
 import ActionButton from '../../../../components/ActionButton/ActionButton';
 import IconButton from '../../../../components/IconButton/IconButton';
 import StatusBadge from '../../../../components/StatusBadge/StatusBadge';
+import Pagination from '../../../../components/Pagination/Pagination';
 import useDebounce from '../../../../hooks/useDebounce';
+import usePagination from '../../../../hooks/usePagination';
 import BugFormModal from './modals/BugFormModal';
 import BugDetalleModal from './modals/BugDetalleModal';
 import '../../../../styles/_table-standard.scss';
 import './GestionBugs.scss';
-
-const ITEMS_PER_PAGE = 15;
 
 function GestionBugs() {
   const [bugs, setBugs] = useState([]);
@@ -76,10 +76,6 @@ function GestionBugs() {
     cargar();
   };
 
-  if (loading) {
-    return <div className="gestion-bugs__loading">Cargando bugs...</div>;
-  }
-
   const effectiveSearchText = forceSearchNow ? searchText : debouncedSearchText;
   const bugsFiltered = bugs
     .filter((bug) => {
@@ -91,8 +87,18 @@ function GestionBugs() {
         bug.usuario?.nombre?.toLowerCase().includes(searchLower) ||
         bug.usuario?.apellido?.toLowerCase().includes(searchLower)
       );
-    })
-    .slice(0, ITEMS_PER_PAGE);
+    });
+
+  const pagination = usePagination(bugsFiltered, 15);
+
+  // Reiniciar paginación cuando se filtra
+  useEffect(() => {
+    pagination.resetPage();
+  }, [effectiveSearchText, filtroEstado]);
+
+  if (loading) {
+    return <div className="gestion-bugs__loading">Cargando bugs...</div>;
+  }
 
   return (
     <div className="gestion-bugs">
@@ -126,7 +132,7 @@ function GestionBugs() {
             onChange={setSearchText}
             onKeyDown={handleSearchKeyDown}
             count={bugsFiltered.length}
-            maxItems={ITEMS_PER_PAGE}
+            maxItems={bugsFiltered.length}
           />
         </div>
       )}
@@ -147,7 +153,7 @@ function GestionBugs() {
               </tr>
             </thead>
             <tbody>
-              {bugsFiltered.map((bug) => (
+              {pagination.paginatedItems.map((bug) => (
                 <tr key={bug.id}>
                   <td>{bug.numero}</td>
                   <td>{bug.titulo || '—'}</td>
@@ -168,6 +174,17 @@ function GestionBugs() {
             </tbody>
           </table>
         </div>
+      )}
+
+      {pagination.showPagination && (
+        <Pagination
+          currentPage={pagination.currentPage}
+          totalPages={pagination.totalPages}
+          totalItems={pagination.totalItems}
+          itemsPerPage={pagination.itemsPerPage}
+          onPageChange={pagination.handleChangePage}
+          onItemsPerPageChange={pagination.handleChangeItemsPerPage}
+        />
       )}
 
       {formModalOpen && (
