@@ -10,11 +10,11 @@ import SearchContainer from '../../../../components/SearchContainer/SearchContai
 import ActionButton from '../../../../components/ActionButton/ActionButton';
 import IconButton from '../../../../components/IconButton/IconButton';
 import StatusBadge from '../../../../components/StatusBadge/StatusBadge';
+import Pagination from '../../../../components/Pagination/Pagination';
 import useDebounce from '../../../../hooks/useDebounce';
+import usePagination from '../../../../hooks/usePagination';
 import '../../../../styles/_table-standard.scss';
 import './GestionPlanesV1.scss';
-
-const ITEMS_PER_PAGE = 20;
 
 function GestionPlanesV1() {
   console.log('[GestionPlanesV1] Mounting component');
@@ -71,6 +71,8 @@ function GestionPlanesV1() {
     };
     cargar();
   }, []);
+
+  const pagination = usePagination(planesFiltered, 15);
 
   const cargar = useCallback(async () => {
     setError(null);
@@ -156,8 +158,12 @@ function GestionPlanesV1() {
         plan.ObraSocial?.os_nombre?.toLowerCase().includes(searchLower) ||
         String(plan.zona || 0).padStart(2, '0').includes(searchLower)
       );
-    })
-    .slice(0, ITEMS_PER_PAGE);
+    });
+
+  // Reiniciar paginación cuando se filtra
+  useEffect(() => {
+    pagination.resetPage();
+  }, [effectiveSearchText, filtros]);
 
   // Manejar tecla Enter para búsqueda inmediata (sin debounce)
   const handleSearchKeyDown = (e) => {
@@ -199,7 +205,7 @@ function GestionPlanesV1() {
           onChange={setSearchText}
           onKeyDown={handleSearchKeyDown}
           count={planesFiltered.length}
-          maxItems={ITEMS_PER_PAGE}
+          maxItems={planesFiltered.length}
         />
       )}
 
@@ -222,7 +228,7 @@ function GestionPlanesV1() {
               </tr>
             </thead>
             <tbody>
-              {planesFiltered.map((plan) => (
+              {pagination.paginatedItems.map((plan) => (
                 <tr key={plan.plan_numero}>
                   <td>{formatNumeroAfiliado(plan.numero_afiliado)}</td>
                   <td>{formatZona(plan.zona)}</td>
@@ -254,6 +260,17 @@ function GestionPlanesV1() {
             </tbody>
           </table>
         </div>
+      )}
+
+      {pagination.showPagination && (
+        <Pagination
+          currentPage={pagination.currentPage}
+          totalPages={pagination.totalPages}
+          totalItems={pagination.totalItems}
+          itemsPerPage={pagination.itemsPerPage}
+          onPageChange={pagination.handleChangePage}
+          onItemsPerPageChange={pagination.handleChangeItemsPerPage}
+        />
       )}
 
       {modalMode && (

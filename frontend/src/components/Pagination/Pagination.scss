@@ -1,0 +1,138 @@
+@import '../../styles/colors';
+
+.pagination {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  padding: 24px;
+  background: $color-bg-light;
+  border-radius: 4px;
+  margin-top: 20px;
+  align-items: center;
+
+  &__info {
+    display: flex;
+    align-items: center;
+    gap: 24px;
+    width: 100%;
+    justify-content: space-between;
+    flex-wrap: wrap;
+  }
+
+  &__text {
+    font-size: 14px;
+    color: $color-text-muted;
+    font-weight: 500;
+  }
+
+  &__items-per-page {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+
+    label {
+      font-size: 14px;
+      color: $color-text-muted;
+      font-weight: 500;
+    }
+  }
+
+  &__select {
+    padding: 6px 12px;
+    border: 1px solid $color-border;
+    border-radius: 4px;
+    font-size: 14px;
+    background: $color-white;
+    cursor: pointer;
+    color: $color-text;
+
+    &:hover {
+      border-color: $color-primary;
+    }
+
+    &:focus {
+      outline: none;
+      border-color: $color-primary;
+      box-shadow: 0 0 0 2px rgba($color-primary, 0.1);
+    }
+  }
+
+  &__controls {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    justify-content: center;
+    flex-wrap: wrap;
+  }
+
+  &__button {
+    padding: 8px 16px;
+    border: 1px solid $color-border;
+    border-radius: 4px;
+    background: $color-white;
+    color: $color-text;
+    font-size: 14px;
+    font-weight: 500;
+    cursor: pointer;
+    transition: all 0.2s ease;
+
+    &:hover:not(:disabled) {
+      border-color: $color-primary;
+      color: $color-primary;
+      background: rgba($color-primary, 0.05);
+    }
+
+    &:disabled {
+      opacity: 0.5;
+      cursor: not-allowed;
+    }
+
+    &--prev,
+    &--next {
+      min-width: 100px;
+    }
+  }
+
+  &__numbers {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+
+  &__number {
+    min-width: 36px;
+    height: 36px;
+    padding: 0;
+    border: 1px solid $color-border;
+    border-radius: 4px;
+    background: $color-white;
+    color: $color-text;
+    font-size: 14px;
+    font-weight: 500;
+    cursor: pointer;
+    transition: all 0.2s ease;
+
+    &:hover:not(:disabled) {
+      border-color: $color-primary;
+      color: $color-primary;
+      background: rgba($color-primary, 0.05);
+    }
+
+    &:disabled {
+      opacity: 0.5;
+      cursor: not-allowed;
+    }
+
+    &--active {
+      background: $color-primary;
+      color: $color-white;
+      border-color: $color-primary;
+    }
+  }
+
+  &__dots {
+    color: $color-text-muted;
+    padding: 0 4px;
+    font-weight: 500;
+  }
+}
