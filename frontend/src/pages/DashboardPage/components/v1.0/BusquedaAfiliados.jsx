@@ -4,7 +4,9 @@ import planesService from '../../../../services/planesV1Service';
 import configService from '../../../../services/configService';
 import PlanV1Modal from '../GestionPlanesV1/modals/PlanV1Modal';
 import IconButton from '../../../../components/IconButton/IconButton';
+import Pagination from '../../../../components/Pagination/Pagination';
 import useDebounce from '../../../../hooks/useDebounce';
+import usePagination from '../../../../hooks/usePagination';
 import { formatNumeroAfiliado } from '../../../../utils/formatters';
 import '../../../../styles/_table-standard.scss';
 import './BusquedaAfiliados.scss';
@@ -23,6 +25,14 @@ const BusquedaAfiliados = () => {
 
   // Debouncificar el texto de búsqueda
   const debouncedSearchText = useDebounce(searchText, debounceDelay);
+
+  // Paginación para la lista de personas
+  const pagination = usePagination(personas, 15);
+
+  // Resetear paginación cuando se busca
+  useEffect(() => {
+    pagination.resetPage();
+  }, [debouncedSearchText]);
 
   // Cargar configuración de debounce al montar
   useEffect(() => {
@@ -168,37 +178,50 @@ const BusquedaAfiliados = () => {
 
       {/* Tabla de resultados */}
       {personas.length > 0 && !selectedPersona && (
-        <table className="personas-table">
-          <thead>
-            <tr>
-              <th>Apellido</th>
-              <th>Nombre</th>
-              <th>Tipo Doc</th>
-              <th>Nro Doc</th>
-              <th>Fecha Nac</th>
-              <th>Acción</th>
-            </tr>
-          </thead>
-          <tbody>
-            {personas.map((persona) => (
-              <tr key={persona.id}>
-                <td>{persona.apellido}</td>
-                <td>{persona.nombre}</td>
-                <td>{persona.tipo_documento}</td>
-                <td>{persona.numero_documento}</td>
-                <td>{new Date(persona.fecha_nacimiento).toLocaleDateString()}</td>
-                <td>
-                  <button
-                    className="btn-ver"
-                    onClick={() => handleSelectPersona(persona)}
-                  >
-                    Ver Planes
-                  </button>
-                </td>
+        <>
+          <table className="personas-table">
+            <thead>
+              <tr>
+                <th>Apellido</th>
+                <th>Nombre</th>
+                <th>Tipo Doc</th>
+                <th>Nro Doc</th>
+                <th>Fecha Nac</th>
+                <th>Acción</th>
               </tr>
-            ))}
-          </tbody>
-        </table>
+            </thead>
+            <tbody>
+              {pagination.paginatedItems.map((persona) => (
+                <tr key={persona.id}>
+                  <td>{persona.apellido}</td>
+                  <td>{persona.nombre}</td>
+                  <td>{persona.tipo_documento}</td>
+                  <td>{persona.numero_documento}</td>
+                  <td>{new Date(persona.fecha_nacimiento).toLocaleDateString()}</td>
+                  <td>
+                    <button
+                      className="btn-ver"
+                      onClick={() => handleSelectPersona(persona)}
+                    >
+                      Ver Planes
+                    </button>
+                  </td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+
+          {pagination.showPagination && (
+            <Pagination
+              currentPage={pagination.currentPage}
+              totalPages={pagination.totalPages}
+              totalItems={pagination.totalItems}
+              itemsPerPage={pagination.itemsPerPage}
+              onPageChange={pagination.handleChangePage}
+              onItemsPerPageChange={pagination.handleChangeItemsPerPage}
+            />
+          )}
+        </>
       )}
 
       {/* Detalle de persona y sus planes */}
