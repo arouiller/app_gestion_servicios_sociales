@@ -33,6 +33,7 @@ De cualquier estado → Descartado
 
 | ID | Prioridad | Estado | Descripción | Contexto / Motivo | Archivos estimados |
 |----|-----------|--------|-------------|-------------------|----|
+| BACKLOG-032 | 🔴 Alta | 📋 Registrado | Sistema de Auditoría - Listado de Acceso a Endpoints del Backend | Admin solo: listado de accesos a endpoints mostrando usuario, fecha/hora, endpoint invocado, parámetros. Trazabilidad completa, compliance, detección de actividad sospechosa. Requiere tabla audit_log, middleware global, sanitización de datos sensibles, escritura asíncrona. | migrations/2.0.14, auditMiddleware.js, auditLog model/controller, AuditLogPage.jsx, auditService.js |
 | BACKLOG-031 | 🔴 Alta | ✅ Solucionado | Implementar paginación en listados (>10 registros) | Todos los listados (planes, afiliados, cobradores, obras sociales, servicios adicionales, tipos de grupo, tipos de plan) deben paginar cuando excedan 10 registros. Mejora UX y performance. Requiere componente de paginación reutilizable y actualización de servicios backend. | GestionPlanesV1.jsx, BusquedaAfiliados.jsx, LookupCRUD.jsx, Pagination.jsx, múltiples servicios |
 | BACKLOG-030 | 🟢 Baja | ✅ Solucionado | Modificar sección de Soporte en Footer (WhatsApp + Email) | Mejorar accesibilidad del contacto directo en landing page. Reemplazar "Contacto" por link WhatsApp (+54 11 3355 2955) y agregar link de Email (alejandro.rouiller@gmail.com). Facilita soporte rápido para usuarios. | Footer.jsx, Footer.scss |
 | BACKLOG-029 | 🟡 Media | ✅ Solucionado | Sistema de Gestión de Bugs (Reportes de Problemas) | Sistema centralizado de reporte y gestión de bugs donde usuarios pueden registrar problemas con editor de texto enriquecido (Quill) y soporte de imágenes. Flujo de estados controlado por admin (REGISTRADO → DESARROLLADO/DESESTIMADO → CERRADO). Números únicos auto-generados (BUG-0001, BUG-0002, etc.). | migrations/2.0.11, bugsController.js, routes/v1.0/bugs.js, bugsService.js, GestionBugs.jsx, BugFormModal.jsx, BugDetalleModal.jsx, StatusBadge.scss |
@@ -3341,6 +3342,90 @@ Frontend (modificar):
 - 283e56b feat(bugs): agregar modales BugFormModal y BugDetalleModal
 - 94f3c99 style(StatusBadge): agregar estilos para estados de bugs
 - 425f06c feat(bugs): integrar módulo de bugs en DashboardPage
+
+---
+
+### BACKLOG-032: Sistema de Auditoría - Listado de Acceso a Endpoints del Backend
+
+**Descripción:**
+Panel administrativo que registra y visualiza todos los accesos a endpoints del backend. Incluye usuario, fecha/hora, endpoint invocado, parámetros y respuesta. Proporciona trazabilidad completa para auditoría, compliance y detección de actividad sospechosa.
+
+**Requerimientos Funcionales:**
+
+a. **Tabla de Auditoría (Backend)**
+   - Registra: usuario_id, fecha_hora, método_http (GET/POST/PUT/DELETE), endpoint (ruta), parametros_json, status_response, duracion_ms
+   - Índices en: usuario_id, fecha_hora, endpoint para queries eficientes
+   - Retention policy: considerar limpiar registros >90 días
+   - Performance: escritura asíncrona (no bloqueante)
+
+b. **Página de Auditoría (Admin-only)**
+   - Tabla paginada con columnas: Usuario | Fecha/Hora | Endpoint | Método | Status | Duración
+   - Filtros: usuario (select), rango de fechas, búsqueda por endpoint
+   - Paginación obligatoria (potencialmente 10k+ registros)
+   - Ordenamiento: por fecha descendente (default)
+   - Exportar a CSV (opcional pero deseable)
+
+c. **Middleware Global (Backend)**
+   - Intercepta TODAS las requests después de autenticación JWT
+   - Captura parámetros de query, body, y ruta
+   - **Sanitización crítica:** NO loguear contraseñas, tokens, datos sensibles completos
+   - Considera excluir ciertos endpoints (health checks, logout)
+   - Manejo de errores: si logging falla, NO debe romper el request
+
+**Requerimientos Técnicos:**
+
+1. **Base de Datos**
+   - Migración 2.0.14: crear tabla `audit_log`
+   - Campos: id (PK), usuario_id (FK), fecha_hora (timestamp), metodo_http (VARCHAR), endpoint (VARCHAR), parametros_json (LONGTEXT), status_response (INT), duracion_ms (INT), created_at
+   - Índices: (usuario_id, fecha_hora), (endpoint), (fecha_hora)
+
+2. **Backend**
+   - Middleware: `middleware/auditMiddleware.js`
+   - Model: `models/AuditLog.js` (Sequelize)
+   - Controller: `controllers/auditController.js` (listar con filtros)
+   - Routes: `routes/audit.js` (GET /audits con auth admin-only)
+   - Escritura asíncrona: usar Redis queue o worker thread
+   - Sanitización: función que reemplaza campos sensibles con [REDACTED]
+
+3. **Frontend**
+   - Página: `pages/DashboardPage/components/AuditLog/AuditLogPage.jsx`
+   - Service: `services/auditService.js`
+   - Componente tabla con paginación (reutilizar Pagination.jsx)
+   - Filtros: usuario select + DateRangePicker + endpoint search
+   - Proteger acceso: validar isAdmin antes de renderizar
+
+**Impacto Técnico:**
+
+| Área | Impacto | Severidad |
+|------|---------|-----------|
+| BD | Nueva tabla, crecimiento rápido (100-500 registros/día), requiere retención | 🔴 Alto |
+| Backend | Middleware global, escritura async, sanitización crítica | 🔴 Alto |
+| Performance | Queries de auditoría pueden ser lentas, paginación obligatoria | 🟡 Medio |
+| Seguridad | Exposición de datos sensibles si no se sanitiza correctamente | 🔴 Alto |
+| Privacidad | Almacenar logs indefinido puede violar GDPR, necesita retención | 🟡 Medio |
+| Frontend | Página + componentes, moderada complejidad | 🟢 Bajo |
+
+**Decisiones Pendientes:**
+
+1. ¿Loguear todos los GET requests o solo mutations (POST/PUT/DELETE)?
+2. ¿Retención de logs? (30 días, 90 días, indefinido?) ← **CRÍTICO para GDPR**
+3. ¿Incluir response body o solo status code?
+4. ¿Mostrar todos los parámetros o solo principales? (ej: solo número_afiliado, no cuota completa)
+5. ¿Exportar a CSV disponible?
+6. ¿Auditoría de cambios en tabla audit_log misma? (meta-auditoría)
+7. ¿Rate limiting en queries de auditoría?
+
+**Estimación:**
+
+- Backend: ~3-4 días (middleware, async queue, sanitización, testing)
+- Frontend: ~1-2 días (página, componentes, filtros)
+- Testing: ~1 día (security, performance, edge cases)
+- **Total: ~5-7 días**
+
+**Estado:**
+
+- 📋 Registrado (registrado 2026-04-23)
+- Pendiente de aclaración de requerimientos y decisiones
 
 ---
 
