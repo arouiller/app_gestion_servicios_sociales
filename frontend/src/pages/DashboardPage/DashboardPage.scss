@@ -139,25 +139,6 @@ $sidebar-width: 220px;
     }
   }
 
-  &__sidebar-toggle {
-    display: none;
-    width: 36px;
-    height: 36px;
-    border: none;
-    background: none;
-    color: var(--color-text-light);
-    cursor: pointer;
-    border-radius: 6px;
-    transition: background 0.15s, color 0.15s;
-    font-size: 1.2rem;
-    padding: 0;
-    flex-shrink: 0;
-
-    &:hover {
-      background: var(--color-bg-soft);
-      color: var(--color-text);
-    }
-  }
 
   &__logout-btn {
     padding: 0.45rem 1rem;
@@ -205,6 +186,37 @@ $sidebar-width: 220px;
       width: 0;
       margin: 0;
       pointer-events: none;
+    }
+  }
+
+  &__sidebar-header {
+    position: relative;
+    height: 0;
+    z-index: 10;
+  }
+
+  &__sidebar-collapse-btn {
+    position: absolute;
+    top: -40px;
+    right: 0;
+    width: 32px;
+    height: 32px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border: 1px solid var(--color-border);
+    background: #fff;
+    color: var(--color-text-light);
+    cursor: pointer;
+    border-radius: 6px;
+    transition: background 0.15s, color 0.15s, transform 0.3s ease;
+    font-size: 1rem;
+    font-weight: 600;
+    padding: 0;
+
+    &:hover {
+      background: var(--color-bg-soft);
+      color: var(--color-text);
     }
   }
 
@@ -345,18 +357,6 @@ $sidebar-width: 220px;
     opacity: 0.85;
     line-height: 1.5;
     margin: 0;
-  }
-}
-
-// ── Desktop: mostrar toggle sidebar ───────────────────────────────────────────
-
-@media (min-width: 1024px) {
-  .dashboard {
-    &__sidebar-toggle {
-      display: flex;
-      align-items: center;
-      justify-content: center;
-    }
   }
 }
 
