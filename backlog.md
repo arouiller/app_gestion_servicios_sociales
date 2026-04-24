@@ -33,6 +33,7 @@ De cualquier estado → Descartado
 
 | ID | Prioridad | Estado | Descripción | Contexto / Motivo | Archivos estimados |
 |----|-----------|--------|-------------|-------------------|----|
+| BACKLOG-033 | 🟡 Media | 📋 Registrado | Estandarizar estructura de barras de filtros en pantallas de gestión | Todas las pantallas de gestión (Planes, Cobradores, Obras Sociales, Servicios Adicionales, Tipos de Grupo, Tipos de Plan) deben mantener estructura consistente: título arriba, debajo caja de búsqueda (izquierda) + botones (nuevo, aumento masivo, etc), todos alineados verticalmente al centro | GestionPlanesV1.jsx, Cobradores.jsx, ObrasSociales.jsx, ServiciosAdicionales.jsx, TiposDeGrupo.jsx, TiposDePlan.jsx, SCSS |
 | BACKLOG-032 | 🔴 Alta | ✅ Solucionado | Sistema de Auditoría - Listado de Acceso a Endpoints del Backend | Admin solo: listado de accesos a endpoints mostrando usuario, fecha/hora, endpoint invocado, parámetros. Trazabilidad completa, compliance, detección de actividad sospechosa. Requiere tabla audit_log, middleware global, sanitización de datos sensibles, escritura asíncrona. | migrations/2.0.14, auditMiddleware.js, auditLog model/controller, AuditLogPage.jsx, auditService.js |
 | BACKLOG-031 | 🔴 Alta | ✅ Solucionado | Implementar paginación en listados (>10 registros) | Todos los listados (planes, afiliados, cobradores, obras sociales, servicios adicionales, tipos de grupo, tipos de plan) deben paginar cuando excedan 10 registros. Mejora UX y performance. Requiere componente de paginación reutilizable y actualización de servicios backend. | GestionPlanesV1.jsx, BusquedaAfiliados.jsx, LookupCRUD.jsx, Pagination.jsx, múltiples servicios |
 | BACKLOG-030 | 🟢 Baja | ✅ Solucionado | Modificar sección de Soporte en Footer (WhatsApp + Email) | Mejorar accesibilidad del contacto directo en landing page. Reemplazar "Contacto" por link WhatsApp (+54 11 3355 2955) y agregar link de Email (alejandro.rouiller@gmail.com). Facilita soporte rápido para usuarios. | Footer.jsx, Footer.scss |
@@ -3452,6 +3453,61 @@ d. **Configuración de Auditoría (Admin UI)**
 
 - 📋 Registrado (registrado 2026-04-23)
 - Pendiente de aclaración de requerimientos y decisiones
+
+---
+
+### BACKLOG-033: Estandarizar Estructura de Barras de Filtros en Pantallas de Gestión
+
+**Descripción:**
+Estandarizar la estructura visual y funcional de las barras de filtros/acciones en todas las pantallas de gestión (Planes, Cobradores, Obras Sociales, Servicios Adicionales, Tipos de Grupo, Tipos de Plan). Actualmente cada pantalla tiene una estructura y alineación diferente. El objetivo es mantener consistencia visual y mejorar la usabilidad.
+
+**Requerimientos Funcionales:**
+
+a. **Estructura de Layout**
+   - Título: posicionado arriba (como actualmente existe)
+   - Barra de filtros/acciones: debajo del título
+   - Componentes en la barra:
+     * Caja de búsqueda/filtro (posición: izquierda)
+     * Botones de acciones (nuevo, aumento masivo, etc) (posición: derecha de la búsqueda)
+   - **Alineación vertical:** todos los componentes deben estar alineados al centro (middle/center)
+
+b. **Aplicar en todas las pantallas:**
+   - GestionPlanesV1
+   - Cobradores
+   - ObrasSociales
+   - ServiciosAdicionales
+   - TiposDeGrupo
+   - TiposDePlan
+   - BusquedaAfiliados (si corresponde)
+
+c. **Detalles técnicos:**
+   - Usar flexbox con `display: flex; align-items: center;`
+   - Caja de búsqueda: ancho automático o mínimo según contenido
+   - Botones: gap consistente (1rem) entre componentes
+   - Responsive: en móviles, si no cabe, puede expandirse a dos filas pero manteniendo alineación vertical
+   - Usar componentes existentes: SearchContainer, botones estándar
+
+**Archivos a modificar:**
+
+| Componente | Ubicación |
+|------------|-----------|
+| GestionPlanesV1 | `frontend/src/pages/DashboardPage/components/GestionPlanesV1/GestionPlanesV1.jsx/.scss` |
+| Cobradores | `frontend/src/pages/DashboardPage/components/Cobradores/Cobradores.jsx/.scss` |
+| ObrasSociales | `frontend/src/pages/DashboardPage/components/ObrasSociales/ObrasSociales.jsx/.scss` |
+| ServiciosAdicionales | `frontend/src/pages/DashboardPage/components/ServiciosAdicionales/ServiciosAdicionales.jsx/.scss` |
+| TiposDeGrupo | `frontend/src/pages/DashboardPage/components/TiposDeGrupo/TiposDeGrupo.jsx/.scss` |
+| TiposDePlan | `frontend/src/pages/DashboardPage/components/TiposDePlan/TiposDePlan.jsx/.scss` |
+| BusquedaAfiliados | `frontend/src/pages/DashboardPage/components/v1.0/BusquedaAfiliados.jsx/.scss` (si aplica) |
+
+**Estimación:**
+
+- Por componente: ~30-45 min (análisis de estructura actual + refactoring JSX + actualización SCSS)
+- Total: ~3-4 horas (7 componentes × 30-45 min)
+
+**Estado:**
+
+- 📋 Registrado (registrado 2026-04-24)
+- Pendiente de aprobación de estructura y prioridad
 
 ---
 
