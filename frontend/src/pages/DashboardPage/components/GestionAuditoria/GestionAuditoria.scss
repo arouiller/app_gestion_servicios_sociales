@@ -69,12 +69,33 @@
     }
   }
 
+  &__filter-group {
+    display: flex;
+    gap: 0.5rem;
+    align-items: center;
+  }
+
   &__date-input {
     padding: 0.5rem 0.75rem;
     border: 1px solid $color-border;
     border-radius: 4px;
     font-size: 0.95rem;
     background: $color-white;
+
+    &:focus {
+      outline: none;
+      border-color: $color-primary;
+      box-shadow: 0 0 0 2px $color-primary-light;
+    }
+  }
+
+  &__time-input {
+    padding: 0.5rem 0.75rem;
+    border: 1px solid $color-border;
+    border-radius: 4px;
+    font-size: 0.95rem;
+    background: $color-white;
+    width: 120px;
 
     &:focus {
       outline: none;

@@ -16,7 +16,9 @@ function GestionAuditoria() {
 
   const [searchText, setSearchText] = useState('');
   const [fechaDesde, setFechaDesde] = useState('');
+  const [horaDesde, setHoraDesde] = useState('');
   const [fechaHasta, setFechaHasta] = useState('');
+  const [horaHasta, setHoraHasta] = useState('');
   const [configItemsPerPage, setConfigItemsPerPage] = useState(null);
   const [auditEnabled, setAuditEnabled] = useState(true);
   const [selectedLogParams, setSelectedLogParams] = useState(null);
@@ -47,8 +49,12 @@ function GestionAuditoria() {
     try {
       const params = {};
       if (debouncedSearchText) params.search = debouncedSearchText;
-      if (fechaDesde) params.fecha_desde = fechaDesde;
-      if (fechaHasta) params.fecha_hasta = fechaHasta;
+      if (fechaDesde) {
+        params.fecha_desde = horaDesde ? `${fechaDesde}T${horaDesde}` : fechaDesde;
+      }
+      if (fechaHasta) {
+        params.fecha_hasta = horaHasta ? `${fechaHasta}T${horaHasta}` : fechaHasta;
+      }
       params.limit = 500; // Cargar todos para paginar en cliente
       const data = await auditService.listar(params);
       setLogs(Array.isArray(data.rows) ? data.rows : []);
@@ -60,7 +66,7 @@ function GestionAuditoria() {
     } finally {
       setLoading(false);
     }
-  }, [debouncedSearchText, fechaDesde, fechaHasta]);
+  }, [debouncedSearchText, fechaDesde, horaDesde, fechaHasta, horaHasta]);
 
   useEffect(() => {
     cargar();
@@ -71,7 +77,9 @@ function GestionAuditoria() {
   const handleLimpiarFiltros = () => {
     setSearchText('');
     setFechaDesde('');
+    setHoraDesde('');
     setFechaHasta('');
+    setHoraHasta('');
   };
 
   const getStatusBadgeClass = (status) => {
@@ -123,20 +131,36 @@ function GestionAuditoria() {
             count={logs.length}
             maxItems={totalCount}
           />
-          <input
-            type="date"
-            className="gestion-auditoria__date-input"
-            value={fechaDesde}
-            onChange={(e) => setFechaDesde(e.target.value)}
-            placeholder="Desde"
-          />
-          <input
-            type="date"
-            className="gestion-auditoria__date-input"
-            value={fechaHasta}
-            onChange={(e) => setFechaHasta(e.target.value)}
-            placeholder="Hasta"
-          />
+          <div className="gestion-auditoria__filter-group">
+            <input
+              type="date"
+              className="gestion-auditoria__date-input"
+              value={fechaDesde}
+              onChange={(e) => setFechaDesde(e.target.value)}
+              placeholder="Desde"
+            />
+            <input
+              type="time"
+              className="gestion-auditoria__time-input"
+              value={horaDesde}
+              onChange={(e) => setHoraDesde(e.target.value)}
+            />
+          </div>
+          <div className="gestion-auditoria__filter-group">
+            <input
+              type="date"
+              className="gestion-auditoria__date-input"
+              value={fechaHasta}
+              onChange={(e) => setFechaHasta(e.target.value)}
+              placeholder="Hasta"
+            />
+            <input
+              type="time"
+              className="gestion-auditoria__time-input"
+              value={horaHasta}
+              onChange={(e) => setHoraHasta(e.target.value)}
+            />
+          </div>
           <button className="gestion-auditoria__btn-limpiar" onClick={handleLimpiarFiltros}>
             Limpiar
           </button>
