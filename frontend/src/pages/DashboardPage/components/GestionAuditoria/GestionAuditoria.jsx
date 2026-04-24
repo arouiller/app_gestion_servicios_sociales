@@ -140,6 +140,9 @@ function GestionAuditoria() {
           <button className="gestion-auditoria__btn-limpiar" onClick={handleLimpiarFiltros}>
             Limpiar
           </button>
+          <button className="gestion-auditoria__btn-refresh" onClick={cargar}>
+            🔄 Refrescar
+          </button>
         </div>
       )}
 

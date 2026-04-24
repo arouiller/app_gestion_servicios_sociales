@@ -57,7 +57,7 @@
     gap: 1rem;
     margin-bottom: 2rem;
     flex-wrap: wrap;
-    align-items: flex-end;
+    align-items: center;
   }
 
   &__date-input {
@@ -86,6 +86,25 @@
 
     &:hover {
       background: darken($color-text-muted, 10%);
+    }
+
+    &:active {
+      transform: scale(0.98);
+    }
+  }
+
+  &__btn-refresh {
+    padding: 0.5rem 1rem;
+    background: $color-primary;
+    color: $color-white;
+    border: none;
+    border-radius: 4px;
+    cursor: pointer;
+    font-size: 0.9rem;
+    transition: background 0.2s;
+
+    &:hover {
+      background: darken($color-primary, 10%);
     }
 
     &:active {
