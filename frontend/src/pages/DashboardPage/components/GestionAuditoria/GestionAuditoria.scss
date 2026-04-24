@@ -75,6 +75,22 @@
     align-items: center;
   }
 
+  &__usuario-select {
+    padding: 0.5rem 0.75rem;
+    border: 1px solid $color-border;
+    border-radius: 4px;
+    font-size: 0.95rem;
+    background: $color-white;
+    cursor: pointer;
+    min-width: 180px;
+
+    &:focus {
+      outline: none;
+      border-color: $color-primary;
+      box-shadow: 0 0 0 2px $color-primary-light;
+    }
+  }
+
   &__date-input {
     padding: 0.5rem 0.75rem;
     border: 1px solid $color-border;

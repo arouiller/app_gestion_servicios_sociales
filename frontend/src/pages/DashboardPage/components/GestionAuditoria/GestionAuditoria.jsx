@@ -1,6 +1,7 @@
 import React, { useCallback, useEffect, useState } from 'react';
 import auditService from '../../../../services/auditService';
 import configService from '../../../../services/configService';
+import usuarioService from '../../../../services/usuarioService';
 import SearchContainer from '../../../../components/SearchContainer/SearchContainer';
 import Pagination from '../../../../components/Pagination/Pagination';
 import useDebounce from '../../../../hooks/useDebounce';
@@ -19,15 +20,17 @@ function GestionAuditoria() {
   const [horaDesde, setHoraDesde] = useState('');
   const [fechaHasta, setFechaHasta] = useState('');
   const [horaHasta, setHoraHasta] = useState('');
+  const [usuarioSeleccionado, setUsuarioSeleccionado] = useState('');
+  const [usuarios, setUsuarios] = useState([]);
   const [configItemsPerPage, setConfigItemsPerPage] = useState(null);
   const [auditEnabled, setAuditEnabled] = useState(true);
   const [selectedLogParams, setSelectedLogParams] = useState(null);
 
   const debouncedSearchText = useDebounce(searchText, 2000);
 
-  // Cargar configuración al montar
+  // Cargar configuración y usuarios al montar
   useEffect(() => {
-    const loadConfig = async () => {
+    const loadData = async () => {
       try {
         const config = await configService.getConfiguracion();
         if (config && config.items_per_page) {
@@ -39,8 +42,15 @@ function GestionAuditoria() {
       } catch (err) {
         console.error('Error cargando configuración:', err);
       }
+
+      try {
+        const usuariosList = await usuarioService.listar();
+        setUsuarios(Array.isArray(usuariosList) ? usuariosList : []);
+      } catch (err) {
+        console.error('Error cargando usuarios:', err);
+      }
     };
-    loadConfig();
+    loadData();
   }, []);
 
   const cargar = useCallback(async () => {
@@ -49,6 +59,7 @@ function GestionAuditoria() {
     try {
       const params = {};
       if (debouncedSearchText) params.search = debouncedSearchText;
+      if (usuarioSeleccionado) params.usuario_id = usuarioSeleccionado;
       if (fechaDesde) {
         params.fecha_desde = horaDesde ? `${fechaDesde}T${horaDesde}` : fechaDesde;
       }
@@ -66,7 +77,7 @@ function GestionAuditoria() {
     } finally {
       setLoading(false);
     }
-  }, [debouncedSearchText, fechaDesde, horaDesde, fechaHasta, horaHasta]);
+  }, [debouncedSearchText, usuarioSeleccionado, fechaDesde, horaDesde, fechaHasta, horaHasta]);
 
   useEffect(() => {
     cargar();
@@ -76,6 +87,7 @@ function GestionAuditoria() {
 
   const handleLimpiarFiltros = () => {
     setSearchText('');
+    setUsuarioSeleccionado('');
     setFechaDesde('');
     setHoraDesde('');
     setFechaHasta('');
@@ -131,6 +143,18 @@ function GestionAuditoria() {
             count={logs.length}
             maxItems={totalCount}
           />
+          <select
+            className="gestion-auditoria__usuario-select"
+            value={usuarioSeleccionado}
+            onChange={(e) => setUsuarioSeleccionado(e.target.value)}
+          >
+            <option value="">Todos los usuarios</option>
+            {usuarios.map((usuario) => (
+              <option key={usuario.id} value={usuario.id}>
+                {usuario.nombre} {usuario.apellido}
+              </option>
+            ))}
+          </select>
           <div className="gestion-auditoria__filter-group">
             <input
               type="date"
