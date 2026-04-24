@@ -4,7 +4,7 @@ const sequelize = require('../config/database');
 const Recibo = sequelize.define('Recibo', {
   id: { type: DataTypes.INTEGER, primaryKey: true, autoIncrement: true },
   plan_numero: { type: DataTypes.INTEGER, allowNull: false },
-  periodo: { type: DataTypes.DATE, allowNull: false },
+  periodo: { type: DataTypes.STRING(10), allowNull: false }, // YYYY-MM-DD
   numero_afiliado: { type: DataTypes.STRING(50), allowNull: false },
   titular_apellido: { type: DataTypes.STRING(100), allowNull: false },
   titular_nombre: { type: DataTypes.STRING(100), allowNull: false },
