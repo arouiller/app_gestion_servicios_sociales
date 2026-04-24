@@ -95,12 +95,16 @@ router.put('/configuracion/:tipo', verifyToken, requireAdmin, async (req, res) =
 // GET /api/admin/auditoria - Listar registros de auditoría
 router.get('/auditoria', verifyToken, requireAdmin, async (req, res) => {
   try {
-    const { search, fecha_desde, fecha_hasta, limit = 50, offset = 0 } = req.query;
+    const { search, usuario_id, fecha_desde, fecha_hasta, limit = 50, offset = 0 } = req.query;
     const { Op } = require('sequelize');
     const where = {};
 
     if (search) {
       where.endpoint = { [Op.like]: `%${search}%` };
+    }
+
+    if (usuario_id) {
+      where.usuario_id = usuario_id;
     }
 
     if (fecha_desde || fecha_hasta) {
