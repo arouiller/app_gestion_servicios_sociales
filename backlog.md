@@ -33,7 +33,7 @@ De cualquier estado → Descartado
 
 | ID | Prioridad | Estado | Descripción | Contexto / Motivo | Archivos estimados |
 |----|-----------|--------|-------------|-------------------|----|
-| BACKLOG-033 | 🟡 Media | 📋 Registrado | Estandarizar estructura de barras de filtros en pantallas de gestión | Todas las pantallas de gestión (Planes, Cobradores, Obras Sociales, Servicios Adicionales, Tipos de Grupo, Tipos de Plan) deben mantener estructura consistente: título arriba, debajo caja de búsqueda (izquierda) + botones (nuevo, aumento masivo, etc), todos alineados verticalmente al centro | GestionPlanesV1.jsx, Cobradores.jsx, ObrasSociales.jsx, ServiciosAdicionales.jsx, TiposDeGrupo.jsx, TiposDePlan.jsx, SCSS |
+| BACKLOG-033 | 🟡 Media | ✅ Solucionado | Estandarizar estructura de barras de filtros en pantallas de gestión | Estructura estándar implementada: título arriba, debajo barra de filtros con búsqueda (izquierda expandida) + botones (derecha). Todos alineados verticalmente al centro. Aplicado en todas las pantallas de gestión con flexbox y BEM. | GestionPlanesV1.jsx, LookupCRUD.jsx, BusquedaAfiliados.jsx, GestionAuditoria.jsx, SCSS |
 | BACKLOG-032 | 🔴 Alta | ✅ Solucionado | Sistema de Auditoría - Listado de Acceso a Endpoints del Backend | Admin solo: listado de accesos a endpoints mostrando usuario, fecha/hora, endpoint invocado, parámetros. Trazabilidad completa, compliance, detección de actividad sospechosa. Requiere tabla audit_log, middleware global, sanitización de datos sensibles, escritura asíncrona. | migrations/2.0.14, auditMiddleware.js, auditLog model/controller, AuditLogPage.jsx, auditService.js |
 | BACKLOG-031 | 🔴 Alta | ✅ Solucionado | Implementar paginación en listados (>10 registros) | Todos los listados (planes, afiliados, cobradores, obras sociales, servicios adicionales, tipos de grupo, tipos de plan) deben paginar cuando excedan 10 registros. Mejora UX y performance. Requiere componente de paginación reutilizable y actualización de servicios backend. | GestionPlanesV1.jsx, BusquedaAfiliados.jsx, LookupCRUD.jsx, Pagination.jsx, múltiples servicios |
 | BACKLOG-030 | 🟢 Baja | ✅ Solucionado | Modificar sección de Soporte en Footer (WhatsApp + Email) | Mejorar accesibilidad del contacto directo en landing page. Reemplazar "Contacto" por link WhatsApp (+54 11 3355 2955) y agregar link de Email (alejandro.rouiller@gmail.com). Facilita soporte rápido para usuarios. | Footer.jsx, Footer.scss |
@@ -3506,8 +3506,29 @@ c. **Detalles técnicos:**
 
 **Estado:**
 
-- 📋 Registrado (registrado 2026-04-24)
-- Pendiente de aprobación de estructura y prioridad
+- ✅ Solucionado (completado 2026-04-24)
+- Implementado en commits: a8ee3a3, 6126445
+- Estructura estándar aplicada a todas las pantallas de gestión
+- SearchContainer con flex: 1 para expandirse hasta los botones
+- Botones alineados a la derecha con gap de 0.75rem
+
+**Cambios Implementados:**
+
+1. **JSX:** Separación de título y barra de filtros
+   - `__title` para el título
+   - `__filters` para el contenedor con búsqueda + botones
+   
+2. **SCSS:** Estilos con flexbox
+   - `display: flex; align-items: center;` en `__filters`
+   - `flex: 1` en SearchContainer para ocupar espacio
+   - `flex: 1` en input-wrapper para expandirse hasta los botones
+   - Gap de 0.75rem entre componentes
+
+3. **Componentes Afectados:**
+   - LookupCRUD (usado por 5 pantallas)
+   - GestionPlanesV1
+   - BusquedaAfiliados
+   - GestionAuditoria
 
 ---
 
