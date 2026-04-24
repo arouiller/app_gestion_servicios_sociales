@@ -97,6 +97,8 @@ exports.generar = async (req, res, next) => {
 
     const recibosGenerados = [];
 
+    console.log(`[RECIBOS] Iniciando loop de generación para ${planesAGenerar.length} planes`);
+
     for (const planNumero of planesAGenerar) {
       try {
         // Verificar si ya existe recibo para este plan en este período (cuando NO es force)
