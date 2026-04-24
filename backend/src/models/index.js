@@ -23,6 +23,7 @@ const Recibo = require('./Recibo');
 const ReciboIntegrante = require('./ReciboIntegrante');
 const PeriodosRecibos = require('./PeriodosRecibos');
 const Bug = require('./Bug');
+const AuditLog = require('./AuditLog');
 
 // Initialize all models
 const db = {
@@ -46,6 +47,7 @@ const db = {
   ReciboIntegrante,
   PeriodosRecibos,
   Bug,
+  AuditLog,
 };
 
 // Define associations for 1.0.x
@@ -93,6 +95,11 @@ if (db.Recibo && db.ReciboIntegrante) {
 // Bug associations
 if (db.Bug && db.Usuario) {
   db.Bug.belongsTo(db.Usuario, { foreignKey: 'usuario_id', as: 'usuario' });
+}
+
+// AuditLog associations
+if (db.AuditLog && db.Usuario) {
+  db.AuditLog.belongsTo(db.Usuario, { foreignKey: 'usuario_id', as: 'usuario' });
 }
 
 module.exports = db;

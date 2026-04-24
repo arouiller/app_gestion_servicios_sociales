@@ -1,0 +1,206 @@
+import React, { useCallback, useEffect, useState } from 'react';
+import auditService from '../../../../services/auditService';
+import configService from '../../../../services/configService';
+import SearchContainer from '../../../../components/SearchContainer/SearchContainer';
+import Pagination from '../../../../components/Pagination/Pagination';
+import useDebounce from '../../../../hooks/useDebounce';
+import usePagination from '../../../../hooks/usePagination';
+import '../../../../styles/_table-standard.scss';
+import './GestionAuditoria.scss';
+
+function GestionAuditoria() {
+  const [logs, setLogs] = useState([]);
+  const [totalCount, setTotalCount] = useState(0);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(null);
+
+  const [searchText, setSearchText] = useState('');
+  const [fechaDesde, setFechaDesde] = useState('');
+  const [fechaHasta, setFechaHasta] = useState('');
+  const [configItemsPerPage, setConfigItemsPerPage] = useState(null);
+  const [auditEnabled, setAuditEnabled] = useState(true);
+
+  const debouncedSearchText = useDebounce(searchText, 2000);
+
+  // Cargar configuración al montar
+  useEffect(() => {
+    const loadConfig = async () => {
+      try {
+        const config = await configService.getConfiguracion();
+        if (config && config.items_per_page) {
+          setConfigItemsPerPage(config.items_per_page);
+        }
+        if (config && config.audit_enabled !== undefined) {
+          setAuditEnabled(config.audit_enabled === 1 || config.audit_enabled === '1');
+        }
+      } catch (err) {
+        console.error('Error cargando configuración:', err);
+      }
+    };
+    loadConfig();
+  }, []);
+
+  const cargar = useCallback(async () => {
+    setError(null);
+    setLoading(true);
+    try {
+      const params = {};
+      if (debouncedSearchText) params.search = debouncedSearchText;
+      if (fechaDesde) params.fecha_desde = fechaDesde;
+      if (fechaHasta) params.fecha_hasta = fechaHasta;
+      params.limit = 500; // Cargar todos para paginar en cliente
+      const data = await auditService.listar(params);
+      setLogs(Array.isArray(data.rows) ? data.rows : []);
+      setTotalCount(data.count || 0);
+    } catch (err) {
+      console.error('Error al cargar auditoría:', err);
+      setError(err.response?.data?.message || err.message || 'Error al cargar auditoría');
+      setLogs([]);
+    } finally {
+      setLoading(false);
+    }
+  }, [debouncedSearchText, fechaDesde, fechaHasta]);
+
+  useEffect(() => {
+    cargar();
+  }, [cargar]);
+
+  const pagination = usePagination(logs, 15, configItemsPerPage);
+
+  const handleLimpiarFiltros = () => {
+    setSearchText('');
+    setFechaDesde('');
+    setFechaHasta('');
+  };
+
+  const getStatusBadgeClass = (status) => {
+    if (status >= 200 && status < 300) return 'gestion-auditoria__badge-status--ok';
+    if (status >= 300 && status < 400) return 'gestion-auditoria__badge-status--redirect';
+    if (status >= 400 && status < 500) return 'gestion-auditoria__badge-status--client-error';
+    return 'gestion-auditoria__badge-status--server-error';
+  };
+
+  const getMethodBadgeClass = (method) => {
+    switch (method) {
+      case 'GET':
+        return 'gestion-auditoria__badge-method--get';
+      case 'POST':
+        return 'gestion-auditoria__badge-method--post';
+      case 'PUT':
+        return 'gestion-auditoria__badge-method--put';
+      case 'DELETE':
+        return 'gestion-auditoria__badge-method--delete';
+      default:
+        return '';
+    }
+  };
+
+  if (loading && logs.length === 0) {
+    return <div className="gestion-auditoria__loading">Cargando auditoría...</div>;
+  }
+
+  return (
+    <div className="gestion-auditoria">
+      <div className="gestion-auditoria__header">
+        <h2 className="gestion-auditoria__title">Auditoría del Sistema</h2>
+      </div>
+
+      {!auditEnabled && (
+        <div className="gestion-auditoria__banner gestion-auditoria__banner--inactive">
+          <p>⚠️ La auditoría está actualmente inactiva. Habilitarla en <strong>Configuración → Auditoría</strong></p>
+        </div>
+      )}
+
+      {error && <div className="gestion-auditoria__alert gestion-auditoria__alert--error">{error}</div>}
+
+      {logs.length > 0 && (
+        <div className="gestion-auditoria__filters">
+          <SearchContainer
+            placeholder="Buscar por endpoint..."
+            value={searchText}
+            onChange={setSearchText}
+            count={logs.length}
+            maxItems={totalCount}
+          />
+          <input
+            type="date"
+            className="gestion-auditoria__date-input"
+            value={fechaDesde}
+            onChange={(e) => setFechaDesde(e.target.value)}
+            placeholder="Desde"
+          />
+          <input
+            type="date"
+            className="gestion-auditoria__date-input"
+            value={fechaHasta}
+            onChange={(e) => setFechaHasta(e.target.value)}
+            placeholder="Hasta"
+          />
+          <button className="gestion-auditoria__btn-limpiar" onClick={handleLimpiarFiltros}>
+            Limpiar
+          </button>
+        </div>
+      )}
+
+      {logs.length === 0 ? (
+        <p className="gestion-auditoria__empty">
+          {auditEnabled
+            ? 'No hay registros de auditoría.'
+            : 'La auditoría está deshabilitada. No hay registros disponibles.'}
+        </p>
+      ) : (
+        <div className="table-wrapper">
+          <table className="table-standard gestion-auditoria__tabla">
+            <thead>
+              <tr>
+                <th>Usuario</th>
+                <th>Fecha/Hora</th>
+                <th>Método</th>
+                <th>Endpoint</th>
+                <th>Status</th>
+                <th>ms</th>
+              </tr>
+            </thead>
+            <tbody>
+              {pagination.paginatedItems.map((log) => (
+                <tr key={log.id}>
+                  <td>
+                    {log.usuario ? `${log.usuario.apellido}, ${log.usuario.nombre}` : 'Sistema'}
+                  </td>
+                  <td>{new Date(log.fecha_hora).toLocaleString('es-AR')}</td>
+                  <td>
+                    <span className={`gestion-auditoria__badge-method ${getMethodBadgeClass(log.metodo)}`}>
+                      {log.metodo}
+                    </span>
+                  </td>
+                  <td title={log.endpoint} className="gestion-auditoria__endpoint">
+                    {log.endpoint.length > 60 ? log.endpoint.substring(0, 60) + '...' : log.endpoint}
+                  </td>
+                  <td>
+                    <span className={`gestion-auditoria__badge-status ${getStatusBadgeClass(log.status_response)}`}>
+                      {log.status_response}
+                    </span>
+                  </td>
+                  <td>{log.duracion_ms || '—'}</td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
+      )}
+
+      {pagination.showPagination && (
+        <Pagination
+          currentPage={pagination.currentPage}
+          totalPages={pagination.totalPages}
+          totalItems={pagination.totalItems}
+          itemsPerPage={pagination.itemsPerPage}
+          onPageChange={pagination.handleChangePage}
+          onItemsPerPageChange={pagination.handleChangeItemsPerPage}
+        />
+      )}
+    </div>
+  );
+}
+
+export default GestionAuditoria;

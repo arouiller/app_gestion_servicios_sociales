@@ -17,6 +17,7 @@ import TiposDePlan from './components/TiposDePlan/TiposDePlan';
 import GestionUsuarios from './components/GestionUsuarios/GestionUsuarios';
 import ConfiguracionNotificaciones from './components/ConfiguracionNotificaciones/ConfiguracionNotificaciones';
 import GestionBugs from './components/GestionBugs/GestionBugs';
+import GestionAuditoria from './components/GestionAuditoria/GestionAuditoria';
 import configService from '../../services/configService';
 import './DashboardPage.scss';
 
@@ -69,6 +70,7 @@ function buildMenu(isAdmin) {
       key: 'administracion',
       label: 'Administración',
       children: [
+        { key: 'auditoria', label: 'Auditoría' },
         { key: 'gestion-usuarios', label: 'Gestión de Usuarios' },
         { key: 'configuracion-notificaciones', label: 'Configuración UI' },
         { key: 'migraciones-bd', label: 'Migraciones BD' },
@@ -238,6 +240,7 @@ function DashboardPageContent() {
           )}
           {activeModule === 'gestion-recibos' && <RecibosPage />}
           {activeModule === 'gestion-bugs' && <GestionBugs />}
+          {activeModule === 'auditoria' && <GestionAuditoria />}
           {activeModule === 'gestion-usuarios' && <GestionUsuarios />}
           {activeModule === 'configuracion-notificaciones' && <ConfiguracionNotificaciones />}
           {activeModule === 'migraciones-bd' && <MigrationsDashboard />}

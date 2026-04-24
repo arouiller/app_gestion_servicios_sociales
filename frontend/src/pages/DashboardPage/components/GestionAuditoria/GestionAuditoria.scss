@@ -1,0 +1,179 @@
+@import '../../../../styles/_colors.scss';
+
+.gestion-auditoria {
+  &__header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: 2rem;
+  }
+
+  &__title {
+    font-size: 1.75rem;
+    font-weight: 600;
+    color: $color-text;
+    margin: 0;
+  }
+
+  &__loading {
+    padding: 2rem;
+    text-align: center;
+    color: $color-text-muted;
+  }
+
+  &__alert {
+    margin-bottom: 2rem;
+    padding: 1rem;
+    border-radius: 4px;
+    font-size: 0.95rem;
+
+    &--error {
+      background: $color-danger-bg;
+      color: $color-danger;
+      border-left: 4px solid $color-danger;
+    }
+  }
+
+  &__banner {
+    margin-bottom: 2rem;
+    padding: 1rem;
+    border-radius: 4px;
+    border-left: 4px solid;
+    font-size: 0.95rem;
+
+    &--inactive {
+      background: #fffbf0;
+      color: #c0680c;
+      border-left-color: #ffb84d;
+
+      p {
+        margin: 0;
+      }
+    }
+  }
+
+  &__filters {
+    display: flex;
+    gap: 1rem;
+    margin-bottom: 2rem;
+    flex-wrap: wrap;
+    align-items: flex-end;
+  }
+
+  &__date-input {
+    padding: 0.5rem 0.75rem;
+    border: 1px solid $color-border;
+    border-radius: 4px;
+    font-size: 0.95rem;
+    background: $color-white;
+
+    &:focus {
+      outline: none;
+      border-color: $color-primary;
+      box-shadow: 0 0 0 2px $color-primary-bg;
+    }
+  }
+
+  &__btn-limpiar {
+    padding: 0.5rem 1rem;
+    background: $color-text-muted;
+    color: $color-white;
+    border: none;
+    border-radius: 4px;
+    cursor: pointer;
+    font-size: 0.9rem;
+    transition: background 0.2s;
+
+    &:hover {
+      background: darken($color-text-muted, 10%);
+    }
+
+    &:active {
+      transform: scale(0.98);
+    }
+  }
+
+  &__empty {
+    padding: 2rem;
+    text-align: center;
+    color: $color-text-muted;
+  }
+
+  &__tabla {
+    th {
+      font-weight: 600;
+      text-align: left;
+    }
+
+    td {
+      padding: 0.75rem;
+    }
+  }
+
+  &__endpoint {
+    max-width: 300px;
+    word-break: break-word;
+    font-family: monospace;
+    font-size: 0.85rem;
+  }
+
+  &__badge-status {
+    display: inline-block;
+    padding: 0.25rem 0.75rem;
+    border-radius: 4px;
+    font-size: 0.85rem;
+    font-weight: 500;
+    min-width: 50px;
+    text-align: center;
+
+    &--ok {
+      background: #e8f5e9;
+      color: #2e7d32;
+    }
+
+    &--redirect {
+      background: #e3f2fd;
+      color: #1565c0;
+    }
+
+    &--client-error {
+      background: #fff3e0;
+      color: #e65100;
+    }
+
+    &--server-error {
+      background: #ffebee;
+      color: #c62828;
+    }
+  }
+
+  &__badge-method {
+    display: inline-block;
+    padding: 0.25rem 0.75rem;
+    border-radius: 4px;
+    font-size: 0.85rem;
+    font-weight: 500;
+    min-width: 50px;
+    text-align: center;
+
+    &--get {
+      background: #f5f5f5;
+      color: #616161;
+    }
+
+    &--post {
+      background: #e3f2fd;
+      color: #1565c0;
+    }
+
+    &--put {
+      background: #fff3e0;
+      color: #e65100;
+    }
+
+    &--delete {
+      background: #ffebee;
+      color: #c62828;
+    }
+  }
+}

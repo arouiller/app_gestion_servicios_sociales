@@ -104,6 +104,17 @@ export default function ConfiguracionNotificaciones() {
       }
     }
 
+    // Validaciones específicas para audit_retention_days
+    if (type === 'audit_retention_days') {
+      if (newValue < 1 || newValue > 365) {
+        setErrors((prev) => ({
+          ...prev,
+          [type]: 'Debe estar entre 1 y 365 días',
+        }));
+        return;
+      }
+    }
+
     try {
       setSaving((prev) => ({ ...prev, [type]: true }));
       await configService.actualizarConfiguracion(type, newValue);
@@ -353,6 +364,119 @@ export default function ConfiguracionNotificaciones() {
           💡 <strong>Tip:</strong> Define cuántos registros se muestran por página en los listados.
           Rango permitido: 5-100. Valores recomendados: 10-20. Los cambios se aplicarán
           inmediatamente al recargar los listados.
+        </p>
+      </div>
+
+      {/* Sección: Configuración de Auditoría */}
+      <div className="configuracion-notificaciones__header" style={{ marginTop: '2rem' }}>
+        <h2>Configuración de Auditoría</h2>
+        <p className="configuracion-notificaciones__subtitle">
+          Registra los accesos al backend para trazabilidad y compliance
+        </p>
+      </div>
+
+      <div className="configuracion-notificaciones__table-wrapper">
+        <table className="configuracion-notificaciones__table table-standard">
+          <thead>
+            <tr>
+              <th>Parámetro</th>
+              <th>Descripción</th>
+              <th>Valor</th>
+              <th>Acciones</th>
+            </tr>
+          </thead>
+          <tbody>
+            {/* Habilitación de Auditoría */}
+            <tr>
+              <td>
+                <span className="configuracion-notificaciones__tipo-badge" style={{ backgroundColor: '#e8f5e9', color: '#2e7d32', borderLeftColor: '#2e7d32' }}>
+                  <span className="configuracion-notificaciones__icon">🔒</span>
+                  Habilitación
+                </span>
+              </td>
+              <td>Activa o desactiva el registro de accesos al backend</td>
+              <td className="configuracion-notificaciones__duration-cell">
+                <div className="configuracion-notificaciones__duration-group">
+                  <input
+                    type="checkbox"
+                    checked={values.audit_enabled === 1}
+                    onChange={() => {
+                      setValues(prev => ({ ...prev, audit_enabled: prev.audit_enabled === 1 ? 0 : 1 }));
+                      if (errors.audit_enabled) {
+                        setErrors(prev => { const newErrors = { ...prev }; delete newErrors.audit_enabled; return newErrors; });
+                      }
+                    }}
+                    disabled={saving.audit_enabled}
+                    style={{ width: 'auto', marginRight: '0.5rem' }}
+                  />
+                  <span className="configuracion-notificaciones__hint">
+                    {values.audit_enabled === 1 ? '✅ Activa' : '❌ Inactiva'}
+                  </span>
+                </div>
+              </td>
+              <td className="configuracion-notificaciones__actions">
+                <button
+                  className="configuracion-notificaciones__btn-save"
+                  onClick={() => handleSave('audit_enabled')}
+                  disabled={saving.audit_enabled}
+                  title={saving.audit_enabled ? 'Guardando...' : 'Guardar configuración'}
+                >
+                  {saving.audit_enabled ? '⏳' : '💾'}
+                </button>
+              </td>
+            </tr>
+
+            {/* Retención de Logs */}
+            <tr>
+              <td>
+                <span className="configuracion-notificaciones__tipo-badge" style={{ backgroundColor: '#f3e5f5', color: '#7b1fa2', borderLeftColor: '#7b1fa2' }}>
+                  <span className="configuracion-notificaciones__icon">📅</span>
+                  Retención
+                </span>
+              </td>
+              <td>Cantidad de días que se conservan los registros de auditoría</td>
+              <td className="configuracion-notificaciones__duration-cell">
+                <div className="configuracion-notificaciones__duration-group">
+                  <input
+                    type="number"
+                    min="1"
+                    max="365"
+                    step="1"
+                    className="configuracion-notificaciones__duration-input"
+                    value={values.audit_retention_days || 90}
+                    onChange={(e) => handleChange('audit_retention_days', e.target.value)}
+                    disabled={saving.audit_retention_days}
+                  />
+                  <span className="configuracion-notificaciones__hint">
+                    (días)
+                  </span>
+                </div>
+                {errors.audit_retention_days && (
+                  <span className="configuracion-notificaciones__error">
+                    {errors.audit_retention_days}
+                  </span>
+                )}
+              </td>
+              <td className="configuracion-notificaciones__actions">
+                <button
+                  className="configuracion-notificaciones__btn-save"
+                  onClick={() => handleSave('audit_retention_days')}
+                  disabled={saving.audit_retention_days}
+                  title={saving.audit_retention_days ? 'Guardando...' : 'Guardar configuración'}
+                >
+                  {saving.audit_retention_days ? '⏳' : '💾'}
+                </button>
+              </td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+
+      <div className="configuracion-notificaciones__info">
+        <p>
+          💡 <strong>Tip:</strong> Los logs se limpian automáticamente después de N días.
+          El cambio de habilitación tarda hasta 30 segundos en aplicarse.
+          Rango permitido: 1-365 días. Valor recomendado: 90 días.
         </p>
       </div>
     </div>
