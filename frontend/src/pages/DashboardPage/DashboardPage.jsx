@@ -18,6 +18,7 @@ import GestionUsuarios from './components/GestionUsuarios/GestionUsuarios';
 import ConfiguracionNotificaciones from './components/ConfiguracionNotificaciones/ConfiguracionNotificaciones';
 import GestionBugs from './components/GestionBugs/GestionBugs';
 import GestionAuditoria from './components/GestionAuditoria/GestionAuditoria';
+import QueryExecPage from './components/QueryExec/QueryExecPage';
 import configService from '../../services/configService';
 import './DashboardPage.scss';
 
@@ -71,6 +72,7 @@ function buildMenu(isAdmin) {
       label: 'Administración',
       children: [
         { key: 'auditoria', label: 'Auditoría' },
+        { key: 'herramienta-queries', label: 'Herramienta de Queries' },
         { key: 'gestion-usuarios', label: 'Gestión de Usuarios' },
         { key: 'configuracion-notificaciones', label: 'Configuración UI' },
         { key: 'migraciones-bd', label: 'Migraciones BD' },
@@ -241,6 +243,7 @@ function DashboardPageContent() {
           {activeModule === 'gestion-recibos' && <RecibosPage />}
           {activeModule === 'gestion-bugs' && <GestionBugs />}
           {activeModule === 'auditoria' && <GestionAuditoria />}
+          {activeModule === 'herramienta-queries' && <QueryExecPage />}
           {activeModule === 'gestion-usuarios' && <GestionUsuarios />}
           {activeModule === 'configuracion-notificaciones' && <ConfiguracionNotificaciones />}
           {activeModule === 'migraciones-bd' && <MigrationsDashboard />}
