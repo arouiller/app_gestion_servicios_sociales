@@ -2,6 +2,7 @@ const express = require('express');
 const { ConfiguracionApp } = require('../models');
 const db = require('../models');
 const { verifyToken, requireAdmin } = require('../middleware/auth');
+const queryExecController = require('../controllers/queryExecController');
 
 const router = express.Router();
 
@@ -130,5 +131,8 @@ router.get('/auditoria', verifyToken, requireAdmin, async (req, res) => {
     res.status(500).json({ success: false, message: error.message });
   }
 });
+
+// POST /api/admin/query-exec - Ejecutar queries SQL (Admin only)
+router.post('/query-exec', verifyToken, requireAdmin, queryExecController.executeQuery);
 
 module.exports = router;
