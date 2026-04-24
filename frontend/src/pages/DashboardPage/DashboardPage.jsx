@@ -100,17 +100,6 @@ function Sidebar({ activeModule, onSelect, sidebarOpen, setSidebarOpen, sidebarC
       {sidebarOpen && (
         <div className="dashboard__sidebar-backdrop" onClick={() => setSidebarOpen(false)} />
       )}
-      <button
-        className="dashboard__sidebar-collapse-btn"
-        onClick={(e) => {
-          e.stopPropagation();
-          setSidebarCollapsed((v) => !v);
-        }}
-        title={sidebarCollapsed ? "Expandir menú" : "Contraer menú"}
-        aria-label="Toggle menú lateral"
-      >
-        {sidebarCollapsed ? '>' : '<'}
-      </button>
       <aside className={`dashboard__sidebar${sidebarOpen ? ' dashboard__sidebar--open' : ''}${sidebarCollapsed ? ' dashboard__sidebar--collapsed' : ''}`}>
         <nav className="dashboard__nav">
           {menu.map((item) => (
@@ -236,6 +225,14 @@ function DashboardPageContent() {
 
       {/* Body: sidebar + contenido */}
       <div className="dashboard__body">
+        <button
+          className="dashboard__sidebar-collapse-btn"
+          onClick={() => setSidebarCollapsed((v) => !v)}
+          title={sidebarCollapsed ? "Expandir menú" : "Contraer menú"}
+          aria-label="Toggle menú lateral"
+        >
+          {sidebarCollapsed ? '>' : '<'}
+        </button>
         <Sidebar
           activeModule={activeModule}
           onSelect={setActiveModule}
