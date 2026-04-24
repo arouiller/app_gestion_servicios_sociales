@@ -31,7 +31,7 @@ Actualmente hay 3 bugs activos: 1 en análisis en gestión de recibos, 1 crític
 
 | ID | Severidad | Fase | Descripción | Reportado | Estado |
 |----|-----------|------|-------------|-----------|--------|
-| BUG-027 | 🟡 IMPORTANTE | BACKLOG-014 | Listado de Recibos: obra social no aparece en lista (pero sí en detalle) | 2026-04-24 | 🚀 En resolución |
+| BUG-027 | 🟡 IMPORTANTE | BACKLOG-014 | Listado de Recibos: obra social no aparece en lista (pero sí en detalle) | 2026-04-24 | ✅ Solucionado |
 | BUG-026 | 🔴 CRÍTICO | BACKLOG-014 | Gestión de Recibos: período Abril 2026 muestra "No hay recibos" pese a tener 12 registrados | 2026-04-24 | ✅ Solucionado |
 | BUG-025 | 🔴 CRÍTICO | BACKLOG-024 | npm install falló: conflicto de versiones al agregar 22 dependencias explícitamente | 2026-04-18 | 🔬 En análisis |
 | BUG-024 | 🔴 CRÍTICO | BACKLOG-N/A | Migraciones BD - Tab "Estadísticas" muestra página en blanco | 2026-04-18 | ✅ Solucionado |
