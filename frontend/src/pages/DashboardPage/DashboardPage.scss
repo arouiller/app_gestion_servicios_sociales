@@ -164,9 +164,11 @@ $sidebar-width: 220px;
     width: 100%;
     margin: 0;
     padding: 2rem 1rem;
+    padding-left: 50px;
     gap: 1.5rem;
     align-items: flex-start;
     position: relative;
+    overflow: visible;
   }
 
   // ── Sidebar ───────────────────────────────────────────────────────────────
@@ -192,7 +194,7 @@ $sidebar-width: 220px;
 
   &__sidebar-collapse-btn {
     position: absolute;
-    left: -44px;
+    left: 7px;
     top: 0.5rem;
     width: 36px;
     height: 36px;
