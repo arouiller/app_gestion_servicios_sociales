@@ -166,6 +166,7 @@ $sidebar-width: 220px;
     padding: 2rem 1rem;
     gap: 1.5rem;
     align-items: flex-start;
+    position: relative;
   }
 
   // ── Sidebar ───────────────────────────────────────────────────────────────
@@ -190,9 +191,9 @@ $sidebar-width: 220px;
   }
 
   &__sidebar-collapse-btn {
-    position: fixed;
-    left: 1rem;
-    top: 76px;
+    position: absolute;
+    left: 0;
+    top: 0.5rem;
     width: 36px;
     height: 36px;
     display: flex;
