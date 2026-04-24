@@ -189,16 +189,14 @@ $sidebar-width: 220px;
     }
   }
 
-  &__sidebar-header {
-    position: relative;
-    height: 0;
-    z-index: 10;
+  &__nav-collapse {
+    display: flex;
+    justify-content: flex-end;
+    padding: 0.5rem;
+    border-bottom: 1px solid var(--color-border);
   }
 
   &__sidebar-collapse-btn {
-    position: absolute;
-    top: -40px;
-    right: 0;
     width: 32px;
     height: 32px;
     display: flex;
@@ -209,10 +207,11 @@ $sidebar-width: 220px;
     color: var(--color-text-light);
     cursor: pointer;
     border-radius: 6px;
-    transition: background 0.15s, color 0.15s, transform 0.3s ease;
-    font-size: 1rem;
+    transition: background 0.15s, color 0.15s;
+    font-size: 1.1rem;
     font-weight: 600;
     padding: 0;
+    flex-shrink: 0;
 
     &:hover {
       background: var(--color-bg-soft);
