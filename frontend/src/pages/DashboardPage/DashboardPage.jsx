@@ -36,20 +36,6 @@ const ICONS = {
 function buildMenu(isAdmin) {
   const menu = [
     {
-      key: 'mi-cuenta',
-      label: 'Mi Cuenta',
-      children: [
-        { key: 'datos-personales', label: 'Datos Personales' },
-      ],
-    },
-    {
-      key: 'requerimientos-bugs',
-      label: 'Requerimientos y Bugs',
-      children: [
-        { key: 'gestion-bugs', label: 'Requerimientos y Bugs' },
-      ],
-    },
-    {
       key: 'gestion',
       label: 'Gestión',
       children: [
@@ -61,6 +47,20 @@ function buildMenu(isAdmin) {
         { key: 'servicios-adicionales', label: 'Servicios Adicionales' },
         { key: 'tipos-de-grupo', label: 'Tipos de Grupo' },
         { key: 'tipos-de-plan', label: 'Tipos de Plan' },
+      ],
+    },
+    {
+      key: 'requerimientos-bugs',
+      label: 'Requerimientos y Bugs',
+      children: [
+        { key: 'gestion-bugs', label: 'Requerimientos y Bugs' },
+      ],
+    },
+    {
+      key: 'mi-cuenta',
+      label: 'Mi Cuenta',
+      children: [
+        { key: 'datos-personales', label: 'Datos Personales' },
       ],
     },
   ];
@@ -84,7 +84,7 @@ function buildMenu(isAdmin) {
 }
 
 function Sidebar({ activeModule, onSelect, sidebarOpen, setSidebarOpen, sidebarCollapsed, setSidebarCollapsed, menu }) {
-  const [expandedSection, setExpandedSection] = useState('mi-cuenta');
+  const [expandedSection, setExpandedSection] = useState(null);
 
   const toggleExpand = (key) => {
     setExpandedSection(expandedSection === key ? null : key);
