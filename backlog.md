@@ -26,6 +26,13 @@ De cualquier estado → Descartado
 
 **Regla crítica:** Un backlog item solo puede pasar a "Solucionado" o "Descartado" a través del pedido explícito del usuario final
 
+**🔴 INSTRUCCIÓN IMPORTANTE PARA CLAUDE:**
+- **NUNCA** marques un item como "✅ Solucionado" sin una indicación explícita del usuario
+- Aunque la implementación esté completa, el item debe quedar en estado "🚀 Desarrollado" hasta que el usuario diga explícitamente "marca el item como solucionado" o "marca BACKLOG-XXX como resuelto"
+- Esta regla asegura que el usuario tenga control explícito sobre el estado de cada requerimiento
+- Si ya implementaste un item y el usuario NO indicó marcarlo como solucionado, actualiza el estado a "🚀 Desarrollado" en lugar de "✅ Solucionado"
+- Solo el usuario puede indicar transiciones a "✅ Solucionado" o "🚫 Descartado"
+
 **Nota:** Si un backlog item desarrollado encuentra problemas, se abre un bug en BUGS.md y el item vuelve a estado "Desarrollado" hasta que se resuelva el bug.
 
 
