@@ -33,6 +33,7 @@ De cualquier estado → Descartado
 
 | ID | Prioridad | Estado | Descripción | Contexto / Motivo | Archivos estimados |
 |----|-----------|--------|-------------|-------------------|----|
+| BACKLOG-035 | 🔴 Alta | ✅ Solucionado | Optimizar espacio de trabajo: sidebar colapsable y ocultable | (1) Reducir márgenes/padding a izquierda y derecha. (2) Menú sidebar con collapse automático (expandir item → colapsan otros). (3) Botón/icono para ocultar sidebar completamente a la izquierda, con toggle para reabrirlo. Mejora UX permitiendo máximo espacio para contenido. | DashboardPage.jsx, DashboardPage.scss, Sidebar component |
 | BACKLOG-034 | 🔴 Alta | ✅ Solucionado | Herramienta de Ejecución de Queries SQL (Admin Only) | Administrador puede ingresar queries SQL (SELECT, INSERT, UPDATE, DELETE), ejecutarlas y ver resultados. Útil para auditoría, diagnóstico, análisis de datos y correcciones de BD. Prohibidas operaciones DROP, ALTER, CREATE. Con límite de resultados (1000) y logging de ejecución. | queryExecController.js, admin.js, QueryExecPage.jsx, queryExecService.js |
 | BACKLOG-033 | 🟡 Media | ✅ Solucionado | Estandarizar estructura de barras de filtros en pantallas de gestión | Estructura estándar implementada: título arriba, debajo barra de filtros con búsqueda (izquierda expandida) + botones (derecha). Todos alineados verticalmente al centro. Aplicado en todas las pantallas de gestión con flexbox y BEM. | GestionPlanesV1.jsx, LookupCRUD.jsx, BusquedaAfiliados.jsx, GestionAuditoria.jsx, SCSS |
 | BACKLOG-032 | 🔴 Alta | ✅ Solucionado | Sistema de Auditoría - Listado de Acceso a Endpoints del Backend | Admin solo: listado de accesos a endpoints mostrando usuario, fecha/hora, endpoint invocado, parámetros. Trazabilidad completa, compliance, detección de actividad sospechosa. Requiere tabla audit_log, middleware global, sanitización de datos sensibles, escritura asíncrona. | migrations/2.0.14, auditMiddleware.js, auditLog model/controller, AuditLogPage.jsx, auditService.js |
@@ -3530,6 +3531,217 @@ c. **Detalles técnicos:**
    - GestionPlanesV1
    - BusquedaAfiliados
    - GestionAuditoria
+
+---
+
+## Detalles de Items
+
+### BACKLOG-035: Optimizar Espacio de Trabajo - Sidebar Colapsable y Ocultable
+
+**Descripción General:**
+
+El dashboard actual utiliza espacio subóptimamente. El objetivo es maximizar el área de contenido mediante:
+1. Reducción de márgenes/padding laterales
+2. Menú sidebar con collapse automático (solo un item expandido a la vez)
+3. Capacidad de ocultar el sidebar completamente con un toggle
+
+**Análisis de Implementación:**
+
+#### Parte 1: Reducir espacios muertos (márgenes/padding)
+
+**Ubicación:** `DashboardPage.scss` y componentes de contenido
+
+**Cambios necesarios:**
+```scss
+/* Actual aproximado */
+.dashboard__content {
+  padding: 2rem;  /* 32px a cada lado */
+  max-width: 1400px;
+}
+
+/* Optimizado */
+.dashboard__content {
+  padding: 1.5rem 1rem;  /* 24px arriba/abajo, 16px izquierda/derecha */
+  width: 100%;  /* Remover max-width para usar espacio disponible */
+}
+
+/* También revisar componentes internos */
+.table-wrapper, .form-container, etc. {
+  padding: reducir de 2rem a 1.5rem
+}
+```
+
+**Impacto:** +10-15% espacio horizontal disponible
+
+---
+
+#### Parte 2: Menú sidebar con collapse automático
+
+**Ubicación:** `DashboardPage.jsx` - función `Sidebar`
+
+**Cambio de lógica:**
+```javascript
+// Actual: cada item tiene su estado independiente
+const [expanded, setExpanded] = useState({ 'mi-cuenta': true });
+
+// Optimizado: solo una sección expandida a la vez
+const [expandedSection, setExpandedSection] = useState('mi-cuenta');
+
+const toggleExpand = (key) => {
+  // Si está expandido, cerrarlo; si está cerrado, abrirlo (cerrando otros)
+  setExpandedSection(expandedSection === key ? null : key);
+};
+
+// En render:
+{expanded[item.key] ? ... }  // Actual
+{expandedSection === item.key ? ... }  // Nuevo
+```
+
+**Beneficio:** Mejor navegación, menos scrolling en sidebar
+
+---
+
+#### Parte 3: Ocultar/mostrar sidebar con toggle
+
+**Ubicación:** `DashboardPage.jsx` + `DashboardPage.scss`
+
+**Cambios en JSX:**
+```javascript
+// State existente
+const [sidebarOpen, setSidebarOpen] = useState(false);  // Mobile
+
+// Agregar new state
+const [sidebarCollapsed, setSidebarCollapsed] = useState(false);  // Desktop
+
+// En topbar, agregar botón toggle
+<button 
+  className="dashboard__sidebar-toggle"
+  onClick={() => setSidebarCollapsed(!sidebarCollapsed)}
+  title={sidebarCollapsed ? "Mostrar menú" : "Ocultar menú"}
+>
+  {sidebarCollapsed ? '☰' : '✕'}  // Icons: menu / close
+</button>
+
+// En sidebar, aplicar clase condicional
+<aside className={`dashboard__sidebar${sidebarCollapsed ? ' dashboard__sidebar--collapsed' : ''}`}>
+```
+
+**Cambios en SCSS:**
+```scss
+.dashboard__sidebar {
+  width: 240px;  /* Actual */
+  transition: transform 0.3s ease, width 0.3s ease;
+  
+  &--collapsed {
+    transform: translateX(-100%);  /* Desliza a la izquierda */
+    width: 0;
+    position: absolute;  /* No ocupa espacio */
+    z-index: 1000;  /* Sobre el contenido cuando reaparece */
+  }
+}
+
+.dashboard__sidebar-toggle {
+  position: fixed;
+  left: 1rem;
+  top: 1rem;
+  z-index: 1001;
+  background: $color-primary;
+  color: white;
+  border: none;
+  width: 40px;
+  height: 40px;
+  border-radius: 50%;
+  cursor: pointer;
+  transition: opacity 0.3s ease;
+  
+  &:hover {
+    opacity: 0.8;
+  }
+}
+```
+
+---
+
+**Arquitectura propuesta:**
+
+```
+DashboardPage.jsx
+├── State:
+│   ├── sidebarOpen (mobile toggle) - mantener
+│   ├── sidebarCollapsed (desktop hide) - NUEVO
+│   └── expandedSection (auto-collapse) - CAMBIO
+│
+├── Sidebar (modify)
+│   ├── Usar expandedSection en lugar de expanded obj
+│   ├── Solo una sección expandida a la vez
+│   └── Responder a toggles de collapse
+│
+├── Topbar (modify)
+│   ├── Agregar botón sidebar-toggle
+│   └── Mostrar icono apropiado (☰ o ✕)
+│
+└── CSS updates
+    ├── Reducir padding en .dashboard__content
+    ├── Agregar transform para sidebar collapse
+    ├── Agregar botón toggle con posición fija
+    └── Ajustar z-index y transitions
+```
+
+**Consideraciones técnicas:**
+
+1. **Responsive:** 
+   - Desktop (>1024px): mostrar toggle, permitir collapse
+   - Tablet (768-1024px): toggle puede colapsar
+   - Mobile (<768px): mantener lógica actual (sidebarOpen)
+
+2. **Estado persistente (opcional):**
+   ```javascript
+   useEffect(() => {
+     localStorage.setItem('sidebarCollapsed', sidebarCollapsed);
+   }, [sidebarCollapsed]);
+   
+   useEffect(() => {
+     const stored = localStorage.getItem('sidebarCollapsed');
+     if (stored) setSidebarCollapsed(JSON.parse(stored));
+   }, []);
+   ```
+
+3. **Animaciones:**
+   - Usar `transform: translateX()` en lugar de `display: none` (mejor performance)
+   - Transition de 0.3s para fluidez
+
+4. **Accesibilidad:**
+   - Botón toggle debe ser keyboard-accesible (tab, enter)
+   - ARIA labels: `aria-label="Mostrar/ocultar menú"`
+   - Mantener focus visible
+
+5. **Testing:**
+   - Desktop: verificar que solo una sección está expandida
+   - Desktop: verificar que toggle oculta/muestra sidebar
+   - Mobile: verificar que no se rompe comportamiento actual
+   - Snapshot test para cambios de layout
+
+---
+
+**Estimación:**
+
+| Tarea | Tiempo | Dependencias |
+|-------|--------|---|
+| Reducir márgenes/padding | 30 min | Ninguna |
+| Implementar auto-collapse sidebar | 45 min | Cambio state en DashboardPage |
+| Implementar toggle collapse/show | 1 hora | Cambios anteriores |
+| Testing y refinamiento | 1 hora | Todo lo anterior |
+| **Total** | **~3 horas** | - |
+
+**Archivos a modificar:**
+- `frontend/src/pages/DashboardPage/DashboardPage.jsx` (60-80 líneas)
+- `frontend/src/pages/DashboardPage/DashboardPage.scss` (40-60 líneas)
+- Revisar `frontend/src/pages/DashboardPage/components/*` para reducir padding
+
+**Estado:** 📋 Registrado
+- Análisis completado: ✅
+- Implementación pendiente
+- Estimación: ~3 horas
 
 ---
 
