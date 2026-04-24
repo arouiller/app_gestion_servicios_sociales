@@ -231,7 +231,15 @@ function DashboardPageContent() {
           title={sidebarCollapsed ? "Expandir menú" : "Contraer menú"}
           aria-label="Toggle menú lateral"
         >
-          {sidebarCollapsed ? '>' : '<'}
+          {sidebarCollapsed ? (
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5">
+              <path d="M9 6l6 6-6 6"/>
+            </svg>
+          ) : (
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5">
+              <path d="M15 6l-6 6 6 6"/>
+            </svg>
+          )}
         </button>
         <Sidebar
           activeModule={activeModule}
