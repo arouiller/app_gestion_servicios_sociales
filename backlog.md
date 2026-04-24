@@ -3355,8 +3355,9 @@ Panel administrativo que registra y visualiza todos los accesos a endpoints del 
 a. **Tabla de Auditoría (Backend)**
    - Registra: usuario_id, fecha_hora, método_http (GET/POST/PUT/DELETE), endpoint (ruta), parametros_json, status_response, duracion_ms
    - Índices en: usuario_id, fecha_hora, endpoint para queries eficientes
-   - Retention policy: considerar limpiar registros >90 días
+   - Retention policy: **configurable** (admin especifica cantidad de días, default 90)
    - Performance: escritura asíncrona (no bloqueante)
+   - **Habilitación/Deshabilitación:** admin puede activar/desactivar logging sin reiniciar app
 
 b. **Página de Auditoría (Admin-only)**
    - Tabla paginada con columnas: Usuario | Fecha/Hora | Endpoint | Método | Status | Duración
@@ -3366,11 +3367,19 @@ b. **Página de Auditoría (Admin-only)**
    - Exportar a CSV (opcional pero deseable)
 
 c. **Middleware Global (Backend)**
-   - Intercepta TODAS las requests después de autenticación JWT
+   - Intercepta TODAS las requests después de autenticación JWT (si logging está HABILITADO)
    - Captura parámetros de query, body, y ruta
    - **Sanitización crítica:** NO loguear contraseñas, tokens, datos sensibles completos
    - Considera excluir ciertos endpoints (health checks, logout)
    - Manejo de errores: si logging falla, NO debe romper el request
+
+d. **Configuración de Auditoría (Admin UI)**
+   - Nueva sección en "Configuración": "Configuración de Auditoría"
+   - **Toggle:** Habilitar/Deshabilitar auditoría (checkbox on/off) → afecta inmediatamente al middleware
+   - **Campo numérico:** Retención de logs (días) → valores 1-365, default 90
+   - Guardar configuración en tabla `configuracion_app` con tipos `audit_enabled` (booleano) y `audit_retention_days` (integer)
+   - Al cambiar, middleware lee config sin reiniciar (config inyectada en memory o redis check)
+   - Indicador visual: mostrar si auditoría está activa/inactiva
 
 **Requerimientos Técnicos:**
 
@@ -3378,14 +3387,22 @@ c. **Middleware Global (Backend)**
    - Migración 2.0.14: crear tabla `audit_log`
    - Campos: id (PK), usuario_id (FK), fecha_hora (timestamp), metodo_http (VARCHAR), endpoint (VARCHAR), parametros_json (LONGTEXT), status_response (INT), duracion_ms (INT), created_at
    - Índices: (usuario_id, fecha_hora), (endpoint), (fecha_hora)
+   - **Configuración:** agregar 2 registros a `configuracion_app`:
+     - `audit_enabled` (tipo: booleano, default: true, valor: 1/0)
+     - `audit_retention_days` (tipo: integer, default: 90, rango: 1-365)
 
 2. **Backend**
    - Middleware: `middleware/auditMiddleware.js`
+     - Verificar `audit_enabled` al inicio de cada request (verificar en memory cache o configService)
+     - Si está deshabilitado, skip logging y continuar
+     - Si está habilitado, proceder a capturar y loguear asincronamente
    - Model: `models/AuditLog.js` (Sequelize)
    - Controller: `controllers/auditController.js` (listar con filtros)
    - Routes: `routes/audit.js` (GET /audits con auth admin-only)
    - Escritura asíncrona: usar Redis queue o worker thread
    - Sanitización: función que reemplaza campos sensibles con [REDACTED]
+   - **Tarea de limpieza:** cron job o trigger que elimina registros más viejos que `audit_retention_days` cada noche
+   - **ConfigService:** agregar métodos para leer y actualizar audit_enabled y audit_retention_days
 
 3. **Frontend**
    - Página: `pages/DashboardPage/components/AuditLog/AuditLogPage.jsx`
@@ -3393,34 +3410,43 @@ c. **Middleware Global (Backend)**
    - Componente tabla con paginación (reutilizar Pagination.jsx)
    - Filtros: usuario select + DateRangePicker + endpoint search
    - Proteger acceso: validar isAdmin antes de renderizar
+   - **UI de Configuración:** agregar sección en `ConfiguracionNotificaciones.jsx` (o crear nueva página "Configuración > Auditoría")
+     - Toggle checkbox: "Habilitar Auditoría" (lee/escribe audit_enabled)
+     - Input number: "Retención de logs (días)" rango 1-365, default 90 (lee/escribe audit_retention_days)
+     - Validaciones: min=1, max=365, step=1
+     - Indicador: mostrar "Auditoría: ACTIVA" o "Auditoría: INACTIVA" en color (verde/rojo)
 
 **Impacto Técnico:**
 
 | Área | Impacto | Severidad |
 |------|---------|-----------|
-| BD | Nueva tabla, crecimiento rápido (100-500 registros/día), requiere retención | 🔴 Alto |
-| Backend | Middleware global, escritura async, sanitización crítica | 🔴 Alto |
-| Performance | Queries de auditoría pueden ser lentas, paginación obligatoria | 🟡 Medio |
+| BD | Nueva tabla, crecimiento rápido (100-500 registros/día), limpieza automática por retención configurable | 🟡 Medio |
+| Backend | Middleware global con check de habilitación, escritura async, sanitización crítica, cron/trigger de limpieza | 🔴 Alto |
+| Performance | Queries de auditoría pueden ser lentas, paginación obligatoria, limpieza nocturna | 🟡 Medio |
 | Seguridad | Exposición de datos sensibles si no se sanitiza correctamente | 🔴 Alto |
-| Privacidad | Almacenar logs indefinido puede violar GDPR, necesita retención | 🟡 Medio |
-| Frontend | Página + componentes, moderada complejidad | 🟢 Bajo |
+| Privacidad | Retención configurable (default 90 días) cumple GDPR si se configura correctamente | 🟢 Bajo |
+| Frontend | Página + componentes + UI configuración, moderada complejidad | 🟡 Medio |
+
+**Decisiones Resueltas:**
+
+1. ✅ Habilitación/Deshabilitación: **configurable por admin** (toggle en UI, almacenado en configuracion_app)
+2. ✅ Retención: **configurable por admin** (rango 1-365 días, default 90, almacenado en configuracion_app)
 
 **Decisiones Pendientes:**
 
 1. ¿Loguear todos los GET requests o solo mutations (POST/PUT/DELETE)?
-2. ¿Retención de logs? (30 días, 90 días, indefinido?) ← **CRÍTICO para GDPR**
-3. ¿Incluir response body o solo status code?
-4. ¿Mostrar todos los parámetros o solo principales? (ej: solo número_afiliado, no cuota completa)
-5. ¿Exportar a CSV disponible?
-6. ¿Auditoría de cambios en tabla audit_log misma? (meta-auditoría)
-7. ¿Rate limiting en queries de auditoría?
+2. ¿Incluir response body o solo status code?
+3. ¿Mostrar todos los parámetros o solo principales? (ej: solo número_afiliado, no cuota completa)
+4. ¿Exportar a CSV disponible?
+5. ¿Auditoría de cambios en tabla audit_log misma? (meta-auditoría)
+6. ¿Rate limiting en queries de auditoría?
 
 **Estimación:**
 
-- Backend: ~3-4 días (middleware, async queue, sanitización, testing)
-- Frontend: ~1-2 días (página, componentes, filtros)
-- Testing: ~1 día (security, performance, edge cases)
-- **Total: ~5-7 días**
+- Backend: ~4-5 días (middleware con checks, async queue, cron/trigger limpieza, sanitización, configService, testing)
+- Frontend: ~2 días (página auditoría + página configuración, componentes, filtros, toggles, validaciones)
+- Testing: ~1 día (security, performance, edge cases, limpieza nocturna)
+- **Total: ~7-8 días**
 
 **Estado:**
 
