@@ -27,13 +27,20 @@ function QueryExecPage() {
         return;
       }
 
-      setResults(response.data || []);
-      setMessage(response.message);
-
-      // Extraer columnas del primer resultado
-      if (response.data && response.data.length > 0) {
-        setColumns(Object.keys(response.data[0]));
+      // Manejar SELECT (con datos) o INSERT/UPDATE/DELETE (sin datos)
+      if (response.data) {
+        setResults(response.data);
+        // Extraer columnas del primer resultado
+        if (response.data.length > 0) {
+          setColumns(Object.keys(response.data[0]));
+        }
+      } else {
+        // Para INSERT/UPDATE/DELETE, mostrar filas afectadas
+        setResults([]);
+        setColumns([]);
       }
+
+      setMessage(response.message);
     } catch (err) {
       setError(err.response?.data?.message || err.message || 'Error al ejecutar query');
       setResults([]);
@@ -56,7 +63,7 @@ function QueryExecPage() {
       <h2 className="query-exec__title">Ejecución de Queries SQL</h2>
 
       <div className="query-exec__warning">
-        ⚠️ <strong>Advertencia:</strong> Solo se permiten queries SELECT. Cualquier intento de INSERT, UPDATE, DELETE o ALTER será rechazado.
+        ⚠️ <strong>Advertencia:</strong> Se permiten SELECT, INSERT, UPDATE y DELETE. Operaciones DROP, ALTER y CREATE están prohibidas. Usa con cuidado, los cambios son permanentes.
       </div>
 
       <form onSubmit={handleExecute} className="query-exec__form">
@@ -69,7 +76,7 @@ function QueryExecPage() {
             className="query-exec__textarea"
             value={query}
             onChange={(e) => setQuery(e.target.value)}
-            placeholder="Ej: SELECT * FROM personas LIMIT 10"
+            placeholder="Ej: SELECT * FROM personas LIMIT 10 | INSERT INTO ... | UPDATE ... | DELETE FROM ..."
             disabled={loading}
           />
         </div>
