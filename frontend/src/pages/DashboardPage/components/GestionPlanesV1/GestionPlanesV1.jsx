@@ -177,36 +177,36 @@ function GestionPlanesV1() {
 
   return (
     <div className="gestion-planes-v1">
-      <div className="gestion-planes-v1__header">
-        <h2 className="gestion-planes-v1__title">Planes de Servicio v1.0</h2>
-        <div className="gestion-planes-v1__actions">
-          <ActionButton variant="primary" icon="+" onClick={handleCrearPlan}>
-            Nuevo Plan
-          </ActionButton>
-          <ActionButton
-            variant="secondary"
-            onClick={() => setBulkUpdateModalOpen(true)}
-          >
-            Aumento Masivo
-          </ActionButton>
-          <ActionButton variant="secondary" onClick={() => setGenerarRecibosModalOpen(true)}>
-            Generar Recibos
-          </ActionButton>
-        </div>
-      </div>
+      <h2 className="gestion-planes-v1__title">Planes de Servicio v1.0</h2>
 
       {error && <div className="gestion-planes-v1__alert gestion-planes-v1__alert--error">{error}</div>}
       {success && <div className="gestion-planes-v1__alert gestion-planes-v1__alert--success">{success}</div>}
 
       {planes.length > 0 && (
-        <SearchContainer
-          placeholder="Buscar por número de afiliado, tipo de plan, cobrador u obra social... (presiona Enter para buscar inmediatamente)"
-          value={searchText}
-          onChange={setSearchText}
-          onKeyDown={handleSearchKeyDown}
-          count={planesFiltered.length}
-          maxItems={planesFiltered.length}
-        />
+        <div className="gestion-planes-v1__filters">
+          <SearchContainer
+            placeholder="Buscar por número de afiliado, tipo de plan, cobrador u obra social... (presiona Enter para buscar inmediatamente)"
+            value={searchText}
+            onChange={setSearchText}
+            onKeyDown={handleSearchKeyDown}
+            count={planesFiltered.length}
+            maxItems={planesFiltered.length}
+          />
+          <div className="gestion-planes-v1__actions">
+            <ActionButton variant="primary" icon="+" onClick={handleCrearPlan}>
+              Nuevo Plan
+            </ActionButton>
+            <ActionButton
+              variant="secondary"
+              onClick={() => setBulkUpdateModalOpen(true)}
+            >
+              Aumento Masivo
+            </ActionButton>
+            <ActionButton variant="secondary" onClick={() => setGenerarRecibosModalOpen(true)}>
+              Generar Recibos
+            </ActionButton>
+          </div>
+        </div>
       )}
 
       {planes.length === 0 ? (

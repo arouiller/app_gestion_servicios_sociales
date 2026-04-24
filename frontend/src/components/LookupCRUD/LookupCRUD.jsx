@@ -211,22 +211,22 @@ const LookupCRUD = ({ titulo, singularName, endpoint, campos }) => {
 
   return (
     <div className="lookup-crud">
-      <div className="header">
-        <h2>{titulo}</h2>
-        <ActionButton variant="primary" icon="+" onClick={() => handleOpenForm()}>
-          Nuevo {singularName || 'Registro'}
-        </ActionButton>
-      </div>
+      <h2 className="lookup-crud__title">{titulo}</h2>
 
-      {registros.length > 0 && (
-        <SearchContainer
-          placeholder={`Buscar ${titulo.toLowerCase()}... (presiona Enter para buscar inmediatamente)`}
-          value={searchText}
-          onChange={setSearchText}
-          onKeyDown={handleSearchKeyDown}
-          count={registrosFiltered.length}
-          maxItems={registrosFiltered.length}
-        />
+      {!sinResultados && (
+        <div className="lookup-crud__filters">
+          <SearchContainer
+            placeholder={`Buscar ${titulo.toLowerCase()}... (presiona Enter para buscar inmediatamente)`}
+            value={searchText}
+            onChange={setSearchText}
+            onKeyDown={handleSearchKeyDown}
+            count={registrosFiltered.length}
+            maxItems={registrosFiltered.length}
+          />
+          <ActionButton variant="primary" icon="+" onClick={() => handleOpenForm()}>
+            Nuevo {singularName || 'Registro'}
+          </ActionButton>
+        </div>
       )}
 
       {sinResultados ? (

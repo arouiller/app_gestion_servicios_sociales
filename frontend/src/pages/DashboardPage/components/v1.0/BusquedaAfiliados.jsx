@@ -160,17 +160,19 @@ const BusquedaAfiliados = () => {
 
   return (
     <div className="busqueda-afiliados">
-      <h2>Búsqueda de Afiliados</h2>
+      <h2 className="busqueda-afiliados__title">Búsqueda de Afiliados</h2>
 
-      <div className="search-box">
-        <input
-          type="text"
-          placeholder="Buscar por apellido, nombre o número de documento... (presiona Enter para buscar inmediatamente)"
-          value={searchText}
-          onChange={handleSearch}
-          onKeyDown={handleKeyDown}
-          disabled={loading}
-        />
+      <div className="busqueda-afiliados__filters">
+        <div className="search-box">
+          <input
+            type="text"
+            placeholder="Buscar por apellido, nombre o número de documento... (presiona Enter para buscar inmediatamente)"
+            value={searchText}
+            onChange={handleSearch}
+            onKeyDown={handleKeyDown}
+            disabled={loading}
+          />
+        </div>
       </div>
 
       {error && <div className="error-message">{error}</div>}
