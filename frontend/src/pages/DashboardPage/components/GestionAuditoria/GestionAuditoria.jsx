@@ -134,7 +134,7 @@ function GestionAuditoria() {
 
       {error && <div className="gestion-auditoria__alert gestion-auditoria__alert--error">{error}</div>}
 
-      {logs.length > 0 && (
+      {!loading && (
         <div className="gestion-auditoria__filters">
           <SearchContainer
             placeholder="Buscar por endpoint..."
