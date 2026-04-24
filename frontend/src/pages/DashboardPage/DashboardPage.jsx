@@ -101,20 +101,20 @@ function Sidebar({ activeModule, onSelect, sidebarOpen, setSidebarOpen, sidebarC
         <div className="dashboard__sidebar-backdrop" onClick={() => setSidebarOpen(false)} />
       )}
       <aside className={`dashboard__sidebar${sidebarOpen ? ' dashboard__sidebar--open' : ''}${sidebarCollapsed ? ' dashboard__sidebar--collapsed' : ''}`}>
-        <div className="dashboard__sidebar-header">
-          <button
-            className="dashboard__sidebar-collapse-btn"
-            onClick={(e) => {
-              e.stopPropagation();
-              setSidebarCollapsed((v) => !v);
-            }}
-            title={sidebarCollapsed ? "Expandir menú" : "Contraer menú"}
-            aria-label="Toggle menú lateral"
-          >
-            {sidebarCollapsed ? '>' : '<'}
-          </button>
-        </div>
         <nav className="dashboard__nav">
+          <div className="dashboard__nav-collapse">
+            <button
+              className="dashboard__sidebar-collapse-btn"
+              onClick={(e) => {
+                e.stopPropagation();
+                setSidebarCollapsed((v) => !v);
+              }}
+              title={sidebarCollapsed ? "Expandir menú" : "Contraer menú"}
+              aria-label="Toggle menú lateral"
+            >
+              {sidebarCollapsed ? '>' : '<'}
+            </button>
+          </div>
           {menu.map((item) => (
             <div key={item.key} className="dashboard__nav-group">
               {item.children ? (
