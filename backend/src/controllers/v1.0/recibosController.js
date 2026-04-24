@@ -192,16 +192,26 @@ exports.generar = async (req, res, next) => {
     console.log(`[RECIBOS] Total recibos generados: ${recibosGenerados.length} para período ${periodoYYYYMM}`);
 
     // Crear o actualizar registro en periodos_recibos
-    await db.PeriodosRecibos.upsert(
-      {
-        periodo: periodoYYYYMM,
-        cantidad_recibos: recibosGenerados.length,
-        fecha_generacion: new Date(),
-      },
-      { transaction }
-    );
+    console.log(`[RECIBOS] Intentando upsert en periodos_recibos: período=${periodoYYYYMM}, cantidad=${recibosGenerados.length}`);
 
+    try {
+      const [periodoRecord, creado] = await db.PeriodosRecibos.upsert(
+        {
+          periodo: periodoYYYYMM,
+          cantidad_recibos: recibosGenerados.length,
+          fecha_generacion: new Date(),
+        },
+        { transaction }
+      );
+      console.log(`[RECIBOS] Upsert exitoso: ${creado ? 'creado' : 'actualizado'} registro para ${periodoYYYYMM}`);
+    } catch (err) {
+      console.error(`[RECIBOS ERROR] Error en upsert de periodos_recibos:`, err.message);
+      throw err;
+    }
+
+    console.log(`[RECIBOS] Commiteando transacción...`);
     await transaction.commit();
+    console.log(`[RECIBOS] Transacción commiteada exitosamente`);
 
     res.status(201).json({
       success: true,
