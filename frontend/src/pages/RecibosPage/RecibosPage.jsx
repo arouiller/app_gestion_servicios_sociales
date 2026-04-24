@@ -226,7 +226,7 @@ function RecibosPage() {
                         <td>{recibo.id}</td>
                         <td>{formatNumeroAfiliado(recibo.numero_afiliado)}</td>
                         <td>{recibo.titular_apellido}, {recibo.titular_nombre}</td>
-                        <td>{recibo.obra_social || '-'}</td>
+                        <td>{recibo.obra_social_nombre || '-'}</td>
                         <td>${Number(recibo.valor_cuota).toFixed(2)}</td>
                         <td>
                           <button

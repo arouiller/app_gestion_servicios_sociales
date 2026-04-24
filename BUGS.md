@@ -25,12 +25,13 @@ Un bug solo puede pasar a estado solucionado, Descartado a traves del pedido exp
 
 ## Registros Activos
 
-Actualmente hay 2 bugs activos: 1 crítico en gestión de recibos, 1 en análisis con dependencias.
+Actualmente hay 3 bugs activos: 1 en análisis en gestión de recibos, 1 crítico con dependencias, 1 en resolución.
 
 ### Historial reciente (últimos 7 días)
 
 | ID | Severidad | Fase | Descripción | Reportado | Estado |
 |----|-----------|------|-------------|-----------|--------|
+| BUG-027 | 🟡 IMPORTANTE | BACKLOG-014 | Listado de Recibos: obra social no aparece en lista (pero sí en detalle) | 2026-04-24 | 🚀 En resolución |
 | BUG-026 | 🔴 CRÍTICO | BACKLOG-014 | Gestión de Recibos: período Abril 2026 muestra "No hay recibos" pese a tener 12 registrados | 2026-04-24 | ✅ Solucionado |
 | BUG-025 | 🔴 CRÍTICO | BACKLOG-024 | npm install falló: conflicto de versiones al agregar 22 dependencias explícitamente | 2026-04-18 | 🔬 En análisis |
 | BUG-024 | 🔴 CRÍTICO | BACKLOG-N/A | Migraciones BD - Tab "Estadísticas" muestra página en blanco | 2026-04-18 | ✅ Solucionado |
@@ -1771,3 +1772,67 @@ Esto causaba un **problema de timezone**:
 ---
 
 **Última actualización:** 2026-04-24 (causa raíz identificada y solucionada)
+
+---
+
+### BUG-027: Listado de Recibos - Obra Social No Aparece en Lista
+
+**Descripción:**
+Al listar recibos de un período (RecibosPage), el campo "Obra Social" aparece vacío para TODOS los recibos. Sin embargo, cuando se abre el detalle de un recibo (ReciboDetalleModal), sí aparece la obra social correctamente.
+
+**Pasos para reproducir:**
+1. Ir a Gestión de Recibos
+2. Hacer click en "Ver recibos" de un período (ej: Marzo 2026)
+3. Ver tabla de recibos
+4. **Resultado:** Columna "Obra Social" está vacía para todos ❌
+5. Hacer click en uno de los recibos para ver detalles
+6. **Resultado:** En el modal de detalles, la obra social SÍ aparece ✓
+
+**Severidad:** 🟡 IMPORTANTE
+- No bloquea funcionalidad (el dato existe y se puede ver en detalles)
+- Pero afecta usabilidad: usuario no puede filtrar/validar por OS en el listado
+- Inconsistencia visual confusa
+
+**Fase:** BACKLOG-014 (Gestión de Recibos)
+
+**Causa probable:**
+
+El campo `obra_social_nombre` se guarda correctamente en tabla `recibos` (confirmado en queries anteriores), pero:
+1. El backend en `recibosController.js` método `list()` puede no estar incluyendo este campo
+2. O el frontend en `RecibosPage.jsx` no está renderizando la columna
+3. O hay una diferencia entre qué datos devuelve el endpoint GET /api/recibos vs GET /api/recibos/:id
+
+**CAUSA RAÍZ IDENTIFICADA:**
+
+En `RecibosPage.jsx` línea 229, el código intenta acceder a campo incorrecto:
+```javascript
+<td>{recibo.obra_social || '-'}</td>  // ❌ Campo incorrecto
+```
+
+El campo en la BD es `obra_social_nombre`, no `obra_social`. El backend devuelve correctamente `obra_social_nombre` en la response, pero el frontend lo ignoraba.
+
+**SOLUCIÓN IMPLEMENTADA:**
+
+Cambiar línea 229 en `RecibosPage.jsx`:
+```javascript
+<td>{recibo.obra_social_nombre || '-'}</td>  // ✅ Correcto
+```
+
+**Verificación:**
+- Backend: devuelve campo correcto `obra_social_nombre` ✓
+- Frontend: ahora accede a campo correcto ✓
+- Modal de detalles: ya estaba usando campo correcto ✓
+
+**Reportado:** 2026-04-24
+**Asociado a:** BACKLOG-014 (Gestión de Recibos)
+
+**Estado:** 🚀 Resuelto (pendiente confirmación)
+- Registrado: 2026-04-24
+- Investigación completada: ✅
+- Fix implementado: ✅
+- Commit: en progreso
+- Pendiente: confirmación del usuario
+
+---
+
+**Última actualización:** 2026-04-24 (BUG-027 investigado y resuelto)
