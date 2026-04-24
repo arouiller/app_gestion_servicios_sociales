@@ -19,6 +19,7 @@ function GestionAuditoria() {
   const [fechaHasta, setFechaHasta] = useState('');
   const [configItemsPerPage, setConfigItemsPerPage] = useState(null);
   const [auditEnabled, setAuditEnabled] = useState(true);
+  const [selectedLogParams, setSelectedLogParams] = useState(null);
 
   const debouncedSearchText = useDebounce(searchText, 2000);
 
@@ -158,6 +159,7 @@ function GestionAuditoria() {
                 <th>Método</th>
                 <th>Endpoint</th>
                 <th>Status</th>
+                <th>Parámetros</th>
                 <th>ms</th>
               </tr>
             </thead>
@@ -181,6 +183,19 @@ function GestionAuditoria() {
                       {log.status_response}
                     </span>
                   </td>
+                  <td className="gestion-auditoria__params-cell">
+                    {log.parametros_json ? (
+                      <button
+                        className="gestion-auditoria__btn-params"
+                        onClick={() => setSelectedLogParams(log)}
+                        title={log.parametros_json}
+                      >
+                        {log.parametros_json.substring(0, 50)}{log.parametros_json.length > 50 ? '...' : ''}
+                      </button>
+                    ) : (
+                      <span className="gestion-auditoria__no-params">—</span>
+                    )}
+                  </td>
                   <td>{log.duracion_ms || '—'}</td>
                 </tr>
               ))}
@@ -198,6 +213,45 @@ function GestionAuditoria() {
           onPageChange={pagination.handleChangePage}
           onItemsPerPageChange={pagination.handleChangeItemsPerPage}
         />
+      )}
+
+      {/* Modal de Parámetros */}
+      {selectedLogParams && (
+        <div className="gestion-auditoria__modal-overlay" onClick={() => setSelectedLogParams(null)}>
+          <div className="gestion-auditoria__modal" onClick={(e) => e.stopPropagation()}>
+            <div className="gestion-auditoria__modal-header">
+              <h3>Parámetros de la Solicitud</h3>
+              <button className="gestion-auditoria__modal-close" onClick={() => setSelectedLogParams(null)}>✕</button>
+            </div>
+            <div className="gestion-auditoria__modal-body">
+              <div className="gestion-auditoria__modal-info">
+                <p><strong>Endpoint:</strong> {selectedLogParams.endpoint}</p>
+                <p><strong>Método:</strong> {selectedLogParams.metodo}</p>
+                <p><strong>Fecha:</strong> {new Date(selectedLogParams.fecha_hora).toLocaleString('es-AR')}</p>
+              </div>
+              <div className="gestion-auditoria__modal-params">
+                <pre>{selectedLogParams.parametros_json ? JSON.stringify(JSON.parse(selectedLogParams.parametros_json), null, 2) : 'Sin parámetros'}</pre>
+              </div>
+            </div>
+            <div className="gestion-auditoria__modal-footer">
+              <button
+                className="gestion-auditoria__modal-btn-copy"
+                onClick={() => {
+                  navigator.clipboard.writeText(selectedLogParams.parametros_json || '');
+                  alert('Parámetros copiados al portapapeles');
+                }}
+              >
+                📋 Copiar JSON
+              </button>
+              <button
+                className="gestion-auditoria__modal-btn-close"
+                onClick={() => setSelectedLogParams(null)}
+              >
+                Cerrar
+              </button>
+            </div>
+          </div>
+        </div>
       )}
     </div>
   );
