@@ -83,11 +83,11 @@ function buildMenu(isAdmin) {
   return menu;
 }
 
-function Sidebar({ activeModule, onSelect, sidebarOpen, setSidebarOpen, menu }) {
-  const [expanded, setExpanded] = useState({ 'mi-cuenta': true });
+function Sidebar({ activeModule, onSelect, sidebarOpen, setSidebarOpen, sidebarCollapsed, menu }) {
+  const [expandedSection, setExpandedSection] = useState('mi-cuenta');
 
   const toggleExpand = (key) => {
-    setExpanded((prev) => ({ ...prev, [key]: !prev[key] }));
+    setExpandedSection(expandedSection === key ? null : key);
   };
 
   const handleSelect = (key) => {
@@ -100,7 +100,7 @@ function Sidebar({ activeModule, onSelect, sidebarOpen, setSidebarOpen, menu }) 
       {sidebarOpen && (
         <div className="dashboard__sidebar-backdrop" onClick={() => setSidebarOpen(false)} />
       )}
-      <aside className={`dashboard__sidebar${sidebarOpen ? ' dashboard__sidebar--open' : ''}`}>
+      <aside className={`dashboard__sidebar${sidebarOpen ? ' dashboard__sidebar--open' : ''}${sidebarCollapsed ? ' dashboard__sidebar--collapsed' : ''}`}>
         <nav className="dashboard__nav">
           {menu.map((item) => (
             <div key={item.key} className="dashboard__nav-group">
@@ -112,11 +112,11 @@ function Sidebar({ activeModule, onSelect, sidebarOpen, setSidebarOpen, menu }) 
                   >
                     <span className="dashboard__nav-icon">{ICONS[item.key]}</span>
                     <span className="dashboard__nav-label">{item.label}</span>
-                    <span className={`dashboard__nav-chevron${expanded[item.key] ? ' dashboard__nav-chevron--open' : ''}`}>
+                    <span className={`dashboard__nav-chevron${expandedSection === item.key ? ' dashboard__nav-chevron--open' : ''}`}>
                       <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5"><path d="M6 9l6 6 6-6"/></svg>
                     </span>
                   </button>
-                  {expanded[item.key] && (
+                  {expandedSection === item.key && (
                     <div className="dashboard__nav-children">
                       {item.children.map((child) => (
                         <button
@@ -170,6 +170,7 @@ function DashboardPageContent() {
   const { user, logout } = useAuth();
   const [activeModule, setActiveModule] = useState('gestion-planes-v1');
   const [sidebarOpen, setSidebarOpen] = useState(false);
+  const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
   const menu = buildMenu(user?.rol === 'admin');
 
   const initials = `${user?.nombre?.[0] ?? ''}${user?.apellido?.[0] ?? ''}`.toUpperCase();
@@ -190,6 +191,14 @@ function DashboardPageContent() {
               <line x1="3" y1="12" x2="21" y2="12"/>
               <line x1="3" y1="18" x2="21" y2="18"/>
             </svg>
+          </button>
+          <button
+            className="dashboard__sidebar-toggle"
+            onClick={() => setSidebarCollapsed((v) => !v)}
+            title={sidebarCollapsed ? "Mostrar menú" : "Ocultar menú"}
+            aria-label="Toggle menú lateral"
+          >
+            {sidebarCollapsed ? '☰' : '✕'}
           </button>
           <div className="dashboard__brand">
             <span className="dashboard__brand-icon">GS</span>
@@ -229,6 +238,7 @@ function DashboardPageContent() {
           onSelect={setActiveModule}
           sidebarOpen={sidebarOpen}
           setSidebarOpen={setSidebarOpen}
+          sidebarCollapsed={sidebarCollapsed}
           menu={menu}
         />
 
