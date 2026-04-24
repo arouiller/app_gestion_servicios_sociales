@@ -1732,10 +1732,42 @@ Después del análisis inicial, las causas probables son:
 4. Si aparecen errores, investigar la causa (FK, validación, etc.)
 5. Restaurar recibos de Marzo borrando los duplicados
 
-**Estado:** 🔬 En análisis (con logging mejorado)
-- Registrado: 2026-04-24
-- Investigación en progreso: esperar logs con nuevo código
+**CAUSA RAÍZ IDENTIFICADA (2026-04-24 - 15:31):**
+
+El campo `periodo` en la tabla `recibos` estaba definido como tipo **DATE** en Sequelize:
+```javascript
+periodo: { type: DataTypes.DATE, allowNull: false }
+```
+
+Esto causaba un **problema de timezone**:
+1. Frontend envía: `"2026-04-01"` (STRING)
+2. Sequelize lo interpreta como DATE
+3. MySQL lo convierte según el timezone del servidor
+4. Se persiste como: `2026-03-31` (1 día menos)
+5. Frontend busca `periodo LIKE '2026-04%'` → no encuentra nada
+6. Pero `periodos_recibos` registra correctamente "2026-04"
+
+**SOLUCIÓN IMPLEMENTADA:**
+
+1. Cambiar modelo `Recibo.js`: `periodo` de `DataTypes.DATE` → `DataTypes.STRING(10)`
+2. Crear migración 2.0.15:
+   - Upgrade: ALTER TABLE recibos MODIFY COLUMN periodo VARCHAR(10) NOT NULL
+   - Downgrade: revertir a DATE
+3. Agregar logging detallado en generación para evitar errores silenciosos
+
+**PASOS PARA APLICAR FIX:**
+
+1. Ejecutar migración 2.0.15 desde panel admin o CLI
+2. Los recibos existentes (ahora con periodo VARCHAR) funcionarán correctamente
+3. Regenerar Abril con el código corregido
+4. Verificar que ahora muestra los 12 recibos
+
+**Estado:** 🔬 Pendiente ejecutar migración y regenerar
+- Investigación completada: ✅
+- Solución implementada: ✅
+- Migración creada: ✅
+- Pendiente: ejecutar migración en Hostinger y regenerar Abril
 
 ---
 
-**Última actualización:** 2026-04-24 (investigación completada, logging agregado)
+**Última actualización:** 2026-04-24 (causa raíz identificada y solucionada)
