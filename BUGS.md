@@ -25,12 +25,13 @@ Un bug solo puede pasar a estado solucionado, Descartado a traves del pedido exp
 
 ## Registros Activos
 
-Actualmente hay 1 bug activo relacionado con actualización de dependencias.
+Actualmente hay 2 bugs activos: 1 crítico en gestión de recibos, 1 en análisis con dependencias.
 
 ### Historial reciente (últimos 7 días)
 
 | ID | Severidad | Fase | Descripción | Reportado | Estado |
 |----|-----------|------|-------------|-----------|--------|
+| BUG-026 | 🔴 CRÍTICO | BACKLOG-014 | Gestión de Recibos: período Abril 2026 muestra "No hay recibos" pese a tener 12 registrados | 2026-04-24 | 🔬 En análisis |
 | BUG-025 | 🔴 CRÍTICO | BACKLOG-024 | npm install falló: conflicto de versiones al agregar 22 dependencias explícitamente | 2026-04-18 | 🔬 En análisis |
 | BUG-024 | 🔴 CRÍTICO | BACKLOG-N/A | Migraciones BD - Tab "Estadísticas" muestra página en blanco | 2026-04-18 | ✅ Solucionado |
 | BUG-019 | 🔴 CRÍTICO | BACKLOG-014 | Gestión de Recibos: seleccionar período con recibos devuelve array vacío | 2026-04-16 | ✅ Solucionado |
@@ -1645,4 +1646,59 @@ Se intentó agregar explícitamente 22 nuevas dependencias (eslint@^9.0.0, glob@
 
 ---
 
-**Última actualización:** 2026-04-18
+### BUG-026: Gestión de Recibos - Período Abril 2026 Muestra "No hay Recibos"
+
+**Descripción:**
+En la pantalla de Gestión de Recibos se muestran dos períodos (Marzo 2026 y Abril 2026), ambos con 12 recibos generados. Sin embargo, al hacer click en "Ver recibos" del período Abril 2026, el sistema muestra el mensaje "No hay recibos para este período", mientras que Marzo 2026 funciona correctamente mostrando los 12 recibos.
+
+**Pasos para reproducir:**
+1. Ir a Gestión de Recibos (panel de Dashboard)
+2. Verificar que se muestran dos períodos: Marzo 2026 (12 recibos) y Abril 2026 (12 recibos)
+3. Hacer click en "Ver recibos" de Marzo 2026 → Funciona, muestra 12 recibos
+4. Hacer click en "Ver recibos" de Abril 2026 → Falla, muestra "No hay recibos para este período"
+
+**Severidad:** 🔴 CRÍTICO
+- Afecta funcionalidad core de consulta de recibos
+- Genera inconsistencia: contador muestra 12, pero vista muestra 0
+- Impide acceso a datos que el sistema dice existen
+
+**Fase:** BACKLOG-014 (Gestión de Recibos)
+
+**Posible Causa Raíz:**
+
+Después del análisis inicial, las causas probables son:
+
+1. **Problema de filtrado en el backend**
+   - Endpoint `GET /api/recibos` puede estar usando comparación de fechas incorrecta
+   - Posible: comparación `fecha = periodo_exacto` en lugar de `fecha >= inicio AND fecha < fin`
+   - Abril podría tener fechas formateadas diferente (ej: "2026-04" vs "2026-04-01")
+
+2. **Problema en cálculo de rango de fechas del período**
+   - Frontend calcula inicio/fin del período incorrectamente para Abril
+   - Marzo podría funcionar por casualidad si usa comparación más flexible
+   - Ej: Marzo busca "2026-03-%" pero Abril busca "2026-04-%" con zona horaria que afecta
+
+3. **Problema de sincronización entre frontend y backend**
+   - El conteo de 12 recibos en la lista es correcto
+   - Pero el filtro en RecibosPage usa parámetros diferentes
+   - Posible: el contador usa query sin filtro, la vista usa fecha exacta
+
+4. **Problema de asociación de datos**
+   - Recibos de Abril podrían estar asociados a otro período o tabla
+   - Marzo funciona porque los datos están correctamente asociados
+   - Abril tiene datos huérfanos o mal asociados
+
+**Investigación Requerida:**
+- [ ] Revisar backend: `controllers/recibosController.js` - método GET de recibos por período
+- [ ] Revisar frontend: `RecibosPage.jsx` - cómo se construyen los parámetros de filtro
+- [ ] Revisar frontend: `GestionRecibos.jsx` - cómo se calcula el contador vs la consulta
+- [ ] Verificar base de datos: SELECT COUNT(*) FROM recibos WHERE periodo_mes='04' AND periodo_ano=2026
+- [ ] Revisar formato de fechas en ambos períodos (¿son consistentes?)
+
+**Estado:** 🔬 En análisis
+- Registrado: 2026-04-24
+- Pendiente investigación técnica
+
+---
+
+**Última actualización:** 2026-04-24
