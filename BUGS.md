@@ -1688,17 +1688,54 @@ Después del análisis inicial, las causas probables son:
    - Marzo funciona porque los datos están correctamente asociados
    - Abril tiene datos huérfanos o mal asociados
 
-**Investigación Requerida:**
-- [ ] Revisar backend: `controllers/recibosController.js` - método GET de recibos por período
-- [ ] Revisar frontend: `RecibosPage.jsx` - cómo se construyen los parámetros de filtro
-- [ ] Revisar frontend: `GestionRecibos.jsx` - cómo se calcula el contador vs la consulta
-- [ ] Verificar base de datos: SELECT COUNT(*) FROM recibos WHERE periodo_mes='04' AND periodo_ano=2026
-- [ ] Revisar formato de fechas en ambos períodos (¿son consistentes?)
+**Investigación realizada (2026-04-24):**
 
-**Estado:** 🔬 En análisis
+**Hallazgos principales:**
+
+1. **Base de datos real en Hostinger:**
+   - Tabla correcta es `planes` (no `plan_v1` como usa el modelo)
+   - Hay 12 planes ACTIVO (plans 1-11 y 13, falta plan 12)
+   - Tabla `recibos`: 
+     * Marzo: 36 recibos (3 por plan) con `periodo = 2026-03-31`
+     * Abril: **0 recibos**
+   - Tabla `periodos_recibos`:
+     * Marzo: registra 12 recibos generados el 2026-04-18
+     * Abril: registra 12 recibos generados el 2026-04-24 ⚠️ INCONSISTENCIA
+
+2. **El problema de Abril:**
+   - `periodos_recibos` registra "cantidad_recibos: 12" pero tabla `recibos` está vacía
+   - Significa: el código reportó generación exitosa pero no creó los recibos
+   - Posibles causas:
+     * Error silencioso en loop de creación (continúa sin excepción)
+     * Transacción se hizo rollback pero upsert ya se ejecutó
+     * Error en FK o validaciones que no lanzó excepción
+
+3. **El problema de Marzo (múltiples generaciones):**
+   - 12 planes × 3 recibos por plan = 36 total
+   - Debería ser solo 12 (1 por plan)
+   - Indica que se generó 3 veces para el mismo período
+   - El código debería rechazar con 409 si período existe y force=false
+
+4. **Acción correctiva implementada:**
+   - Agregado logging detallado en `recibosController.js`
+   - Cada paso de generación ahora registra en console:
+     * Planes encontrados
+     * Cada plan procesado o omitido
+     * Total de recibos generados
+     * Errores capturados por plan
+   - Envuelto en try-catch por plan para no silenciar errores
+
+**Próximos pasos:**
+1. Revisar logs del servidor de Hostinger del 2026-04-24 13:46:02 (generación de Abril)
+2. Buscar mensajes `[RECIBOS]` o `[RECIBOS ERROR]` en los logs
+3. Ejecutar nuevamente la generación de Abril para capturar logs con el nuevo código
+4. Si aparecen errores, investigar la causa (FK, validación, etc.)
+5. Restaurar recibos de Marzo borrando los duplicados
+
+**Estado:** 🔬 En análisis (con logging mejorado)
 - Registrado: 2026-04-24
-- Pendiente investigación técnica
+- Investigación en progreso: esperar logs con nuevo código
 
 ---
 
-**Última actualización:** 2026-04-24
+**Última actualización:** 2026-04-24 (investigación completada, logging agregado)
