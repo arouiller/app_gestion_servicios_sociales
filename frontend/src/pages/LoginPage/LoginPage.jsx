@@ -224,12 +224,6 @@ function LoginPage() {
           </button>
         </form>
 
-        {/* Link a registro */}
-        <p className="auth-switch">
-          ¿No tenés cuenta?{' '}
-          <Link to="/register">Crear una cuenta</Link>
-        </p>
-
         <Link to="/" className="auth-back">
           &larr; Volver al inicio
         </Link>

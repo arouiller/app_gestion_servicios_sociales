@@ -177,7 +177,7 @@ function GestionPlanesV1() {
 
   return (
     <div className="gestion-planes-v1">
-      <h2 className="gestion-planes-v1__title">Planes de Servicio v1.0</h2>
+      <h2 className="gestion-planes-v1__title">Planes</h2>
 
       {error && <div className="gestion-planes-v1__alert gestion-planes-v1__alert--error">{error}</div>}
       {success && <div className="gestion-planes-v1__alert gestion-planes-v1__alert--success">{success}</div>}
