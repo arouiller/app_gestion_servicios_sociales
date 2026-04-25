@@ -8,52 +8,10 @@ const router = express.Router();
 
 // ── Esquemas de validación ───────────────────────────────────────────────────
 
-const registerSchema = {
-  nombre: [rules.required('El nombre'), rules.minLength(2, 'El nombre'), rules.maxLength(100, 'El nombre')],
-  apellido: [rules.required('El apellido'), rules.minLength(2, 'El apellido'), rules.maxLength(100, 'El apellido')],
-  email: [rules.required('El email'), rules.email()],
-  password: [rules.password()],
-  confirmar_password: [rules.required('La confirmación de contraseña'), rules.match('password', 'La confirmación de contraseña')],
-};
-
 const loginSchema = {
   email: [rules.required('El email'), rules.email()],
   password: [rules.required('La contraseña')],
 };
-
-// ── POST /api/auth/register ─────────────────────────────────────────────────
-
-router.post('/register', validate(registerSchema), async (req, res) => {
-  const { nombre, apellido, email, password } = req.body;
-
-  // Verificar email único
-  const existente = await Usuario.findOne({ where: { email: email.toLowerCase().trim() } });
-  if (existente) {
-    return res.status(409).json({
-      success: false,
-      message: 'Ya existe una cuenta con ese email',
-      errors: { email: 'Ya existe una cuenta con ese email' },
-    });
-  }
-
-  // Hashear contraseña y crear usuario
-  const password_hash = await Usuario.hashPassword(password);
-
-  const usuario = await Usuario.create({
-    nombre: nombre.trim(),
-    apellido: apellido.trim(),
-    email: email.toLowerCase().trim(),
-    password_hash,
-    rol: 'usuario',
-    estado: 'activo',
-  });
-
-  return res.status(201).json({
-    success: true,
-    message: 'Cuenta creada exitosamente. Ya podés iniciar sesión.',
-    user: usuario.toSafeJSON(),
-  });
-});
 
 // ── POST /api/auth/login ────────────────────────────────────────────────────
 
