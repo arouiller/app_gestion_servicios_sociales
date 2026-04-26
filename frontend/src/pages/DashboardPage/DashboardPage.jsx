@@ -92,7 +92,10 @@ function Sidebar({ activeModule, onSelect, sidebarOpen, setSidebarOpen, sidebarC
 
   const handleSelect = (key) => {
     onSelect(key);
-    setSidebarOpen(false);
+    // Solo cerrar sidebar en mobile (cuando está abierto como drawer)
+    if (sidebarOpen) {
+      setSidebarOpen(false);
+    }
   };
 
   return (
