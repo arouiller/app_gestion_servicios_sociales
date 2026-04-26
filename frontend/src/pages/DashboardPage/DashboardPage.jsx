@@ -80,10 +80,17 @@ function buildMenu(isAdmin) {
     });
   }
 
+  // Sección de Cerrar sesión (siempre al final)
+  menu.push({
+    key: 'logout',
+    label: 'Cerrar sesión',
+    isLogout: true,
+  });
+
   return menu;
 }
 
-function Sidebar({ activeModule, onSelect, sidebarOpen, setSidebarOpen, sidebarCollapsed, setSidebarCollapsed, menu }) {
+function Sidebar({ activeModule, onSelect, sidebarOpen, setSidebarOpen, sidebarCollapsed, setSidebarCollapsed, menu, onLogout }) {
   const [expandedSection, setExpandedSection] = useState(null);
 
   const toggleExpand = (key) => {
@@ -105,45 +112,65 @@ function Sidebar({ activeModule, onSelect, sidebarOpen, setSidebarOpen, sidebarC
       )}
       <aside className={`dashboard__sidebar${sidebarOpen ? ' dashboard__sidebar--open' : ''}${sidebarCollapsed ? ' dashboard__sidebar--collapsed' : ''}`}>
         <nav className="dashboard__nav">
-          {menu.map((item) => (
-            <div key={item.key} className="dashboard__nav-group">
-              {item.children ? (
-                <>
+          {menu.map((item) => {
+            if (item.isLogout) {
+              return (
+                <div key={item.key} className="dashboard__nav-group dashboard__nav-group--logout">
                   <button
-                    className="dashboard__nav-section"
-                    onClick={() => toggleExpand(item.key)}
+                    className="dashboard__nav-section dashboard__nav-section--logout"
+                    onClick={() => {
+                      onLogout();
+                      if (sidebarOpen) {
+                        setSidebarOpen(false);
+                      }
+                    }}
+                  >
+                    <span className="dashboard__nav-label">{item.label}</span>
+                  </button>
+                </div>
+              );
+            }
+
+            return (
+              <div key={item.key} className="dashboard__nav-group">
+                {item.children ? (
+                  <>
+                    <button
+                      className="dashboard__nav-section"
+                      onClick={() => toggleExpand(item.key)}
+                    >
+                      <span className="dashboard__nav-icon">{ICONS[item.key]}</span>
+                      <span className="dashboard__nav-label">{item.label}</span>
+                      <span className={`dashboard__nav-chevron${expandedSection === item.key ? ' dashboard__nav-chevron--open' : ''}`}>
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5"><path d="M6 9l6 6 6-6"/></svg>
+                      </span>
+                    </button>
+                    {expandedSection === item.key && (
+                      <div className="dashboard__nav-children">
+                        {item.children.map((child) => (
+                          <button
+                            key={child.key}
+                            className={`dashboard__nav-item${activeModule === child.key ? ' dashboard__nav-item--active' : ''}`}
+                            onClick={() => handleSelect(child.key)}
+                          >
+                            {child.label}
+                          </button>
+                        ))}
+                      </div>
+                    )}
+                  </>
+                ) : (
+                  <button
+                    className={`dashboard__nav-section${activeModule === item.key ? ' dashboard__nav-section--active' : ''}`}
+                    onClick={() => handleSelect(item.key)}
                   >
                     <span className="dashboard__nav-icon">{ICONS[item.key]}</span>
                     <span className="dashboard__nav-label">{item.label}</span>
-                    <span className={`dashboard__nav-chevron${expandedSection === item.key ? ' dashboard__nav-chevron--open' : ''}`}>
-                      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5"><path d="M6 9l6 6 6-6"/></svg>
-                    </span>
                   </button>
-                  {expandedSection === item.key && (
-                    <div className="dashboard__nav-children">
-                      {item.children.map((child) => (
-                        <button
-                          key={child.key}
-                          className={`dashboard__nav-item${activeModule === child.key ? ' dashboard__nav-item--active' : ''}`}
-                          onClick={() => handleSelect(child.key)}
-                        >
-                          {child.label}
-                        </button>
-                      ))}
-                    </div>
-                  )}
-                </>
-              ) : (
-                <button
-                  className={`dashboard__nav-section${activeModule === item.key ? ' dashboard__nav-section--active' : ''}`}
-                  onClick={() => handleSelect(item.key)}
-                >
-                  <span className="dashboard__nav-icon">{ICONS[item.key]}</span>
-                  <span className="dashboard__nav-label">{item.label}</span>
-                </button>
-              )}
-            </div>
-          ))}
+                )}
+              </div>
+            );
+          })}
         </nav>
       </aside>
     </>
@@ -220,9 +247,6 @@ function DashboardPageContent() {
           >
             ?
           </button>
-          <button className="dashboard__logout-btn" onClick={logout}>
-            Cerrar sesión
-          </button>
         </div>
       </header>
 
@@ -252,6 +276,7 @@ function DashboardPageContent() {
           sidebarCollapsed={sidebarCollapsed}
           setSidebarCollapsed={setSidebarCollapsed}
           menu={menu}
+          onLogout={logout}
         />
 
         <main className="dashboard__content">

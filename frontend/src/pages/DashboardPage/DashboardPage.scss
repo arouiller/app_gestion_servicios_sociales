@@ -156,6 +156,25 @@ $sidebar-width: 220px;
     &:hover { border-color: var(--color-danger); color: var(--color-danger); }
   }
 
+  // ── Logout en menu (mobile) ────────────────────────────────────────────────
+
+  &__nav-group--logout {
+    border-top: 1px solid var(--color-border);
+    padding-top: 0.75rem;
+    margin-top: 0.5rem;
+  }
+
+  &__nav-section--logout {
+    color: var(--color-danger);
+    font-weight: 600;
+    padding: 0.75rem 1rem;
+
+    &:hover {
+      background: var(--color-danger-bg);
+      color: var(--color-danger);
+    }
+  }
+
   // ── Body: sidebar + content ───────────────────────────────────────────────
 
   &__body {
