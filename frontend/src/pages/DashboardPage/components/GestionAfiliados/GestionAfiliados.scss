@@ -5,6 +5,11 @@
   padding: 2rem;
   margin-top: 1.5rem;
 
+  @media (max-width: 600px) {
+    padding: 0.5rem;
+    margin-top: 0.4rem;
+  }
+
   // ── Header ──────────────────────────────────────────────────────────────
   &__header {
     display: flex;

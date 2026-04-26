@@ -7,6 +7,11 @@
   gap: 8px;
   width: 100%;
 
+  @media (max-width: 600px) {
+    margin-bottom: 5px;
+    gap: 2px;
+  }
+
   &__input-wrapper {
     position: relative;
     display: flex;

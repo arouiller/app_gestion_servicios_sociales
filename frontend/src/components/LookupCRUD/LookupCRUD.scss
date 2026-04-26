@@ -1,6 +1,10 @@
 .lookup-crud {
   padding: 16px;
 
+  @media (max-width: 600px) {
+    padding: 4px;
+  }
+
   &.loading {
     text-align: center;
     padding: 32px;
