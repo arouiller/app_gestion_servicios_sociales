@@ -9,7 +9,7 @@ $sidebar-width: 220px;
   // ── Topbar ────────────────────────────────────────────────────────────────
 
   &__topbar {
-    background: #fff;
+    background: var(--color-surface);
     border-bottom: 1px solid var(--color-border);
     padding: 0 1rem;
     height: 60px;
@@ -56,7 +56,7 @@ $sidebar-width: 220px;
   &__brand-icon {
     width: 34px;
     height: 34px;
-    background: linear-gradient(135deg, var(--color-primary), var(--color-secondary));
+    background: var(--gradient-brand);
     color: #fff;
     border-radius: 8px;
     display: flex;
@@ -82,7 +82,7 @@ $sidebar-width: 220px;
     width: 36px;
     height: 36px;
     border-radius: 50%;
-    background: linear-gradient(135deg, var(--color-primary), var(--color-secondary));
+    background: var(--gradient-brand);
     color: #fff;
     font-weight: 700;
     font-size: 0.82rem;
@@ -112,8 +112,8 @@ $sidebar-width: 220px;
     padding: 0.1rem 0.5rem;
     border-radius: 100px;
 
-    &--admin   { background: #fef3e8; color: #e67e22; }
-    &--usuario { background: #e8f4f8; color: var(--color-primary); }
+    &--admin   { background: var(--color-warning-bg); color: var(--color-warning); }
+    &--usuario { background: var(--color-primary-light); color: var(--color-primary); }
   }
 
   &__help-btn {
@@ -124,7 +124,7 @@ $sidebar-width: 220px;
     justify-content: center;
     border: 1.5px solid var(--color-border);
     border-radius: 50%;
-    background: #fff;
+    background: var(--color-surface);
     color: var(--color-primary);
     font-weight: 700;
     font-size: 1rem;
@@ -147,13 +147,13 @@ $sidebar-width: 220px;
     font-size: 0.82rem;
     font-weight: 600;
     color: var(--color-text-light);
-    background: #fff;
+    background: var(--color-surface);
     cursor: pointer;
     font-family: var(--font-family);
     transition: border-color 0.2s, color 0.2s;
     white-space: nowrap;
 
-    &:hover { border-color: #ef4444; color: #dc2626; }
+    &:hover { border-color: var(--color-danger); color: var(--color-danger); }
   }
 
   // ── Body: sidebar + content ───────────────────────────────────────────────
@@ -202,7 +202,7 @@ $sidebar-width: 220px;
     align-items: center;
     justify-content: center;
     border: 1px solid var(--color-border);
-    background: #fff;
+    background: var(--color-surface);
     color: var(--color-text-light);
     cursor: pointer;
     border-radius: 6px;
@@ -226,7 +226,7 @@ $sidebar-width: 220px;
 
   &__nav {
     padding: 0.5rem 0;
-    background-color: var(--color-primary);
+    background-color: var(--color-surface);
   }
 
   &__nav-group {
@@ -252,7 +252,7 @@ $sidebar-width: 220px;
     &:hover { background: var(--color-bg-soft); color: var(--color-text); }
 
     &--active {
-      background: #eff6ff;
+      background: var(--color-primary-light);
       color: var(--color-primary);
     }
   }
@@ -300,10 +300,10 @@ $sidebar-width: 220px;
     text-align: left;
     transition: background 0.15s, color 0.15s;
 
-    &:hover { background: #e5e7eb; color: var(--color-text); }
+    &:hover { background: rgba(var(--color-primary-rgb), 0.05); color: var(--color-text); }
 
     &--active {
-      background: #dbeafe;
+      background: var(--color-primary-light);
       color: var(--color-primary);
       font-weight: 600;
     }
@@ -323,7 +323,7 @@ $sidebar-width: 220px;
   // ── Bienvenida ────────────────────────────────────────────────────────────
 
   &__welcome {
-    background: linear-gradient(135deg, var(--color-primary-dark), var(--color-primary));
+    background: var(--gradient-brand);
     border-radius: 12px;
     padding: 2rem 2.5rem;
     display: flex;
