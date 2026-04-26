@@ -48,8 +48,8 @@
   }
 
   &__star {
-    color: #f39c12;
-    fill: #f39c12;
+    color: var(--color-warning);
+    fill: var(--color-warning);
     font-size: 1rem;
   }
 
@@ -72,7 +72,7 @@
     width: 42px;
     height: 42px;
     border-radius: 50%;
-    background: linear-gradient(135deg, var(--color-primary), var(--color-secondary));
+    background: var(--gradient-brand);
     color: #fff;
     font-weight: 700;
     font-size: 0.85rem;

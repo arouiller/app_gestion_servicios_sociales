@@ -54,7 +54,7 @@
     font-size: 0.75rem;
     font-weight: 800;
     color: var(--color-primary);
-    background: #e8f4f8;
+    background: var(--color-primary-light);
     display: inline-block;
     padding: 0.25rem 0.65rem;
     border-radius: 100px;
@@ -65,7 +65,7 @@
   &__icon {
     width: 64px;
     height: 64px;
-    background: linear-gradient(135deg, var(--color-primary), var(--color-primary-light));
+    background: var(--gradient-brand);
     color: #fff;
     border-radius: var(--radius-md);
     display: flex;
@@ -73,7 +73,7 @@
     justify-content: center;
     font-size: 1.625rem;
     margin: 0 auto 1.5rem;
-    box-shadow: 0 8px 20px rgba(26, 107, 138, 0.3);
+    box-shadow: 0 8px 20px rgba(var(--color-primary-rgb), 0.3);
   }
 
   &__title {
