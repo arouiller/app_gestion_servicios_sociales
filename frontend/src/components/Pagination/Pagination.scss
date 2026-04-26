@@ -1,12 +1,12 @@
-@import '../../styles/colors';
+// Usa CSS custom props directamente
 
 .pagination {
   display: flex;
   flex-direction: column;
   gap: 16px;
   padding: 24px;
-  background: $color-bg-light;
-  border-radius: 4px;
+  background: var(--color-bg-soft);
+  border-radius: var(--radius-sm);
   margin-top: 20px;
   align-items: center;
 
@@ -20,9 +20,9 @@
   }
 
   &__text {
-    font-size: 14px;
-    color: $color-text-muted;
-    font-weight: 500;
+    font-size: var(--text-sm);
+    color: var(--color-text-muted);
+    font-weight: var(--font-medium);
   }
 
   &__items-per-page {
@@ -31,29 +31,30 @@
     gap: 8px;
 
     label {
-      font-size: 14px;
-      color: $color-text-muted;
-      font-weight: 500;
+      font-size: var(--text-sm);
+      color: var(--color-text-muted);
+      font-weight: var(--font-medium);
     }
   }
 
   &__select {
     padding: 6px 12px;
-    border: 1px solid $color-border;
-    border-radius: 4px;
-    font-size: 14px;
-    background: $color-white;
+    border: 1px solid var(--color-border);
+    border-radius: var(--radius-sm);
+    font-size: var(--text-sm);
+    background: var(--color-surface);
     cursor: pointer;
-    color: $color-text;
+    color: var(--color-text);
+    transition: all var(--transition-fast);
 
     &:hover {
-      border-color: $color-primary;
+      border-color: var(--color-primary);
     }
 
     &:focus {
       outline: none;
-      border-color: $color-primary;
-      box-shadow: 0 0 0 2px rgba($color-primary, 0.1);
+      border-color: var(--color-primary);
+      box-shadow: var(--shadow-focus);
     }
   }
 
@@ -67,19 +68,19 @@
 
   &__button {
     padding: 8px 16px;
-    border: 1px solid $color-border;
-    border-radius: 4px;
-    background: $color-white;
-    color: $color-text;
-    font-size: 14px;
-    font-weight: 500;
+    border: 1px solid var(--color-border);
+    border-radius: var(--radius-sm);
+    background: var(--color-surface);
+    color: var(--color-text);
+    font-size: var(--text-sm);
+    font-weight: var(--font-medium);
     cursor: pointer;
-    transition: all 0.2s ease;
+    transition: all var(--transition-fast);
 
     &:hover:not(:disabled) {
-      border-color: $color-primary;
-      color: $color-primary;
-      background: rgba($color-primary, 0.05);
+      border-color: var(--color-primary);
+      color: var(--color-primary);
+      background: rgba(var(--color-primary-rgb), 0.05);
     }
 
     &:disabled {
@@ -103,19 +104,19 @@
     min-width: 36px;
     height: 36px;
     padding: 0;
-    border: 1px solid $color-border;
-    border-radius: 4px;
-    background: $color-white;
-    color: $color-text;
-    font-size: 14px;
-    font-weight: 500;
+    border: 1px solid var(--color-border);
+    border-radius: var(--radius-sm);
+    background: var(--color-surface);
+    color: var(--color-text);
+    font-size: var(--text-sm);
+    font-weight: var(--font-medium);
     cursor: pointer;
-    transition: all 0.2s ease;
+    transition: all var(--transition-fast);
 
     &:hover:not(:disabled) {
-      border-color: $color-primary;
-      color: $color-primary;
-      background: rgba($color-primary, 0.05);
+      border-color: var(--color-primary);
+      color: var(--color-primary);
+      background: rgba(var(--color-primary-rgb), 0.05);
     }
 
     &:disabled {
@@ -124,15 +125,15 @@
     }
 
     &--active {
-      background: $color-primary;
-      color: $color-white;
-      border-color: $color-primary;
+      background: var(--color-primary);
+      color: #fff;
+      border-color: var(--color-primary);
     }
   }
 
   &__dots {
-    color: $color-text-muted;
+    color: var(--color-text-muted);
     padding: 0 4px;
-    font-weight: 500;
+    font-weight: var(--font-medium);
   }
 }
