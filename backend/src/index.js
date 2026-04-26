@@ -7,6 +7,7 @@ const helmet = require('helmet');
 const morgan = require('morgan');
 const path = require('path');
 const sequelize = require('./config/database');
+const auditMiddleware = require('./middleware/audit');
 
 const app = express();
 
@@ -24,6 +25,9 @@ app.use(express.urlencoded({ extended: true }));
 if (process.env.NODE_ENV !== 'test') {
   app.use(morgan('dev'));
 }
+
+// ── Middleware de auditoría ───────────────────────────────────────────────────
+app.use(auditMiddleware);
 
 // ── Health check ──────────────────────────────────────────────────────────────
 app.get('/api/health', (req, res) => {
@@ -45,6 +49,7 @@ app.use('/api/personas', require('./routes/personas'));
 app.use('/api/v1.0/planes', require('./routes/v1.0-planes'));
 app.use('/api/v1.0/plan-integrantes', require('./routes/v1.0-plan-integrantes'));
 app.use('/api/v1.0', require('./routes/v1.0/integrante-servicios'));
+app.use('/api/v1.0/bugs', require('./routes/v1.0/bugs'));
 app.use('/api/recibos', require('./routes/recibos'));
 
 // ── Frontend estático ─────────────────────────────────────────────────────────
@@ -77,6 +82,25 @@ async function startServer() {
     app.listen(PORT, () => {
       console.log(`🚀 Backend corriendo en http://localhost:${PORT} [${process.env.NODE_ENV || 'development'}]`);
     });
+
+    // ── Limpieza diaria de audit_log según retención configurada ────────────
+    setInterval(async () => {
+      try {
+        const { ConfiguracionApp, AuditLog } = require('./models');
+        const { Op } = require('sequelize');
+        const retConfig = await ConfiguracionApp.findOne({
+          where: { tipo_notificacion: 'audit_retention_days' }
+        });
+        const days = retConfig ? retConfig.duracion_ms : 90;
+        const cutoff = new Date(Date.now() - days * 24 * 60 * 60 * 1000);
+        const deleted = await AuditLog.destroy({ where: { fecha_hora: { [Op.lt]: cutoff } } });
+        if (deleted > 0) {
+          console.log(`[audit] limpieza: ${deleted} registros eliminados`);
+        }
+      } catch (err) {
+        console.error('[audit] error en limpieza:', err.message);
+      }
+    }, 24 * 60 * 60 * 1000); // 24 horas
   } catch (err) {
     console.error('❌ Error al iniciar servidor:', err.message);
     process.exit(1);

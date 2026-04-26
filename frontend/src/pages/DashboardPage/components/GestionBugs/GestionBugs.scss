@@ -1,0 +1,81 @@
+@import '../../../../styles/colors';
+
+.gestion-bugs {
+  padding: 20px;
+
+  &__loading {
+    padding: 20px;
+    text-align: center;
+    color: $color-text-muted;
+  }
+
+  &__header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 20px;
+  }
+
+  &__title {
+    margin: 0;
+    font-size: 24px;
+    font-weight: 600;
+  }
+
+  &__alert {
+    padding: 12px 16px;
+    border-radius: 4px;
+    margin-bottom: 16px;
+    font-size: 14px;
+
+    &--error {
+      background-color: $notification-error-bg;
+      color: $notification-error-text;
+      border: 1px solid $notification-error-border;
+    }
+
+    &--success {
+      background-color: $notification-success-bg;
+      color: $notification-success-text;
+      border: 1px solid $notification-success-border;
+    }
+  }
+
+  &__filters {
+    display: flex;
+    gap: 16px;
+    align-items: flex-end;
+    margin-bottom: 20px;
+  }
+
+  &__filter-estado {
+    padding: 8px 12px;
+    border: 1px solid $color-border;
+    border-radius: 4px;
+    font-size: 14px;
+    background-color: $color-white;
+    cursor: pointer;
+
+    &:hover {
+      border-color: $color-primary;
+    }
+  }
+
+  &__empty {
+    padding: 40px 20px;
+    text-align: center;
+    color: $color-text-muted;
+    font-size: 16px;
+  }
+
+  &__tabla {
+    width: 100%;
+
+    td:nth-child(2) {
+      max-width: 200px;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+    }
+  }
+}

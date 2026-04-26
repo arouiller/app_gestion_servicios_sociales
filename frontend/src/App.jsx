@@ -4,7 +4,6 @@ import { AuthProvider } from './context/AuthContext';
 import ProtectedRoute from './components/ProtectedRoute';
 import LandingPage from './pages/LandingPage/LandingPage';
 import LoginPage from './pages/LoginPage/LoginPage';
-import RegisterPage from './pages/RegisterPage/RegisterPage';
 import ChangePasswordRequired from './pages/ChangePasswordRequired/ChangePasswordRequired';
 import DashboardPage from './pages/DashboardPage/DashboardPage';
 
@@ -15,7 +14,6 @@ function App() {
         <Routes>
           <Route path="/"          element={<LandingPage />} />
           <Route path="/login"     element={<LoginPage />} />
-          <Route path="/register"  element={<RegisterPage />} />
           <Route path="/cambiar-password" element={<ChangePasswordRequired />} />
           <Route
             path="/dashboard"

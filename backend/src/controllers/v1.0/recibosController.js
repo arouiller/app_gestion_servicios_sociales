@@ -89,54 +89,62 @@ exports.generar = async (req, res, next) => {
         transaction,
       });
       planesAGenerar = todosPlanes.map((p) => p.plan_numero);
+      console.log(`[RECIBOS] Planes encontrados para ${periodoYYYYMM}: ${planesAGenerar.length}`, planesAGenerar);
     } else {
       planesAGenerar = planes;
+      console.log(`[RECIBOS] Planes especificados para ${periodoYYYYMM}: ${planesAGenerar.length}`, planesAGenerar);
     }
 
     const recibosGenerados = [];
 
+    console.log(`[RECIBOS] Iniciando loop de generación para ${planesAGenerar.length} planes`);
+
     for (const planNumero of planesAGenerar) {
-      // Verificar si ya existe recibo para este plan en este período (cuando NO es force)
-      if (!force) {
-        const existente = await db.Recibo.findOne({
-          where: { plan_numero: planNumero, periodo: periodoNormalizado },
+      try {
+        // Verificar si ya existe recibo para este plan en este período (cuando NO es force)
+        if (!force) {
+          const existente = await db.Recibo.findOne({
+            where: { plan_numero: planNumero, periodo: periodoNormalizado },
+            transaction,
+          });
+
+          if (existente) {
+            // Omitir sin error
+            console.log(`[RECIBOS] Plan ${planNumero} ya tiene recibo para ${periodoYYYYMM}, omitiendo`);
+            continue;
+          }
+        }
+
+        // Obtener datos del plan con sus relaciones
+        const plan = await db.PlanV1.findByPk(planNumero, {
+          attributes: ['plan_numero', 'numero_afiliado', 'domicilio', 'valor_cuota'],
+          include: [
+            { model: db.TipoDePlan, attributes: ['tipo_plan_nombre'] },
+            { model: db.Cobrador, attributes: ['cobrador_apellido', 'cobrador_nombre'] },
+            { model: db.TipoDeGrupo, attributes: ['tipo_de_grupo_nombre'] },
+            { model: db.ObraSocial, attributes: ['os_nombre'] },
+          ],
           transaction,
         });
 
-        if (existente) {
-          // Omitir sin error
+        if (!plan) {
+          console.log(`[RECIBOS] Plan ${planNumero} no encontrado, omitiendo`);
           continue;
         }
-      }
 
-      // Obtener datos del plan con sus relaciones
-      const plan = await db.PlanV1.findByPk(planNumero, {
-        attributes: ['plan_numero', 'numero_afiliado', 'domicilio', 'valor_cuota'],
-        include: [
-          { model: db.TipoDePlan, attributes: ['tipo_plan_nombre'] },
-          { model: db.Cobrador, attributes: ['cobrador_apellido', 'cobrador_nombre'] },
-          { model: db.TipoDeGrupo, attributes: ['tipo_de_grupo_nombre'] },
-          { model: db.ObraSocial, attributes: ['os_nombre'] },
-        ],
-        transaction,
-      });
+        // Obtener integrantes del plan
+        const integrantes = await db.PlanIntegrante.findAll({
+          where: { plan_numero: planNumero },
+          include: [{ model: db.Persona, attributes: ['id', 'apellido', 'nombre', 'tipo_documento', 'numero_documento', 'fecha_nacimiento', 'fecha_cobertura'] }],
+          transaction,
+        });
 
-      if (!plan) {
-        continue;
-      }
-
-      // Obtener integrantes del plan
-      const integrantes = await db.PlanIntegrante.findAll({
-        where: { plan_numero: planNumero },
-        include: [{ model: db.Persona, attributes: ['id', 'apellido', 'nombre', 'tipo_documento', 'numero_documento', 'fecha_nacimiento', 'fecha_cobertura'] }],
-        transaction,
-      });
-
-      // Encontrar titular
-      const titular = integrantes.find((i) => i.rol === 'titular');
-      if (!titular) {
-        continue; // Sin titular, omitir
-      }
+        // Encontrar titular
+        const titular = integrantes.find((i) => i.rol === 'titular');
+        if (!titular) {
+          console.log(`[RECIBOS] Plan ${planNumero} sin titular, omitiendo`);
+          continue; // Sin titular, omitir
+        }
 
       // Crear recibo con snapshots
       const recibo = await db.Recibo.create(
@@ -175,20 +183,37 @@ exports.generar = async (req, res, next) => {
         );
       }
 
-      recibosGenerados.push(recibo);
+        console.log(`[RECIBOS] Recibo creado para plan ${planNumero}, período ${periodoYYYYMM}`);
+        recibosGenerados.push(recibo);
+      } catch (err) {
+        console.error(`[RECIBOS ERROR] Error generando recibo para plan ${planNumero}:`, err.message);
+        throw err; // Relanzar para que la transacción se haga rollback
+      }
     }
 
-    // Crear o actualizar registro en periodos_recibos
-    await db.PeriodosRecibos.upsert(
-      {
-        periodo: periodoYYYYMM,
-        cantidad_recibos: recibosGenerados.length,
-        fecha_generacion: new Date(),
-      },
-      { transaction }
-    );
+    console.log(`[RECIBOS] Total recibos generados: ${recibosGenerados.length} para período ${periodoYYYYMM}`);
 
+    // Crear o actualizar registro en periodos_recibos
+    console.log(`[RECIBOS] Intentando upsert en periodos_recibos: período=${periodoYYYYMM}, cantidad=${recibosGenerados.length}`);
+
+    try {
+      const [periodoRecord, creado] = await db.PeriodosRecibos.upsert(
+        {
+          periodo: periodoYYYYMM,
+          cantidad_recibos: recibosGenerados.length,
+          fecha_generacion: new Date(),
+        },
+        { transaction }
+      );
+      console.log(`[RECIBOS] Upsert exitoso: ${creado ? 'creado' : 'actualizado'} registro para ${periodoYYYYMM}`);
+    } catch (err) {
+      console.error(`[RECIBOS ERROR] Error en upsert de periodos_recibos:`, err.message);
+      throw err;
+    }
+
+    console.log(`[RECIBOS] Commiteando transacción...`);
     await transaction.commit();
+    console.log(`[RECIBOS] Transacción commiteada exitosamente`);
 
     res.status(201).json({
       success: true,

@@ -16,6 +16,9 @@ import TiposDeGrupo from './components/TiposDeGrupo/TiposDeGrupo';
 import TiposDePlan from './components/TiposDePlan/TiposDePlan';
 import GestionUsuarios from './components/GestionUsuarios/GestionUsuarios';
 import ConfiguracionNotificaciones from './components/ConfiguracionNotificaciones/ConfiguracionNotificaciones';
+import GestionBugs from './components/GestionBugs/GestionBugs';
+import GestionAuditoria from './components/GestionAuditoria/GestionAuditoria';
+import QueryExecPage from './components/QueryExec/QueryExecPage';
 import configService from '../../services/configService';
 import './DashboardPage.scss';
 
@@ -25,19 +28,13 @@ const ICONS = {
   'mi-cuenta': <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><circle cx="12" cy="8" r="4"/><path d="M4 20c0-4 3.6-7 8-7s8 3 8 7"/></svg>,
   'administracion': <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm0 18c-4.42 0-8-3.58-8-8s3.58-8 8-8 8 3.58 8 8-3.58 8-8 8z"/><path d="M12.5 7H11v6l5.25 3.15.75-1.23-4.5-2.67z"/></svg>,
   'gestion': <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg>,
+  'requerimientos-bugs': <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="12" y1="13" x2="16" y2="13"/><line x1="12" y1="17" x2="16" y2="17"/><line x1="8" y1="13" x2="8" y2="13.01"/><line x1="8" y1="17" x2="8" y2="17.01"/></svg>,
 };
 
 // ── Sidebar ──────────────────────────────────────────────────────────────────
 
 function buildMenu(isAdmin) {
   const menu = [
-    {
-      key: 'mi-cuenta',
-      label: 'Mi Cuenta',
-      children: [
-        { key: 'datos-personales', label: 'Datos Personales' },
-      ],
-    },
     {
       key: 'gestion',
       label: 'Gestión',
@@ -52,6 +49,20 @@ function buildMenu(isAdmin) {
         { key: 'tipos-de-plan', label: 'Tipos de Plan' },
       ],
     },
+    {
+      key: 'requerimientos-bugs',
+      label: 'Requerimientos y Bugs',
+      children: [
+        { key: 'gestion-bugs', label: 'Requerimientos y Bugs' },
+      ],
+    },
+    {
+      key: 'mi-cuenta',
+      label: 'Mi Cuenta',
+      children: [
+        { key: 'datos-personales', label: 'Datos Personales' },
+      ],
+    },
   ];
 
   // Sección de Administración solo para admin
@@ -60,8 +71,10 @@ function buildMenu(isAdmin) {
       key: 'administracion',
       label: 'Administración',
       children: [
+        { key: 'auditoria', label: 'Auditoría' },
+        { key: 'herramienta-queries', label: 'Herramienta de Queries' },
         { key: 'gestion-usuarios', label: 'Gestión de Usuarios' },
-        { key: 'configuracion-notificaciones', label: 'Configuración Notificaciones' },
+        { key: 'configuracion-notificaciones', label: 'Configuración UI' },
         { key: 'migraciones-bd', label: 'Migraciones BD' },
       ],
     });
@@ -70,11 +83,11 @@ function buildMenu(isAdmin) {
   return menu;
 }
 
-function Sidebar({ activeModule, onSelect, sidebarOpen, setSidebarOpen, menu }) {
-  const [expanded, setExpanded] = useState({ 'mi-cuenta': true });
+function Sidebar({ activeModule, onSelect, sidebarOpen, setSidebarOpen, sidebarCollapsed, setSidebarCollapsed, menu }) {
+  const [expandedSection, setExpandedSection] = useState(null);
 
   const toggleExpand = (key) => {
-    setExpanded((prev) => ({ ...prev, [key]: !prev[key] }));
+    setExpandedSection(expandedSection === key ? null : key);
   };
 
   const handleSelect = (key) => {
@@ -87,7 +100,7 @@ function Sidebar({ activeModule, onSelect, sidebarOpen, setSidebarOpen, menu }) 
       {sidebarOpen && (
         <div className="dashboard__sidebar-backdrop" onClick={() => setSidebarOpen(false)} />
       )}
-      <aside className={`dashboard__sidebar${sidebarOpen ? ' dashboard__sidebar--open' : ''}`}>
+      <aside className={`dashboard__sidebar${sidebarOpen ? ' dashboard__sidebar--open' : ''}${sidebarCollapsed ? ' dashboard__sidebar--collapsed' : ''}`}>
         <nav className="dashboard__nav">
           {menu.map((item) => (
             <div key={item.key} className="dashboard__nav-group">
@@ -99,11 +112,11 @@ function Sidebar({ activeModule, onSelect, sidebarOpen, setSidebarOpen, menu }) 
                   >
                     <span className="dashboard__nav-icon">{ICONS[item.key]}</span>
                     <span className="dashboard__nav-label">{item.label}</span>
-                    <span className={`dashboard__nav-chevron${expanded[item.key] ? ' dashboard__nav-chevron--open' : ''}`}>
+                    <span className={`dashboard__nav-chevron${expandedSection === item.key ? ' dashboard__nav-chevron--open' : ''}`}>
                       <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5"><path d="M6 9l6 6 6-6"/></svg>
                     </span>
                   </button>
-                  {expanded[item.key] && (
+                  {expandedSection === item.key && (
                     <div className="dashboard__nav-children">
                       {item.children.map((child) => (
                         <button
@@ -155,8 +168,9 @@ function Bienvenida({ user }) {
 
 function DashboardPageContent() {
   const { user, logout } = useAuth();
-  const [activeModule, setActiveModule] = useState(null);
+  const [activeModule, setActiveModule] = useState('gestion-planes-v1');
   const [sidebarOpen, setSidebarOpen] = useState(false);
+  const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
   const menu = buildMenu(user?.rol === 'admin');
 
   const initials = `${user?.nombre?.[0] ?? ''}${user?.apellido?.[0] ?? ''}`.toUpperCase();
@@ -211,11 +225,29 @@ function DashboardPageContent() {
 
       {/* Body: sidebar + contenido */}
       <div className="dashboard__body">
+        <button
+          className="dashboard__sidebar-collapse-btn"
+          onClick={() => setSidebarCollapsed((v) => !v)}
+          title={sidebarCollapsed ? "Expandir menú" : "Contraer menú"}
+          aria-label="Toggle menú lateral"
+        >
+          {sidebarCollapsed ? (
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5">
+              <path d="M9 6l6 6-6 6"/>
+            </svg>
+          ) : (
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5">
+              <path d="M15 6l-6 6 6 6"/>
+            </svg>
+          )}
+        </button>
         <Sidebar
           activeModule={activeModule}
           onSelect={setActiveModule}
           sidebarOpen={sidebarOpen}
           setSidebarOpen={setSidebarOpen}
+          sidebarCollapsed={sidebarCollapsed}
+          setSidebarCollapsed={setSidebarCollapsed}
           menu={menu}
         />
 
@@ -228,6 +260,9 @@ function DashboardPageContent() {
             </GestionPlanesV1ErrorBoundary>
           )}
           {activeModule === 'gestion-recibos' && <RecibosPage />}
+          {activeModule === 'gestion-bugs' && <GestionBugs />}
+          {activeModule === 'auditoria' && <GestionAuditoria />}
+          {activeModule === 'herramienta-queries' && <QueryExecPage />}
           {activeModule === 'gestion-usuarios' && <GestionUsuarios />}
           {activeModule === 'configuracion-notificaciones' && <ConfiguracionNotificaciones />}
           {activeModule === 'migraciones-bd' && <MigrationsDashboard />}

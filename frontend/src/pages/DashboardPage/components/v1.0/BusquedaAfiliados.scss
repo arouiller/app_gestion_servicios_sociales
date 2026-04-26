@@ -1,14 +1,22 @@
 .busqueda-afiliados {
   padding: 20px;
 
-  h2 {
-    margin-bottom: 20px;
-    font-size: 1.5em;
+  &__title {
+    margin: 0 0 20px 0;
+    font-size: 1.75rem;
     font-weight: 600;
   }
 
-  .search-box {
+  &__filters {
+    display: flex;
+    gap: 0.75rem;
     margin-bottom: 20px;
+    align-items: center;
+  }
+
+  .search-box {
+    flex: 1;
+    margin-bottom: 0;
 
     input {
       width: 100%;
@@ -28,6 +36,12 @@
         cursor: not-allowed;
       }
     }
+  }
+
+  h2 {
+    margin-bottom: 20px;
+    font-size: 1.5em;
+    font-weight: 600;
   }
 
   .personas-table,

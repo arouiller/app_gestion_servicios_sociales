@@ -1,6 +1,8 @@
 import React, { useCallback, useEffect, useState } from 'react';
 import { useAuth } from '../../../../context/AuthContext';
 import planesV1Service from '../../../../services/planesV1Service';
+import configService from '../../../../services/configService';
+import { formatNumeroAfiliado, formatZona } from '../../../../utils/formatters';
 import PlanV1Modal from './modals/PlanV1Modal';
 import BulkUpdateCuotaModal from '../BulkUpdateCuotaModal/BulkUpdateCuotaModal';
 import GenerarRecibosModal from './modals/GenerarRecibosModal';
@@ -8,10 +10,11 @@ import SearchContainer from '../../../../components/SearchContainer/SearchContai
 import ActionButton from '../../../../components/ActionButton/ActionButton';
 import IconButton from '../../../../components/IconButton/IconButton';
 import StatusBadge from '../../../../components/StatusBadge/StatusBadge';
+import Pagination from '../../../../components/Pagination/Pagination';
+import useDebounce from '../../../../hooks/useDebounce';
+import usePagination from '../../../../hooks/usePagination';
 import '../../../../styles/_table-standard.scss';
 import './GestionPlanesV1.scss';
-
-const ITEMS_PER_PAGE = 20;
 
 function GestionPlanesV1() {
   console.log('[GestionPlanesV1] Mounting component');
@@ -26,8 +29,33 @@ function GestionPlanesV1() {
   const [planEditando, setPlanEditando] = useState(null);
   const [filtros, setFiltros] = useState({ estado: '', cobrador: '', obraSocial: '' });
   const [searchText, setSearchText] = useState('');
+  const [debounceDelay, setDebounceDelay] = useState(2000);
+  const [forceSearchNow, setForceSearchNow] = useState(false);
   const [bulkUpdateModalOpen, setBulkUpdateModalOpen] = useState(false);
   const [generarRecibosModalOpen, setGenerarRecibosModalOpen] = useState(false);
+  const [configItemsPerPage, setConfigItemsPerPage] = useState(null);
+
+  // Debouncificar el texto de búsqueda
+  const debouncedSearchText = useDebounce(searchText, debounceDelay);
+
+  // Cargar configuración al montar
+  useEffect(() => {
+    const loadConfig = async () => {
+      try {
+        const config = await configService.getConfiguracion();
+        if (config && config.debounce_delay_ms) {
+          setDebounceDelay(config.debounce_delay_ms);
+        }
+        if (config && config.items_per_page) {
+          setConfigItemsPerPage(config.items_per_page);
+        }
+      } catch (err) {
+        console.error('Error cargando configuración:', err);
+        // Mantener defaults si hay error
+      }
+    };
+    loadConfig();
+  }, []);
 
   // Cargar planes sin usar filtros como dependencia inicial
   useEffect(() => {
@@ -63,6 +91,26 @@ function GestionPlanesV1() {
     }
   }, [filtros]);
 
+  // Usar searchText inmediatamente si se presionó Enter, si no usar debouncedSearchText
+  const effectiveSearchText = forceSearchNow ? searchText : debouncedSearchText;
+
+  // Filtrar planes por búsqueda
+  const planesFiltered = planes
+    .filter(plan => {
+      const searchLower = effectiveSearchText.toLowerCase();
+      return (
+        plan.numero_afiliado?.toLowerCase().includes(searchLower) ||
+        plan.TipoDePlan?.tipo_plan_nombre?.toLowerCase().includes(searchLower) ||
+        plan.Cobrador?.cobrador_apellido?.toLowerCase().includes(searchLower) ||
+        plan.Cobrador?.cobrador_nombre?.toLowerCase().includes(searchLower) ||
+        plan.ObraSocial?.os_nombre?.toLowerCase().includes(searchLower) ||
+        String(plan.zona || 0).padStart(2, '0').includes(searchLower)
+      );
+    });
+
+  const pagination = usePagination(planesFiltered, 15, configItemsPerPage);
+  // El hook usePagination ahora resetea automáticamente cuando items.length cambia
+
   const mostrarMensaje = (texto, tipo = 'success') => {
     if (tipo === 'success') {
       setSuccess(texto);
@@ -86,7 +134,7 @@ function GestionPlanesV1() {
   };
 
   const handleSuspenderPlan = async (plan) => {
-    if (!window.confirm(`¿Estás seguro de que querés suspender el plan ${plan.numero_afiliado}?`)) {
+    if (!window.confirm(`¿Estás seguro de que querés suspender el plan ${formatNumeroAfiliado(plan.numero_afiliado)}?`)) {
       return;
     }
 
@@ -117,51 +165,48 @@ function GestionPlanesV1() {
 
   console.log('[GestionPlanesV1] Rendering component. Planes count:', planes.length, 'Error:', error);
 
-  // Filtrar planes por búsqueda
-  const planesFiltered = planes
-    .filter(plan => {
-      const searchLower = searchText.toLowerCase();
-      return (
-        plan.numero_afiliado?.toLowerCase().includes(searchLower) ||
-        plan.TipoDePlan?.tipo_plan_nombre?.toLowerCase().includes(searchLower) ||
-        plan.Cobrador?.cobrador_apellido?.toLowerCase().includes(searchLower) ||
-        plan.Cobrador?.cobrador_nombre?.toLowerCase().includes(searchLower) ||
-        plan.ObraSocial?.os_nombre?.toLowerCase().includes(searchLower)
-      );
-    })
-    .slice(0, ITEMS_PER_PAGE);
+  // Manejar tecla Enter para búsqueda inmediata (sin debounce)
+  const handleSearchKeyDown = (e) => {
+    if (e.key === 'Enter') {
+      e.preventDefault();
+      setForceSearchNow(true);
+      // Resetear forceSearchNow después de que se renderice
+      setTimeout(() => setForceSearchNow(false), 0);
+    }
+  };
 
   return (
     <div className="gestion-planes-v1">
-      <div className="gestion-planes-v1__header">
-        <h2 className="gestion-planes-v1__title">Planes de Servicio v1.0</h2>
-        <div className="gestion-planes-v1__actions">
-          <ActionButton variant="primary" icon="+" onClick={handleCrearPlan}>
-            Nuevo Plan
-          </ActionButton>
-          <ActionButton
-            variant="secondary"
-            onClick={() => setBulkUpdateModalOpen(true)}
-          >
-            Aumento Masivo
-          </ActionButton>
-          <ActionButton variant="secondary" onClick={() => setGenerarRecibosModalOpen(true)}>
-            Generar Recibos
-          </ActionButton>
-        </div>
-      </div>
+      <h2 className="gestion-planes-v1__title">Planes</h2>
 
       {error && <div className="gestion-planes-v1__alert gestion-planes-v1__alert--error">{error}</div>}
       {success && <div className="gestion-planes-v1__alert gestion-planes-v1__alert--success">{success}</div>}
 
       {planes.length > 0 && (
-        <SearchContainer
-          placeholder="Buscar por número de afiliado, tipo de plan, cobrador u obra social..."
-          value={searchText}
-          onChange={setSearchText}
-          count={planesFiltered.length}
-          maxItems={ITEMS_PER_PAGE}
-        />
+        <div className="gestion-planes-v1__filters">
+          <SearchContainer
+            placeholder="Buscar por número de afiliado, tipo de plan, cobrador u obra social... (presiona Enter para buscar inmediatamente)"
+            value={searchText}
+            onChange={setSearchText}
+            onKeyDown={handleSearchKeyDown}
+            count={planesFiltered.length}
+            maxItems={planesFiltered.length}
+          />
+          <div className="gestion-planes-v1__actions">
+            <ActionButton variant="primary" icon="+" onClick={handleCrearPlan}>
+              Nuevo Plan
+            </ActionButton>
+            <ActionButton
+              variant="secondary"
+              onClick={() => setBulkUpdateModalOpen(true)}
+            >
+              Aumento Masivo
+            </ActionButton>
+            <ActionButton variant="secondary" onClick={() => setGenerarRecibosModalOpen(true)}>
+              Generar Recibos
+            </ActionButton>
+          </div>
+        </div>
       )}
 
       {planes.length === 0 ? (
@@ -174,6 +219,7 @@ function GestionPlanesV1() {
             <thead>
               <tr>
                 <th>Número de Afiliado</th>
+                <th>Zona</th>
                 <th>Tipo de Plan</th>
                 <th>Cobrador</th>
                 <th>Obra Social</th>
@@ -182,9 +228,10 @@ function GestionPlanesV1() {
               </tr>
             </thead>
             <tbody>
-              {planesFiltered.map((plan) => (
+              {pagination.paginatedItems.map((plan) => (
                 <tr key={plan.plan_numero}>
-                  <td>{plan.numero_afiliado}</td>
+                  <td>{formatNumeroAfiliado(plan.numero_afiliado)}</td>
+                  <td>{formatZona(plan.zona)}</td>
                   <td>{plan.TipoDePlan?.tipo_plan_nombre || '—'}</td>
                   <td>{plan.Cobrador?.cobrador_apellido}, {plan.Cobrador?.cobrador_nombre}</td>
                   <td>{plan.ObraSocial?.os_nombre || '—'}</td>
@@ -213,6 +260,17 @@ function GestionPlanesV1() {
             </tbody>
           </table>
         </div>
+      )}
+
+      {pagination.showPagination && (
+        <Pagination
+          currentPage={pagination.currentPage}
+          totalPages={pagination.totalPages}
+          totalItems={pagination.totalItems}
+          itemsPerPage={pagination.itemsPerPage}
+          onPageChange={pagination.handleChangePage}
+          onItemsPerPageChange={pagination.handleChangeItemsPerPage}
+        />
       )}
 
       {modalMode && (

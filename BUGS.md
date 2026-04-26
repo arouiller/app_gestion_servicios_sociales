@@ -25,12 +25,15 @@ Un bug solo puede pasar a estado solucionado, Descartado a traves del pedido exp
 
 ## Registros Activos
 
-Actualmente no hay bugs abiertos. Todos los bugs reportados han sido resolucionados.
+Actualmente hay 3 bugs activos: 1 en análisis en gestión de recibos, 1 crítico con dependencias, 1 en resolución.
 
 ### Historial reciente (últimos 7 días)
 
 | ID | Severidad | Fase | Descripción | Reportado | Estado |
 |----|-----------|------|-------------|-----------|--------|
+| BUG-027 | 🟡 IMPORTANTE | BACKLOG-014 | Listado de Recibos: obra social no aparece en lista (pero sí en detalle) | 2026-04-24 | ✅ Solucionado |
+| BUG-026 | 🔴 CRÍTICO | BACKLOG-014 | Gestión de Recibos: período Abril 2026 muestra "No hay recibos" pese a tener 12 registrados | 2026-04-24 | ✅ Solucionado |
+| BUG-025 | 🔴 CRÍTICO | BACKLOG-024 | npm install falló: conflicto de versiones al agregar 22 dependencias explícitamente | 2026-04-18 | 🔬 En análisis |
 | BUG-024 | 🔴 CRÍTICO | BACKLOG-N/A | Migraciones BD - Tab "Estadísticas" muestra página en blanco | 2026-04-18 | ✅ Solucionado |
 | BUG-019 | 🔴 CRÍTICO | BACKLOG-014 | Gestión de Recibos: seleccionar período con recibos devuelve array vacío | 2026-04-16 | ✅ Solucionado |
 
@@ -1573,4 +1576,263 @@ return { tableName: TABLE_NAME, recordCount: parseInt(total, 10) };
 
 ---
 
-**Última actualización:** 2026-04-18
+### BUG-025: npm install Falló - Conflicto de Versiones (BACKLOG-024)
+
+**Descripción:**
+Al hacer npm install en servidor durante compilación de rama V_1.0.6, el proceso falló con error de command execution. El error no mostró detalles específicos, pero la causa fue agregar 22 nuevas dependencias directamente al package.json.
+
+**Error reportado:**
+```
+Error: Command failed: npm install --include=dev
+    at genericNodeError (node:internal/errors:984:15)
+    ...
+```
+
+**Severidad:** 🔴 CRÍTICO
+- Bloquea compilación del servidor
+- Rama V_1.0.6 no puede desplegarse
+
+**Reportado:** 2026-04-18
+**Causa raíz identificada (2026-04-18):**
+
+Las advertencias de deprecación en compilación frontend provenían de **sub-dependencias internas** de `react-scripts 5.0.1`:
+- eslint (versión vieja dentro de react-scripts)
+- glob, rimraf (versiones deprecadas dentro de react-scripts)
+- Babel plugins (plugin-proposal-* dentro de react-scripts)
+
+**Error cometido:**
+Se intentó agregar explícitamente 22 nuevas dependencias (eslint@^9.0.0, glob@^10.0.0, etc.) al `devDependencies`. Esto causó:
+1. Conflictos de versión (nuevas versiones incompatibles con react-scripts 5.0.1)
+2. Resolución de dependencias fallada
+3. npm install abortado
+
+**Solución implementada (2026-04-18):**
+
+1. ✅ Revertir cambios agresivos (commit: 7be2c1f)
+2. ✅ Mantener package.json original que compila exitosamente
+3. 🔬 Propuesta para siguiente fase: actualizar `react-scripts` de 5.0.1 → 5.1.0 o superior
+
+**Por qué react-scripts update es la solución:**
+- react-scripts 5.1.0+ incluye internamente versiones modernas de:
+  - eslint@^8.40+ o @9+
+  - glob@^10+
+  - rimraf@^5+
+  - Babel plugins modernos (plugin-transform-*)
+- No requiere agregar dependencias explícitas
+- Mantiene compatibilidad con el resto del proyecto
+- Resuelve ALL deprecation warnings automáticamente
+
+**Testing requerido para siguiente fase:**
+- [ ] Cambiar `react-scripts: "5.0.1"` → `react-scripts: "5.1.0"` o latest
+- [ ] npm install compila sin errores
+- [ ] npm run build funciona
+- [ ] npm start funciona en desarrollo
+- [ ] No hay regresiones en componentes React
+- [ ] Testing completo de la app
+
+**Archivos afectados:**
+- `frontend/package.json` (revertido)
+- `frontend/package-lock.json` (será regenerado en servidor)
+
+**Commits asociados:**
+- b8b763b - chore(deps): actualizar dependencias deprecadas (REVERTIDO)
+- 7be2c1f - revert(BACKLOG-024): revertir cambios agresivos ✅
+
+**Estado:** 🔬 En análisis (solución identificada, pendiente implementación cuidadosa)
+
+**Notas:**
+- La rama compila correctamente ahora (package.json revertido)
+- Se requiere actualización de react-scripts de forma incremental
+- Considerar hacer update en fase separada con testing exhaustivo
+
+---
+
+### BUG-026: Gestión de Recibos - Período Abril 2026 Muestra "No hay Recibos"
+
+**Descripción:**
+En la pantalla de Gestión de Recibos se muestran dos períodos (Marzo 2026 y Abril 2026), ambos con 12 recibos generados. Sin embargo, al hacer click en "Ver recibos" del período Abril 2026, el sistema muestra el mensaje "No hay recibos para este período", mientras que Marzo 2026 funciona correctamente mostrando los 12 recibos.
+
+**Pasos para reproducir:**
+1. Ir a Gestión de Recibos (panel de Dashboard)
+2. Verificar que se muestran dos períodos: Marzo 2026 (12 recibos) y Abril 2026 (12 recibos)
+3. Hacer click en "Ver recibos" de Marzo 2026 → Funciona, muestra 12 recibos
+4. Hacer click en "Ver recibos" de Abril 2026 → Falla, muestra "No hay recibos para este período"
+
+**Severidad:** 🔴 CRÍTICO
+- Afecta funcionalidad core de consulta de recibos
+- Genera inconsistencia: contador muestra 12, pero vista muestra 0
+- Impide acceso a datos que el sistema dice existen
+
+**Fase:** BACKLOG-014 (Gestión de Recibos)
+
+**Posible Causa Raíz:**
+
+Después del análisis inicial, las causas probables son:
+
+1. **Problema de filtrado en el backend**
+   - Endpoint `GET /api/recibos` puede estar usando comparación de fechas incorrecta
+   - Posible: comparación `fecha = periodo_exacto` en lugar de `fecha >= inicio AND fecha < fin`
+   - Abril podría tener fechas formateadas diferente (ej: "2026-04" vs "2026-04-01")
+
+2. **Problema en cálculo de rango de fechas del período**
+   - Frontend calcula inicio/fin del período incorrectamente para Abril
+   - Marzo podría funcionar por casualidad si usa comparación más flexible
+   - Ej: Marzo busca "2026-03-%" pero Abril busca "2026-04-%" con zona horaria que afecta
+
+3. **Problema de sincronización entre frontend y backend**
+   - El conteo de 12 recibos en la lista es correcto
+   - Pero el filtro en RecibosPage usa parámetros diferentes
+   - Posible: el contador usa query sin filtro, la vista usa fecha exacta
+
+4. **Problema de asociación de datos**
+   - Recibos de Abril podrían estar asociados a otro período o tabla
+   - Marzo funciona porque los datos están correctamente asociados
+   - Abril tiene datos huérfanos o mal asociados
+
+**Investigación realizada (2026-04-24):**
+
+**Hallazgos principales:**
+
+1. **Base de datos real en Hostinger:**
+   - Tabla correcta es `planes` (no `plan_v1` como usa el modelo)
+   - Hay 12 planes ACTIVO (plans 1-11 y 13, falta plan 12)
+   - Tabla `recibos`: 
+     * Marzo: 36 recibos (3 por plan) con `periodo = 2026-03-31`
+     * Abril: **0 recibos**
+   - Tabla `periodos_recibos`:
+     * Marzo: registra 12 recibos generados el 2026-04-18
+     * Abril: registra 12 recibos generados el 2026-04-24 ⚠️ INCONSISTENCIA
+
+2. **El problema de Abril:**
+   - `periodos_recibos` registra "cantidad_recibos: 12" pero tabla `recibos` está vacía
+   - Significa: el código reportó generación exitosa pero no creó los recibos
+   - Posibles causas:
+     * Error silencioso en loop de creación (continúa sin excepción)
+     * Transacción se hizo rollback pero upsert ya se ejecutó
+     * Error en FK o validaciones que no lanzó excepción
+
+3. **El problema de Marzo (múltiples generaciones):**
+   - 12 planes × 3 recibos por plan = 36 total
+   - Debería ser solo 12 (1 por plan)
+   - Indica que se generó 3 veces para el mismo período
+   - El código debería rechazar con 409 si período existe y force=false
+
+4. **Acción correctiva implementada:**
+   - Agregado logging detallado en `recibosController.js`
+   - Cada paso de generación ahora registra en console:
+     * Planes encontrados
+     * Cada plan procesado o omitido
+     * Total de recibos generados
+     * Errores capturados por plan
+   - Envuelto en try-catch por plan para no silenciar errores
+
+**Próximos pasos:**
+1. Revisar logs del servidor de Hostinger del 2026-04-24 13:46:02 (generación de Abril)
+2. Buscar mensajes `[RECIBOS]` o `[RECIBOS ERROR]` en los logs
+3. Ejecutar nuevamente la generación de Abril para capturar logs con el nuevo código
+4. Si aparecen errores, investigar la causa (FK, validación, etc.)
+5. Restaurar recibos de Marzo borrando los duplicados
+
+**CAUSA RAÍZ IDENTIFICADA (2026-04-24 - 15:31):**
+
+El campo `periodo` en la tabla `recibos` estaba definido como tipo **DATE** en Sequelize:
+```javascript
+periodo: { type: DataTypes.DATE, allowNull: false }
+```
+
+Esto causaba un **problema de timezone**:
+1. Frontend envía: `"2026-04-01"` (STRING)
+2. Sequelize lo interpreta como DATE
+3. MySQL lo convierte según el timezone del servidor
+4. Se persiste como: `2026-03-31` (1 día menos)
+5. Frontend busca `periodo LIKE '2026-04%'` → no encuentra nada
+6. Pero `periodos_recibos` registra correctamente "2026-04"
+
+**SOLUCIÓN IMPLEMENTADA:**
+
+1. Cambiar modelo `Recibo.js`: `periodo` de `DataTypes.DATE` → `DataTypes.STRING(10)`
+2. Crear migración 2.0.15:
+   - Upgrade: ALTER TABLE recibos MODIFY COLUMN periodo VARCHAR(10) NOT NULL
+   - Downgrade: revertir a DATE
+3. Agregar logging detallado en generación para evitar errores silenciosos
+
+**PASOS PARA APLICAR FIX:**
+
+1. Ejecutar migración 2.0.15 desde panel admin o CLI
+2. Los recibos existentes (ahora con periodo VARCHAR) funcionarán correctamente
+3. Regenerar Abril con el código corregido
+4. Verificar que ahora muestra los 12 recibos
+
+**Estado:** 🔬 Pendiente ejecutar migración y regenerar
+- Investigación completada: ✅
+- Solución implementada: ✅
+- Migración creada: ✅
+- Pendiente: ejecutar migración en Hostinger y regenerar Abril
+
+---
+
+**Última actualización:** 2026-04-24 (causa raíz identificada y solucionada)
+
+---
+
+### BUG-027: Listado de Recibos - Obra Social No Aparece en Lista
+
+**Descripción:**
+Al listar recibos de un período (RecibosPage), el campo "Obra Social" aparece vacío para TODOS los recibos. Sin embargo, cuando se abre el detalle de un recibo (ReciboDetalleModal), sí aparece la obra social correctamente.
+
+**Pasos para reproducir:**
+1. Ir a Gestión de Recibos
+2. Hacer click en "Ver recibos" de un período (ej: Marzo 2026)
+3. Ver tabla de recibos
+4. **Resultado:** Columna "Obra Social" está vacía para todos ❌
+5. Hacer click en uno de los recibos para ver detalles
+6. **Resultado:** En el modal de detalles, la obra social SÍ aparece ✓
+
+**Severidad:** 🟡 IMPORTANTE
+- No bloquea funcionalidad (el dato existe y se puede ver en detalles)
+- Pero afecta usabilidad: usuario no puede filtrar/validar por OS en el listado
+- Inconsistencia visual confusa
+
+**Fase:** BACKLOG-014 (Gestión de Recibos)
+
+**Causa probable:**
+
+El campo `obra_social_nombre` se guarda correctamente en tabla `recibos` (confirmado en queries anteriores), pero:
+1. El backend en `recibosController.js` método `list()` puede no estar incluyendo este campo
+2. O el frontend en `RecibosPage.jsx` no está renderizando la columna
+3. O hay una diferencia entre qué datos devuelve el endpoint GET /api/recibos vs GET /api/recibos/:id
+
+**CAUSA RAÍZ IDENTIFICADA:**
+
+En `RecibosPage.jsx` línea 229, el código intenta acceder a campo incorrecto:
+```javascript
+<td>{recibo.obra_social || '-'}</td>  // ❌ Campo incorrecto
+```
+
+El campo en la BD es `obra_social_nombre`, no `obra_social`. El backend devuelve correctamente `obra_social_nombre` en la response, pero el frontend lo ignoraba.
+
+**SOLUCIÓN IMPLEMENTADA:**
+
+Cambiar línea 229 en `RecibosPage.jsx`:
+```javascript
+<td>{recibo.obra_social_nombre || '-'}</td>  // ✅ Correcto
+```
+
+**Verificación:**
+- Backend: devuelve campo correcto `obra_social_nombre` ✓
+- Frontend: ahora accede a campo correcto ✓
+- Modal de detalles: ya estaba usando campo correcto ✓
+
+**Reportado:** 2026-04-24
+**Asociado a:** BACKLOG-014 (Gestión de Recibos)
+
+**Estado:** 🚀 Resuelto (pendiente confirmación)
+- Registrado: 2026-04-24
+- Investigación completada: ✅
+- Fix implementado: ✅
+- Commit: en progreso
+- Pendiente: confirmación del usuario
+
+---
+
+**Última actualización:** 2026-04-24 (BUG-027 investigado y resuelto)

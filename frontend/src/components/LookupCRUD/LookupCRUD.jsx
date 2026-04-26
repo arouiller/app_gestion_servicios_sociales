@@ -1,10 +1,14 @@
 import React, { useEffect, useState } from 'react';
 import lookupService from '../../services/lookupService';
+import configService from '../../services/configService';
 import ErrorDisplay from '../ErrorDisplay/ErrorDisplay';
 import SearchContainer from '../SearchContainer/SearchContainer';
 import ActionButton from '../ActionButton/ActionButton';
 import IconButton from '../IconButton/IconButton';
 import ConfirmDeleteWithRefsModal from '../ConfirmDeleteWithRefsModal/ConfirmDeleteWithRefsModal';
+import Pagination from '../Pagination/Pagination';
+import useDebounce from '../../hooks/useDebounce';
+import usePagination from '../../hooks/usePagination';
 import '../../styles/_table-standard.scss';
 import './LookupCRUD.scss';
 
@@ -16,6 +20,9 @@ const LookupCRUD = ({ titulo, singularName, endpoint, campos }) => {
   const [editingId, setEditingId] = useState(null);
   const [formData, setFormData] = useState({});
   const [searchText, setSearchText] = useState('');
+  const [debounceDelay, setDebounceDelay] = useState(2000);
+  const [forceSearchNow, setForceSearchNow] = useState(false);
+  const [configItemsPerPage, setConfigItemsPerPage] = useState(null);
   const [deleteModal, setDeleteModal] = useState({
     isOpen: false,
     registroId: null,
@@ -25,9 +32,30 @@ const LookupCRUD = ({ titulo, singularName, endpoint, campos }) => {
     isLoading: false,
     error: null,
   });
-  const ITEMS_PER_PAGE = 20;
 
   const entidad = endpoint.split('/').pop();
+
+  // Debouncificar el texto de búsqueda
+  const debouncedSearchText = useDebounce(searchText, debounceDelay);
+
+  // Cargar configuración al montar
+  useEffect(() => {
+    const loadConfig = async () => {
+      try {
+        const config = await configService.getConfiguracion();
+        if (config && config.debounce_delay_ms) {
+          setDebounceDelay(config.debounce_delay_ms);
+        }
+        if (config && config.items_per_page) {
+          setConfigItemsPerPage(config.items_per_page);
+        }
+      } catch (err) {
+        console.error('Error cargando configuración:', err);
+        // Mantener defaults si hay error
+      }
+    };
+    loadConfig();
+  }, []);
 
   // Cargar lista
   useEffect(() => {
@@ -153,36 +181,52 @@ const LookupCRUD = ({ titulo, singularName, endpoint, campos }) => {
     }));
   };
 
-  if (loading) return <div className="lookup-crud loading">Cargando...</div>;
+  // Usar searchText inmediatamente si se presionó Enter, si no usar debouncedSearchText
+  const effectiveSearchText = forceSearchNow ? searchText : debouncedSearchText;
 
   const registrosFiltered = registros
     .filter(registro => {
-      const searchLower = searchText.toLowerCase();
+      const searchLower = effectiveSearchText.toLowerCase();
       return Object.values(registro).some(val =>
         String(val).toLowerCase().includes(searchLower)
       );
-    })
-    .slice(0, ITEMS_PER_PAGE);
+    });
+
+  const pagination = usePagination(registrosFiltered, 15, configItemsPerPage);
+  // El hook usePagination ahora resetea automáticamente cuando items.length cambia
+
+  if (loading) return <div className="lookup-crud loading">Cargando...</div>;
+
+  // Manejar tecla Enter para búsqueda inmediata (sin debounce)
+  const handleSearchKeyDown = (e) => {
+    if (e.key === 'Enter') {
+      e.preventDefault();
+      setForceSearchNow(true);
+      // Resetear forceSearchNow después de que se renderice
+      setTimeout(() => setForceSearchNow(false), 0);
+    }
+  };
 
   const sinResultados = registros.length === 0;
 
   return (
     <div className="lookup-crud">
-      <div className="header">
-        <h2>{titulo}</h2>
-        <ActionButton variant="primary" icon="+" onClick={() => handleOpenForm()}>
-          Nuevo {singularName || 'Registro'}
-        </ActionButton>
-      </div>
+      <h2 className="lookup-crud__title">{titulo}</h2>
 
-      {registros.length > 0 && (
-        <SearchContainer
-          placeholder={`Buscar ${titulo.toLowerCase()}...`}
-          value={searchText}
-          onChange={setSearchText}
-          count={registrosFiltered.length}
-          maxItems={ITEMS_PER_PAGE}
-        />
+      {!sinResultados && (
+        <div className="lookup-crud__filters">
+          <SearchContainer
+            placeholder={`Buscar ${titulo.toLowerCase()}... (presiona Enter para buscar inmediatamente)`}
+            value={searchText}
+            onChange={setSearchText}
+            onKeyDown={handleSearchKeyDown}
+            count={registrosFiltered.length}
+            maxItems={registrosFiltered.length}
+          />
+          <ActionButton variant="primary" icon="+" onClick={() => handleOpenForm()}>
+            Nuevo {singularName || 'Registro'}
+          </ActionButton>
+        </div>
       )}
 
       {sinResultados ? (
@@ -201,7 +245,7 @@ const LookupCRUD = ({ titulo, singularName, endpoint, campos }) => {
             </tr>
           </thead>
           <tbody>
-            {registrosFiltered.map(registro => (
+            {pagination.paginatedItems.map(registro => (
               <tr key={Object.values(registro)[0]}>
                 {campos.map(campo => (
                   <td key={campo.name}>{registro[campo.name]}</td>
@@ -226,6 +270,17 @@ const LookupCRUD = ({ titulo, singularName, endpoint, campos }) => {
           </tbody>
           </table>
         </div>
+      )}
+
+      {pagination.showPagination && (
+        <Pagination
+          currentPage={pagination.currentPage}
+          totalPages={pagination.totalPages}
+          totalItems={pagination.totalItems}
+          itemsPerPage={pagination.itemsPerPage}
+          onPageChange={pagination.handleChangePage}
+          onItemsPerPageChange={pagination.handleChangeItemsPerPage}
+        />
       )}
 
       {showForm && (

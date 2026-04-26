@@ -1,17 +1,6 @@
 import api from './api';
 
 const authService = {
-  register: async ({ nombre, apellido, email, password, confirmar_password }) => {
-    const response = await api.post('/auth/register', {
-      nombre,
-      apellido,
-      email,
-      password,
-      confirmar_password,
-    });
-    return response.data;
-  },
-
   login: async ({ email, password, password_blanqueada = false }) => {
     const response = await api.post('/auth/login', {
       email,

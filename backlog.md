@@ -26,6 +26,13 @@ De cualquier estado → Descartado
 
 **Regla crítica:** Un backlog item solo puede pasar a "Solucionado" o "Descartado" a través del pedido explícito del usuario final
 
+**🔴 INSTRUCCIÓN IMPORTANTE PARA CLAUDE:**
+- **NUNCA** marques un item como "✅ Solucionado" sin una indicación explícita del usuario
+- Aunque la implementación esté completa, el item debe quedar en estado "🚀 Desarrollado" hasta que el usuario diga explícitamente "marca el item como solucionado" o "marca BACKLOG-XXX como resuelto"
+- Esta regla asegura que el usuario tenga control explícito sobre el estado de cada requerimiento
+- Si ya implementaste un item y el usuario NO indicó marcarlo como solucionado, actualiza el estado a "🚀 Desarrollado" en lugar de "✅ Solucionado"
+- Solo el usuario puede indicar transiciones a "✅ Solucionado" o "🚫 Descartado"
+
 **Nota:** Si un backlog item desarrollado encuentra problemas, se abre un bug en BUGS.md y el item vuelve a estado "Desarrollado" hasta que se resuelva el bug.
 
 
@@ -33,6 +40,15 @@ De cualquier estado → Descartado
 
 | ID | Prioridad | Estado | Descripción | Contexto / Motivo | Archivos estimados |
 |----|-----------|--------|-------------|-------------------|----|
+| BACKLOG-035 | 🔴 Alta | ✅ Solucionado | Optimizar espacio de trabajo: sidebar colapsable y ocultable | (1) Reducir márgenes/padding a izquierda y derecha. (2) Menú sidebar con collapse automático (expandir item → colapsan otros). (3) Botón/icono para ocultar sidebar completamente a la izquierda, con toggle para reabrirlo. Mejora UX permitiendo máximo espacio para contenido. | DashboardPage.jsx, DashboardPage.scss, Sidebar component |
+| BACKLOG-034 | 🔴 Alta | ✅ Solucionado | Herramienta de Ejecución de Queries SQL (Admin Only) | Administrador puede ingresar queries SQL (SELECT, INSERT, UPDATE, DELETE), ejecutarlas y ver resultados. Útil para auditoría, diagnóstico, análisis de datos y correcciones de BD. Prohibidas operaciones DROP, ALTER, CREATE. Con límite de resultados (1000) y logging de ejecución. | queryExecController.js, admin.js, QueryExecPage.jsx, queryExecService.js |
+| BACKLOG-033 | 🟡 Media | ✅ Solucionado | Estandarizar estructura de barras de filtros en pantallas de gestión | Estructura estándar implementada: título arriba, debajo barra de filtros con búsqueda (izquierda expandida) + botones (derecha). Todos alineados verticalmente al centro. Aplicado en todas las pantallas de gestión con flexbox y BEM. | GestionPlanesV1.jsx, LookupCRUD.jsx, BusquedaAfiliados.jsx, GestionAuditoria.jsx, SCSS |
+| BACKLOG-032 | 🔴 Alta | ✅ Solucionado | Sistema de Auditoría - Listado de Acceso a Endpoints del Backend | Admin solo: listado de accesos a endpoints mostrando usuario, fecha/hora, endpoint invocado, parámetros. Trazabilidad completa, compliance, detección de actividad sospechosa. Requiere tabla audit_log, middleware global, sanitización de datos sensibles, escritura asíncrona. | migrations/2.0.14, auditMiddleware.js, auditLog model/controller, AuditLogPage.jsx, auditService.js |
+| BACKLOG-031 | 🔴 Alta | ✅ Solucionado | Implementar paginación en listados (>10 registros) | Todos los listados (planes, afiliados, cobradores, obras sociales, servicios adicionales, tipos de grupo, tipos de plan) deben paginar cuando excedan 10 registros. Mejora UX y performance. Requiere componente de paginación reutilizable y actualización de servicios backend. | GestionPlanesV1.jsx, BusquedaAfiliados.jsx, LookupCRUD.jsx, Pagination.jsx, múltiples servicios |
+| BACKLOG-030 | 🟢 Baja | ✅ Solucionado | Modificar sección de Soporte en Footer (WhatsApp + Email) | Mejorar accesibilidad del contacto directo en landing page. Reemplazar "Contacto" por link WhatsApp (+54 11 3355 2955) y agregar link de Email (alejandro.rouiller@gmail.com). Facilita soporte rápido para usuarios. | Footer.jsx, Footer.scss |
+| BACKLOG-029 | 🟡 Media | ✅ Solucionado | Sistema de Gestión de Bugs (Reportes de Problemas) | Sistema centralizado de reporte y gestión de bugs donde usuarios pueden registrar problemas con editor de texto enriquecido (Quill) y soporte de imágenes. Flujo de estados controlado por admin (REGISTRADO → DESARROLLADO/DESESTIMADO → CERRADO). Números únicos auto-generados (BUG-0001, BUG-0002, etc.). | migrations/2.0.11, bugsController.js, routes/v1.0/bugs.js, bugsService.js, GestionBugs.jsx, BugFormModal.jsx, BugDetalleModal.jsx, StatusBadge.scss |
+| BACKLOG-025 | 🔴 Alta | ✅ Solucionado | Implementar debounce configurable en búsquedas de texto | Todas las búsquedas por texto deberían iniciarse después de 2000ms (configurable) sin input. Mejora: reduce llamadas al servidor, mejor UX. Afecta: BusquedaAfiliados, LookupCRUD, y otros. Requiere backend config y posible migración BD 2.0.9 para tabla de configuración. | useDebounce hook, configService, ConfiguracionApp |
+| BACKLOG-024 | 🔴 Alta | 🔬 En análisis | Actualizar dependencias deprecadas del frontend | 20 paquetes outdated detectados en compilación. Solución encontrada: actualizar react-scripts 5.0.1 → 5.1.0+ (que incluye automáticamente versiones modernas). Intento inicial de agregar 22 deps explícitas causó conflicto npm. Requiere actualización incremental con testing exhaustivo. | package.json, react-scripts upgrade |
 | BACKLOG-023 | 🔴 Alta | ✅ Solucionado | Agregar campo abreviacion a Tipos de Plan | Campo requerido (NOT NULL) en tabla tipo_plan. Disponible en BD y UI (crear/editar). Ej: "Plan Premium" → "PP", "Plan Basic" → "PB". Facilita identificación rápida en listas y reportes. | migrations/2.0.7, models/TipoDePlan, TiposDePlan.jsx |
 | BACKLOG-022 | 🔴 Alta | ✅ Solucionado | Agregar campo abreviacion a Tipos de Grupo | Campo requerido (NOT NULL) en tabla tipo_grupo. Disponible en BD y UI (crear/editar). Ej: "Familiar" → "FAM", "Individual" → "IND". Mejora usabilidad en formularios y reportes. | migrations/2.0.7, models/TipoDeGrupo, TiposDeGrupo.jsx |
 | BACKLOG-021 | 🔴 Alta | ✅ Solucionado | Navegación automática a campo con error en PlanV1Modal | Al crear/editar plan, si falta dato o hay error del backend, UI navega automáticamente al tab y campo afectado. Mejora UX: usuario ve dónde está el problema sin búsqueda manual. Implementado: FIELD_TO_TAB, navigateToFirstError(), validate() retorna errors object, manejo de 422/409. | PlanV1Modal.jsx, usePlanV1Form.js, planesController.js |
@@ -2254,6 +2270,1485 @@ Agregar campo `abreviacion` (VARCHAR(10), NOT NULL) a las tablas `tipos_de_grupo
 - Validación en frontend (maxLength 10) y backend (trim/uppercase)
 - Abreviaturas facilitan reportes y identificación en formularios largos
 - Reutilizable: mismo patrón puede aplicarse a otros tipos si es necesario
+
+---
+
+### BACKLOG-024: Actualizar Dependencias Deprecadas del Frontend
+
+**Descripción:**
+Actualizar y reemplazar 20 paquetes deprecados detectados en compilación del frontend. Incluye librerías con vulnerabilidades publicadas y Babel plugins que corresponden a propuestas ya fusionadas al estándar ECMAScript.
+
+**Paquetes a actualizar:**
+
+**🔴 Críticos (vulnerabilidades):**
+1. `eslint@8.57.1` → `eslint@latest` (sin soporte, versión vieja)
+2. `glob@7.2.3` → `glob@10.x` (vulnerabilidades publicadas)
+3. `rimraf@3.0.2` → `rimraf@5.x` (versión vieja)
+
+**🟡 Babel Plugins (reemplazar propuestas por transform):**
+4. `@babel/plugin-proposal-private-methods@7.18.6` → `@babel/plugin-transform-private-methods`
+5. `@babel/plugin-proposal-nullish-coalescing-operator@7.18.6` → `@babel/plugin-transform-nullish-coalescing-operator`
+6. `@babel/plugin-proposal-numeric-separator@7.18.6` → `@babel/plugin-transform-numeric-separator`
+7. `@babel/plugin-proposal-class-properties@7.18.6` → `@babel/plugin-transform-class-properties`
+8. `@babel/plugin-proposal-optional-chaining@7.21.0` → `@babel/plugin-transform-optional-chaining`
+9. `@babel/plugin-proposal-private-property-in-object@7.21.11` → `@babel/plugin-transform-private-property-in-object`
+
+**🟡 Herramientas build/lint:**
+10. `rollup-plugin-terser@7.0.2` → `@rollup/plugin-terser`
+11. `@humanwhocodes/config-array@0.13.0` → `@eslint/config-array`
+12. `@humanwhocodes/object-schema@2.0.3` → `@eslint/object-schema`
+13. `svgo@1.3.2` → `svgo@3.x` (versión actualizada)
+
+**🟢 Polyfills/utilidades obsoletas:**
+14. `inflight@1.0.6` → `lru-cache` (alternativa moderna)
+15. `stable@0.1.8` → Remover (Array.sort() ya es estable en JS moderno)
+16. `whatwg-encoding@1.0.5` → `@exodus/bytes`
+17. `abab@2.0.6` → Usar atob()/btoa() nativo
+18. `q@1.5.1` → Usar Promise nativo
+19. `sourcemap-codec@1.4.8` → `@jridgewell/sourcemap-codec`
+20. `source-map@0.8.0-beta.0` → `source-map@0.7.x` (estable)
+
+**Workbox (Google Analytics deprecated):**
+21. `workbox-google-analytics@6.6.0` → Remover o reemplazar con GA4
+22. `workbox-cacheable-response@6.6.0` → Actualizar a versión compatible
+
+**Contexto:**
+- 20 advertencias en compilación de npm (build exitoso pero con paquetes outdated)
+- Algunas librerías contienen vulnerabilidades de seguridad publicadas
+- Babel plugins corresponden a propuestas que ya fueron fusionadas al estándar ES2020+
+- Mejora: seguridad, mantenibilidad, eliminación de memory leaks conocidos
+
+**Archivos a modificar:**
+- `frontend/package.json` - Reemplazar versiones
+- `frontend/.babelrc` (si existe) - Actualizar plugins
+- `frontend/package-lock.json` - Regenerar con `npm install`
+
+**Testing requerido:**
+- [ ] `npm install` sin errores
+- [ ] `npm run build` compila correctamente
+- [ ] `npm run lint` sin errores
+- [ ] `npm start` funciona en desarrollo
+- [ ] App funciona en navegadores soportados
+
+**Estimación:** 1-2 horas (principalmente esperar descarga/compilación)
+
+**Prioridad:** 🔴 Alta — Vulnerabilidades de seguridad
+
+**Estado:** 🚀 Desarrollado (2026-04-18) - Implementadas todas las actualizaciones
+
+---
+
+### BACKLOG-025: Implementar Debounce Configurable en Búsquedas de Texto
+
+**Descripción:**
+En todos los apartados donde se realicen búsquedas a través del ingreso de texto del usuario, la búsqueda debe iniciarse luego de pasado un cierto tiempo en el cual el usuario no ingresa nuevo texto. Este tiempo, con un valor por defecto de **2000 ms (2 segundos)**, debe ser **configurable por el administrador**.
+
+**Requerimientos:**
+
+a. **Implementación Frontend - Hook personalizado useDebounce**
+   - Crear hook: `frontend/src/hooks/useDebounce.js`
+   - Comportamiento:
+     * Recibe valor (searchText) y delay (ms)
+     * Retorna valor debouncificado
+     * Solo dispara actualizaciones cuando usuario para de escribir
+   - Uso: `const debouncedSearchText = useDebounce(searchText, debounceDelay);`
+
+b. **Componentes afectados - Aplicar debounce a búsquedas**
+   - `BusquedaAfiliados.jsx`: búsqueda de personas por apellido/nombre/DNI
+   - `LookupCRUD.jsx`: búsqueda en tablas de datos maestros (Cobradores, OS, Servicios, Tipos de Grupo, Tipos de Plan)
+   - `GestionPlanesV1.jsx`: búsqueda de planes (si existe)
+   - `GestionAfiliados.jsx`: búsqueda de afiliados
+   - Otros componentes con búsqueda por texto (revisar y actualizar)
+
+c. **Configuración del Tiempo de Debounce**
+   - Valor default: 2000 ms
+   - Almacenado en tabla `ConfiguracionApp` (existente)
+   - Nueva entrada de configuración: `debounce_delay_ms` (INT, default 2000)
+   - Endpoint GET /api/admin/configuracion devuelve este valor
+   - Endpoint PUT /api/admin/configuracion/:tipo actualiza este valor
+
+d. **Panel de Administración (ConfiguracionNotificaciones.jsx)**
+   - Agregar nueva sección o nueva fila en tabla existente
+   - Permitir admin cambiar el valor de debounce (en ms)
+   - Validaciones:
+     * Mínimo: 100 ms (búsqueda muy rápida)
+     * Máximo: 10000 ms (10 segundos)
+   - Guardar cambio en BD
+   - La siguiente búsqueda usará el nuevo valor
+
+e. **Flujo de Usuario Mejorado**
+
+   **Antes (actual):**
+   ```
+   Usuario escribe: "juan"
+   ↓
+   onChange dispara búsqueda inmediatamente (J) → API call
+   Usuario continúa escribiendo: "juan p"
+   ↓
+   onChange dispara búsqueda (P) → API call
+   Usuario continúa escribiendo: "juan perez"
+   ↓
+   onChange dispara búsqueda (PEREZ) → API call
+   Resultado: 3 API calls para una sola búsqueda ❌ (ineficiente)
+   ```
+
+   **Después (con debounce):**
+   ```
+   Usuario escribe: "juan"
+   ↓
+   onChange actualiza estado local (SIN API call)
+   Timer de 2000ms inicia
+   Usuario continúa escribiendo: "juan p"
+   ↓
+   onChange actualiza estado local (SIN API call)
+   Timer resetea (reinicia contador de 2000ms)
+   Usuario continúa escribiendo: "juan perez"
+   ↓
+   onChange actualiza estado local (SIN API call)
+   Timer resetea (reinicia contador de 2000ms)
+   Usuario para de escribir por 2 segundos
+   ↓
+   Timer expira → se dispara búsqueda una sola vez (JUAN PEREZ) → 1 API call ✅ (eficiente)
+   ```
+
+f. **Cambios en Base de Datos (Migración 2.0.9)**
+   - Tabla: `ConfiguracionApp` (agregar si no existe entrada de debounce)
+   - Nuevo registro: `INSERT INTO ConfiguracionApp (tipo_notificacion, duracion_ms) VALUES ('debounce_delay_ms', 2000);`
+   - O crear tabla separada: `ConfiguracionGlobal` con columna `debounce_delay_ms`
+   - Nota: Si se usa `ConfiguracionApp` existente, se debe extender semanticamente para no confundir
+   - Alternativa: Crear tabla `ConfiguracionSistema` más genérica
+
+g. **Servicio Frontend - Actualizar configService**
+   - Método existente: `getConfiguracion()` → ya trae todas las configs
+   - Método existente: `actualizarConfiguracion(tipo, valor)` → ya actualiza
+   - Solo necesita que backend devuelva la nueva entrada
+
+h. **Implementación técnica en componentes**
+   
+   **BusquedaAfiliados.jsx (ejemplo):**
+   ```javascript
+   const [searchText, setSearchText] = useState('');
+   const [debounceDelay, setDebounceDelay] = useState(2000); // cargar de config
+   const debouncedSearchText = useDebounce(searchText, debounceDelay);
+   
+   // useEffect para buscar cuando debouncedSearchText cambia
+   useEffect(() => {
+     if (debouncedSearchText.trim()) {
+       handleSearch(); // llamada a API
+     }
+   }, [debouncedSearchText]);
+   ```
+
+**Contexto:**
+- Mejora rendimiento: reduce llamadas al servidor significativamente
+- Mejora UX: búsquedas ocurren de forma más natural (sin lag de múltiples requests simultáneos)
+- Configurable: admin puede ajustar según velocidad de red y preferencias de negocio
+- Patrón común: Google Search, LinkedIn, Amazon usan debounce para búsquedas
+
+**Análisis de Impacto:**
+
+1. **Cambios Frontend:**
+   - Crear hook useDebounce.js (50 líneas)
+   - Actualizar 5-8 componentes con búsqueda (10-20 líneas cada uno)
+   - Actualizar configService.js para manejar nueva config (5 líneas)
+   - Actualizar ConfiguracionNotificaciones.jsx para mostrar/editar debounce delay (20-30 líneas)
+
+2. **Cambios Backend:**
+   - Si se agrega a ConfiguracionApp: necesita migración 2.0.9
+   - Si se crea tabla nueva ConfiguracionSistema: necesita migración 2.0.9
+   - Endpoint GET /api/admin/configuracion ya retorna todo (sin cambio)
+   - Endpoint PUT /api/admin/configuracion/:tipo ya maneja updates (sin cambio)
+
+3. **Cambios Base de Datos:**
+   - Opción A (recomendada): Extender ConfiguracionApp con registro `debounce_delay_ms`
+   - Opción B: Crear tabla genérica `ConfiguracionSistema` (más escalable para futuras configs)
+   - Migración 2.0.9 si es necesario
+
+**Archivos a modificar/crear:**
+
+Frontend:
+- `frontend/src/hooks/useDebounce.js` (NUEVO)
+- `frontend/src/components/v1.0/BusquedaAfiliados.jsx` (modificar)
+- `frontend/src/components/LookupCRUD/LookupCRUD.jsx` (modificar)
+- `frontend/src/components/GestionPlanesV1/GestionPlanesV1.jsx` (modificar)
+- `frontend/src/components/GestionAfiliados/GestionAfiliados.jsx` (modificar)
+- `frontend/src/components/ConfiguracionNotificaciones/ConfiguracionNotificaciones.jsx` (extender)
+- `frontend/src/services/configService.js` (sin cambio, ya funciona)
+
+Backend:
+- `backend/src/migrations/versions/2.0.9_debounce_config/upgrade.sql` (NUEVO si es necesario)
+- `backend/src/migrations/versions/2.0.9_debounce_config/downgrade.sql` (NUEVO si es necesario)
+- Rutas/Controladores: sin cambio (GET/PUT ya existen)
+
+**Estimación:** 6-8 horas
+  - Hook useDebounce: 0.5h
+  - Actualizar componentes (5-8): 2-3h
+  - Panel de configuración (UI + validaciones): 1-1.5h
+  - Migración BD 2.0.9 (si aplica): 0.5h
+  - Testing: 1.5-2h
+
+**Prioridad:** 🔴 Alta — Mejora rendimiento y UX en funcionalidad core
+
+**Estado:** ✅ Solucionado (2026-04-21)
+
+**Implementación Completada (2026-04-21):**
+1. ✅ Hook useDebounce.js: custom hook con setTimeout y cleanup
+2. ✅ ConfiguracionApp extendida: debounce_delay_ms con default 2000ms
+3. ✅ Migración 2.0.9: inserta configuración en BD
+4. ✅ Frontend (3 componentes): BusquedaAfiliados, LookupCRUD, GestionPlanesV1
+5. ✅ Panel admin: ConfiguracionNotificaciones con sección de búsquedas configurable (100-10000ms)
+6. ✅ Validación backend: VALID_TYPES en admin.js incluye debounce_delay_ms
+7. ✅ Enter key enhancement: búsqueda inmediata sin esperar debounce en todos los componentes
+8. ✅ Menú renombrado: "Configuración Notificaciones" → "Configuración UI"
+
+**Commits relacionados:**
+- f6217d8 - feat(configuracion): permitir debounce_delay_ms en endpoint
+- 87cc5b1 - feat(BACKLOG-025): implementar debounce configurable
+- (y commits anteriores del setup)
+
+---
+
+### BACKLOG-026: Formatear Número de Afiliado a 5 Dígitos
+
+**Descripción:**
+En todos los sitios donde se muestre o edite el número de afiliado, debe mostrarse con exactamente 5 dígitos. Si el número tiene menos de 5 dígitos, se debe completar con ceros a la izquierda (ej: 123 → 00123).
+
+**Requerimientos:**
+
+a. **Visualización (display)**
+   - En tablas que muestren planes (GestionPlanesV1, BusquedaAfiliados, RecibosPage)
+   - En modales de edición (PlanV1Modal)
+   - En confirmaciones y mensajes de alerta
+   - En detalles de recibos
+   - En cualquier lista o vista que muestre número_afiliado
+
+b. **Edición (input)**
+   - Campo de input en PlanV1Modal debe aceptar números de 1-5 dígitos
+   - Al guardar, validar y formatear a 5 dígitos antes de enviar a backend
+   - Mostrar hint/placeholder indicando formato (ej: "Ej: 00123")
+
+c. **Backend**
+   - Al guardar en BD: convertir a 5 dígitos (INT → LPAD en SQL o validación en Node)
+   - Al retornar en APIs: retornar siempre formateado a 5 dígitos
+   - En consultas/filtros: permitir búsqueda sin ceros (ej: buscar "123" debe encontrar "00123")
+
+**Impacto de Implementación:**
+
+**Frontend (19 archivos afectados):**
+1. **Componentes de visualización (6):**
+   - `GestionPlanesV1.jsx` (línea 224: `<td>{plan.numero_afiliado}</td>`)
+   - `BusquedaAfiliados.jsx` (línea 240: mostrar en tabla de planes)
+   - `RecibosPage.jsx` (mostrar en lista de recibos)
+   - `ReciboDetalleModal.jsx` (mostrar en detalle)
+   - `ListadoPlanes.jsx` (mostrar en tabla)
+   - `PlanesPorCobrador.jsx` (mostrar en tabla)
+
+2. **Componentes de edición (2):**
+   - `PlanV1Modal.jsx` (línea 397: input + validación al guardar)
+   - `usePlanV1Form.js` (hook de validación)
+
+3. **Mensajes y confirmaciones (2):**
+   - `GestionPlanesV1.jsx` (línea 112: confirmación de suspensión)
+   - `BusquedaAfiliados.jsx` (línea 124-125: confirmación de cambio de estado)
+
+4. **Modal de generación de recibos (1):**
+   - `GenerarRecibosModal.jsx`
+
+5. **Tabla de actualización masiva (1):**
+   - `BulkUpdateCuotaModal.jsx`
+
+**Solución técnica (2 opciones):**
+
+**Opción A: Formatter utility (RECOMENDADA)**
+   - Crear función `formatAfiliado(numero)` en `frontend/src/utils/formatters.js`
+   - Usar en todos los puntos de visualización: `{formatAfiliado(plan.numero_afiliado)}`
+   - En edición: usar `formatAfiliado()` en onChange y onBlur
+   - Centralizado, reutilizable, fácil de mantener
+
+**Opción B: Computed property**
+   - En cada componente, crear `const displayNumero = String(numero).padStart(5, '0')`
+   - Repetir en cada lugar donde se use
+   - Más disperso pero funcional
+
+**Backend (3 archivos):**
+1. **Modelo:**
+   - `PlanV1.js`: agregar getter/setter o validación
+
+2. **Controllers (v1.0):**
+   - `planesController.js`: validación al crear/actualizar
+   - `recibosController.js`: validación al generar recibos
+
+3. **Migraciones/Seed:**
+   - Evaluar si datos existentes necesitan formateo
+   - Si hay datos sin formato, crear migración 2.0.10 para formatear
+
+**Base de Datos:**
+- Opción A: Cambiar tipo de dato `numero_afiliado` de INT a VARCHAR(5) con ZEROFILL
+  * Requiere migración para conversión de tipo
+  * Más robusto, datos siempre formateados
+  
+- Opción B: Mantener INT, formatear en application layer
+  * Menos invasivo, no requiere migración
+  * Riesgo: si se accede BD directamente, no está garantizado el formato
+
+**Testing:**
+- Crear planes con números 1-5 dígitos y verificar visualización
+- Editar número de afiliado y confirmar formato guardado
+- Búsqueda: buscar "123" debe encontrar plan "00123"
+- Recibos: verificar formato en documentos generados
+- APIs: verificar que todas las responses retornen formateado
+
+**Estimación:** 4-6 horas
+  - Crear formatter utility: 0.5h
+  - Actualizar componentes frontend (12-15 puntos): 2-3h
+  - Actualizar backend (validación): 0.5h
+  - Decisión y migración BD (si aplica): 0.5h
+  - Testing: 1-1.5h
+
+**Prioridad:** 🟡 Media — Mejora consistencia visual y UX, pero no afecta funcionalidad core
+
+**Estado:** ✅ Solucionado (2026-04-21)
+
+**Implementación Completada (2026-04-21):**
+1. ✅ Crear `frontend/src/utils/formatters.js` con función `formatNumeroAfiliado()`
+2. ✅ Aplicar en 10 componentes: GestionPlanesV1, BusquedaAfiliados, PlanV1Modal (título), RecibosPage, PlanesPorCobrador, ListadoPlanes, GenerarRecibosModal, ReciboDetalleModal, BulkUpdateCuotaModal
+3. ✅ Formato reutilizable con `padStart(5, '0')`
+4. ✅ Los inputs de edición NO formateados (usuario ingresa sin ceros)
+5. ✅ Búsqueda flexible mantiene compatibilidad (buscar números sin ceros)
+
+**Commit:**
+- 2056052 - feat(BACKLOG-026): formatear numero_afiliado a 5 dígitos
+
+---
+
+### BACKLOG-027: Página Principal - Listado de Planes al Login
+
+**Descripción:**
+Al ingresar al sitio y autenticarse (post-login), la página principal debe mostrar directamente el listado de todos los planes, sin necesidad de navegar por el menú. Este listado será el punto de entrada por defecto, mejorando la UX al dar acceso rápido a la funcionalidad más utilizada.
+
+**Requerimientos:**
+
+a. **Flujo de navegación:**
+   - Usuario hace login exitoso
+   - Redirect automático a página principal de planes (en lugar de página en blanco o panel neutro)
+   - El menú lateral permanece disponible para navegar a otras secciones
+
+b. **Contenido de la página:**
+   - Listado tabular de todos los planes
+   - Columnas: Número de Afiliado | Apellido | Nombre | Acciones
+   - Mostrar formateado: numero_afiliado con 5 dígitos (relacionado a BACKLOG-026)
+   - Nombre y apellido del titular (Persona asociada al plan)
+   - Paginación o scroll infinito (máximo 20-50 planes por vista)
+
+c. **Acciones (botones en tabla):**
+   - Botón "Editar": abre PlanV1Modal en modo edición
+   - Botón "Eliminar/Suspender": abre confirmación de eliminación (similar a GestionPlanesV1 actual)
+   - Opcionales: ver detalles, generar recibos (desde panel de planes)
+
+d. **Búsqueda y filtros:**
+   - Barra de búsqueda para filtrar por numero_afiliado, nombre o apellido (BACKLOG-025: debounce aplicado)
+   - Opcional: filtros por estado (Activo/Suspendido)
+
+**Impacto Técnico:**
+
+**Frontend (3 archivos, cambio mínimo):**
+
+1. **App.jsx (ruta por defecto)**
+   - Cambiar ruta raíz `/` para redirigir a `/dashboard` o `/planes`
+   - O: mantener `/dashboard` como default, hacer `/` → `/dashboard`
+   - Ubicación actual: `frontend/src/App.jsx` (rutas React Router)
+
+2. **DashboardPage.jsx (estado inicial)**
+   - Cambiar `useState(activeModule)` inicial de `null`/`undefined` a `'gestion-planes-v1'`
+   - Lógica actual: lee props o parámetros URL para determinar módulo activo
+   - Solución simple: agregar `const [activeModule, setActiveModule] = useState('gestion-planes-v1');`
+   - Ubicación: `frontend/src/pages/DashboardPage/DashboardPage.jsx` (línea ~??)
+
+3. **GestionPlanesV1.jsx (ya existe, sin cambios)**
+   - Componente ya implementado y funcional
+   - Ya carga datos, búsqueda, acciones (editar, suspender)
+   - Solo necesita ser módulo inicial
+   - Ubicación: `frontend/src/pages/DashboardPage/components/GestionPlanesV1/GestionPlanesV1.jsx`
+
+**Backend (sin cambios):**
+   - API GET `/api/planes-v1` ya retorna todos los planes con relaciones (Persona, TipoDePlan, etc)
+   - No hay nuevos endpoints necesarios
+   - Controllers/routes existentes suficientes
+
+**Arquitectura - Decisión: ¿Cómo hacer el redirect?**
+
+**Opción A: Redirect en Router (RECOMENDADA)**
+   ```js
+   // App.jsx
+   <Routes>
+     <Route path="/" element={<Navigate to="/dashboard" replace />} />
+     <Route path="/dashboard" element={<DashboardPage defaultModule="gestion-planes-v1" />} />
+   </Routes>
+   ```
+   - ✅ Limpio, explícito
+   - ✅ Maneja raíz `/` correctamente
+   - ✅ No rompe otras rutas
+   - ⚠️ Requiere pasar prop a DashboardPage
+
+**Opción B: Estado inicial en DashboardPage (SIMPLE)**
+   ```js
+   const [activeModule, setActiveModule] = useState('gestion-planes-v1');
+   ```
+   - ✅ Más simple, una línea
+   - ✅ Cero cambios en App.jsx
+   - ⚠️ Menos flexible para rutas futuras
+   - ⚠️ Si hay URL params, puede no sincronizar correctamente
+
+**Opción C: useEffect + navegación condicional**
+   - En DashboardPage, si activeModule es null, navegar a gestion-planes-v1
+   - ✅ Flexibilidad
+   - ⚠️ Lógica adicional
+
+**Relaciones con otros requerimientos:**
+- **BACKLOG-026 (formato afiliado):** Listado debe mostrar numero_afiliado formateado a 5 dígitos
+- **BACKLOG-025 (debounce):** Búsqueda ya implementada con debounce configurable
+
+**Testing:**
+- Login → Verificar redirect automático a planes (no página en blanco)
+- Tabla visible con todos los planes
+- Columnas correctas: numero_afiliado (5 dígitos), apellido, nombre
+- Búsqueda funciona (debounce + Enter)
+- Botones editar/suspender funcionan
+- Navegación a otros módulos sigue siendo posible (menú)
+- No rompe autenticación ni cierre de sesión
+
+**Estimación:** 1-2 horas (bajo esfuerzo)
+  - Cambiar estado inicial: 0.25h
+  - Opcional: redirect en Router: 0.5h
+  - Testing flujo completo (login → planes): 0.5h
+  - Verificar no rompe otras funcionalidades: 0.5h
+
+**Prioridad:** 🔴 Alta — Es el punto de entrada principal, mejora UX significativamente
+
+**Estado:** ✅ Solucionado (2026-04-21)
+
+**Implementación Completada (2026-04-21):**
+1. ✅ Cambiar `useState(null)` → `useState('gestion-planes-v1')` en DashboardPage.jsx línea 158
+2. ✅ Login redirige directamente a tabla de planes (sin página en blanco)
+3. ✅ Menú lateral permanece funcional para navegar a otros módulos
+4. ✅ GestionPlanesV1 se monta automáticamente como módulo inicial
+
+**Commit:**
+- 74b3c84 - feat(BACKLOG-027): configurar gestion-planes-v1 como módulo inicial
+
+---
+
+### BACKLOG-028: Agregar Campo Zona a Planes
+
+**Descripción:**
+Ampliar el modelo de datos de planes agregando un nuevo campo numérico "Zona" de 2 dígitos. Este campo será obligatorio con valor por defecto 0, y debe mostrarse formateado con ceros a la izquierda (00-99). El cambio impacta en el backend (modelo y controller de planes) y en las interfaces de edición y visualización de planes. Zona pertenece al plan, no al afiliado.
+
+**Requerimientos:**
+
+a. **Estructura del Campo (BD)**
+   - Nombre: `zona`
+   - Tipo: TINYINT UNSIGNED (0-99) o INT
+   - Default: 0
+   - Nullable: NO
+   - Ubicación tabla: tabla `personas`
+   - Rango válido: 0-99 (2 dígitos)
+   - Formato display: siempre con padding a 2 dígitos (00, 01, 02, ..., 99)
+
+b. **Formato Visual**
+   - Input: permitir 1-2 dígitos (validar 0-99)
+   - Display: mostrar siempre con 2 dígitos formateados (00, 01, etc.)
+   - Búsqueda: permitir búsqueda sin ceros (buscar "5" encuentra zona "05")
+   - Listados: mostrar formateado (ejemplo: "Zona: 05")
+
+c. **Validaciones**
+   - Rango: 0-99 (validar en frontend y backend)
+   - Obligatorio: siempre presente (default 0)
+   - Tipo numérico: solo dígitos 0-9
+
+d. **Flujo de Usuario**
+   - Al crear afiliado: mostrar campo Zona con default "00"
+   - Al editar afiliado: mostrar zona actual, permitir cambio
+   - Al buscar afiliados: permitir filtrar por zona
+   - Al crear plan: mostrar zona del afiliado titular
+
+**Impacto Técnico - Base de Datos:**
+
+1. **Migración 2.0.11 (NUEVA)**
+   - upgrade.sql:
+     ```sql
+     ALTER TABLE personas ADD COLUMN zona TINYINT UNSIGNED NOT NULL DEFAULT 0;
+     ```
+   - downgrade.sql:
+     ```sql
+     ALTER TABLE personas DROP COLUMN zona;
+     ```
+   - Considerar: para datos existentes, zona será 0 para todos
+
+2. **Modelo Sequelize (Persona.js)**
+   - Agregar atributo:
+     ```js
+     zona: {
+       type: DataTypes.INTEGER,
+       allowNull: false,
+       defaultValue: 0,
+       validate: { min: 0, max: 99 }
+     }
+     ```
+
+**Impacto Técnico - Backend:**
+
+1. **Controllers (planesController.js, personasController.js)**
+   - Validación de zona en create/update (0-99)
+   - Retornar zona en responses
+   - Permitir filtrar por zona en búsquedas
+
+2. **Routes**
+   - POST /api/personas: aceptar zona en body
+   - PUT /api/personas/:id: aceptar zona en body
+   - GET /api/personas: retornar zona en responses
+
+3. **Responses API**
+   - Todos los endpoints que retornan persona incluir zona
+   - Ejemplo: `{ id, nombre, apellido, ... zona, ... }`
+
+**Impacto Técnico - Frontend (CRÍTICO - muchos componentes):**
+
+1. **Componentes de creación/edición de afiliados (5):**
+   - `AfiladoSearchModal.jsx` (buscar + crear afiliados)
+   - `AfiladoEditModal.jsx` (editar datos de afiliado)
+   - `AfiladoFormModal.jsx` (si existe)
+   - PlanV1Modal.jsx (si permite crear afiliados inline)
+   - Formularios de creación general de personas
+
+2. **Componentes de visualización (8):**
+   - `BusquedaAfiliados.jsx` (tabla de personas)
+   - `ListadoPlanes.jsx` (mostrar zona del titular)
+   - `GestionPlanesV1.jsx` (tabla de planes - mostrar zona titular)
+   - `PlanesPorCobrador.jsx` (tabla planes - zona)
+   - `PersonasPage.jsx` (si existe)
+   - `ReciboDetalleModal.jsx` (mostrar zona)
+   - `IntegranteServiciosModal.jsx` (si muestra datos integrante)
+   - Otros listados con personas
+
+3. **Barra de búsqueda y filtros (3):**
+   - Permitir filtrar por zona en BusquedaAfiliados
+   - Permitir filtrar por zona en LookupCRUD (si se agrega)
+   - Implementar búsqueda flexible: "5" encuentra "05"
+
+4. **Hooks/Utilities (2):**
+   - `usePlanV1Form.js`: incluir zona en validación de integrantes
+   - Crear `formatZona()` en utils/formatters.js para reutilización
+
+5. **Servicios (1):**
+   - `personasService.js`: actualizar métodos create/update/search
+
+**Flujo de Creación de Afiliado (Ejemplo):**
+```
+Usuario abre modal "Agregar Afiliado" en un plan
+↓
+Mostrar formulario con campos:
+  - Nombre (requerido)
+  - Apellido (requerido)
+  - Tipo de Documento
+  - Número de Documento
+  - Fecha de Nacimiento
+  - Zona (NUEVO) [input 0-99, default "00"]
+  ↓
+Usuario ingresa zona "5"
+↓
+onBlur: formatear a "05" en el input
+↓
+Click "Guardar"
+↓
+POST /api/personas { nombre, apellido, ..., zona: 5 }
+↓
+Backend valida 0 <= zona <= 99
+↓
+Backend guarda con zona = 5
+↓
+Respuesta: { id, nombre, apellido, ..., zona: 5 }
+↓
+Frontend formatea: "Zona: 05" en display
+```
+
+**Decisiones de Diseño:**
+
+1. **¿Donde aparece el campo zona?**
+   - ✅ Obligatorio: Formularios de creación/edición de afiliados
+   - ⚠️ Opcional: Tablas/listados (mostrar si hay espacio)
+   - ⚠️ Filtro: Permitir búsqueda/filtro por zona
+
+2. **¿Formato de entrada vs salida?**
+   - Input: permitir 1-2 dígitos (usuario escribe "5" o "05")
+   - onBlur: formatear a 2 dígitos ("05")
+   - Display: siempre "05"
+   - API: guardar como INT 5, retornar como INT 5
+
+3. **¿Migración backwards compatible?**
+   - ✅ DEFAULT 0: datos existentes obtendrán zona 0
+   - ⚠️ No nullable: todas las personas tendrán zona asignada
+
+**Archivos a crear/modificar:**
+
+Backend:
+- `backend/src/migrations/versions/2.0.11_zona_personas/upgrade.sql` (NUEVO)
+- `backend/src/migrations/versions/2.0.11_zona_personas/downgrade.sql` (NUEVO)
+- `backend/src/models/Persona.js` (agregar atributo zona)
+- `backend/src/controllers/personasController.js` (validar zona)
+- `backend/src/controllers/planesController.js` (incluir zona en responses)
+
+Frontend:
+- `frontend/src/utils/formatters.js` (agregar formatZona)
+- `frontend/src/components/AfiladoSearchModal.jsx` (agregar campo zona)
+- `frontend/src/components/AfiladoEditModal.jsx` (agregar campo zona)
+- `frontend/src/components/BusquedaAfiliados.jsx` (mostrar zona en tabla)
+- `frontend/src/pages/DashboardPage/components/GestionPlanesV1/GestionPlanesV1.jsx` (mostrar zona)
+- `frontend/src/pages/DashboardPage/components/v1.0/ListadoPlanes.jsx` (mostrar zona)
+- `frontend/src/pages/DashboardPage/components/v1.0/PlanesPorCobrador.jsx` (mostrar zona)
+- `frontend/src/pages/DashboardPage/components/GestionPlanesV1/hooks/usePlanV1Form.js` (validar zona integrantes)
+- `frontend/src/services/personasService.js` (actualizar métodos)
+- `frontend/src/components/ReciboDetalleModal.jsx` (mostrar zona)
+- Otros listados/componentes que muestren personas
+
+**Estimación:** 8-12 horas
+  - Migración BD + modelo: 0.5h
+  - Backend (controllers/routes): 1h
+  - Formatter utility: 0.5h
+  - Formularios afiliados (2-3 componentes): 2-3h
+  - Listados y tablas (5-8 componentes): 2-3h
+  - Búsqueda/filtros: 1-1.5h
+  - Testing y ajustes: 1.5-2h
+
+**Prioridad:** 🟡 Media — Nueva característica que amplía modelo de datos, requiere cambios transversales
+
+**Estado:** ✅ Solucionado (2026-04-21)
+
+**Implementación Completada (2026-04-21) - Corrección:**
+1. ✅ Migración 2.0.10 corregida: `backend/src/migrations/versions/2.0.10_zona_planes/` (renombrada, ahora agrega zona a tabla `planes`, no `personas`)
+2. ✅ Modelo Sequelize: removido `zona` de `backend/src/models/Persona.js`, agregado a `backend/src/models/PlanV1.js`
+3. ✅ Backend controller: agregado `zona` a destructuring y creación en `planesController.js::crear()`, agregado a `camposPermitidos` en `actualizar()`
+4. ✅ Frontend form state: agregado `zona: 0` a `INITIAL_FORM` e inicialización en `usePlanV1Form.js`
+5. ✅ Frontend form field: agregado campo zona en `PlanV1Modal.jsx` tab "Datos Generales" con validación 0-99 y formatZona preview
+6. ✅ Frontend visualización: agregada columna Zona a tabla de planes en `GestionPlanesV1.jsx`
+7. ✅ Frontend limpieza: removido campo zona de `AfiladoSearchModal.jsx`, `AfiladoEditModal.jsx`, y columna Zona de `BusquedaAfiliados.jsx`
+8. ✅ Formatter utility: reutilización de `formatZona()` ya existente en `frontend/src/utils/formatters.js`
+
+**Commits:**
+- 424b5ba - refactor(BACKLOG-028): corregir migración - zona en planes, no en personas
+- 9fc89c7 - refactor(BACKLOG-028): quitar zona de Persona, agregar a PlanV1 y controller
+- 74f6468 - refactor(BACKLOG-028): agregar campo zona al formulario y tabla de planes
+- 89c85cb - refactor(BACKLOG-028): quitar zona de formularios y tabla de afiliados
+
+---
+
+### BACKLOG-031: Implementar Paginación en Listados (>10 registros)
+
+**Descripción:**
+Todos los listados de datos (planes, afiliados, cobradores, obras sociales, servicios adicionales, tipos de grupo, tipos de plan, bugs) deben mostrar paginación cuando el número total de registros exceda 10 elementos. La paginación debe ser con componente reutilizable, manejo de estado por página, y controles visuales intuitivos.
+
+**Análisis de Diseño:**
+
+a. **Estado actual (problemas identificados):**
+   - GestionPlanesV1.jsx: `.slice(0, ITEMS_PER_PAGE)` mostrando solo primeros 20 registros, sin navegación
+   - LookupCRUD.jsx: `.slice(0, ITEMS_PER_PAGE)` mostrando solo primeros 20 registros, sin navegación
+   - BusquedaAfiliados.jsx: sin paginación, carga todos los resultados
+   - GestionBugs.jsx: `.slice()` basado en índice con paginación hardcodeada
+   - Problema: usuarios no pueden acceder a registros más allá del límite sin scroll masivo o búsqueda
+   - UX pobre: sin indicación de cuántos registros totales hay
+
+b. **Solución propuesta:**
+
+   **Componente Pagination.jsx** (nuevo, reutilizable):
+   ```
+   Props: currentPage, totalPages, totalItems, itemsPerPage, onPageChange
+   Renderiza:
+   - Texto info: "Mostrando X-Y de Z registros"
+   - Botón "Anterior" (disabled si page=1)
+   - Links números de página (1 2 3 ... N)
+   - Botón "Siguiente" (disabled si page=totalPages)
+   - Select "Items per page" (10, 20, 50)
+   Evento: onPageChange(newPage, newItemsPerPage)
+   ```
+
+   **Hook usePagination.js** (nuevo):
+   ```
+   Estado: currentPage, itemsPerPage
+   Calcula: totalPages = Math.ceil(totalItems / itemsPerPage)
+   Retorna: paginatedItems, currentPage, totalPages, handleChangePage, handleChangeItemsPerPage
+   Validación: page siempre >= 1 y <= totalPages
+   ```
+
+   **Actualizar componentes principales:**
+   - GestionPlanesV1.jsx:
+     * Integrar usePagination hook
+     * Mostrar Pagination si planes.length > 10
+     * Usar paginatedItems en lugar de slice(0, 20)
+     * Default ITEMS_PER_PAGE = 15 (entre 10 y 20)
+   
+   - LookupCRUD.jsx:
+     * Integrar usePagination hook
+     * Mostrar Pagination si registros.length > 10
+     * Usar paginatedItems en lugar de slice(0, 20)
+     * Default ITEMS_PER_PAGE = 15
+   
+   - BusquedaAfiliados.jsx:
+     * Integrar usePagination hook si no tiene
+     * Agregar Pagination
+     * Default ITEMS_PER_PAGE = 15
+   
+   - GestionBugs.jsx:
+     * Mantener lógica existente pero mejorar con componente Pagination
+     * Default ITEMS_PER_PAGE = 15
+
+c. **Criterio de activación:**
+   - Si totalItems > 10: mostrar Pagination
+   - Si totalItems <= 10: no mostrar Pagination (toda tabla en una página)
+
+d. **Estilos:**
+   - Componente Pagination.scss con BEM
+   - Centrado en footer de tabla
+   - Botones deshabilitados con opacidad
+   - Números activos resaltados
+   - Select de items con estilos consistentes
+
+e. **Comportamiento:**
+   - Al cambiar filtro/búsqueda: resetear a página 1
+   - Al cambiar items per page: resetear a página 1
+   - Validación: si estoy en página 5 pero ahora hay solo 3 páginas, ir a última
+   - Performance: filtrado en cliente (ya funciona así), paginación post-filtrado
+
+**Archivos a modificar:**
+1. Crear: frontend/src/components/Pagination/Pagination.jsx (nuevo)
+2. Crear: frontend/src/hooks/usePagination.js (nuevo)
+3. Crear: frontend/src/components/Pagination/Pagination.scss (nuevo)
+4. Modificar: GestionPlanesV1.jsx
+5. Modificar: LookupCRUD.jsx
+6. Modificar: BusquedaAfiliados.jsx (si no tiene paginación)
+7. Modificar: GestionBugs.jsx
+
+**Decisiones de diseño:**
+- Default ITEMS_PER_PAGE = 15 (visible sin scroll en mayoría de pantallas)
+- Opciones en select: [10, 15, 20, 50] (usuarios pueden elegir)
+- Números de página máximo 7 visibles (1 2 3 4 5 6 7) luego "... N"
+- Mantener búsqueda/filtros activos al cambiar página
+- Sin paginación en servidor: se hace en cliente (dato pequeño)
+
+---
+
+### BACKLOG-030: Modificar Sección de Soporte en Footer (WhatsApp + Email)
+
+**Descripción:**
+Mejorar la accesibilidad del contacto directo en la landing page. Reemplazar el link "Contacto" con un link directo a WhatsApp (+54 11 3355 2955) y agregar un nuevo link de Email (alejandro.rouiller@gmail.com) en la sección "Soporte" del Footer.
+
+**Requerimientos:**
+
+a. **Cambios en componente Footer (frontend/src/pages/LandingPage/components/Footer/Footer.jsx)**
+   - Sección "Soporte" contiene:
+     - Link "Documentación" (existente, mantener)
+     - Reemplazar "Contacto" por "WhatsApp": URL debe abrir chat de WhatsApp con número +54 11 3355 2955
+       * Usar deep link: `https://wa.me/+541133552955` o `whatsapp://send?phone=+541133552955`
+       * Validar funcionalidad en desktop y mobile
+     - Agregar nuevo link "Email": abre cliente de email del usuario
+       * Usar mailto link: `mailto:alejandro.rouiller@gmail.com`
+
+b. **Estilos (posiblemente Footer.scss)**
+   - Mantener consistencia visual con links existentes
+   - No requiere cambios de styling, solo revisión si es necesario
+
+**Contexto:**
+Facilita contacto rápido y directo de usuarios con soporte mediante canales modernos (WhatsApp para chat instantáneo, Email como alternativa formal). Mejora UX en landing page y accesibilidad del soporte.
+
+**Archivos estimados:**
+- Footer.jsx (cambio principal)
+- Footer.scss (revisión, posiblemente sin cambios)
+
+**Decisiones:**
+- WhatsApp link formato: `https://wa.me/+541133552955` (estándar internacional)
+- Email link formato: `mailto:alejandro.rouiller@gmail.com` (RFC estándar)
+- Sin validación adicional, links son directo a herramientas externas
+- WhatsApp link abre en nueva pestaña (target="_blank", rel="noopener noreferrer")
+
+**Implementación:**
+- ✅ Footer.jsx: reemplazado link "Contacto" por "WhatsApp" + agregado link "Email"
+- ✅ Sección "Soporte" con 3 links: Documentación, WhatsApp, Email
+
+**Commits:**
+- 31ac91a - feat(footer): agregar links WhatsApp y Email en seccion Soporte
+
+---
+
+### BACKLOG-029: Sistema de Gestión de Bugs (Reportes de Problemas)
+
+**Descripción:**
+Implementar un sistema centralizado de reporte y gestión de bugs donde usuarios pueden registrar problemas encontrados con un campo de texto enriquecido (con soporte para imágenes). Los bugs tienen un número único asignado automáticamente por el sistema y flujo de estados (REGISTRADO → DESARROLLADO/DESESTIMADO/CERRADO) controlado por administradores.
+
+**Requerimientos:**
+
+a. **Registro de Bug (por cualquier usuario)**
+   - Acceso: interfaz en menú principal o módulo dedicado
+   - Campo de texto enriquecido: soporte HTML, imágenes, formatos (negrita, cursiva, listas, etc.)
+   - Validación: descripción requerida, mínimo 20 caracteres
+   - Estado inicial: "REGISTRADO" (asignado automáticamente)
+   - Número único: autoincremento, formato: BUGS-0001, BUGS-0002, etc.
+   - Metadatos capturados:
+     - ID de usuario que reporta
+     - Fecha/hora de creación
+     - Campo de reproducción (optional): pasos para reproducir, navegador, versión app, etc.
+
+b. **Gestión de Estado (solo admin)**
+   - Estados posibles: REGISTRADO → DESARROLLADO, REGISTRADO → DESESTIMADO, DESARROLLADO → CERRADO, DESESTIMADO → CERRADO
+   - Cada cambio registra: quién cambió, cuándo, motivo (campo de texto)
+   - Vista admin: botones para cambiar estado con modal de confirmación
+   - Auditoría: historial de cambios de estado visible
+
+c. **Listado de Bugs**
+   - Tabla paginada con: número, resumen (primeras 100 chars), usuario, fecha, estado, acciones
+   - Filtros: por estado, por usuario creador, por rango de fechas
+   - Búsqueda: texto completo en descripción
+   - Ordenamiento: por fecha (desc default), por estado, por usuario
+   - Indicadores visuales: color según estado
+
+d. **Visualización de Detalle**
+   - Descripción HTML completa con imágenes
+   - Información de creador, fecha, estado actual
+   - Historial de cambios de estado (timestamps, admin que cambió, motivo)
+   - Si es admin: botones para cambiar estado
+   - Links relacionados: ninguno por ahora (future: enlazar con tickets, PRs, etc.)
+
+**Impacto Técnico - Base de Datos:**
+
+1. **Nueva tabla: `bugs`**
+   ```sql
+   bugs (
+     id: INT AUTO_INCREMENT PRIMARY KEY,
+     numero: VARCHAR(20) UNIQUE NOT NULL,  -- BUGS-0001, BUGS-0002, etc.
+     usuario_id: INT NOT NULL FK personas.id,
+     titulo: VARCHAR(255),  -- optional resumen
+     descripcion: LONGTEXT NOT NULL,  -- HTML enriquecido
+     pasos_reproduccion: LONGTEXT,  -- optional
+     estado: ENUM('REGISTRADO','DESARROLLADO','DESESTIMADO','CERRADO') DEFAULT 'REGISTRADO',
+     fecha_creacion: TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+     fecha_actualizacion: TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+     navegador_user_agent: VARCHAR(500),  -- optional, capturado en frontend
+     url_origen: VARCHAR(500),  -- optional
+     version_app: VARCHAR(50),  -- optional
+     indice: INT UNIQUE NOT NULL AUTO_INCREMENT  -- para generar número BUGS-XXXX
+   )
+   ```
+
+2. **Tabla de auditoría: `bugs_historial_cambios`**
+   ```sql
+   bugs_historial_cambios (
+     id: INT AUTO_INCREMENT PRIMARY KEY,
+     bug_id: INT NOT NULL FK bugs.id,
+     estado_anterior: ENUM(...),
+     estado_nuevo: ENUM(...),
+     admin_id: INT NOT NULL FK personas.id,  -- admin que realizó el cambio
+     motivo: LONGTEXT,  -- descripción del cambio/cierre
+     fecha_cambio: TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+   )
+   ```
+
+3. **Índices:**
+   - PRIMARY KEY (id)
+   - UNIQUE (numero)
+   - INDEX (usuario_id)
+   - INDEX (estado)
+   - INDEX (fecha_creacion)
+
+**Impacto Técnico - Backend:**
+
+1. **Modelo Sequelize:**
+   - `Bug.js` con relaciones a Usuario (creador)
+   - `BugHistorialCambio.js` con relaciones a Bug y Usuario (admin)
+
+2. **Controller: `bugsController.js`**
+   - `crear(req, res)`: POST /api/bugs → crear bug nuevo, generar número secuencial
+   - `listar(req, res)`: GET /api/bugs → listar bugs con filtros, paginación, búsqueda
+   - `obtener(req, res)`: GET /api/bugs/:id → detalle bug + historial cambios
+   - `cambiarEstado(req, res)`: PUT /api/bugs/:id/estado → cambiar estado (admin only)
+     - Validar transiciones de estado permitidas
+     - Registrar en tabla de auditoría
+     - Notificar a usuario que reportó (opcional: email)
+
+3. **Routes:**
+   - GET `/api/bugs` → admin: todos, usuario: solo los suyos (o públicos si aplica)
+   - GET `/api/bugs/:id` → detail completo
+   - POST `/api/bugs` → crear (cualquier usuario autenticado)
+   - PUT `/api/bugs/:id/estado` → cambiar estado (admin only)
+   - Protección: auth middleware en todas las rutas
+
+4. **Middleware:**
+   - Validación de transiciones de estado (solo cambios permitidos)
+   - Sanitización de HTML en descripción (prevenir XSS)
+   - Rate limiting en crear bug (ej: 5 bugs/hora/usuario para evitar spam)
+
+**Impacto Técnico - Frontend:**
+
+1. **Componentes nuevos:**
+   - `BugsPage.jsx`: página principal con listado
+   - `BugForm.jsx` / `BugReportModal.jsx`: modal o página para registrar bug
+   - `BugDetailModal.jsx`: modal o página de detalle
+   - `BugStateChangeModal.jsx`: modal para admin cambiar estado
+   - `BugList.jsx`: tabla con filtros, búsqueda, paginación
+   - `BugFilters.jsx`: componente de filtros
+
+2. **Editor de texto enriquecido:**
+   - Opciones: Quill, TinyMCE, CKEditor, slate
+   - Criterios de selección:
+     - Soporte de imágenes (embed o upload)
+     - Lightweight
+     - Fácil integración React
+     - Sanitización de HTML (XSS prevention)
+   - Consideraciones de upload de imágenes:
+     - ¿Guardar en BD como base64? (no escalable)
+     - ¿Guardar en carpeta `public/uploads/bugs/`? (más simple, requiere gestión de archivos)
+     - ¿Usar CDN externo? (no en Hostinger shared hosting)
+     - Recomendación: carpeta local con límite de tamaño/cantidad
+
+3. **Estados visuales:**
+   - Badge/color por estado:
+     - REGISTRADO: gris
+     - DESARROLLADO: amarillo
+     - DESESTIMADO: rojo
+     - CERRADO: verde
+
+4. **Acceso:**
+   - Menú principal: opción "Reportar Bug" o "Gestión de Bugs"
+   - Dashboard: módulo "Bugs" similar a Planes, Recibos, etc.
+
+**Decisiones de Diseño (pendientes):**
+
+1. **¿Quién puede ver los bugs?**
+   - Opción A: Solo admin ve todos, usuarios ven los suyos
+   - Opción B: Todos ven todos los bugs (transparencia total)
+   - Opción C: Usuarios ven bugs CERRADOS/DESARROLLADOS, admin ve todos
+   - Recomendación: Opción A (privacidad, menos ruido para usuarios)
+
+2. **¿Qué desencadena cambio de estado?**
+   - Solo admin manual (actual)
+   - ¿Implementar auto-cierre después de N días? (future)
+   - ¿Workflow: REGISTRADO → REVISADO → ASIGNADO → DESARROLLADO? (más complejo, out-of-scope)
+
+3. **¿Imágenes en descripción?**
+   - Upload (requiere gestión de carpetas)
+   - Embed URL externa (más simple)
+   - Copy-paste como base64 (pesado)
+   - Recomendación: Upload local, límite 2MB/imagen, máx 3 imágenes/bug
+
+4. **¿Notificaciones?**
+   - Email a usuario cuando estado cambia? (requiere config de mail)
+   - Notificación en app? (requiere sistema de notificaciones)
+   - Recomendación: v1 sin notificaciones, usuario verifica manualmente
+
+5. **¿Cierre automático?**
+   - Bugs CERRADOS después de 30 días sin actividad? (future)
+   - Bugs DESESTIMADOS después de 90 días? (future)
+   - v1: solo cierre manual
+
+6. **¿Búsqueda full-text?**
+   - Implementar FULLTEXT index en MySQL para búsqueda rápida
+   - Or: búsqueda simple LIKE en descripción
+   - Recomendación: LIKE para v1
+
+**Archivos a crear/modificar:**
+
+Backend (nuevos):
+- `backend/src/migrations/versions/2.0.11_bugs_system/upgrade.sql`
+- `backend/src/migrations/versions/2.0.11_bugs_system/downgrade.sql`
+- `backend/src/models/Bug.js`
+- `backend/src/models/BugHistorialCambio.js`
+- `backend/src/controllers/bugsController.js`
+- `backend/src/routes/bugs.js`
+
+Frontend (nuevos):
+- `frontend/src/pages/BugsPage/BugsPage.jsx`
+- `frontend/src/pages/BugsPage/BugsPage.scss`
+- `frontend/src/pages/BugsPage/components/BugList.jsx`
+- `frontend/src/pages/BugsPage/components/BugFilters.jsx`
+- `frontend/src/pages/BugsPage/modals/BugReportModal.jsx`
+- `frontend/src/pages/BugsPage/modals/BugDetailModal.jsx`
+- `frontend/src/pages/BugsPage/modals/BugStateChangeModal.jsx`
+- `frontend/src/services/bugsService.js`
+
+Frontend (modificar):
+- `frontend/src/App.jsx`: agregar ruta /bugs
+- `frontend/src/pages/DashboardPage/DashboardPage.jsx`: agregar módulo bugs al menú
+- `frontend/src/context/AuthContext.jsx`: si se requieren permisos específicos
+
+**Estimación:**
+- Migración BD + modelos: 1h
+- Backend (controller, routes, validaciones): 3-4h
+- Editor de texto enriquecido (investigación + integración): 2-3h
+- Frontend (componentes, modales, listado, filtros): 4-5h
+- Servicios y integración API: 1-2h
+- Testing y ajustes: 2-3h
+- **Total: 13-18 horas**
+
+**Prioridad:** 🟡 Media — Sistema de reporte útil pero no bloqueante para core
+
+**Estado:** ✅ Solucionado (2026-04-21)
+
+**Implementación:**
+
+**Backend:**
+- ✅ Migración 2.0.11: tabla bugs con id, numero (UNIQUE), usuario_id, titulo, descripcion (LONGTEXT), estado (ENUM), fecha_creacion, fecha_actualizacion
+- ✅ Modelo Bug.js con beforeSave hook actualizando fecha_actualizacion
+- ✅ Registro de modelo en models/index.js con asociación a Usuario
+- ✅ Controller bugsController.js con 4 handlers:
+  - `listar()`: GET /api/v1.0/bugs con filtros estado, usuario_id y búsqueda full-text en titulo/descripcion
+  - `obtener()`: GET /api/v1.0/bugs/:id con include Usuario
+  - `crear()`: POST /api/v1.0/bugs - genera número secuencial BUG-XXXX, estado inicial REGISTRADO, captura usuario_id de JWT
+  - `cambiarEstado()`: PUT /api/v1.0/bugs/:id/estado - solo admin, valida transiciones (REGISTRADO→DESARROLLADO/DESESTIMADO, luego→CERRADO, CERRADO read-only)
+- ✅ Routes v1.0/bugs.js con endpoints protegidos por verifyToken y requireAdmin según corresponda
+
+**Frontend:**
+- ✅ react-quill instalado en package.json (v2.0.0-beta.2)
+- ✅ Service bugsService.js con métodos listar(), obtener(), crear(), cambiarEstado()
+- ✅ Componente GestionBugs.jsx: listado paginado (15 items/page) con tabla mostrando número, título, reportado por, fecha, estado
+  - Filtro por estado (select)
+  - Búsqueda debounced en título/descripción/usuario
+  - Acciones: ver detalle
+- ✅ Modal BugFormModal.jsx:
+  - Campo título (opcional)
+  - Editor ReactQuill para descripción (requerida)
+  - Toolbar: bold, italic, underline, listas ordenadas/bullets, imágenes
+  - Validación: descripción no vacía
+  - Change detection con ConfirmCloseDialog
+- ✅ Modal BugDetalleModal.jsx:
+  - Muestra: número, reportado por, fecha, estado
+  - Título (si existe)
+  - Descripción HTML renderizada con dangerouslySetInnerHTML
+  - Admin-only: botones de transición de estado según estado actual
+  - Transiciones visibles: REGISTRADO→Marcar Desarrollado + Desestimar, DESARROLLADO→Cerrar Bug, DESESTIMADO→Cerrar Bug, CERRADO→read-only
+- ✅ Integración en DashboardPage.jsx:
+  - Importado GestionBugs
+  - Agregado 'gestion-bugs' al menú bajo sección Gestión
+  - Render condicional: `{activeModule === 'gestion-bugs' && <GestionBugs />}`
+- ✅ StatusBadge.scss: agregados estilos para 4 estados:
+  - --registrado: color info
+  - --desarrollado: color warning
+  - --desestimado: color danger
+  - --cerrado: color muted
+
+**Decisiones implementadas:**
+- Todos los usuarios ven todos los bugs (transparencia total en entorno interno)
+- Solo admin puede cambiar estado
+- Números formato BUG-XXXX (secuencial de 4 dígitos)
+- Sin tabla de auditoría en v1 (solo estado actual, sin historial de cambios)
+- Sin notificaciones por email (usuario verifica manualmente)
+- Sin rate limiting en v1
+- Editor Quill con imágenes embebidas como base64
+
+**Commits:**
+- e3b4502 feat(bugs): agregar migración 2.0.11 para tabla bugs
+- e0b328b feat(bugs): agregar modelo Bug y registrar en models/index.js
+- 02da8a4 feat(bugs): agregar controller bugsController.js con 4 handlers
+- a6ceeb5 feat(bugs): agregar routes/v1.0-bugs.js con 4 endpoints
+- c222aac feat(bugs): montar rutas de bugs en index.js
+- fb15bdb feat(bugs): instalar react-quill para editor de texto enriquecido
+- d4d29c8 feat(bugs): agregar bugsService.js
+- 0fd78c5 feat(bugs): agregar GestionBugs.jsx - listado con filtros y paginación
+- 283e56b feat(bugs): agregar modales BugFormModal y BugDetalleModal
+- 94f3c99 style(StatusBadge): agregar estilos para estados de bugs
+- 425f06c feat(bugs): integrar módulo de bugs en DashboardPage
+
+---
+
+### BACKLOG-032: Sistema de Auditoría - Listado de Acceso a Endpoints del Backend
+
+**Descripción:**
+Panel administrativo que registra y visualiza todos los accesos a endpoints del backend. Incluye usuario, fecha/hora, endpoint invocado, parámetros y respuesta. Proporciona trazabilidad completa para auditoría, compliance y detección de actividad sospechosa.
+
+**Requerimientos Funcionales:**
+
+a. **Tabla de Auditoría (Backend)**
+   - Registra: usuario_id, fecha_hora, método_http (GET/POST/PUT/DELETE), endpoint (ruta), parametros_json, status_response, duracion_ms
+   - Índices en: usuario_id, fecha_hora, endpoint para queries eficientes
+   - Retention policy: **configurable** (admin especifica cantidad de días, default 90)
+   - Performance: escritura asíncrona (no bloqueante)
+   - **Habilitación/Deshabilitación:** admin puede activar/desactivar logging sin reiniciar app
+
+b. **Página de Auditoría (Admin-only)**
+   - Tabla paginada con columnas: Usuario | Fecha/Hora | Endpoint | Método | Status | Duración
+   - Filtros: usuario (select), rango de fechas, búsqueda por endpoint
+   - Paginación obligatoria (potencialmente 10k+ registros)
+   - Ordenamiento: por fecha descendente (default)
+   - Exportar a CSV (opcional pero deseable)
+
+c. **Middleware Global (Backend)**
+   - Intercepta TODAS las requests después de autenticación JWT (si logging está HABILITADO)
+   - Captura parámetros de query, body, y ruta
+   - **Sanitización crítica:** NO loguear contraseñas, tokens, datos sensibles completos
+   - Considera excluir ciertos endpoints (health checks, logout)
+   - Manejo de errores: si logging falla, NO debe romper el request
+
+d. **Configuración de Auditoría (Admin UI)**
+   - Nueva sección en "Configuración": "Configuración de Auditoría"
+   - **Toggle:** Habilitar/Deshabilitar auditoría (checkbox on/off) → afecta inmediatamente al middleware
+   - **Campo numérico:** Retención de logs (días) → valores 1-365, default 90
+   - Guardar configuración en tabla `configuracion_app` con tipos `audit_enabled` (booleano) y `audit_retention_days` (integer)
+   - Al cambiar, middleware lee config sin reiniciar (config inyectada en memory o redis check)
+   - Indicador visual: mostrar si auditoría está activa/inactiva
+
+**Requerimientos Técnicos:**
+
+1. **Base de Datos**
+   - Migración 2.0.14: crear tabla `audit_log`
+   - Campos: id (PK), usuario_id (FK), fecha_hora (timestamp), metodo_http (VARCHAR), endpoint (VARCHAR), parametros_json (LONGTEXT), status_response (INT), duracion_ms (INT), created_at
+   - Índices: (usuario_id, fecha_hora), (endpoint), (fecha_hora)
+   - **Configuración:** agregar 2 registros a `configuracion_app`:
+     - `audit_enabled` (tipo: booleano, default: true, valor: 1/0)
+     - `audit_retention_days` (tipo: integer, default: 90, rango: 1-365)
+
+2. **Backend**
+   - Middleware: `middleware/auditMiddleware.js`
+     - Verificar `audit_enabled` al inicio de cada request (verificar en memory cache o configService)
+     - Si está deshabilitado, skip logging y continuar
+     - Si está habilitado, proceder a capturar y loguear asincronamente
+   - Model: `models/AuditLog.js` (Sequelize)
+   - Controller: `controllers/auditController.js` (listar con filtros)
+   - Routes: `routes/audit.js` (GET /audits con auth admin-only)
+   - Escritura asíncrona: usar Redis queue o worker thread
+   - Sanitización: función que reemplaza campos sensibles con [REDACTED]
+   - **Tarea de limpieza:** cron job o trigger que elimina registros más viejos que `audit_retention_days` cada noche
+   - **ConfigService:** agregar métodos para leer y actualizar audit_enabled y audit_retention_days
+
+3. **Frontend**
+   - Página: `pages/DashboardPage/components/AuditLog/AuditLogPage.jsx`
+   - Service: `services/auditService.js`
+   - Componente tabla con paginación (reutilizar Pagination.jsx)
+   - Filtros: usuario select + DateRangePicker + endpoint search
+   - Proteger acceso: validar isAdmin antes de renderizar
+   - **UI de Configuración:** agregar sección en `ConfiguracionNotificaciones.jsx` (o crear nueva página "Configuración > Auditoría")
+     - Toggle checkbox: "Habilitar Auditoría" (lee/escribe audit_enabled)
+     - Input number: "Retención de logs (días)" rango 1-365, default 90 (lee/escribe audit_retention_days)
+     - Validaciones: min=1, max=365, step=1
+     - Indicador: mostrar "Auditoría: ACTIVA" o "Auditoría: INACTIVA" en color (verde/rojo)
+
+**Impacto Técnico:**
+
+| Área | Impacto | Severidad |
+|------|---------|-----------|
+| BD | Nueva tabla, crecimiento rápido (100-500 registros/día), limpieza automática por retención configurable | 🟡 Medio |
+| Backend | Middleware global con check de habilitación, escritura async, sanitización crítica, cron/trigger de limpieza | 🔴 Alto |
+| Performance | Queries de auditoría pueden ser lentas, paginación obligatoria, limpieza nocturna | 🟡 Medio |
+| Seguridad | Exposición de datos sensibles si no se sanitiza correctamente | 🔴 Alto |
+| Privacidad | Retención configurable (default 90 días) cumple GDPR si se configura correctamente | 🟢 Bajo |
+| Frontend | Página + componentes + UI configuración, moderada complejidad | 🟡 Medio |
+
+**Decisiones Resueltas:**
+
+1. ✅ Habilitación/Deshabilitación: **configurable por admin** (toggle en UI, almacenado en configuracion_app)
+2. ✅ Retención: **configurable por admin** (rango 1-365 días, default 90, almacenado en configuracion_app)
+
+**Decisiones Pendientes:**
+
+1. ¿Loguear todos los GET requests o solo mutations (POST/PUT/DELETE)?
+2. ¿Incluir response body o solo status code?
+3. ¿Mostrar todos los parámetros o solo principales? (ej: solo número_afiliado, no cuota completa)
+4. ¿Exportar a CSV disponible?
+5. ¿Auditoría de cambios en tabla audit_log misma? (meta-auditoría)
+6. ¿Rate limiting en queries de auditoría?
+
+**Estimación:**
+
+- Backend: ~4-5 días (middleware con checks, async queue, cron/trigger limpieza, sanitización, configService, testing)
+- Frontend: ~2 días (página auditoría + página configuración, componentes, filtros, toggles, validaciones)
+- Testing: ~1 día (security, performance, edge cases, limpieza nocturna)
+- **Total: ~7-8 días**
+
+**Estado:**
+
+- 📋 Registrado (registrado 2026-04-23)
+- Pendiente de aclaración de requerimientos y decisiones
+
+---
+
+### BACKLOG-033: Estandarizar Estructura de Barras de Filtros en Pantallas de Gestión
+
+**Descripción:**
+Estandarizar la estructura visual y funcional de las barras de filtros/acciones en todas las pantallas de gestión (Planes, Cobradores, Obras Sociales, Servicios Adicionales, Tipos de Grupo, Tipos de Plan). Actualmente cada pantalla tiene una estructura y alineación diferente. El objetivo es mantener consistencia visual y mejorar la usabilidad.
+
+**Requerimientos Funcionales:**
+
+a. **Estructura de Layout**
+   - Título: posicionado arriba (como actualmente existe)
+   - Barra de filtros/acciones: debajo del título
+   - Componentes en la barra:
+     * Caja de búsqueda/filtro (posición: izquierda)
+     * Botones de acciones (nuevo, aumento masivo, etc) (posición: derecha de la búsqueda)
+   - **Alineación vertical:** todos los componentes deben estar alineados al centro (middle/center)
+
+b. **Aplicar en todas las pantallas:**
+   - GestionPlanesV1
+   - Cobradores
+   - ObrasSociales
+   - ServiciosAdicionales
+   - TiposDeGrupo
+   - TiposDePlan
+   - BusquedaAfiliados (si corresponde)
+
+c. **Detalles técnicos:**
+   - Usar flexbox con `display: flex; align-items: center;`
+   - Caja de búsqueda: ancho automático o mínimo según contenido
+   - Botones: gap consistente (1rem) entre componentes
+   - Responsive: en móviles, si no cabe, puede expandirse a dos filas pero manteniendo alineación vertical
+   - Usar componentes existentes: SearchContainer, botones estándar
+
+**Archivos a modificar:**
+
+| Componente | Ubicación |
+|------------|-----------|
+| GestionPlanesV1 | `frontend/src/pages/DashboardPage/components/GestionPlanesV1/GestionPlanesV1.jsx/.scss` |
+| Cobradores | `frontend/src/pages/DashboardPage/components/Cobradores/Cobradores.jsx/.scss` |
+| ObrasSociales | `frontend/src/pages/DashboardPage/components/ObrasSociales/ObrasSociales.jsx/.scss` |
+| ServiciosAdicionales | `frontend/src/pages/DashboardPage/components/ServiciosAdicionales/ServiciosAdicionales.jsx/.scss` |
+| TiposDeGrupo | `frontend/src/pages/DashboardPage/components/TiposDeGrupo/TiposDeGrupo.jsx/.scss` |
+| TiposDePlan | `frontend/src/pages/DashboardPage/components/TiposDePlan/TiposDePlan.jsx/.scss` |
+| BusquedaAfiliados | `frontend/src/pages/DashboardPage/components/v1.0/BusquedaAfiliados.jsx/.scss` (si aplica) |
+
+**Estimación:**
+
+- Por componente: ~30-45 min (análisis de estructura actual + refactoring JSX + actualización SCSS)
+- Total: ~3-4 horas (7 componentes × 30-45 min)
+
+**Estado:**
+
+- ✅ Solucionado (completado 2026-04-24)
+- Implementado en commits: a8ee3a3, 6126445
+- Estructura estándar aplicada a todas las pantallas de gestión
+- SearchContainer con flex: 1 para expandirse hasta los botones
+- Botones alineados a la derecha con gap de 0.75rem
+
+**Cambios Implementados:**
+
+1. **JSX:** Separación de título y barra de filtros
+   - `__title` para el título
+   - `__filters` para el contenedor con búsqueda + botones
+   
+2. **SCSS:** Estilos con flexbox
+   - `display: flex; align-items: center;` en `__filters`
+   - `flex: 1` en SearchContainer para ocupar espacio
+   - `flex: 1` en input-wrapper para expandirse hasta los botones
+   - Gap de 0.75rem entre componentes
+
+3. **Componentes Afectados:**
+   - LookupCRUD (usado por 5 pantallas)
+   - GestionPlanesV1
+   - BusquedaAfiliados
+   - GestionAuditoria
+
+---
+
+## Detalles de Items
+
+### BACKLOG-035: Optimizar Espacio de Trabajo - Sidebar Colapsable y Ocultable
+
+**Descripción General:**
+
+El dashboard actual utiliza espacio subóptimamente. El objetivo es maximizar el área de contenido mediante:
+1. Reducción de márgenes/padding laterales
+2. Menú sidebar con collapse automático (solo un item expandido a la vez)
+3. Capacidad de ocultar el sidebar completamente con un toggle
+
+**Análisis de Implementación:**
+
+#### Parte 1: Reducir espacios muertos (márgenes/padding)
+
+**Ubicación:** `DashboardPage.scss` y componentes de contenido
+
+**Cambios necesarios:**
+```scss
+/* Actual aproximado */
+.dashboard__content {
+  padding: 2rem;  /* 32px a cada lado */
+  max-width: 1400px;
+}
+
+/* Optimizado */
+.dashboard__content {
+  padding: 1.5rem 1rem;  /* 24px arriba/abajo, 16px izquierda/derecha */
+  width: 100%;  /* Remover max-width para usar espacio disponible */
+}
+
+/* También revisar componentes internos */
+.table-wrapper, .form-container, etc. {
+  padding: reducir de 2rem a 1.5rem
+}
+```
+
+**Impacto:** +10-15% espacio horizontal disponible
+
+---
+
+#### Parte 2: Menú sidebar con collapse automático
+
+**Ubicación:** `DashboardPage.jsx` - función `Sidebar`
+
+**Cambio de lógica:**
+```javascript
+// Actual: cada item tiene su estado independiente
+const [expanded, setExpanded] = useState({ 'mi-cuenta': true });
+
+// Optimizado: solo una sección expandida a la vez
+const [expandedSection, setExpandedSection] = useState('mi-cuenta');
+
+const toggleExpand = (key) => {
+  // Si está expandido, cerrarlo; si está cerrado, abrirlo (cerrando otros)
+  setExpandedSection(expandedSection === key ? null : key);
+};
+
+// En render:
+{expanded[item.key] ? ... }  // Actual
+{expandedSection === item.key ? ... }  // Nuevo
+```
+
+**Beneficio:** Mejor navegación, menos scrolling en sidebar
+
+---
+
+#### Parte 3: Ocultar/mostrar sidebar con toggle
+
+**Ubicación:** `DashboardPage.jsx` + `DashboardPage.scss`
+
+**Cambios en JSX:**
+```javascript
+// State existente
+const [sidebarOpen, setSidebarOpen] = useState(false);  // Mobile
+
+// Agregar new state
+const [sidebarCollapsed, setSidebarCollapsed] = useState(false);  // Desktop
+
+// En topbar, agregar botón toggle
+<button 
+  className="dashboard__sidebar-toggle"
+  onClick={() => setSidebarCollapsed(!sidebarCollapsed)}
+  title={sidebarCollapsed ? "Mostrar menú" : "Ocultar menú"}
+>
+  {sidebarCollapsed ? '☰' : '✕'}  // Icons: menu / close
+</button>
+
+// En sidebar, aplicar clase condicional
+<aside className={`dashboard__sidebar${sidebarCollapsed ? ' dashboard__sidebar--collapsed' : ''}`}>
+```
+
+**Cambios en SCSS:**
+```scss
+.dashboard__sidebar {
+  width: 240px;  /* Actual */
+  transition: transform 0.3s ease, width 0.3s ease;
+  
+  &--collapsed {
+    transform: translateX(-100%);  /* Desliza a la izquierda */
+    width: 0;
+    position: absolute;  /* No ocupa espacio */
+    z-index: 1000;  /* Sobre el contenido cuando reaparece */
+  }
+}
+
+.dashboard__sidebar-toggle {
+  position: fixed;
+  left: 1rem;
+  top: 1rem;
+  z-index: 1001;
+  background: $color-primary;
+  color: white;
+  border: none;
+  width: 40px;
+  height: 40px;
+  border-radius: 50%;
+  cursor: pointer;
+  transition: opacity 0.3s ease;
+  
+  &:hover {
+    opacity: 0.8;
+  }
+}
+```
+
+---
+
+**Arquitectura propuesta:**
+
+```
+DashboardPage.jsx
+├── State:
+│   ├── sidebarOpen (mobile toggle) - mantener
+│   ├── sidebarCollapsed (desktop hide) - NUEVO
+│   └── expandedSection (auto-collapse) - CAMBIO
+│
+├── Sidebar (modify)
+│   ├── Usar expandedSection en lugar de expanded obj
+│   ├── Solo una sección expandida a la vez
+│   └── Responder a toggles de collapse
+│
+├── Topbar (modify)
+│   ├── Agregar botón sidebar-toggle
+│   └── Mostrar icono apropiado (☰ o ✕)
+│
+└── CSS updates
+    ├── Reducir padding en .dashboard__content
+    ├── Agregar transform para sidebar collapse
+    ├── Agregar botón toggle con posición fija
+    └── Ajustar z-index y transitions
+```
+
+**Consideraciones técnicas:**
+
+1. **Responsive:** 
+   - Desktop (>1024px): mostrar toggle, permitir collapse
+   - Tablet (768-1024px): toggle puede colapsar
+   - Mobile (<768px): mantener lógica actual (sidebarOpen)
+
+2. **Estado persistente (opcional):**
+   ```javascript
+   useEffect(() => {
+     localStorage.setItem('sidebarCollapsed', sidebarCollapsed);
+   }, [sidebarCollapsed]);
+   
+   useEffect(() => {
+     const stored = localStorage.getItem('sidebarCollapsed');
+     if (stored) setSidebarCollapsed(JSON.parse(stored));
+   }, []);
+   ```
+
+3. **Animaciones:**
+   - Usar `transform: translateX()` en lugar de `display: none` (mejor performance)
+   - Transition de 0.3s para fluidez
+
+4. **Accesibilidad:**
+   - Botón toggle debe ser keyboard-accesible (tab, enter)
+   - ARIA labels: `aria-label="Mostrar/ocultar menú"`
+   - Mantener focus visible
+
+5. **Testing:**
+   - Desktop: verificar que solo una sección está expandida
+   - Desktop: verificar que toggle oculta/muestra sidebar
+   - Mobile: verificar que no se rompe comportamiento actual
+   - Snapshot test para cambios de layout
+
+---
+
+**Estimación:**
+
+| Tarea | Tiempo | Dependencias |
+|-------|--------|---|
+| Reducir márgenes/padding | 30 min | Ninguna |
+| Implementar auto-collapse sidebar | 45 min | Cambio state en DashboardPage |
+| Implementar toggle collapse/show | 1 hora | Cambios anteriores |
+| Testing y refinamiento | 1 hora | Todo lo anterior |
+| **Total** | **~3 horas** | - |
+
+**Archivos a modificar:**
+- `frontend/src/pages/DashboardPage/DashboardPage.jsx` (60-80 líneas)
+- `frontend/src/pages/DashboardPage/DashboardPage.scss` (40-60 líneas)
+- Revisar `frontend/src/pages/DashboardPage/components/*` para reducir padding
+
+**Estado:** 📋 Registrado
+- Análisis completado: ✅
+- Implementación pendiente
+- Estimación: ~3 horas
 
 ---
 

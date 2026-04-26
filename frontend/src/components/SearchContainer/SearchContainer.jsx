@@ -4,7 +4,8 @@ import './SearchContainer.scss';
 function SearchContainer({
   placeholder = 'Buscar...',
   value,
-  onChange
+  onChange,
+  onKeyDown
 }) {
   return (
     <div className="search-container">
@@ -15,6 +16,7 @@ function SearchContainer({
           placeholder={placeholder}
           value={value}
           onChange={(e) => onChange(e.target.value)}
+          onKeyDown={onKeyDown}
           aria-label="Search"
         />
         <span className="search-container__icon">🔍</span>

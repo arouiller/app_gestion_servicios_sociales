@@ -121,6 +121,7 @@ const crear = async (req, res, next) => {
       localidad,
       valor_cuota,
       estado,
+      zona,
     } = req.body;
 
     // Validar que el número de afiliado sea numérico
@@ -154,6 +155,7 @@ const crear = async (req, res, next) => {
       localidad,
       valor_cuota,
       estado: estado || 'ACTIVO',
+      zona: zona ?? 0,
     });
 
     return res.status(201).json({
@@ -212,6 +214,7 @@ const actualizar = async (req, res, next) => {
       'localidad',
       'valor_cuota',
       'estado',
+      'zona',
     ];
 
     const actualizaciones = {};

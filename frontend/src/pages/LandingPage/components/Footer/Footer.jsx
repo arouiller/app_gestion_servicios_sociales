@@ -40,7 +40,8 @@ function Footer() {
             <h4 className="footer__links-title">Soporte</h4>
             <ul className="footer__links">
               <li><a href="#">Documentacion</a></li>
-              <li><a href="#">Contacto</a></li>
+              <li><a href="https://wa.me/+541133552955" target="_blank" rel="noopener noreferrer">WhatsApp</a></li>
+              <li><a href="mailto:alejandro.rouiller@gmail.com">Email</a></li>
             </ul>
           </div>
         </div>

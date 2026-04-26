@@ -1,18 +1,35 @@
 .gestion-planes-v1 {
   padding: 1rem;
 
+  &__title {
+    font-size: 1.75rem;
+    font-weight: 600;
+    margin: 0 0 1.5rem 0;
+  }
+
+  &__filters {
+    display: flex;
+    gap: 0.75rem;
+    margin-bottom: 1.5rem;
+    align-items: center;
+
+    .search-container {
+      margin-bottom: 0;
+      flex-direction: row;
+      flex: 1;
+    }
+
+    .search-container__input-wrapper {
+      flex: 1;
+    }
+  }
+
   &__header {
     display: flex;
     justify-content: space-between;
     align-items: center;
     margin-bottom: 1.5rem;
     gap: 1rem;
-  }
-
-  &__title {
-    font-size: 1.5rem;
-    font-weight: 600;
-    margin: 0;
   }
 
   &__actions {
