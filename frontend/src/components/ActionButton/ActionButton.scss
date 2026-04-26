@@ -1,49 +1,63 @@
-@import '../../styles/colors';
+// No importa _colors.scss — usa CSS custom props directamente
 
 .action-button {
   display: inline-flex;
   align-items: center;
-  gap: 6px;
-  padding: 8px 16px;
+  gap: var(--space-1);
+  padding: 7px 14px;
   border: none;
-  border-radius: 4px;
-  font-size: 14px;
-  font-weight: 500;
+  border-radius: var(--radius-sm);
+  font-size: var(--text-sm);
+  font-weight: var(--font-medium);
+  font-family: var(--font-family);
   cursor: pointer;
-  transition: all 0.2s;
+  transition: all var(--transition-fast);
   white-space: nowrap;
+  line-height: 1.4;
 
   &:disabled {
-    opacity: 0.6;
+    opacity: 0.55;
     cursor: not-allowed;
   }
 
-  // Variants
+  // ── Variantes ──────────────────────────────────────────────────────
   &--primary {
-    background-color: $color-primary;
-    color: $color-white;
+    background-color: var(--color-primary);
+    color: #fff;
 
     &:hover:not(:disabled) {
-      background-color: $color-primary-hover;
+      background-color: var(--color-primary-hover);
     }
   }
 
   &--secondary {
-    background-color: $color-btn-border;
-    color: $color-text;
-    border: 1px solid $color-border;
+    background-color: transparent;
+    color: var(--color-text-light);
+    border: 1px solid var(--color-border);
 
     &:hover:not(:disabled) {
-      background-color: $color-btn-hover-bg;
+      background-color: var(--color-bg-soft);
+      border-color: var(--color-border-strong);
     }
   }
 
   &--danger {
-    background-color: $color-danger;
-    color: $color-white;
+    background-color: var(--color-danger);
+    color: #fff;
 
     &:hover:not(:disabled) {
-      background-color: #c82333;
+      background-color: var(--color-danger-hover);
+    }
+  }
+
+  &--ghost {
+    background: transparent;
+    color: var(--color-primary);
+    border: 1px solid transparent;
+
+    &:hover:not(:disabled) {
+      background-color: var(--color-primary-light);
+      border-color: var(--color-primary-light);
     }
   }
 
@@ -51,32 +65,33 @@
     background: none;
     border: none;
     padding: 6px;
-    color: $color-text;
-    font-size: 16px;
+    color: var(--color-text-muted);
+    font-size: var(--text-md);
 
     &:hover:not(:disabled) {
-      color: $color-primary;
+      color: var(--color-primary);
+      background-color: var(--color-primary-light);
     }
   }
 
-  // Sizes
+  // ── Tamaños ────────────────────────────────────────────────────────
   &--small {
-    padding: 6px 12px;
-    font-size: 12px;
+    padding: 5px 10px;
+    font-size: var(--text-xs);
   }
 
   &--medium {
-    padding: 8px 16px;
-    font-size: 14px;
+    padding: 7px 14px;
+    font-size: var(--text-sm);
   }
 
   &--large {
-    padding: 12px 24px;
-    font-size: 16px;
+    padding: 10px 20px;
+    font-size: var(--text-md);
   }
 
   &__icon {
-    font-size: 16px;
+    font-size: var(--text-md);
   }
 
   &__text {

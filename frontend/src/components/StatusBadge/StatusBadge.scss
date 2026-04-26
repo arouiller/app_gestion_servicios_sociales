@@ -1,50 +1,50 @@
-@import '../../styles/colors';
+// Usa CSS custom props directamente
 
 .status-badge {
   display: inline-block;
   padding: 4px 12px;
-  border-radius: 4px;
-  font-size: 12px;
-  font-weight: 500;
+  border-radius: var(--radius-xs);
+  font-size: var(--text-xs);
+  font-weight: var(--font-medium);
   white-space: nowrap;
 
   &--activo {
-    background-color: $color-success-bg;
-    color: $color-success;
+    background-color: var(--color-success-bg);
+    color: var(--color-success);
   }
 
   &--suspendido {
-    background-color: $color-suspended-bg;
-    color: $color-suspended;
+    background-color: var(--color-danger-bg);
+    color: var(--color-danger);
   }
 
   &--pendiente {
-    background-color: $color-warning-bg;
-    color: #856404;
+    background-color: var(--color-warning-bg);
+    color: var(--color-warning);
   }
 
   &--inactivo {
-    background-color: $color-bg-light;
-    color: $color-text-muted;
+    background-color: var(--color-bg-soft);
+    color: var(--color-text-muted);
   }
 
   &--registrado {
-    background-color: $color-info-bg;
-    color: $color-info;
+    background-color: var(--color-info-bg);
+    color: var(--color-info);
   }
 
   &--desarrollado {
-    background-color: $color-warning-bg;
-    color: $color-warning;
+    background-color: var(--color-warning-bg);
+    color: var(--color-warning);
   }
 
   &--desestimado {
-    background-color: $color-danger-bg;
-    color: $color-danger;
+    background-color: var(--color-danger-bg);
+    color: var(--color-danger);
   }
 
   &--cerrado {
-    background-color: $color-bg-light;
-    color: $color-text-muted;
+    background-color: var(--color-bg-soft);
+    color: var(--color-text-muted);
   }
 }
