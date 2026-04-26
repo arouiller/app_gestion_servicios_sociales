@@ -1,13 +1,13 @@
 // Estilos estándar para tablas en toda la aplicación
 // Proporciona consistencia visual y UX en listados
 
-// Variables estándar
-$table-header-bg: #f8f9fa;
-$table-header-border: #e9ecef;
-$table-row-hover-bg: #f5f5f5;
-$table-row-alternate-bg: #fafafa;
-$table-border-color: #dee2e6;
-$table-text-color: #212529;
+// Variables estándar — mapeadas a CSS custom properties
+$table-header-bg: var(--color-surface-alt);
+$table-header-border: var(--color-border);
+$table-row-hover-bg: var(--color-primary-light);
+$table-row-alternate-bg: var(--color-surface-alt);
+$table-border-color: var(--color-border);
+$table-text-color: var(--color-text);
 $table-padding-y: 0.75rem;
 $table-padding-x: 1rem;
 $table-font-size: 0.95rem;
@@ -90,7 +90,7 @@ $table-font-size: 0.95rem;
 
 // Estilos para celda vacía
 .table-cell-empty {
-  color: #6c757d;
+  color: var(--color-text-muted);
   font-style: italic;
   text-align: center;
 
@@ -116,15 +116,15 @@ $table-font-size: 0.95rem;
   .action-button {
     padding: 0.25rem 0.5rem;
     font-size: 1rem;
-    border: 1px solid #dee2e6;
-    background-color: white;
+    border: 1px solid var(--color-border);
+    background-color: var(--color-surface);
     border-radius: 3px;
     cursor: pointer;
     transition: all 0.2s ease;
 
     &:hover:not(:disabled) {
-      background-color: #f8f9fa;
-      border-color: #adb5bd;
+      background-color: var(--color-surface-alt);
+      border-color: var(--color-border);
     }
 
     &:disabled {
