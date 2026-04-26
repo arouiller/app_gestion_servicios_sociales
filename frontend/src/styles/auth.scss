@@ -5,7 +5,7 @@
   display: flex;
   align-items: center;
   justify-content: center;
-  background: linear-gradient(135deg, #0f4c6a 0%, #1a6b8a 55%, #1e8449 100%);
+  background: var(--gradient-brand);
   padding: 5rem 1rem 2rem;
   position: relative;
   overflow: hidden;
@@ -25,11 +25,11 @@
 .auth-card {
   position: relative;
   z-index: 1;
-  background: #fff;
+  background: var(--color-surface);
   border-radius: 20px;
   padding: 2.75rem 2.5rem;
   width: 100%;
-  box-shadow: 0 24px 64px rgba(0, 0, 0, 0.22);
+  box-shadow: var(--shadow-xl);
   display: flex;
   flex-direction: column;
   align-items: center;
@@ -46,7 +46,7 @@
   &__icon {
     width: 44px;
     height: 44px;
-    background: linear-gradient(135deg, var(--color-primary), var(--color-secondary));
+    background: var(--gradient-brand);
     color: #fff;
     border-radius: 10px;
     display: flex;
@@ -99,15 +99,15 @@
   margin-bottom: 1.25rem;
 
   &--error {
-    background: #fde8e8;
-    border: 1px solid #fca5a5;
-    color: #b91c1c;
+    background: var(--color-danger-bg);
+    border: 1px solid var(--color-danger);
+    color: var(--color-danger);
   }
 
   &--success {
-    background: #dcfce7;
-    border: 1px solid #86efac;
-    color: #15803d;
+    background: var(--color-success-bg);
+    border: 1px solid var(--color-success);
+    color: var(--color-success);
   }
 
   &__icon { font-size: 1rem; flex-shrink: 0; margin-top: 1px; }
@@ -165,7 +165,7 @@
     font-size: 0.95rem;
     font-family: var(--font-family);
     color: var(--color-text);
-    background: #fff;
+    background: var(--color-surface);
     transition: border-color 0.2s, box-shadow 0.2s;
     outline: none;
 
@@ -173,12 +173,12 @@
 
     &:focus {
       border-color: var(--color-primary);
-      box-shadow: 0 0 0 3px rgba(26, 107, 138, 0.12);
+      box-shadow: var(--shadow-focus);
     }
 
     &--error {
-      border-color: #ef4444;
-      &:focus { box-shadow: 0 0 0 3px rgba(239, 68, 68, 0.12); }
+      border-color: var(--color-danger);
+      &:focus { box-shadow: 0 0 0 3px rgba(var(--color-danger-rgb), 0.2); }
     }
 
     &--with-icon { padding-right: 2.75rem; }
@@ -203,7 +203,7 @@
 
   &__error {
     font-size: 0.78rem;
-    color: #ef4444;
+    color: var(--color-danger);
     display: flex;
     align-items: center;
     gap: 0.3rem;
@@ -250,18 +250,18 @@
     background: var(--color-border);
     transition: background 0.3s;
 
-    &--active-weak   { background: #ef4444; }
-    &--active-fair   { background: #f97316; }
-    &--active-strong { background: #22c55e; }
+    &--active-weak   { background: var(--color-danger); }
+    &--active-fair   { background: var(--color-warning); }
+    &--active-strong { background: var(--color-success); }
   }
 
   &__label {
     font-size: 0.75rem;
     font-weight: 600;
 
-    &--weak   { color: #ef4444; }
-    &--fair   { color: #f97316; }
-    &--strong { color: #22c55e; }
+    &--weak   { color: var(--color-danger); }
+    &--fair   { color: var(--color-warning); }
+    &--strong { color: var(--color-success); }
   }
 }
 
@@ -270,7 +270,7 @@
 .auth-submit {
   width: 100%;
   padding: 0.875rem;
-  background: linear-gradient(135deg, var(--color-primary), var(--color-primary-light));
+  background: var(--gradient-brand);
   color: #fff;
   border: none;
   border-radius: 8px;
@@ -289,7 +289,7 @@
   &:hover:not(:disabled) {
     opacity: 0.92;
     transform: translateY(-1px);
-    box-shadow: 0 6px 18px rgba(26, 107, 138, 0.35);
+    box-shadow: 0 6px 18px rgba(var(--color-primary-rgb), 0.35);
   }
 
   &:disabled {
