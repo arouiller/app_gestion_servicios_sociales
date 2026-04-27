@@ -1,6 +1,8 @@
 // Estilos específicos del modal GenerarRecibos
 // Los estilos comunes (modal-overlay, modal-content, btn, form-group) están en _components.scss
 
+@import '../../../../../styles/components';
+
 .modal-content.generar-recibos-modal {
   max-width: 700px;
 }

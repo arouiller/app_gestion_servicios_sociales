@@ -1,6 +1,8 @@
 // Estilos específicos del modal UsuarioForm
 // Los estilos comunes (modal-overlay, modal-content, form-group, btn) están en _components.scss
 
+@import '../../../../styles/components';
+
 .usuario-form-modal {
   &__overlay {
     @extend .modal-overlay;
