@@ -1,40 +1,32 @@
+// Estilos específicos del modal UsuarioForm
+// Los estilos comunes (modal-overlay, modal-content, form-group, btn) están en _components.scss
+
 .usuario-form-modal {
   &__overlay {
-    position: fixed;
-    top: 0;
-    left: 0;
-    right: 0;
-    bottom: 0;
-    background-color: rgba(0, 0, 0, 0.5);
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    z-index: 1000;
+    @extend .modal-overlay;
   }
 
-  background: var(--color-surface);
-  border-radius: 8px;
-  padding: 1.5rem;
+  @extend .modal-content;
   max-width: 500px;
-  width: 90%;
-  box-shadow: var(--shadow-xl);
+  padding: 0; // Remover padding por defecto, usar modal-header/body/footer
 
   &__title {
-    margin: 0 0 1.5rem 0;
+    margin: 0;
     font-size: 1.25rem;
     font-weight: 700;
     color: var(--color-text);
   }
 
   &__field {
+    @extend .form-field;
     margin-bottom: 1.5rem;
 
     label {
       display: block;
-      margin-bottom: 0.5rem;
       font-weight: 600;
       color: var(--color-text);
       font-size: 0.95rem;
+      margin-bottom: 0.5rem;
     }
 
     input {
@@ -63,18 +55,12 @@
   }
 
   &__error {
-    background-color: var(--color-danger-bg);
-    color: var(--color-danger);
-    padding: 0.75rem;
-    border-radius: 6px;
-    margin-bottom: 1rem;
-    font-size: 0.95rem;
-    border: 1px solid var(--color-danger);
+    @extend .error-message;
   }
 
   &__actions {
     display: flex;
-    gap: 1rem;
+    gap: 0.75rem;
     justify-content: flex-end;
   }
 
@@ -116,5 +102,47 @@
       background-color: var(--color-border-strong);
       border-color: var(--color-border-strong);
     }
+  }
+
+  // Estructura del modal
+  &__overlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background-color: rgba(0, 0, 0, 0.5);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    z-index: 1000;
+  }
+
+  // Contenedor principal
+  background: var(--color-surface);
+  border-radius: 8px;
+  width: 90%;
+  box-shadow: var(--shadow-xl);
+  display: flex;
+  flex-direction: column;
+}
+
+// Estructura interna del formulario
+.usuario-form-modal {
+  // El contenido del form va en la estructura nativa de UsuarioFormModal
+  h3 {
+    padding: 1.5rem;
+    margin: 0;
+    font-size: 1.1rem;
+    font-weight: 700;
+    color: var(--color-text);
+    border-bottom: 1px solid var(--color-border);
+  }
+
+  form {
+    padding: 1.5rem;
+    display: flex;
+    flex-direction: column;
+    flex: 1;
   }
 }
