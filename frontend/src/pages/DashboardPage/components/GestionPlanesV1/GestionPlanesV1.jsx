@@ -240,8 +240,9 @@ function GestionPlanesV1() {
                   </td>
                   <td className="table-actions">
                     <div className="action-button-group">
-                      <IconButton
-                        icon="edit"
+                      <ActionButton
+                        variant="primary"
+                        icon="✎"
                         title="Editar"
                         onClick={() => handleEditarPlan(plan)}
                       />

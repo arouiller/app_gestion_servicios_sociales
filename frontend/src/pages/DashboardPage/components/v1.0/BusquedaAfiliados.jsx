@@ -3,6 +3,7 @@ import personasService from '../../../../services/personasService';
 import planesService from '../../../../services/planesV1Service';
 import configService from '../../../../services/configService';
 import PlanV1Modal from '../GestionPlanesV1/modals/PlanV1Modal';
+import ActionButton from '../../../../components/ActionButton/ActionButton';
 import IconButton from '../../../../components/IconButton/IconButton';
 import Pagination from '../../../../components/Pagination/Pagination';
 import useDebounce from '../../../../hooks/useDebounce';
@@ -270,8 +271,9 @@ const BusquedaAfiliados = () => {
                       <td>${plan.valor_cuota || '0.00'}</td>
                       <td className="table-actions">
                         <div className="action-button-group">
-                          <IconButton
-                            icon="edit"
+                          <ActionButton
+                            variant="primary"
+                            icon="✎"
                             title="Editar"
                             onClick={() => handleEditarPlan(plan)}
                           />
