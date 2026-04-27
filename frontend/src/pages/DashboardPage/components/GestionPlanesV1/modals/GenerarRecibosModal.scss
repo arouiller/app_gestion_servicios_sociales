@@ -31,14 +31,14 @@
   align-items: center;
   justify-content: space-between;
   padding: 1.5rem;
-  border-bottom: 1px solid $color-border;
+  border-bottom: 1px solid var(--color-border);
   flex-shrink: 0;
 
   h2 {
     margin: 0;
     font-size: 1.1rem;
     font-weight: 700;
-    color: #111827;
+    color: var(--color-text);
   }
 }
 
@@ -46,14 +46,15 @@
   background: none;
   border: none;
   font-size: 1.1rem;
-  color: #6b7280;
+  color: var(--color-text-muted);
   cursor: pointer;
   line-height: 1;
   padding: 0.2rem;
   flex-shrink: 0;
+  transition: color var(--transition-fast);
 
   &:hover {
-    color: #111827;
+    color: var(--color-text);
   }
 }
 
