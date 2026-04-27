@@ -197,12 +197,12 @@ function GestionPlanesV1() {
               Nuevo Plan
             </ActionButton>
             <ActionButton
-              variant="secondary"
+              variant="primary"
               onClick={() => setBulkUpdateModalOpen(true)}
             >
               Aumento Masivo
             </ActionButton>
-            <ActionButton variant="secondary" onClick={() => setGenerarRecibosModalOpen(true)}>
+            <ActionButton variant="primary" onClick={() => setGenerarRecibosModalOpen(true)}>
               Generar Recibos
             </ActionButton>
           </div>
