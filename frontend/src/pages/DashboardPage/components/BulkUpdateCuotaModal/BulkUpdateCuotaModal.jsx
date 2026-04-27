@@ -244,18 +244,6 @@ function BulkUpdateCuotaModal({ isOpen, onClose, onSuccess }) {
         <div className="modal-content bulk-cuota-modal" onClick={(e) => e.stopPropagation()}>
           <div className="modal-header">
             <h2>Aumento Masivo de Cuotas</h2>
-            <button
-              className="modal-close"
-              onClick={() => {
-                if (hasChanges) {
-                  setShowConfirmClose(true);
-                } else {
-                  onClose?.();
-                }
-              }}
-            >
-              ✕
-            </button>
           </div>
 
         <div className="modal-body">

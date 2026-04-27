@@ -323,18 +323,6 @@ function PlanV1Modal({ mode, planData, onClose, onSave }) {
       <div className="plan-v1-modal">
         <div className="plan-v1-modal__header">
           <h3>{mode === 'crear' ? 'Nuevo Plan' : `Editar Plan: ${formatNumeroAfiliado(planData?.numero_afiliado)}`}</h3>
-          <button
-            className="plan-v1-modal__close"
-            onClick={() => {
-              if (hasChanges) {
-                setShowConfirmClose(true);
-              } else {
-                onClose?.();
-              }
-            }}
-          >
-            ✕
-          </button>
         </div>
 
         <div className="plan-v1-modal__body">

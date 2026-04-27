@@ -208,18 +208,6 @@ function GenerarRecibosModal({ isOpen, onClose, onSuccess }) {
         <div className="modal-content generar-recibos-modal" onClick={(e) => e.stopPropagation()}>
           <div className="modal-header">
             <h2>Generar Recibos</h2>
-            <button
-              className="modal-close"
-              onClick={() => {
-                if (hasChanges) {
-                  setShowConfirmClose(true);
-                } else {
-                  handleClose();
-                }
-              }}
-            >
-              ✕
-            </button>
           </div>
 
         <div className="modal-body">
