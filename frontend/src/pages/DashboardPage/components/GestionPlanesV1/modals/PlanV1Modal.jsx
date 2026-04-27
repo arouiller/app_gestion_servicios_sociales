@@ -572,19 +572,21 @@ function PlanV1Modal({ mode, planData, onClose, onSave }) {
                               title="Servicios"
                             />
                           </td>
-                          <td>
-                            <ActionButton
-                              variant="icon"
-                              icon="✎"
-                              onClick={() => handleIntegranteEdit(integrante.persona_id)}
-                              title="Editar"
-                            />
-                            <ActionButton
-                              variant="icon"
-                              icon="🗑"
-                              onClick={() => handleIntegranteRemove(integrante.persona_id)}
-                              title="Quitar"
-                            />
+                          <td className="table-actions">
+                            <div className="action-button-group">
+                              <ActionButton
+                                variant="icon"
+                                icon="✎"
+                                onClick={() => handleIntegranteEdit(integrante.persona_id)}
+                                title="Editar"
+                              />
+                              <ActionButton
+                                variant="icon"
+                                icon="🗑"
+                                onClick={() => handleIntegranteRemove(integrante.persona_id)}
+                                title="Quitar"
+                              />
+                            </div>
                           </td>
                         </tr>
                       ))}

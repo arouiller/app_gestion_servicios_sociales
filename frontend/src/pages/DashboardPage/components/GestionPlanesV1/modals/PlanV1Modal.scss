@@ -321,4 +321,18 @@
     font-size: 0.875rem;
   }
 
+  // Estilos para acciones en tablas dentro del modal
+  .table-actions {
+    text-align: right;
+    white-space: nowrap;
+    width: auto;
+  }
+
+  .action-button-group {
+    display: flex;
+    gap: 0.5rem;
+    justify-content: flex-end;
+    align-items: center;
+  }
+
 }
