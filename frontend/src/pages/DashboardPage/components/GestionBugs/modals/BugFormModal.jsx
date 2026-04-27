@@ -99,14 +99,6 @@ function BugFormModal({ onClose, onSave }) {
         <div className="bug-form-modal" onClick={(e) => e.stopPropagation()}>
           <div className="bug-form-modal__header">
             <h3 className="bug-form-modal__title">Reportar Bug</h3>
-            <button
-              className="bug-form-modal__close"
-              onClick={handleEscapeWithChanges}
-              type="button"
-              aria-label="Cerrar"
-            >
-              ✕
-            </button>
           </div>
 
           <div className="bug-form-modal__body">

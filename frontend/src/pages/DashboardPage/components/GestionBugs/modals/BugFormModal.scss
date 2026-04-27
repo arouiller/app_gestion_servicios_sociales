@@ -15,9 +15,9 @@
   }
 
   position: relative;
-  background: $color-white;
+  background: var(--color-surface);
   border-radius: 8px;
-  box-shadow: 0 2px 16px rgba(0, 0, 0, 0.15);
+  box-shadow: var(--shadow-xl);
   max-width: 1200px;
   width: 95%;
   max-height: 95vh;
@@ -28,38 +28,22 @@
     display: flex;
     justify-content: space-between;
     align-items: center;
-    padding: 16px 24px;
-    border-bottom: 1px solid $color-border;
+    padding: 1.5rem;
+    border-bottom: 1px solid var(--color-border);
   }
 
   &__title {
     margin: 0;
-    font-size: 18px;
-    font-weight: 600;
-  }
-
-  &__close {
-    background: none;
-    border: none;
-    font-size: 24px;
-    cursor: pointer;
-    color: $color-text-muted;
-    padding: 0;
-    width: 32px;
-    height: 32px;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-
-    &:hover {
-      color: $color-text;
-    }
+    font-size: 1.1rem;
+    font-weight: 700;
+    color: var(--color-text);
   }
 
   &__body {
     flex: 1;
-    padding: 24px;
+    padding: 1.5rem;
     overflow-y: auto;
+    background: var(--color-bg-soft);
   }
 
   &__error {
@@ -109,17 +93,18 @@
   &__input,
   &__select {
     width: 100%;
-    padding: 8px 12px;
-    border: 1px solid $color-border;
-    border-radius: 4px;
-    font-size: 14px;
+    padding: 0.625rem 0.75rem;
+    border: 1px solid var(--color-border);
+    border-radius: 6px;
+    font-size: 0.95rem;
     font-family: inherit;
-    background: $color-white;
+    background: var(--color-surface);
+    color: var(--color-text);
 
     &:focus {
       outline: none;
-      border-color: $color-primary;
-      box-shadow: 0 0 0 2px rgba($color-primary, 0.1);
+      border-color: var(--color-primary);
+      box-shadow: var(--shadow-focus);
     }
   }
 
@@ -128,33 +113,35 @@
   }
 
   &__quill {
-    background: $color-white;
-    border: 1px solid $color-border;
-    border-radius: 4px;
+    background: var(--color-surface);
+    border: 1px solid var(--color-border);
+    border-radius: 6px;
     display: flex;
     flex-direction: column;
 
     .ql-toolbar {
-      border-top-left-radius: 4px;
-      border-top-right-radius: 4px;
-      border-bottom: 1px solid $color-border;
+      border-top-left-radius: 6px;
+      border-top-right-radius: 6px;
+      border-bottom: 1px solid var(--color-border);
+      background: var(--color-surface-alt);
     }
 
     .ql-container {
-      border-bottom-left-radius: 4px;
-      border-bottom-right-radius: 4px;
-      font-size: 14px;
+      border-bottom-left-radius: 6px;
+      border-bottom-right-radius: 6px;
+      font-size: 0.95rem;
       min-height: 300px;
       flex: 1;
+      color: var(--color-text);
     }
   }
 
   &__footer {
     display: flex;
     justify-content: flex-end;
-    gap: 12px;
-    padding: 16px 24px;
-    border-top: 1px solid $color-border;
-    background: $color-bg-light;
+    gap: 0.75rem;
+    padding: 1.5rem;
+    border-top: 1px solid var(--color-border);
+    background: var(--color-surface);
   }
 }
