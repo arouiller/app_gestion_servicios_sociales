@@ -303,6 +303,43 @@ function PlanV1Modal({ mode, planData, onClose, onSave }) {
     updateIntegranteRol(personaId, newRol);
   };
 
+  const handleDragEnd = (result) => {
+    const { source, destination, draggableId } = result;
+
+    // Dropped outside the list
+    if (!destination) {
+      return;
+    }
+
+    // No change in position
+    if (
+      source.droppableId === destination.droppableId &&
+      source.index === destination.index
+    ) {
+      return;
+    }
+
+    // Reorder integrantes array
+    const integrantes = Array.from(form.integrantes);
+    const [removed] = integrantes.splice(source.index, 1);
+    integrantes.splice(destination.index, 0, removed);
+
+    // Update orden field for each integrante
+    const reorderedIntegrantes = integrantes.map((integrante, index) => ({
+      ...integrante,
+      orden: index + 1,
+    }));
+
+    handleFieldChange('integrantes', reorderedIntegrantes);
+  };
+
+  const handleEstadoChange = (personaId, newEstado) => {
+    const updatedIntegrantes = form.integrantes.map((i) =>
+      i.persona_id === personaId ? { ...i, estado: newEstado } : i
+    );
+    handleFieldChange('integrantes', updatedIntegrantes);
+  };
+
   const navigateToFirstError = (errorObj) => {
     for (const tab of TAB_ORDER) {
       const firstErrorField = Object.keys(errorObj).find(f => FIELD_TO_TAB[f] === tab);
