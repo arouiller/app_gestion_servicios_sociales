@@ -1,5 +1,4 @@
 claude_.md
-CLAUDE.md
 docs/*
 # Allow documentation files
 !docs/*.md
