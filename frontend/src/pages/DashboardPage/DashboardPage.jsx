@@ -19,6 +19,7 @@ import ConfiguracionNotificaciones from './components/ConfiguracionNotificacione
 import GestionBugs from './components/GestionBugs/GestionBugs';
 import GestionAuditoria from './components/GestionAuditoria/GestionAuditoria';
 import QueryExecPage from './components/QueryExec/QueryExecPage';
+import ListadosPage from '../ListadosPage/ListadosPage';
 import configService from '../../services/configService';
 import './DashboardPage.scss';
 
@@ -42,6 +43,7 @@ function buildMenu(isAdmin) {
         { key: 'busqueda-afiliados', label: 'Búsqueda de Afiliados' },
         { key: 'gestion-planes-v1', label: 'Gestión de Planes' },
         { key: 'gestion-recibos', label: 'Gestión de Recibos' },
+        { key: 'listados', label: 'Listados' },
         { key: 'cobradores', label: 'Cobradores' },
         { key: 'obras-sociales', label: 'Obras Sociales' },
         { key: 'servicios-adicionales', label: 'Servicios Adicionales' },
@@ -260,6 +262,7 @@ function DashboardPageContent() {
             </GestionPlanesV1ErrorBoundary>
           )}
           {activeModule === 'gestion-recibos' && <RecibosPage />}
+          {activeModule === 'listados' && <ListadosPage />}
           {activeModule === 'gestion-bugs' && <GestionBugs />}
           {activeModule === 'auditoria' && <GestionAuditoria />}
           {activeModule === 'herramienta-queries' && <QueryExecPage />}
