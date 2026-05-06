@@ -1,4 +1,5 @@
 import React, { useState, useEffect, useCallback, useMemo, useRef } from 'react';
+import { DragDropContext, Droppable, Draggable } from 'react-beautiful-dnd';
 import { usePlanV1Form } from '../hooks/usePlanV1Form';
 import ActionButton from '../../../../../components/ActionButton/ActionButton';
 import { formatNumeroAfiliado, formatZona } from '../../../../../utils/formatters';
@@ -6,7 +7,6 @@ import planesV1Service from '../../../../../services/planesV1Service';
 import planesIntegrantesService from '../../../../../services/planesIntegrantesService';
 import lookupService from '../../../../../services/lookupService';
 import recibosService from '../../../../../services/recibosService';
-import zonaService from '../../../../../services/zonaService';
 import AfiladoSearchModal from './AfiladoSearchModal';
 import AfiladoEditModal from './AfiladoEditModal';
 import ReciboDetalleModal from './ReciboDetalleModal';
@@ -37,7 +37,6 @@ function PlanV1Modal({ mode, planData, onClose, onSave }) {
     obrasSociales: [],
     tiposDeGrupo: [],
   });
-  const [zonas, setZonas] = useState([]);
 
   const [activeTab, setActiveTab] = useState('datos'); // 'datos' | 'afiliados' | 'recibos' | 'historial'
   const [maxAfiliadoNumber, setMaxAfiliadoNumber] = useState(null);
@@ -90,7 +89,6 @@ function PlanV1Modal({ mode, planData, onClose, onSave }) {
   // Load lookups and max affiliate number on mount
   useEffect(() => {
     loadLookupData();
-    loadZonas();
     if (mode === 'crear') {
       loadMaxAfiliadoNumber();
     } else if (mode === 'editar' && planData?.plan_numero) {
@@ -98,15 +96,6 @@ function PlanV1Modal({ mode, planData, onClose, onSave }) {
       loadFullPlanData();
     }
   }, [mode, planData?.plan_numero]);
-
-  const loadZonas = async () => {
-    try {
-      const result = await zonaService.getAll();
-      setZonas(result.data || []);
-    } catch (error) {
-      console.error('Error loading zonas:', error);
-    }
-  };
 
   const loadLookupData = async () => {
     try {
@@ -252,6 +241,17 @@ function PlanV1Modal({ mode, planData, onClose, onSave }) {
             await planesIntegrantesService.actualizar(existing.id, { rol: integrante.rol });
           }
         }
+
+        // Reorder integrantes with updated estado and orden
+        const integrantesWithMeta = form.integrantes.map((integrante, index) => {
+          const existing = existingMap.get(integrante.persona_id);
+          return {
+            id: existing?.id,
+            orden: index + 1,
+            estado: integrante.estado || 'Activo',
+          };
+        });
+        await planesIntegrantesService.reorder(planData.plan_numero, integrantesWithMeta);
       }
 
       onSave();
@@ -314,6 +314,43 @@ function PlanV1Modal({ mode, planData, onClose, onSave }) {
     updateIntegranteRol(personaId, newRol);
   };
 
+  const handleDragEnd = (result) => {
+    const { source, destination, draggableId } = result;
+
+    // Dropped outside the list
+    if (!destination) {
+      return;
+    }
+
+    // No change in position
+    if (
+      source.droppableId === destination.droppableId &&
+      source.index === destination.index
+    ) {
+      return;
+    }
+
+    // Reorder integrantes array
+    const integrantes = Array.from(form.integrantes);
+    const [removed] = integrantes.splice(source.index, 1);
+    integrantes.splice(destination.index, 0, removed);
+
+    // Update orden field for each integrante
+    const reorderedIntegrantes = integrantes.map((integrante, index) => ({
+      ...integrante,
+      orden: index + 1,
+    }));
+
+    handleFieldChange('integrantes', reorderedIntegrantes);
+  };
+
+  const handleEstadoChange = (personaId, newEstado) => {
+    const updatedIntegrantes = form.integrantes.map((i) =>
+      i.persona_id === personaId ? { ...i, estado: newEstado } : i
+    );
+    handleFieldChange('integrantes', updatedIntegrantes);
+  };
+
   const navigateToFirstError = (errorObj) => {
     for (const tab of TAB_ORDER) {
       const firstErrorField = Object.keys(errorObj).find(f => FIELD_TO_TAB[f] === tab);
@@ -335,6 +372,18 @@ function PlanV1Modal({ mode, planData, onClose, onSave }) {
       <div className="plan-v1-modal">
         <div className="plan-v1-modal__header">
           <h3>{mode === 'crear' ? 'Nuevo Plan' : `Editar Plan: ${formatNumeroAfiliado(planData?.numero_afiliado)}`}</h3>
+          <button
+            className="plan-v1-modal__close"
+            onClick={() => {
+              if (hasChanges) {
+                setShowConfirmClose(true);
+              } else {
+                onClose?.();
+              }
+            }}
+          >
+            ✕
+          </button>
         </div>
 
         <div className="plan-v1-modal__body">
@@ -495,17 +544,18 @@ function PlanV1Modal({ mode, planData, onClose, onSave }) {
 
               <div className="plan-v1-modal__field">
                 <label>Zona</label>
-                <select
-                  value={form.zona || ''}
-                  onChange={(e) => handleFieldChange('zona', e.target.value ? parseInt(e.target.value) : 0)}
-                >
-                  <option value="">Sin zona</option>
-                  {zonas.map((zona) => (
-                    <option key={zona.id} value={zona.id}>
-                      {zona.nombre} ({zona.provincia?.nombre})
-                    </option>
-                  ))}
-                </select>
+                <input
+                  type="number"
+                  min="0"
+                  max="99"
+                  value={form.zona}
+                  onChange={(e) => handleFieldChange('zona', parseInt(e.target.value) || 0)}
+                  onBlur={(e) => {
+                    const val = parseInt(e.target.value) || 0;
+                    handleFieldChange('zona', Math.max(0, Math.min(99, val)));
+                  }}
+                  placeholder="00"
+                />
               </div>
 
               <div className="plan-v1-modal__field">
@@ -548,62 +598,93 @@ function PlanV1Modal({ mode, planData, onClose, onSave }) {
                 {form.integrantes.length === 0 ? (
                   <p className="plan-v1-modal__empty">Aún no hay afiliados. Agregá al menos uno.</p>
                 ) : (
-                  <table className="plan-v1-modal__afiliados-tabla">
-                    <thead>
-                      <tr>
-                        <th>Nombre</th>
-                        <th>Apellido</th>
-                        <th>DNI</th>
-                        <th>Rol</th>
-                        <th>Zona</th>
-                        <th>Servicios</th>
-                        <th>Acciones</th>
-                      </tr>
-                    </thead>
-                    <tbody>
-                      {form.integrantes.map((integrante) => (
-                        <tr key={integrante.persona_id}>
-                          <td>{integrante.persona?.nombre}</td>
-                          <td>{integrante.persona?.apellido}</td>
-                          <td>{integrante.persona?.numero_documento}</td>
-                          <td>
-                            <select
-                              value={integrante.rol}
-                              onChange={(e) => handleRolChange(integrante.persona_id, e.target.value)}
-                            >
-                              <option value="titular">Titular</option>
-                              <option value="adherente">Adherente</option>
-                            </select>
-                          </td>
-                          <td>
-                            <ActionButton
-                              variant="icon"
-                              icon="⚙️"
-                              onClick={() => integrante.id && setServiciosModalOpen(integrante.id)}
-                              disabled={!integrante.id}
-                              title="Servicios"
-                            />
-                          </td>
-                          <td className="table-actions">
-                            <div className="action-button-group">
-                              <ActionButton
-                                variant="icon"
-                                icon="✎"
-                                onClick={() => handleIntegranteEdit(integrante.persona_id)}
-                                title="Editar"
-                              />
-                              <ActionButton
-                                variant="icon"
-                                icon="🗑"
-                                onClick={() => handleIntegranteRemove(integrante.persona_id)}
-                                title="Quitar"
-                              />
-                            </div>
-                          </td>
+                  <DragDropContext onDragEnd={handleDragEnd}>
+                    <table className="plan-v1-modal__afiliados-tabla">
+                      <thead>
+                        <tr>
+                          <th>Orden</th>
+                          <th>Nombre</th>
+                          <th>Apellido</th>
+                          <th>DNI</th>
+                          <th>Rol</th>
+                          <th>Estado</th>
+                          <th>Servicios</th>
+                          <th>Acciones</th>
                         </tr>
-                      ))}
-                    </tbody>
-                  </table>
+                      </thead>
+                      <Droppable droppableId="afiliados">
+                        {(provided, snapshot) => (
+                          <tbody
+                            {...provided.droppableProps}
+                            ref={provided.innerRef}
+                            className={snapshot.isDraggingOver ? 'dragging-over' : ''}
+                          >
+                            {form.integrantes.map((integrante, index) => (
+                              <Draggable key={integrante.persona_id} draggableId={String(integrante.persona_id)} index={index}>
+                                {(provided, snapshot) => (
+                                  <tr
+                                    ref={provided.innerRef}
+                                    {...provided.draggableProps}
+                                    {...provided.dragHandleProps}
+                                    className={snapshot.isDragging ? 'dragging' : ''}
+                                  >
+                                    <td>{index + 1}</td>
+                                    <td>{integrante.persona?.nombre}</td>
+                                    <td>{integrante.persona?.apellido}</td>
+                                    <td>{integrante.persona?.numero_documento}</td>
+                                    <td>
+                                      <select
+                                        value={integrante.rol}
+                                        onChange={(e) => handleRolChange(integrante.persona_id, e.target.value)}
+                                      >
+                                        <option value="titular">Titular</option>
+                                        <option value="adherente">Adherente</option>
+                                      </select>
+                                    </td>
+                                    <td>
+                                      <select
+                                        value={integrante.estado || 'Activo'}
+                                        onChange={(e) => handleEstadoChange(integrante.persona_id, e.target.value)}
+                                      >
+                                        <option value="Activo">Activo</option>
+                                        <option value="Suspendido">Suspendido</option>
+                                        <option value="Eliminado">Eliminado</option>
+                                        <option value="Promocion">Promoción</option>
+                                      </select>
+                                    </td>
+                                    <td>
+                                      <ActionButton
+                                        variant="icon"
+                                        icon="⚙️"
+                                        onClick={() => integrante.id && setServiciosModalOpen(integrante.id)}
+                                        disabled={!integrante.id}
+                                        title="Servicios"
+                                      />
+                                    </td>
+                                    <td>
+                                      <ActionButton
+                                        variant="icon"
+                                        icon="✎"
+                                        onClick={() => handleIntegranteEdit(integrante.persona_id)}
+                                        title="Editar"
+                                      />
+                                      <ActionButton
+                                        variant="icon"
+                                        icon="🗑"
+                                        onClick={() => handleIntegranteRemove(integrante.persona_id)}
+                                        title="Quitar"
+                                      />
+                                    </td>
+                                  </tr>
+                                )}
+                              </Draggable>
+                            ))}
+                            {provided.placeholder}
+                          </tbody>
+                        )}
+                      </Droppable>
+                    </table>
+                  </DragDropContext>
                 )}
               </div>
             )}

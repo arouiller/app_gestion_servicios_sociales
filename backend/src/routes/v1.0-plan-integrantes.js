@@ -11,5 +11,6 @@ router.get('/plan/:planNumero', verifyToken, controller.obtenerPorPlan);
 router.post('/', verifyToken, requireAdmin, controller.crear);
 router.put('/:id', verifyToken, requireAdmin, controller.actualizar);
 router.delete('/:id', verifyToken, requireAdmin, controller.eliminar);
+router.post('/reorder', verifyToken, requireAdmin, controller.reorder);
 
 module.exports = router;

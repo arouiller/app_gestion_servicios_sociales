@@ -43,6 +43,15 @@ const planesIntegrantesService = {
       throw error;
     }
   },
+
+  // Reordenar integrantes de un plan
+  reorder: async (planNumero, integrantes) => {
+    const { data } = await api.post('/v1.0/plan-integrantes/reorder', {
+      planNumero,
+      integrantes,
+    });
+    return data;
+  },
 };
 
 export default planesIntegrantesService;
