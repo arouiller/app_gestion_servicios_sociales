@@ -241,6 +241,17 @@ function PlanV1Modal({ mode, planData, onClose, onSave }) {
             await planesIntegrantesService.actualizar(existing.id, { rol: integrante.rol });
           }
         }
+
+        // Reorder integrantes with updated estado and orden
+        const integrantesWithMeta = form.integrantes.map((integrante, index) => {
+          const existing = existingMap.get(integrante.persona_id);
+          return {
+            id: existing?.id,
+            orden: index + 1,
+            estado: integrante.estado || 'Activo',
+          };
+        });
+        await planesIntegrantesService.reorder(planData.plan_numero, integrantesWithMeta);
       }
 
       onSave();
