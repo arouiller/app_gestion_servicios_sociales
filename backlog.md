@@ -40,6 +40,10 @@ De cualquier estado → Descartado
 
 | ID | Prioridad | Estado | Descripción | Contexto / Motivo | Archivos estimados |
 |----|-----------|--------|-------------|-------------------|----|
+| BACKLOG-039 | 🔴 Alta | 📋 Registrado | Nueva página de Listados por Zona | Usuario selecciona zona y se genera listado con todos los planes de esa zona. Por cada plan: número, tipo, cuota actual, afiliados (nombre, apellido, fecha nacimiento, edad, DNI). Útil para reportes y análisis por zona geográfica. | ListadosPage.jsx, listadosService.js, migrations (nuevo campo zona en planes), rutas |
+| BACKLOG-038 | 🔴 Alta | 📋 Registrado | Edición de afiliados (planes) - Miembros ordenables con drag & drop | Miembros del plan organizables por drag & drop. El primer miembro es siempre titular. Estados de afiliación: Activo, Suspendido, Eliminado, Promocion. Mejorar UX permitiendo reordenamiento flexible. | PlanV1Modal.jsx, planesController.js, migrations (nuevo campo estado en plan_integrantes, nuevo orden) |
+| BACKLOG-037 | 🔴 Alta | 📋 Registrado | Pantalla de Afiliados (planes) mejorada - Listado completo con zona | Listado paginado de planes con búsqueda por texto. Mostrar: datos actuales + zona. Filtro de texto busca en número de plan, tipo de plan, zona. Mejora navegación y búsqueda de planes específicos. | BusquedaAfiliados.jsx, planesService.js, campos zona en respuesta API |
+| BACKLOG-036 | 🔴 Alta | 📋 Registrado | Entidad Zonas - CRUD con gestión en menú | Zonas como entidad separada con código (NOT NULL, UNIQUE) y nombre. CRUD completo en nueva pantalla de gestión. Link en menú Administración. Base para filtros por zona en planes y listados. Requiere migración BD, modelo Sequelize, endpoints API, página CRUD. | migrations/v2.0.x, Zona model, zonaController.js, zonasService.js, GestionZonas.jsx, DashboardPage.jsx (menú) |
 | BACKLOG-035 | 🔴 Alta | ✅ Solucionado | Optimizar espacio de trabajo: sidebar colapsable y ocultable | (1) Reducir márgenes/padding a izquierda y derecha. (2) Menú sidebar con collapse automático (expandir item → colapsan otros). (3) Botón/icono para ocultar sidebar completamente a la izquierda, con toggle para reabrirlo. Mejora UX permitiendo máximo espacio para contenido. | DashboardPage.jsx, DashboardPage.scss, Sidebar component |
 | BACKLOG-034 | 🔴 Alta | ✅ Solucionado | Herramienta de Ejecución de Queries SQL (Admin Only) | Administrador puede ingresar queries SQL (SELECT, INSERT, UPDATE, DELETE), ejecutarlas y ver resultados. Útil para auditoría, diagnóstico, análisis de datos y correcciones de BD. Prohibidas operaciones DROP, ALTER, CREATE. Con límite de resultados (1000) y logging de ejecución. | queryExecController.js, admin.js, QueryExecPage.jsx, queryExecService.js |
 | BACKLOG-033 | 🟡 Media | ✅ Solucionado | Estandarizar estructura de barras de filtros en pantallas de gestión | Estructura estándar implementada: título arriba, debajo barra de filtros con búsqueda (izquierda expandida) + botones (derecha). Todos alineados verticalmente al centro. Aplicado en todas las pantallas de gestión con flexbox y BEM. | GestionPlanesV1.jsx, LookupCRUD.jsx, BusquedaAfiliados.jsx, GestionAuditoria.jsx, SCSS |
@@ -3749,6 +3753,289 @@ DashboardPage.jsx
 - Análisis completado: ✅
 - Implementación pendiente
 - Estimación: ~3 horas
+
+---
+
+### BACKLOG-036: Entidad Zonas - CRUD con gestión en menú
+
+**Descripción:**
+Crear entidad "Zonas" como tabla separada en la BD con código y nombre. Actualmente las zonas son números simples en el campo `zona` de los planes. Esta refactorización permite:
+- Gestión centralizada de zonas
+- Validación de integridad referencial
+- Filtros por zona en otras pantallas
+- Reportes y análisis segmentado por zona
+
+**Requerimientos:**
+
+1. **Modelo y Migración BD**
+   - Nueva tabla: `zonas`
+   - Campos:
+     * `id` (PK, INT)
+     * `codigo` (STRING, NOT NULL, UNIQUE) - ej: "Z001", "ZONA_01"
+     * `nombre` (STRING, NOT NULL) - ej: "Zona Centro", "Zona Norte"
+     * `activo` (BOOLEAN, default: true)
+     * `created_at`, `updated_at` (TIMESTAMP)
+   - Relación: `Plan` has many `Zona` (1:N) - agregar FK `zona_id` en tabla `plan_integrantes`
+   - Migración: nueva versión secuencial (ej: v2.0.x)
+
+2. **Backend API**
+   - Modelo Sequelize: `models/Zona.js`
+   - Controller: `zonaController.js` con CRUD completo
+   - Routes: `GET /api/zonas`, `POST /api/zonas`, `PUT /api/zonas/:id`, `DELETE /api/zonas/:id`
+   - Validación: codigo único, no permitir eliminación si hay planes asociados (cascade option)
+
+3. **Frontend CRUD**
+   - Nueva página: `GestionZonas.jsx`
+   - Modal CRUD: `ZonaFormModal.jsx`
+   - Tabla de listado con: código, nombre, estado
+   - Acciones: editar, habilitar/deshabilitar, eliminar (con confirmación)
+   - Integración en menú: agregar link en sección "Administración"
+
+4. **Migración de datos (opcional)**
+   - Detectar zonas existentes en campo `zona` de `plan_integrantes`
+   - Crear registros en tabla `zonas` automáticamente
+   - Mapear FK `zona_id` en los planes
+
+**Archivos a crear/modificar:**
+- `backend/src/migrations/versions/v2.0.x_zonas/` (upgrade.sql, downgrade.sql)
+- `backend/src/models/Zona.js` (nuevo)
+- `backend/src/controllers/zonaController.js` (nuevo)
+- `backend/src/routes/admin.js` (agregar rutas de zonas)
+- `frontend/src/pages/DashboardPage/components/GestionZonas/` (nuevo)
+- `frontend/src/pages/DashboardPage/components/GestionZonas/ZonaFormModal.jsx` (nuevo)
+- `frontend/src/services/zonaService.js` (nuevo)
+- `frontend/src/pages/DashboardPage/DashboardPage.jsx` (agregar link en menú)
+- `backend/src/models/PlanIntegrante.js` (agregar FK zona_id)
+
+**Dependencias:**
+- BACKLOG-036 es prerequisito para BACKLOG-037, BACKLOG-038, BACKLOG-039
+
+**Estimación:** ~6 horas
+- Migración BD: 1 hora
+- Modelo + API: 1.5 horas
+- Frontend CRUD: 2 horas
+- Testing + integración: 1.5 horas
+
+**Prioridad:** 🔴 Alta — Prerequisito para otros requerimientos
+
+**Estado:** 📋 Registrado
+
+---
+
+### BACKLOG-037: Pantalla de Afiliados (planes) mejorada - Listado completo con zona
+
+**Descripción:**
+Mejorar la pantalla de búsqueda de afiliados (planes) para mostrar un listado paginado y filtrable con todos los planes del sistema, incluyendo el nuevo campo "zona".
+
+**Requerimientos:**
+
+1. **Listado Paginado**
+   - Mostrar todos los planes (sin límite de búsqueda previa)
+   - Paginación de 10-20 planes por página
+   - Componente Pagination reutilizable
+
+2. **Búsqueda por Texto**
+   - Campo de búsqueda que filtra en tiempo real (con debounce)
+   - Busca en: número de plan, tipo de plan, zona
+   - Debounce de 2000ms
+
+3. **Columnas del listado**
+   - Número de afiliado / Número de plan
+   - Tipo de plan
+   - **Zona** (nuevo) — relación con tabla Zonas
+   - Cuota actual
+   - Estado (Activo/Suspendido)
+   - Cantidad de integrantes
+   - Acciones (editar, ver detalles)
+
+4. **Filtros adicionales**
+   - Filtro por estado (Activo/Suspendido)
+   - Filtro por zona (dropdown, populate desde tabla zonas)
+   - Reset de filtros
+
+5. **Integración con otros módulos**
+   - Clic en plan abre PlanV1Modal (edición)
+   - Clic en zona puede filtrar por esa zona
+
+**Archivos a modificar:**
+- `frontend/src/pages/DashboardPage/components/BusquedaAfiliados/BusquedaAfiliados.jsx` (refactorizar)
+- `frontend/src/services/planesService.js` (agregar método getPlanes con filtros)
+- Backend: `backend/src/controllers/planesController.js` - agregar filtros en GET /api/planes
+
+**Dependencias:**
+- BACKLOG-036 (Zonas) debe estar completado
+
+**Estimación:** ~4 horas
+- Backend filtros: 1.5 horas
+- Frontend listado: 1.5 horas
+- Integración + styling: 1 hora
+
+**Prioridad:** 🔴 Alta
+
+**Estado:** 📋 Registrado
+
+---
+
+### BACKLOG-038: Edición de afiliados (planes) - Miembros ordenables con drag & drop
+
+**Descripción:**
+Mejorar la modal de edición de planes para permitir reordenamiento de miembros mediante drag & drop, definición de titular, y gestión de estados de afiliación.
+
+**Requerimientos:**
+
+1. **Drag & Drop de Miembros**
+   - Implementar librería (react-beautiful-dnd o react-dnd)
+   - Miembros reordenables en lista
+   - Reorder se persiste en BD
+
+2. **Designación de Titular**
+   - El primer miembro de la lista es siempre "Titular"
+   - Puede reasignarse moviendo otro miembro al primer lugar
+   - Persiste en BD
+
+3. **Estados de Afiliación**
+   - Nuevo campo `estado` en tabla `plan_integrantes`
+   - Estados: 
+     * Activo (✓ default)
+     * Suspendido (⊘)
+     * Eliminado (✕)
+     * Promocion (★)
+   - Selector por afiliado con estado actual
+   - Cambio de estado se persiste en BD
+   - Visual diferenciado por estado (colores, iconos)
+
+4. **UI/UX**
+   - Sección "Miembros" en modal PlanV1Modal
+   - Tabla/lista con: foto (si existe), nombre, apellido, estado, acciones
+   - Drag handle (⋮⋮) a la izquierda de cada fila
+   - Dropdown de estado por miembro
+   - Botón para agregar miembro (mantener funcionalidad actual)
+   - Validación: no permitir reordenamiento si plan está suspendido
+
+5. **Backend**
+   - Nueva migración para campo `estado` en `plan_integrantes`
+   - Nuevo campo `orden` (INT) para guardar posición de miembros
+   - Endpoints de actualización:
+     * `PUT /api/planes/:id/miembros` - reordenar + actualizar estados
+     * Validar en controlador que el primer miembro tiene orden 1
+
+**Archivos a crear/modificar:**
+- `backend/src/migrations/versions/v2.0.x_plan_integrantes_estado/` (agregar campos estado, orden)
+- `backend/src/models/PlanIntegrante.js` (agregar campos)
+- `backend/src/controllers/planesController.js` (agregar endpoint PUT /miembros)
+- `frontend/src/pages/DashboardPage/components/PlanV1Modal/PlanV1Modal.jsx` (sección miembros)
+- `frontend/src/pages/DashboardPage/components/PlanV1Modal/MiembrosEditor.jsx` (nuevo - drag & drop)
+- `frontend/src/pages/DashboardPage/components/PlanV1Modal/MiembrosEditor.scss` (nuevo)
+- `package.json` - agregar librería drag & drop
+
+**Dependencias:**
+- BACKLOG-036 (Zonas) debe estar completado
+- React Beautiful DND o similar
+
+**Estimación:** ~6 horas
+- Migración BD + backend: 1.5 horas
+- Componente drag & drop: 2.5 horas
+- Estados + validación: 1.5 horas
+- Testing: 0.5 horas
+
+**Prioridad:** 🔴 Alta
+
+**Estado:** 📋 Registrado
+
+---
+
+### BACKLOG-039: Nueva página de Listados por Zona
+
+**Descripción:**
+Crear una nueva página de "Listados" donde el usuario selecciona una zona y genera un reporte/listado completo de todos los planes de esa zona con información detallada de afiliados.
+
+**Requerimientos:**
+
+1. **Selección de Zona**
+   - Dropdown o select con todas las zonas (populate desde tabla Zonas)
+   - Por defecto: sin selección (botón "Generar" deshabilitado)
+   - Una vez seleccionada: se habilita el botón "Generar"
+
+2. **Contenido del Listado**
+   - Por cada plan de la zona seleccionada:
+     * Número de plan
+     * Tipo de plan
+     * Cuota actual
+     * Estado del plan
+   
+   - Por cada afiliado del plan:
+     * Nombre y apellido
+     * Fecha de nacimiento
+     * Edad (calculada)
+     * DNI (número_documento)
+     * Estado de afiliación (si está implementado en BACKLOG-038)
+
+3. **Formato del Listado**
+   - Tabla o lista anidada (planes como secciones, afiliados como subelementos)
+   - Opción de "Expandir todo" / "Contraer todo"
+   - Opción de imprimir (PDF o formato imprimible)
+   - Opción de exportar (CSV o Excel)
+
+4. **Filtros opcionales**
+   - Filtro por tipo de plan (si se selecciona zona)
+   - Filtro por estado del plan (Activo/Suspendido)
+   - Búsqueda rápida dentro del listado
+
+5. **Performance**
+   - Lazy load de planes si hay muchos
+   - Paginación interna si es necesario
+   - Caché de listados generados (opcional)
+
+**Archivos a crear/modificar:**
+- `frontend/src/pages/DashboardPage/components/ListadosPage/` (nuevo)
+- `frontend/src/pages/DashboardPage/components/ListadosPage/ListadosPage.jsx` (nuevo)
+- `frontend/src/pages/DashboardPage/components/ListadosPage/ListadosPage.scss` (nuevo)
+- `frontend/src/pages/DashboardPage/components/ListadoZonaDetalle.jsx` (nuevo - componente de tabla detallada)
+- `frontend/src/services/listadosService.js` (nuevo)
+- `frontend/src/pages/DashboardPage/DashboardPage.jsx` (agregar ruta/componente)
+- Backend: `backend/src/controllers/listadosController.js` (nuevo - endpoint GET /api/listados/zona/:zonaId)
+
+**Backend Endpoint**
+- `GET /api/listados/zona/:zonaId` - retorna todos los planes + afiliados de una zona
+- Response structure:
+  ```json
+  {
+    "zona": { "id": 1, "codigo": "Z001", "nombre": "Zona Centro" },
+    "planes": [
+      {
+        "id": 1,
+        "numero": "P001",
+        "tipo_plan": "Premium",
+        "cuota_actual": 5000,
+        "estado": "activo",
+        "integrantes": [
+          {
+            "nombre": "Juan",
+            "apellido": "Pérez",
+            "fecha_nacimiento": "1985-03-15",
+            "edad": 39,
+            "numero_documento": "12345678",
+            "estado": "Activo"
+          }
+        ]
+      }
+    ]
+  }
+  ```
+
+**Dependencias:**
+- BACKLOG-036 (Zonas) debe estar completado
+- BACKLOG-037 (Listado de planes) seria recomendable
+- Librerías opcionales: jsPDF/pdfkit (exportar PDF), xlsx (exportar Excel)
+
+**Estimación:** ~5 horas
+- Frontend: 2.5 horas
+- Backend endpoint: 1.5 horas
+- Exportación (opcional): 1 hora
+
+**Prioridad:** 🔴 Alta — Requerimiento core de reportes
+
+**Estado:** 📋 Registrado
 
 ---
 
