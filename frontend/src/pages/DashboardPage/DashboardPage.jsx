@@ -19,6 +19,7 @@ import ConfiguracionNotificaciones from './components/ConfiguracionNotificacione
 import GestionBugs from './components/GestionBugs/GestionBugs';
 import GestionAuditoria from './components/GestionAuditoria/GestionAuditoria';
 import QueryExecPage from './components/QueryExec/QueryExecPage';
+import GestionProvinciasZonas from './components/GestionProvinciasZonas/GestionProvinciasZonas';
 import configService from '../../services/configService';
 import './DashboardPage.scss';
 
@@ -76,6 +77,7 @@ function buildMenu(isAdmin) {
         { key: 'gestion-usuarios', label: 'Gestión de Usuarios' },
         { key: 'configuracion-notificaciones', label: 'Configuración UI' },
         { key: 'migraciones-bd', label: 'Migraciones BD' },
+        { key: 'provincias-zonas', label: 'Provincias y Zonas' },
       ],
     });
   }
@@ -299,6 +301,7 @@ function DashboardPageContent() {
           {activeModule === 'servicios-adicionales' && <ServiciosAdicionales />}
           {activeModule === 'tipos-de-grupo' && <TiposDeGrupo />}
           {activeModule === 'tipos-de-plan' && <TiposDePlan />}
+          {activeModule === 'provincias-zonas' && <GestionProvinciasZonas />}
           {!activeModule && <Bienvenida user={user} />}
         </main>
       </div>
