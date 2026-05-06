@@ -25,17 +25,13 @@ Un bug solo puede pasar a estado solucionado, Descartado a traves del pedido exp
 
 ## Registros Activos
 
-Actualmente hay 3 bugs activos: 1 en análisis en gestión de recibos, 1 crítico con dependencias, 1 en resolución.
+Actualmente hay 1 bug activo: 1 crítico en análisis con dependencias.
 
 ### Historial reciente (últimos 7 días)
 
 | ID | Severidad | Fase | Descripción | Reportado | Estado |
 |----|-----------|------|-------------|-----------|--------|
-| BUG-027 | 🟡 IMPORTANTE | BACKLOG-014 | Listado de Recibos: obra social no aparece en lista (pero sí en detalle) | 2026-04-24 | ✅ Solucionado |
-| BUG-026 | 🔴 CRÍTICO | BACKLOG-014 | Gestión de Recibos: período Abril 2026 muestra "No hay recibos" pese a tener 12 registrados | 2026-04-24 | ✅ Solucionado |
 | BUG-025 | 🔴 CRÍTICO | BACKLOG-024 | npm install falló: conflicto de versiones al agregar 22 dependencias explícitamente | 2026-04-18 | 🔬 En análisis |
-| BUG-024 | 🔴 CRÍTICO | BACKLOG-N/A | Migraciones BD - Tab "Estadísticas" muestra página en blanco | 2026-04-18 | ✅ Solucionado |
-| BUG-019 | 🔴 CRÍTICO | BACKLOG-014 | Gestión de Recibos: seleccionar período con recibos devuelve array vacío | 2026-04-16 | ✅ Solucionado |
 
 ---
 
@@ -43,6 +39,10 @@ Actualmente hay 3 bugs activos: 1 en análisis en gestión de recibos, 1 crític
 
 | ID | Fase | Descripción | Resuelto | Commits |
 |----|------|-------------|----------|---------|
+| BUG-027 | BACKLOG-014 | Listado de Recibos: obra social no aparece en lista (pero sí en detalle) | 2026-05-06 | (cerrado por usuario) |
+| BUG-026 | BACKLOG-014 | Gestión de Recibos: período Abril 2026 muestra "No hay recibos" pese a tener 12 registrados | 2026-05-06 | (cerrado por usuario) |
+| BUG-024 | BACKLOG-N/A | Migraciones BD - Tab "Estadísticas" muestra página en blanco | 2026-05-06 | (cerrado por usuario) |
+| BUG-019 | BACKLOG-014 | Gestión de Recibos: seleccionar período con recibos devuelve array vacío | 2026-05-06 | (cerrado por usuario) |
 | BUG-023 | BACKLOG-019 | Eliminación cascada de Cobrador: error notNull Violation (modelo Sequelize no permitía NULL) | 2026-04-17 | 8879462 |
 | BUG-022 | BACKLOG-019 | Eliminación cascada de Tipo de Plan: error notNull Violation (modelo Sequelize no permitía NULL) | 2026-04-17 | 8879462 |
 | BUG-021 | BACKLOG-019 | Eliminación cascada de Tipo de Grupo: error notNull Violation (modelo Sequelize no permitía NULL) | 2026-04-17 | 8879462 |
