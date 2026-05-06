@@ -6,6 +6,7 @@ import planesV1Service from '../../../../../services/planesV1Service';
 import planesIntegrantesService from '../../../../../services/planesIntegrantesService';
 import lookupService from '../../../../../services/lookupService';
 import recibosService from '../../../../../services/recibosService';
+import zonaService from '../../../../../services/zonaService';
 import AfiladoSearchModal from './AfiladoSearchModal';
 import AfiladoEditModal from './AfiladoEditModal';
 import ReciboDetalleModal from './ReciboDetalleModal';
@@ -36,6 +37,7 @@ function PlanV1Modal({ mode, planData, onClose, onSave }) {
     obrasSociales: [],
     tiposDeGrupo: [],
   });
+  const [zonas, setZonas] = useState([]);
 
   const [activeTab, setActiveTab] = useState('datos'); // 'datos' | 'afiliados' | 'recibos' | 'historial'
   const [maxAfiliadoNumber, setMaxAfiliadoNumber] = useState(null);
@@ -88,6 +90,7 @@ function PlanV1Modal({ mode, planData, onClose, onSave }) {
   // Load lookups and max affiliate number on mount
   useEffect(() => {
     loadLookupData();
+    loadZonas();
     if (mode === 'crear') {
       loadMaxAfiliadoNumber();
     } else if (mode === 'editar' && planData?.plan_numero) {
@@ -95,6 +98,15 @@ function PlanV1Modal({ mode, planData, onClose, onSave }) {
       loadFullPlanData();
     }
   }, [mode, planData?.plan_numero]);
+
+  const loadZonas = async () => {
+    try {
+      const result = await zonaService.getAll();
+      setZonas(result.data || []);
+    } catch (error) {
+      console.error('Error loading zonas:', error);
+    }
+  };
 
   const loadLookupData = async () => {
     try {
@@ -138,6 +150,7 @@ function PlanV1Modal({ mode, planData, onClose, onSave }) {
           persona_id: pi.persona_id,
           persona: pi.Persona,
           rol: pi.rol,
+          zona_id: pi.zona_id,
         }));
         console.log('[PlanV1Modal] Integrantes encontrados:', integrantes);
         handleFieldChange('integrantes', integrantes);
@@ -229,15 +242,22 @@ function PlanV1Modal({ mode, planData, onClose, onSave }) {
               plan_numero: planData.plan_numero,
               persona_id: integrante.persona_id,
               rol: integrante.rol,
+              zona_id: integrante.zona_id || null,
             });
           }
         }
 
-        // Update roles for existing integrantes
+        // Update roles and zonas for existing integrantes
         for (const integrante of form.integrantes) {
           const existing = existingMap.get(integrante.persona_id);
-          if (existing && existing.rol !== integrante.rol) {
-            await planesIntegrantesService.actualizar(existing.id, { rol: integrante.rol });
+          if (existing) {
+            const updatePayload = {};
+            if (existing.rol !== integrante.rol) updatePayload.rol = integrante.rol;
+            if (existing.zona_id !== integrante.zona_id) updatePayload.zona_id = integrante.zona_id || null;
+
+            if (Object.keys(updatePayload).length > 0) {
+              await planesIntegrantesService.actualizar(existing.id, updatePayload);
+            }
           }
         }
       }
@@ -544,6 +564,7 @@ function PlanV1Modal({ mode, planData, onClose, onSave }) {
                         <th>Apellido</th>
                         <th>DNI</th>
                         <th>Rol</th>
+                        <th>Zona</th>
                         <th>Servicios</th>
                         <th>Acciones</th>
                       </tr>
@@ -561,6 +582,26 @@ function PlanV1Modal({ mode, planData, onClose, onSave }) {
                             >
                               <option value="titular">Titular</option>
                               <option value="adherente">Adherente</option>
+                            </select>
+                          </td>
+                          <td>
+                            <select
+                              value={integrante.zona_id || ''}
+                              onChange={(e) => {
+                                const updated = form.integrantes.map(i =>
+                                  i.persona_id === integrante.persona_id
+                                    ? { ...i, zona_id: e.target.value ? parseInt(e.target.value) : null }
+                                    : i
+                                );
+                                handleFieldChange('integrantes', updated);
+                              }}
+                            >
+                              <option value="">Sin zona</option>
+                              {zonas.map((zona) => (
+                                <option key={zona.id} value={zona.id}>
+                                  {zona.nombre} ({zona.provincia?.nombre})
+                                </option>
+                              ))}
                             </select>
                           </td>
                           <td>

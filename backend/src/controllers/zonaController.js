@@ -1,209 +1,135 @@
-const { Zona, Provincia, PlanIntegrante, sequelize } = require('../models');
-const logger = require('../utils/logger');
+const { Zona, Provincia, PlanIntegrante } = require('../models');
 
-// GET /api/zonas - Listar todas las zonas con provincia
-exports.list = async (req, res) => {
-  try {
-    const { provincia_id } = req.query;
+const zonaController = {
+  async list(req, res) {
+    try {
+      const { provincia_id } = req.query;
+      const where = {};
 
-    const where = {};
-    if (provincia_id) where.provincia_id = provincia_id;
+      if (provincia_id) {
+        where.provincia_id = provincia_id;
+      }
 
-    const zonas = await Zona.findAll({
-      where,
-      include: [{
-        model: Provincia,
-        as: 'provincia',
-        attributes: ['id', 'nombre', 'codigo']
-      }],
-      order: [['nombre', 'ASC']]
-    });
-
-    res.json({
-      success: true,
-      data: zonas
-    });
-  } catch (error) {
-    logger.error('Error listing zonas:', error);
-    res.status(500).json({
-      success: false,
-      message: 'Error al listar zonas'
-    });
-  }
-};
-
-// GET /api/provincias/:id/zonas - Listar zonas de una provincia
-exports.byProvincia = async (req, res) => {
-  try {
-    const { id } = req.params;
-
-    const provincia = await Provincia.findByPk(id);
-    if (!provincia) {
-      return res.status(404).json({
-        success: false,
-        message: 'Provincia no encontrada'
+      const zonas = await Zona.findAll({
+        where,
+        include: [{ model: Provincia, as: 'provincia', attributes: ['id', 'nombre', 'codigo'] }],
+        order: [['nombre', 'ASC']]
       });
+
+      res.json({ success: true, data: zonas });
+    } catch (error) {
+      console.error('Error listing zonas:', error);
+      res.status(500).json({ success: false, message: error.message });
     }
+  },
 
-    const zonas = await Zona.findAll({
-      where: { provincia_id: id },
-      order: [['nombre', 'ASC']]
-    });
+  async byProvincia(req, res) {
+    try {
+      const { id } = req.params;
 
-    res.json({
-      success: true,
-      data: zonas
-    });
-  } catch (error) {
-    logger.error('Error listing zonas by provincia:', error);
-    res.status(500).json({
-      success: false,
-      message: 'Error al listar zonas'
-    });
-  }
-};
+      const provincia = await Provincia.findByPk(id);
+      if (!provincia) {
+        return res.status(404).json({ success: false, message: 'Provincia no encontrada' });
+      }
 
-// POST /api/zonas - Crear nueva zona
-exports.create = async (req, res) => {
-  try {
-    const { provincia_id, codigo, nombre } = req.body;
-
-    if (!provincia_id || !codigo || !nombre) {
-      return res.status(422).json({
-        success: false,
-        message: 'Provincia, código y nombre son requeridos'
+      const zonas = await Zona.findAll({
+        where: { provincia_id: id },
+        order: [['nombre', 'ASC']]
       });
+
+      res.json({ success: true, data: zonas });
+    } catch (error) {
+      console.error('Error listing zonas by provincia:', error);
+      res.status(500).json({ success: false, message: error.message });
     }
+  },
 
-    // Validar que provincia existe
-    const provincia = await Provincia.findByPk(provincia_id);
-    if (!provincia) {
-      return res.status(404).json({
-        success: false,
-        message: 'Provincia no encontrada'
-      });
-    }
+  async create(req, res) {
+    try {
+      const { provincia_id, codigo, nombre } = req.body;
 
-    // Validar unicidad de código dentro de provincia
-    const existe = await Zona.findOne({
-      where: { provincia_id, codigo }
-    });
-
-    if (existe) {
-      return res.status(409).json({
-        success: false,
-        message: `El código "${codigo}" ya existe en esta provincia`
-      });
-    }
-
-    const zona = await Zona.create({
-      provincia_id,
-      codigo,
-      nombre,
-      activo: true
-    });
-
-    res.status(201).json({
-      success: true,
-      message: 'Zona creada exitosamente',
-      data: zona
-    });
-  } catch (error) {
-    logger.error('Error creating zona:', error);
-    res.status(500).json({
-      success: false,
-      message: 'Error al crear zona'
-    });
-  }
-};
-
-// PUT /api/zonas/:id - Editar zona
-exports.update = async (req, res) => {
-  try {
-    const { id } = req.params;
-    const { codigo, nombre, activo } = req.body;
-
-    const zona = await Zona.findByPk(id);
-    if (!zona) {
-      return res.status(404).json({
-        success: false,
-        message: 'Zona no encontrada'
-      });
-    }
-
-    // Validar unicidad de código si cambió
-    if (codigo !== zona.codigo) {
-      const existe = await Zona.findOne({
-        where: {
-          provincia_id: zona.provincia_id,
-          codigo
-        }
-      });
-      if (existe) {
-        return res.status(409).json({
+      if (!provincia_id || !codigo || !nombre) {
+        return res.status(400).json({
           success: false,
-          message: `El código "${codigo}" ya existe en esta provincia`
+          message: 'provincia_id, codigo y nombre son requeridos'
         });
       }
+
+      const provincia = await Provincia.findByPk(provincia_id);
+      if (!provincia) {
+        return res.status(404).json({ success: false, message: 'Provincia no encontrada' });
+      }
+
+      const zona = await Zona.create({
+        provincia_id,
+        codigo: codigo.trim(),
+        nombre: nombre.trim()
+      });
+
+      res.status(201).json({ success: true, data: zona });
+    } catch (error) {
+      if (error.name === 'SequelizeUniqueConstraintError') {
+        return res.status(409).json({
+          success: false,
+          message: 'El código ya existe para esta provincia'
+        });
+      }
+      console.error('Error creating zona:', error);
+      res.status(500).json({ success: false, message: error.message });
     }
+  },
 
-    await zona.update({
-      codigo: codigo || zona.codigo,
-      nombre: nombre || zona.nombre,
-      activo: activo !== undefined ? activo : zona.activo
-    });
+  async update(req, res) {
+    try {
+      const { id } = req.params;
+      const { codigo, nombre } = req.body;
 
-    res.json({
-      success: true,
-      message: 'Zona actualizada exitosamente',
-      data: zona
-    });
-  } catch (error) {
-    logger.error('Error updating zona:', error);
-    res.status(500).json({
-      success: false,
-      message: 'Error al actualizar zona'
-    });
+      const zona = await Zona.findByPk(id);
+      if (!zona) {
+        return res.status(404).json({ success: false, message: 'Zona no encontrada' });
+      }
+
+      if (codigo) zona.codigo = codigo.trim();
+      if (nombre) zona.nombre = nombre.trim();
+
+      await zona.save();
+      res.json({ success: true, data: zona });
+    } catch (error) {
+      if (error.name === 'SequelizeUniqueConstraintError') {
+        return res.status(409).json({
+          success: false,
+          message: 'El código ya existe para esta provincia'
+        });
+      }
+      console.error('Error updating zona:', error);
+      res.status(500).json({ success: false, message: error.message });
+    }
+  },
+
+  async delete(req, res) {
+    try {
+      const { id } = req.params;
+
+      const zona = await Zona.findByPk(id);
+      if (!zona) {
+        return res.status(404).json({ success: false, message: 'Zona no encontrada' });
+      }
+
+      const planesCount = await PlanIntegrante.count({ where: { zona_id: id } });
+      if (planesCount > 0) {
+        return res.status(400).json({
+          success: false,
+          message: 'No se puede eliminar zona con planes asociados'
+        });
+      }
+
+      await zona.destroy();
+      res.json({ success: true, message: 'Zona eliminada' });
+    } catch (error) {
+      console.error('Error deleting zona:', error);
+      res.status(500).json({ success: false, message: error.message });
+    }
   }
 };
 
-// DELETE /api/zonas/:id - Eliminar zona
-exports.delete = async (req, res) => {
-  try {
-    const { id } = req.params;
-
-    const zona = await Zona.findByPk(id);
-    if (!zona) {
-      return res.status(404).json({
-        success: false,
-        message: 'Zona no encontrada'
-      });
-    }
-
-    // Validar que no tenga planes asociados
-    const planes_count = await PlanIntegrante.count({
-      where: { zona_id: id }
-    });
-
-    if (planes_count > 0) {
-      return res.status(409).json({
-        success: false,
-        message: `No se puede eliminar la zona. Tiene ${planes_count} plan(es) asociado(s)`,
-        planes_count
-      });
-    }
-
-    await zona.destroy();
-
-    res.json({
-      success: true,
-      message: 'Zona eliminada exitosamente'
-    });
-  } catch (error) {
-    logger.error('Error deleting zona:', error);
-    res.status(500).json({
-      success: false,
-      message: 'Error al eliminar zona'
-    });
-  }
-};
+module.exports = zonaController;

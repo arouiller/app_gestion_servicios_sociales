@@ -1,74 +1,25 @@
 import api from './api';
 
-const ENDPOINT = '/admin/provincias';
-
 const provinciaService = {
-  /**
-   * GET /api/provincias
-   * Listar todas las provincias con sus zonas
-   */
-  getAll: async () => {
-    try {
-      const response = await api.get(ENDPOINT);
-      return response.data.data || [];
-    } catch (error) {
-      console.error('Error fetching provincias:', error);
-      throw error;
-    }
+  async getAll() {
+    const { data } = await api.get('/admin/provincias');
+    return data;
   },
 
-  /**
-   * POST /api/provincias
-   * Crear nueva provincia
-   * @param {object} provincia - { nombre, codigo }
-   */
-  create: async (provincia) => {
-    try {
-      const response = await api.post(ENDPOINT, {
-        nombre: provincia.nombre,
-        codigo: provincia.codigo,
-      });
-      return response.data;
-    } catch (error) {
-      console.error('Error creating provincia:', error);
-      throw error;
-    }
+  async create(data) {
+    const response = await api.post('/admin/provincias', data);
+    return response.data;
   },
 
-  /**
-   * PUT /api/provincias/:id
-   * Actualizar provincia existente
-   * @param {number} id - ID de la provincia
-   * @param {object} provincia - { nombre, codigo, activo }
-   */
-  update: async (id, provincia) => {
-    try {
-      const response = await api.put(`${ENDPOINT}/${id}`, {
-        nombre: provincia.nombre,
-        codigo: provincia.codigo,
-        activo: provincia.activo,
-      });
-      return response.data;
-    } catch (error) {
-      console.error('Error updating provincia:', error);
-      throw error;
-    }
+  async update(id, data) {
+    const response = await api.put(`/admin/provincias/${id}`, data);
+    return response.data;
   },
 
-  /**
-   * DELETE /api/provincias/:id
-   * Eliminar provincia
-   * @param {number} id - ID de la provincia
-   */
-  delete: async (id) => {
-    try {
-      const response = await api.delete(`${ENDPOINT}/${id}`);
-      return response.data;
-    } catch (error) {
-      console.error('Error deleting provincia:', error);
-      throw error;
-    }
-  },
+  async delete(id) {
+    const response = await api.delete(`/admin/provincias/${id}`);
+    return response.data;
+  }
 };
 
 export default provinciaService;

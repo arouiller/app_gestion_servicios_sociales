@@ -1,82 +1,61 @@
 import React, { useState, useEffect } from 'react';
-import './ZonaFormModal.scss';
 
-const ZonaFormModal = ({ zona, provincia, onClose, onSave }) => {
-  const [formData, setFormData] = useState({
-    codigo: '',
-    nombre: ''
-  });
+const ZonaFormModal = ({ zona, provincia, onSave, onClose }) => {
+  const [codigo, setCodigo] = useState('');
+  const [nombre, setNombre] = useState('');
 
   useEffect(() => {
     if (zona) {
-      setFormData({
-        codigo: zona.codigo,
-        nombre: zona.nombre
-      });
-    } else {
-      setFormData({
-        codigo: '',
-        nombre: ''
-      });
+      setCodigo(zona.codigo);
+      setNombre(zona.nombre);
     }
   }, [zona]);
 
-  const handleChange = (e) => {
-    const { name, value } = e.target;
-    setFormData(prev => ({
-      ...prev,
-      [name]: value
-    }));
-  };
-
   const handleSubmit = (e) => {
     e.preventDefault();
-    if (!formData.codigo.trim() || !formData.nombre.trim()) {
-      alert('Código y nombre son requeridos');
+    if (!codigo.trim() || !nombre.trim()) {
+      alert('Todos los campos son requeridos');
       return;
     }
-    onSave(formData);
+    onSave({ codigo: codigo.trim(), nombre: nombre.trim() });
+  };
+
+  const handleKeyDown = (e) => {
+    if (e.key === 'Escape') {
+      onClose();
+    }
   };
 
   return (
-    <div className="modal-overlay" onClick={onClose}>
+    <div className="modal-overlay" onClick={onClose} onKeyDown={handleKeyDown}>
       <div className="modal-content" onClick={(e) => e.stopPropagation()}>
-        <div className="modal-header">
-          <h2>{zona ? 'Editar Zona' : `Nueva Zona - ${provincia.nombre}`}</h2>
-          <button className="modal-close" onClick={onClose}>✕</button>
-        </div>
-        <form onSubmit={handleSubmit} className="modal-body">
+        <h3>{zona ? 'Editar Zona' : 'Nueva Zona'}</h3>
+        <p className="provincia-header-info">Provincia: <strong>{provincia.nombre}</strong></p>
+        <form onSubmit={handleSubmit}>
           <div className="form-group">
-            <label htmlFor="codigo">Código *</label>
+            <label>Código *</label>
             <input
-              id="codigo"
-              name="codigo"
               type="text"
-              value={formData.codigo}
-              onChange={handleChange}
-              placeholder="Ej: Z001"
-              required
-              maxLength="50"
+              value={codigo}
+              onChange={(e) => setCodigo(e.target.value)}
+              placeholder="Ej: Z1"
             />
           </div>
           <div className="form-group">
-            <label htmlFor="nombre">Nombre *</label>
+            <label>Nombre *</label>
             <input
-              id="nombre"
-              name="nombre"
               type="text"
-              value={formData.nombre}
-              onChange={handleChange}
+              value={nombre}
+              onChange={(e) => setNombre(e.target.value)}
               placeholder="Ej: Zona Centro"
-              required
             />
           </div>
-          <div className="modal-footer">
-            <button type="button" className="btn btn-secondary" onClick={onClose}>
-              Cancelar
+          <div className="form-actions">
+            <button type="submit" className="btn-primary">
+              {zona ? 'Actualizar' : 'Crear'}
             </button>
-            <button type="submit" className="btn btn-primary">
-              {zona ? 'Guardar Cambios' : 'Crear Zona'}
+            <button type="button" className="btn-secondary" onClick={onClose}>
+              Cancelar
             </button>
           </div>
         </form>

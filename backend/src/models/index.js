@@ -121,11 +121,4 @@ if (db.PlanIntegrante && db.Zona) {
   db.Zona.hasMany(db.PlanIntegrante, { foreignKey: 'zona_id', as: 'planes' });
 }
 
-// Call associate methods if they exist (for models that define associations)
-Object.values(db).forEach(model => {
-  if (model && typeof model.associate === 'function') {
-    model.associate(db);
-  }
-});
-
 module.exports = db;

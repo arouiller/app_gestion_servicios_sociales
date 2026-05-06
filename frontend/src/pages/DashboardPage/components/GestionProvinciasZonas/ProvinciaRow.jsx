@@ -2,76 +2,63 @@ import React from 'react';
 
 const ProvinciaRow = ({
   provincia,
-  isExpanded,
+  expanded,
   onToggleExpand,
   onEdit,
   onDelete,
-  onAddZona,
+  onNewZona,
   onEditZona,
   onDeleteZona
 }) => {
-  const zonas = provincia.zonas || [];
-
   return (
-    <>
-      <div className="provincia-row">
-        <div className="provincia-content">
-          <button
-            className="expand-button"
-            onClick={onToggleExpand}
-            title={isExpanded ? 'Contraer' : 'Expandir'}
-          >
-            {isExpanded ? '▼' : '▶'}
-          </button>
-          <div className="provincia-info">
-            <h3>{provincia.nombre}</h3>
-            <span className="codigo">{provincia.codigo}</span>
-            {!provincia.activo && <span className="badge inactive">Inactivo</span>}
-          </div>
+    <div className="provincia-row">
+      <div className="provincia-header">
+        <button className="expand-btn" onClick={onToggleExpand}>
+          {expanded ? '▼' : '▶'}
+        </button>
+        <div className="provincia-info">
+          <span className="nombre">{provincia.nombre}</span>
+          <span className="codigo">({provincia.codigo})</span>
         </div>
         <div className="provincia-actions">
-          <button className="btn-icon edit" onClick={onEdit} title="Editar">✎</button>
-          <button className="btn-icon delete" onClick={onDelete} title="Eliminar">🗑</button>
-          <button className="btn-icon add-zona" onClick={onAddZona} title="Agregar zona">+</button>
+          <button className="btn-icon" onClick={onEdit} title="Editar">
+            ✎
+          </button>
+          <button className="btn-icon btn-danger" onClick={onDelete} title="Eliminar">
+            ✕
+          </button>
+          <button className="btn-icon btn-success" onClick={onNewZona} title="Agregar zona">
+            +
+          </button>
         </div>
       </div>
 
-      {isExpanded && (
+      {expanded && provincia.zonas && provincia.zonas.length > 0 && (
         <div className="zonas-list">
-          {zonas.length === 0 ? (
-            <p className="empty-zonas">Sin zonas registradas</p>
-          ) : (
-            zonas.map(zona => (
-              <div key={zona.id} className="zona-row">
-                <div className="zona-content">
-                  <div className="zona-info">
-                    <span className="nombre">{zona.nombre}</span>
-                    <span className="codigo">{zona.codigo}</span>
-                    {!zona.activo && <span className="badge inactive">Inactivo</span>}
-                  </div>
-                </div>
-                <div className="zona-actions">
-                  <button
-                    className="btn-icon edit"
-                    onClick={() => onEditZona(zona)}
-                    title="Editar"
-                  >
-                    ✎
-                  </button>
-                  <button
-                    className="btn-icon delete"
-                    onClick={() => onDeleteZona(zona)}
-                    title="Eliminar"
-                  >
-                    🗑
-                  </button>
-                </div>
+          {provincia.zonas.map(zona => (
+            <div key={zona.id} className="zona-row">
+              <span className="zona-info">
+                {zona.nombre} <span className="codigo">({zona.codigo})</span>
+              </span>
+              <div className="zona-actions">
+                <button className="btn-icon" onClick={() => onEditZona(zona)} title="Editar">
+                  ✎
+                </button>
+                <button className="btn-icon btn-danger" onClick={() => onDeleteZona(zona.id)} title="Eliminar">
+                  ✕
+                </button>
               </div>
-            ))
-          )}
+            </div>
+          ))}
         </div>
       )}
-    </>
+
+      {expanded && (!provincia.zonas || provincia.zonas.length === 0) && (
+        <div className="zonas-list">
+          <div className="empty-zonas">Sin zonas</div>
+        </div>
+      )}
+    </div>
   );
 };
 

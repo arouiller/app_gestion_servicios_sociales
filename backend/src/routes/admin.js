@@ -3,8 +3,6 @@ const { ConfiguracionApp } = require('../models');
 const db = require('../models');
 const { verifyToken, requireAdmin } = require('../middleware/auth');
 const queryExecController = require('../controllers/queryExecController');
-const provinciaController = require('../controllers/provinciaController');
-const zonaController = require('../controllers/zonaController');
 
 const router = express.Router();
 
@@ -137,17 +135,51 @@ router.get('/auditoria', verifyToken, requireAdmin, async (req, res) => {
 // POST /api/admin/query-exec - Ejecutar queries SQL (Admin only)
 router.post('/query-exec', verifyToken, requireAdmin, queryExecController.executeQuery);
 
-// Provincias CRUD
-router.get('/provincias', verifyToken, requireAdmin, provinciaController.list);
-router.post('/provincias', verifyToken, requireAdmin, provinciaController.create);
-router.put('/provincias/:id', verifyToken, requireAdmin, provinciaController.update);
-router.delete('/provincias/:id', verifyToken, requireAdmin, provinciaController.delete);
+// Provincias CRUD (lazy load controllers)
+router.get('/provincias', verifyToken, requireAdmin, (req, res, next) => {
+  const provinciaController = require('../controllers/provinciaController');
+  provinciaController.list(req, res).catch(next);
+});
 
-// Zonas CRUD
-router.get('/provincias/:id/zonas', verifyToken, requireAdmin, zonaController.byProvincia);
-router.get('/zonas', verifyToken, requireAdmin, zonaController.list);
-router.post('/zonas', verifyToken, requireAdmin, zonaController.create);
-router.put('/zonas/:id', verifyToken, requireAdmin, zonaController.update);
-router.delete('/zonas/:id', verifyToken, requireAdmin, zonaController.delete);
+router.post('/provincias', verifyToken, requireAdmin, (req, res, next) => {
+  const provinciaController = require('../controllers/provinciaController');
+  provinciaController.create(req, res).catch(next);
+});
+
+router.put('/provincias/:id', verifyToken, requireAdmin, (req, res, next) => {
+  const provinciaController = require('../controllers/provinciaController');
+  provinciaController.update(req, res).catch(next);
+});
+
+router.delete('/provincias/:id', verifyToken, requireAdmin, (req, res, next) => {
+  const provinciaController = require('../controllers/provinciaController');
+  provinciaController.delete(req, res).catch(next);
+});
+
+// Zonas CRUD (lazy load controllers)
+router.get('/provincias/:id/zonas', verifyToken, requireAdmin, (req, res, next) => {
+  const zonaController = require('../controllers/zonaController');
+  zonaController.byProvincia(req, res).catch(next);
+});
+
+router.get('/zonas', verifyToken, requireAdmin, (req, res, next) => {
+  const zonaController = require('../controllers/zonaController');
+  zonaController.list(req, res).catch(next);
+});
+
+router.post('/zonas', verifyToken, requireAdmin, (req, res, next) => {
+  const zonaController = require('../controllers/zonaController');
+  zonaController.create(req, res).catch(next);
+});
+
+router.put('/zonas/:id', verifyToken, requireAdmin, (req, res, next) => {
+  const zonaController = require('../controllers/zonaController');
+  zonaController.update(req, res).catch(next);
+});
+
+router.delete('/zonas/:id', verifyToken, requireAdmin, (req, res, next) => {
+  const zonaController = require('../controllers/zonaController');
+  zonaController.delete(req, res).catch(next);
+});
 
 module.exports = router;
