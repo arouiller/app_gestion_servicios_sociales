@@ -44,7 +44,7 @@ const crear = async (req, res) => {
 
 const actualizar = async (req, res) => {
   const { id } = req.params;
-  const { rol } = req.body;
+  const { rol, estado } = req.body;
 
   const integrante = await db.PlanIntegrante.findByPk(id);
 
@@ -56,14 +56,18 @@ const actualizar = async (req, res) => {
   }
 
   // Validar rol válido
-  if (!['titular', 'adherente'].includes(rol)) {
+  if (rol && !['titular', 'adherente'].includes(rol)) {
     return res.status(400).json({
       success: false,
       message: 'Rol inválido. Debe ser "titular" o "adherente"',
     });
   }
 
-  await integrante.update({ rol });
+  const updateData = {};
+  if (rol) updateData.rol = rol;
+  if (estado) updateData.estado = estado;
+
+  await integrante.update(updateData);
 
   return res.json({
     success: true,
@@ -116,4 +120,50 @@ const obtenerPorPlan = async (req, res) => {
   });
 };
 
-module.exports = { crear, actualizar, eliminar, obtenerPorPlan };
+// ── POST /api/v1.0/plan-integrantes/reorder ────────────────────────────────
+// Reordenar integrantes de un plan
+
+const reorder = async (req, res) => {
+  const { planNumero, integrantes } = req.body;
+
+  if (!planNumero || !Array.isArray(integrantes)) {
+    return res.status(400).json({
+      success: false,
+      message: 'planNumero e integrantes array son requeridos',
+    });
+  }
+
+  const transaction = await db.sequelize.transaction();
+
+  try {
+    // Actualizar orden y estado para cada integrante
+    for (const integrante of integrantes) {
+      await db.PlanIntegrante.update(
+        {
+          orden: integrante.orden,
+          estado: integrante.estado || 'Activo',
+        },
+        {
+          where: { id: integrante.id, plan_numero: planNumero },
+          transaction,
+        }
+      );
+    }
+
+    await transaction.commit();
+
+    res.json({
+      success: true,
+      message: 'Integrantes reordenados exitosamente',
+    });
+  } catch (error) {
+    await transaction.rollback();
+    console.error('Error reordering integrantes:', error);
+    res.status(500).json({
+      success: false,
+      message: error.message,
+    });
+  }
+};
+
+module.exports = { crear, actualizar, eliminar, obtenerPorPlan, reorder };
