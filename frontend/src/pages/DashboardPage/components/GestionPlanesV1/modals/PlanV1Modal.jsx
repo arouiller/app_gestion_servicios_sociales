@@ -234,21 +234,12 @@ function PlanV1Modal({ mode, planData, onClose, onSave }) {
           }
         }
 
-        // Update roles for existing integrantes
-        for (const integrante of form.integrantes) {
-          const existing = existingMap.get(integrante.persona_id);
-          if (existing && existing.rol !== integrante.rol) {
-            await planesIntegrantesService.actualizar(existing.id, { rol: integrante.rol });
-          }
-        }
-
-        // Reorder integrantes with updated estado and orden
+        // Reorder integrantes - roles are assigned automatically based on position
         const integrantesWithMeta = form.integrantes.map((integrante, index) => {
           const existing = existingMap.get(integrante.persona_id);
           return {
             id: existing?.id,
             orden: index + 1,
-            estado: integrante.estado || 'Activo',
           };
         });
         await planesIntegrantesService.reorder(planData.plan_numero, integrantesWithMeta);
@@ -273,8 +264,9 @@ function PlanV1Modal({ mode, planData, onClose, onSave }) {
       alert('Este afiliado ya está asignado al plan');
       return;
     }
-    // Open role selector - for now, default to 'adherente', user can change in table
-    addIntegrante(persona, 'adherente');
+    // Rol se asigna automáticamente: si es el primero = titular, si no = adherente
+    const rol = form.integrantes.length === 0 ? 'titular' : 'adherente';
+    addIntegrante(persona, rol);
     setAfiladoSearchOpen(false);
   };
 
@@ -295,23 +287,7 @@ function PlanV1Modal({ mode, planData, onClose, onSave }) {
   };
 
   const handleIntegranteRemove = (personaId) => {
-    if (form.integrantes.filter((i) => i.rol === 'titular').length === 1 &&
-        form.integrantes.find((i) => i.persona_id === personaId)?.rol === 'titular') {
-      alert('No puedes quitar el único titular. Designa otro primero.');
-      return;
-    }
     removeIntegrante(personaId);
-  };
-
-  const handleRolChange = (personaId, newRol) => {
-    // Validate: don't allow changing only titular to adherente
-    if (form.integrantes.filter((i) => i.rol === 'titular').length === 1 &&
-        form.integrantes.find((i) => i.persona_id === personaId)?.rol === 'titular' &&
-        newRol !== 'titular') {
-      alert('Debe haber al menos un titular. Designa otro primero.');
-      return;
-    }
-    updateIntegranteRol(personaId, newRol);
   };
 
   const handleDragEnd = (result) => {
@@ -335,20 +311,14 @@ function PlanV1Modal({ mode, planData, onClose, onSave }) {
     const [removed] = integrantes.splice(source.index, 1);
     integrantes.splice(destination.index, 0, removed);
 
-    // Update orden field for each integrante
+    // Update orden y rol basado en posición para cada integrante
     const reorderedIntegrantes = integrantes.map((integrante, index) => ({
       ...integrante,
       orden: index + 1,
+      rol: index === 0 ? 'titular' : 'adherente', // Primero = titular, resto = adherente
     }));
 
     handleFieldChange('integrantes', reorderedIntegrantes);
-  };
-
-  const handleEstadoChange = (personaId, newEstado) => {
-    const updatedIntegrantes = form.integrantes.map((i) =>
-      i.persona_id === personaId ? { ...i, estado: newEstado } : i
-    );
-    handleFieldChange('integrantes', updatedIntegrantes);
   };
 
   const navigateToFirstError = (errorObj) => {
@@ -607,7 +577,6 @@ function PlanV1Modal({ mode, planData, onClose, onSave }) {
                           <th>Apellido</th>
                           <th>DNI</th>
                           <th>Rol</th>
-                          <th>Estado</th>
                           <th>Servicios</th>
                           <th>Acciones</th>
                         </tr>
@@ -632,26 +601,7 @@ function PlanV1Modal({ mode, planData, onClose, onSave }) {
                                     <td>{integrante.persona?.nombre}</td>
                                     <td>{integrante.persona?.apellido}</td>
                                     <td>{integrante.persona?.numero_documento}</td>
-                                    <td>
-                                      <select
-                                        value={integrante.rol}
-                                        onChange={(e) => handleRolChange(integrante.persona_id, e.target.value)}
-                                      >
-                                        <option value="titular">Titular</option>
-                                        <option value="adherente">Adherente</option>
-                                      </select>
-                                    </td>
-                                    <td>
-                                      <select
-                                        value={integrante.estado || 'Activo'}
-                                        onChange={(e) => handleEstadoChange(integrante.persona_id, e.target.value)}
-                                      >
-                                        <option value="Activo">Activo</option>
-                                        <option value="Suspendido">Suspendido</option>
-                                        <option value="Eliminado">Eliminado</option>
-                                        <option value="Promocion">Promoción</option>
-                                      </select>
-                                    </td>
+                                    <td>{index === 0 ? 'Titular' : 'Adherente'}</td>
                                     <td>
                                       <ActionButton
                                         variant="icon"

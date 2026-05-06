@@ -6,13 +6,8 @@ const PlanIntegrante = sequelize.define('PlanIntegrante', {
   plan_numero: { type: DataTypes.INTEGER, allowNull: false },
   persona_id: { type: DataTypes.INTEGER, allowNull: false },
   zona_id: { type: DataTypes.INTEGER, allowNull: true },
-  rol: { type: DataTypes.ENUM('titular','integrante'), allowNull: false },
+  rol: { type: DataTypes.ENUM('titular','adherente'), allowNull: false },
   credencial: { type: DataTypes.CHAR(1), allowNull: false },
-  estado: {
-    type: DataTypes.ENUM('Activo', 'Suspendido', 'Eliminado', 'Promocion'),
-    defaultValue: 'Activo',
-    allowNull: false,
-  },
   orden: {
     type: DataTypes.INTEGER,
     defaultValue: 0,

@@ -40,11 +40,11 @@ const crear = async (req, res) => {
 };
 
 // ── PUT /api/v1.0/plan-integrantes/:id ──────────────────────────────────────
-// Actualizar rol de un integrante
+// Actualizar integrante
 
 const actualizar = async (req, res) => {
   const { id } = req.params;
-  const { rol, estado } = req.body;
+  const { orden } = req.body;
 
   const integrante = await db.PlanIntegrante.findByPk(id);
 
@@ -55,17 +55,8 @@ const actualizar = async (req, res) => {
     });
   }
 
-  // Validar rol válido
-  if (rol && !['titular', 'adherente'].includes(rol)) {
-    return res.status(400).json({
-      success: false,
-      message: 'Rol inválido. Debe ser "titular" o "adherente"',
-    });
-  }
-
   const updateData = {};
-  if (rol) updateData.rol = rol;
-  if (estado) updateData.estado = estado;
+  if (orden !== undefined) updateData.orden = orden;
 
   await integrante.update(updateData);
 
@@ -136,12 +127,15 @@ const reorder = async (req, res) => {
   const transaction = await db.sequelize.transaction();
 
   try {
-    // Actualizar orden y estado para cada integrante
-    for (const integrante of integrantes) {
+    // Actualizar orden y rol basado en posición para cada integrante
+    for (let index = 0; index < integrantes.length; index++) {
+      const integrante = integrantes[index];
+      const rol = index === 0 ? 'titular' : 'adherente'; // Primero = titular, resto = adherente
+
       await db.PlanIntegrante.update(
         {
           orden: integrante.orden,
-          estado: integrante.estado || 'Activo',
+          rol,
         },
         {
           where: { id: integrante.id, plan_numero: planNumero },

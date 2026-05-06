@@ -66,7 +66,7 @@ const listadosController = {
           {
             model: db.PlanIntegrante,
             as: 'PlanIntegrantes',
-            attributes: ['id', 'persona_id', 'rol', 'estado', 'orden'],
+            attributes: ['id', 'persona_id', 'rol', 'orden'],
             include: [
               {
                 model: db.Persona,
