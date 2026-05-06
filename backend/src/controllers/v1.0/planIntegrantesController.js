@@ -4,7 +4,7 @@ const db = require('../../models');
 // Agregar un integrante a un plan
 
 const crear = async (req, res) => {
-  const { plan_numero, persona_id, rol, zona_id } = req.body;
+  const { plan_numero, persona_id, rol } = req.body;
 
   // Validar que no existe duplicado
   const existente = await db.PlanIntegrante.findOne({
@@ -30,7 +30,6 @@ const crear = async (req, res) => {
     plan_numero,
     persona_id,
     rol,
-    zona_id: zona_id || null,
     credencial: 'T', // Default credencial
   });
 
@@ -45,7 +44,7 @@ const crear = async (req, res) => {
 
 const actualizar = async (req, res) => {
   const { id } = req.params;
-  const { rol, zona_id } = req.body;
+  const { rol } = req.body;
 
   const integrante = await db.PlanIntegrante.findByPk(id);
 
@@ -56,19 +55,15 @@ const actualizar = async (req, res) => {
     });
   }
 
-  // Validar rol válido if provided
-  if (rol && !['titular', 'adherente'].includes(rol)) {
+  // Validar rol válido
+  if (!['titular', 'adherente'].includes(rol)) {
     return res.status(400).json({
       success: false,
       message: 'Rol inválido. Debe ser "titular" o "adherente"',
     });
   }
 
-  const updateData = {};
-  if (rol) updateData.rol = rol;
-  if (zona_id !== undefined) updateData.zona_id = zona_id || null;
-
-  await integrante.update(updateData);
+  await integrante.update({ rol });
 
   return res.json({
     success: true,

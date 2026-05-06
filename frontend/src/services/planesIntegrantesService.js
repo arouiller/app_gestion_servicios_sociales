@@ -34,7 +34,6 @@ const planesIntegrantesService = {
             plan_numero: planNumero,
             persona_id: integrante.persona_id,
             rol: integrante.rol,
-            zona_id: integrante.zona_id || null,
           })
         )
       );
