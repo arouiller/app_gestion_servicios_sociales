@@ -13,6 +13,10 @@ const Usuario = require('./Usuario');
 // App Configuration
 const ConfiguracionApp = require('./ConfiguracionApp');
 
+// Provincias y Zonas
+const Provincia = require('./Provincia');
+const Zona = require('./Zona');
+
 // 1.0.x Models
 const Persona = require('./Persona');
 const PlanV1 = require('./PlanV1');
@@ -37,6 +41,9 @@ const db = {
   Usuario,
   // App Configuration
   ConfiguracionApp,
+  // Provincias y Zonas
+  Provincia,
+  Zona,
   // 1.0.x Models
   Persona,
   PlanV1,
@@ -101,5 +108,24 @@ if (db.Bug && db.Usuario) {
 if (db.AuditLog && db.Usuario) {
   db.AuditLog.belongsTo(db.Usuario, { foreignKey: 'usuario_id', as: 'usuario' });
 }
+
+// Provincia and Zona associations
+if (db.Provincia && db.Zona) {
+  db.Provincia.hasMany(db.Zona, { foreignKey: 'provincia_id', as: 'zonas', onDelete: 'RESTRICT' });
+  db.Zona.belongsTo(db.Provincia, { foreignKey: 'provincia_id', as: 'provincia', onDelete: 'RESTRICT' });
+}
+
+// PlanIntegrante and Zona associations
+if (db.PlanIntegrante && db.Zona) {
+  db.PlanIntegrante.belongsTo(db.Zona, { foreignKey: 'zona_id', as: 'zona' });
+  db.Zona.hasMany(db.PlanIntegrante, { foreignKey: 'zona_id', as: 'planes' });
+}
+
+// Call associate methods if they exist (for models that define associations)
+Object.values(db).forEach(model => {
+  if (model && typeof model.associate === 'function') {
+    model.associate(db);
+  }
+});
 
 module.exports = db;
