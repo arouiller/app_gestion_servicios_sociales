@@ -1,19 +1,15 @@
 import api from './api';
 
-const ENDPOINT = '/zonas';
+const ENDPOINT = '/admin/zonas';
 
 const zonaService = {
   /**
    * GET /api/zonas
-   * Listar todas las zonas (opcionalmente filtrar por provincia)
-   * @param {number} provinciaId - ID de provincia (opcional)
+   * Listar todas las zonas con provincia
    */
-  getAll: async (provinciaId = null) => {
+  getAll: async () => {
     try {
-      const url = provinciaId
-        ? `${ENDPOINT}?provincia_id=${provinciaId}`
-        : ENDPOINT;
-      const response = await api.get(url);
+      const response = await api.get(ENDPOINT);
       return response.data.data || [];
     } catch (error) {
       console.error('Error fetching zonas:', error);
@@ -22,13 +18,26 @@ const zonaService = {
   },
 
   /**
-   * GET /api/provincias/:provinciaId/zonas
-   * Listar zonas de una provincia específica
-   * @param {number} provinciaId - ID de la provincia
+   * GET /api/zonas?provincia_id=:id
+   * Listar zonas de una provincia
+   */
+  getByProvinciaId: async (provinciaId) => {
+    try {
+      const response = await api.get(`${ENDPOINT}?provincia_id=${provinciaId}`);
+      return response.data.data || [];
+    } catch (error) {
+      console.error('Error fetching zonas by provincia:', error);
+      throw error;
+    }
+  },
+
+  /**
+   * GET /api/admin/provincias/:id/zonas
+   * Listar zonas de una provincia (ruta alternativa)
    */
   getByProvincia: async (provinciaId) => {
     try {
-      const response = await api.get(`/provincias/${provinciaId}/zonas`);
+      const response = await api.get(`/admin/provincias/${provinciaId}/zonas`);
       return response.data.data || [];
     } catch (error) {
       console.error('Error fetching zonas by provincia:', error);
