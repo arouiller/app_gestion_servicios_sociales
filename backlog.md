@@ -43,7 +43,7 @@ De cualquier estado → Descartado
 | BACKLOG-039 | 🔴 Alta | 📋 Registrado | Nueva página de Listados por Zona | Usuario selecciona zona y se genera listado con todos los planes de esa zona. Por cada plan: número, tipo, cuota actual, afiliados (nombre, apellido, fecha nacimiento, edad, DNI). Útil para reportes y análisis por zona geográfica. | ListadosPage.jsx, listadosService.js, migrations (nuevo campo zona en planes), rutas |
 | BACKLOG-038 | 🔴 Alta | 📋 Registrado | Edición de afiliados (planes) - Miembros ordenables con drag & drop | Miembros del plan organizables por drag & drop. El primer miembro es siempre titular. Estados de afiliación: Activo, Suspendido, Eliminado, Promocion. Mejorar UX permitiendo reordenamiento flexible. | PlanV1Modal.jsx, planesController.js, migrations (nuevo campo estado en plan_integrantes, nuevo orden) |
 | BACKLOG-037 | 🔴 Alta | 📋 Registrado | Pantalla de Afiliados (planes) mejorada - Listado completo con zona | Listado paginado de planes con búsqueda por texto. Mostrar: datos actuales + zona. Filtro de texto busca en número de plan, tipo de plan, zona. Mejora navegación y búsqueda de planes específicos. | BusquedaAfiliados.jsx, planesService.js, campos zona en respuesta API |
-| BACKLOG-036 | 🔴 Alta | 📋 Registrado | Entidad Zonas - CRUD con gestión en menú | Zonas como entidad separada con código (NOT NULL, UNIQUE) y nombre. CRUD completo en nueva pantalla de gestión. Link en menú Administración. Base para filtros por zona en planes y listados. Requiere migración BD, modelo Sequelize, endpoints API, página CRUD. | migrations/v2.0.x, Zona model, zonaController.js, zonasService.js, GestionZonas.jsx, DashboardPage.jsx (menú) |
+| BACKLOG-036 | 🔴 Alta | 📋 Registrado | Entidad Provincias y Zonas - CRUD jerárquico | Estructura jerárquica: Provincia (1) → (N) Zonas. CRUD unificado en pantalla con tree view. Requiere 2 tablas con FK, migración de datos, endpoints API dual, pantalla jerárquica. Base para otros requerimientos. | migrations/v2.0.x, Provincia/Zona models, controllers, GestionProvinciasZonas.jsx, servicios |
 | BACKLOG-035 | 🔴 Alta | ✅ Solucionado | Optimizar espacio de trabajo: sidebar colapsable y ocultable | (1) Reducir márgenes/padding a izquierda y derecha. (2) Menú sidebar con collapse automático (expandir item → colapsan otros). (3) Botón/icono para ocultar sidebar completamente a la izquierda, con toggle para reabrirlo. Mejora UX permitiendo máximo espacio para contenido. | DashboardPage.jsx, DashboardPage.scss, Sidebar component |
 | BACKLOG-034 | 🔴 Alta | ✅ Solucionado | Herramienta de Ejecución de Queries SQL (Admin Only) | Administrador puede ingresar queries SQL (SELECT, INSERT, UPDATE, DELETE), ejecutarlas y ver resultados. Útil para auditoría, diagnóstico, análisis de datos y correcciones de BD. Prohibidas operaciones DROP, ALTER, CREATE. Con límite de resultados (1000) y logging de ejecución. | queryExecController.js, admin.js, QueryExecPage.jsx, queryExecService.js |
 | BACKLOG-033 | 🟡 Media | ✅ Solucionado | Estandarizar estructura de barras de filtros en pantallas de gestión | Estructura estándar implementada: título arriba, debajo barra de filtros con búsqueda (izquierda expandida) + botones (derecha). Todos alineados verticalmente al centro. Aplicado en todas las pantallas de gestión con flexbox y BEM. | GestionPlanesV1.jsx, LookupCRUD.jsx, BusquedaAfiliados.jsx, GestionAuditoria.jsx, SCSS |
@@ -3756,65 +3756,130 @@ DashboardPage.jsx
 
 ---
 
-### BACKLOG-036: Entidad Zonas - CRUD con gestión en menú
+### BACKLOG-036: Entidad Provincias y Zonas - CRUD jerárquico en menú
 
 **Descripción:**
-Crear entidad "Zonas" como tabla separada en la BD con código y nombre. Actualmente las zonas son números simples en el campo `zona` de los planes. Esta refactorización permite:
-- Gestión centralizada de zonas
+Crear estructura jerárquica de Provincias → Zonas para gestión territorial. Actualmente las zonas son números simples en el campo `zona` de los planes. Esta refactorización permite:
+- Gestión centralizada de provincias y zonas
 - Validación de integridad referencial
-- Filtros por zona en otras pantallas
-- Reportes y análisis segmentado por zona
+- Estructura jerárquica (cada provincia contiene múltiples zonas)
+- Filtros por provincia/zona en otras pantallas
+- Reportes y análisis segmentado por territorio
+- CRUD unificado en una sola pantalla jerárquica
+
+**Estructura de datos:**
+
+```
+Provincia (1) → (N) Zonas
+  ├── Provincia: Buenos Aires
+  │   ├── Zona: Centro
+  │   ├── Zona: Norte
+  │   └── Zona: Sur
+  ├── Provincia: CABA
+  │   ├── Zona: Zona 1
+  │   └── Zona: Zona 2
+  └── ...
+```
 
 **Requerimientos:**
 
 1. **Modelo y Migración BD**
-   - Nueva tabla: `zonas`
-   - Campos:
+   - Nueva tabla: `provincias`
      * `id` (PK, INT)
-     * `codigo` (STRING, NOT NULL, UNIQUE) - ej: "Z001", "ZONA_01"
+     * `nombre` (STRING, NOT NULL, UNIQUE) - ej: "Buenos Aires", "CABA"
+     * `codigo` (STRING, NOT NULL, UNIQUE) - ej: "BA", "CABA"
+     * `activo` (BOOLEAN, default: true)
+     * `created_at`, `updated_at` (TIMESTAMP)
+   
+   - Nueva tabla: `zonas`
+     * `id` (PK, INT)
+     * `provincia_id` (FK, INT, NOT NULL) - referencia a `provincias.id`
+     * `codigo` (STRING, NOT NULL) - ej: "Z001", "ZONA_01" (único dentro de provincia)
      * `nombre` (STRING, NOT NULL) - ej: "Zona Centro", "Zona Norte"
      * `activo` (BOOLEAN, default: true)
      * `created_at`, `updated_at` (TIMESTAMP)
-   - Relación: `Plan` has many `Zona` (1:N) - agregar FK `zona_id` en tabla `plan_integrantes`
+     * Índice UNIQUE(provincia_id, codigo)
+   
+   - Actualizar tabla: `plan_integrantes`
+     * Agregar FK `zona_id` (INT, NOT NULL) que referencia `zonas.id`
+     * Eliminar campo antiguo `zona` si existe
+   
    - Migración: nueva versión secuencial (ej: v2.0.x)
 
-2. **Backend API**
-   - Modelo Sequelize: `models/Zona.js`
-   - Controller: `zonaController.js` con CRUD completo
-   - Routes: `GET /api/zonas`, `POST /api/zonas`, `PUT /api/zonas/:id`, `DELETE /api/zonas/:id`
-   - Validación: codigo único, no permitir eliminación si hay planes asociados (cascade option)
+2. **Relaciones Sequelize**
+   - `Provincia.hasMany(Zona, { foreignKey: 'provincia_id' })`
+   - `Zona.belongsTo(Provincia, { foreignKey: 'provincia_id' })`
+   - `PlanIntegrante.belongsTo(Zona, { foreignKey: 'zona_id' })`
+   - `Zona.hasMany(PlanIntegrante, { foreignKey: 'zona_id' })`
 
-3. **Frontend CRUD**
-   - Nueva página: `GestionZonas.jsx`
-   - Modal CRUD: `ZonaFormModal.jsx`
-   - Tabla de listado con: código, nombre, estado
-   - Acciones: editar, habilitar/deshabilitar, eliminar (con confirmación)
+3. **Backend API**
+   - Modelos Sequelize: `models/Provincia.js`, `models/Zona.js`
+   - Controller: `provinciaController.js` y `zonaController.js` con CRUD
+   - Routes:
+     * `GET /api/provincias` - listar todas
+     * `POST /api/provincias` - crear
+     * `PUT /api/provincias/:id` - editar
+     * `DELETE /api/provincias/:id` - eliminar
+     * `GET /api/provincias/:id/zonas` - listar zonas de una provincia
+     * `GET /api/zonas` - listar todas las zonas
+     * `POST /api/zonas` - crear zona (requiere provincia_id)
+     * `PUT /api/zonas/:id` - editar zona
+     * `DELETE /api/zonas/:id` - eliminar zona
+   - Validación:
+     * Código única por provincia (en zonas)
+     * No permitir eliminación de provincia si tiene zonas activas
+     * No permitir eliminación de zona si tiene planes asociados
+     * Mostrar advertencia de referencias antes de eliminar
+
+4. **Frontend CRUD - Pantalla Jerárquica**
+   - Nueva página: `GestionProvinciasZonas.jsx`
+   - Estructura jerárquica (tree view o accordion):
+     * Fila por provincia con: nombre, código, acciones (editar, agregar zona, eliminar)
+     * Expandible para mostrar zonas pertenecientes
+     * Por cada zona: código, nombre, acciones (editar, eliminar)
+   - Modales:
+     * `ProvinciaFormModal.jsx` - crear/editar provincia
+     * `ZonaFormModal.jsx` - crear/editar zona (con selector de provincia)
+   - Acciones:
+     * Editar provincia (modal)
+     * Agregar zona a provincia (modal + zona_id prepopulado con provincia_id)
+     * Editar zona (modal)
+     * Eliminar provincia (con confirmación, mostrar planes afectados si hay)
+     * Eliminar zona (con confirmación, mostrar planes afectados si hay)
    - Integración en menú: agregar link en sección "Administración"
 
-4. **Migración de datos (opcional)**
-   - Detectar zonas existentes en campo `zona` de `plan_integrantes`
-   - Crear registros en tabla `zonas` automáticamente
-   - Mapear FK `zona_id` en los planes
+5. **Migración de datos**
+   - Script de migración que:
+     * Detecta provincias únicas del campo `zona` antiguo (o usar provincias por defecto si es número)
+     * Crea registros en tabla `provincias`
+     * Crea registros en tabla `zonas` con FK a provincia
+     * Actualiza planes para usar FK `zona_id` en lugar de `zona` numérico
 
 **Archivos a crear/modificar:**
-- `backend/src/migrations/versions/v2.0.x_zonas/` (upgrade.sql, downgrade.sql)
+- `backend/src/migrations/versions/v2.0.x_provincias_zonas/` (upgrade.sql, downgrade.sql)
+- `backend/src/models/Provincia.js` (nuevo)
 - `backend/src/models/Zona.js` (nuevo)
+- `backend/src/controllers/provinciaController.js` (nuevo)
 - `backend/src/controllers/zonaController.js` (nuevo)
-- `backend/src/routes/admin.js` (agregar rutas de zonas)
-- `frontend/src/pages/DashboardPage/components/GestionZonas/` (nuevo)
-- `frontend/src/pages/DashboardPage/components/GestionZonas/ZonaFormModal.jsx` (nuevo)
+- `backend/src/routes/admin.js` (agregar rutas de provincias y zonas)
+- `frontend/src/pages/DashboardPage/components/GestionProvinciasZonas/` (nuevo)
+- `frontend/src/pages/DashboardPage/components/GestionProvinciasZonas/GestionProvinciasZonas.jsx` (nuevo)
+- `frontend/src/pages/DashboardPage/components/GestionProvinciasZonas/ProvinciaFormModal.jsx` (nuevo)
+- `frontend/src/pages/DashboardPage/components/GestionProvinciasZonas/ZonaFormModal.jsx` (nuevo)
+- `frontend/src/pages/DashboardPage/components/GestionProvinciasZonas/GestionProvinciasZonas.scss` (nuevo)
+- `frontend/src/services/provinciaService.js` (nuevo)
 - `frontend/src/services/zonaService.js` (nuevo)
 - `frontend/src/pages/DashboardPage/DashboardPage.jsx` (agregar link en menú)
-- `backend/src/models/PlanIntegrante.js` (agregar FK zona_id)
+- `backend/src/models/PlanIntegrante.js` (agregar FK zona_id, eliminar campo zona)
 
 **Dependencias:**
 - BACKLOG-036 es prerequisito para BACKLOG-037, BACKLOG-038, BACKLOG-039
 
-**Estimación:** ~6 horas
-- Migración BD: 1 hora
-- Modelo + API: 1.5 horas
-- Frontend CRUD: 2 horas
-- Testing + integración: 1.5 horas
+**Estimación:** ~9 horas (mayor complejidad por jerarquía)
+- Migración BD + script migración datos: 2 horas
+- Modelos + APIs: 2.5 horas
+- Frontend tree view + modales: 2.5 horas
+- Testing + integración: 2 horas
 
 **Prioridad:** 🔴 Alta — Prerequisito para otros requerimientos
 
