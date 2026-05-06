@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import provinciaService from '../../../../services/provinciaService';
+import zonaService from '../../../../services/zonaService';
 import ProvinciaFormModal from './ProvinciaFormModal';
 import ZonaFormModal from './ZonaFormModal';
 import ProvinciaRow from './ProvinciaRow';
@@ -105,41 +106,33 @@ const GestionProvinciasZonas = () => {
   const handleZonaModalSave = async (zonaData) => {
     try {
       if (editingZona) {
-        await provinciaService.update(editingZona.id, zonaData);
+        await zonaService.update(editingZona.id, zonaData);
         alert('Zona actualizada exitosamente');
       } else {
-        // Para crear zona, necesitamos llamar a zonaService, pero aquí usaremos relación
         const zonaWithProvincia = {
           ...zonaData,
           provincia_id: selectedProvincia.id
         };
-        // Crear zona en backend
-        const response = await fetch('/api/zonas', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify(zonaWithProvincia)
-        });
-        if (!response.ok) throw new Error('Error creating zona');
+        await zonaService.create(zonaWithProvincia);
         alert('Zona creada exitosamente');
       }
       loadProvincias();
       handleZonaModalClose();
     } catch (error) {
       console.error('Error saving zona:', error);
-      alert(error.message || 'Error al guardar zona');
+      alert(error.response?.data?.message || error.message || 'Error al guardar zona');
     }
   };
 
   const handleDeleteZona = async (zona) => {
     if (window.confirm(`¿Eliminar zona "${zona.nombre}"?`)) {
       try {
-        const response = await fetch(`/api/zonas/${zona.id}`, { method: 'DELETE' });
-        if (!response.ok) throw new Error('Error deleting zona');
+        await zonaService.delete(zona.id);
         alert('Zona eliminada exitosamente');
         loadProvincias();
       } catch (error) {
         console.error('Error deleting zona:', error);
-        alert(error.message || 'Error al eliminar zona');
+        alert(error.response?.data?.message || error.message || 'Error al eliminar zona');
       }
     }
   };
