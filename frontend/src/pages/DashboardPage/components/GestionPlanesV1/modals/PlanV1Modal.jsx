@@ -587,59 +587,93 @@ function PlanV1Modal({ mode, planData, onClose, onSave }) {
                 {form.integrantes.length === 0 ? (
                   <p className="plan-v1-modal__empty">Aún no hay afiliados. Agregá al menos uno.</p>
                 ) : (
-                  <table className="plan-v1-modal__afiliados-tabla">
-                    <thead>
-                      <tr>
-                        <th>Nombre</th>
-                        <th>Apellido</th>
-                        <th>DNI</th>
-                        <th>Rol</th>
-                        <th>Servicios</th>
-                        <th>Acciones</th>
-                      </tr>
-                    </thead>
-                    <tbody>
-                      {form.integrantes.map((integrante) => (
-                        <tr key={integrante.persona_id}>
-                          <td>{integrante.persona?.nombre}</td>
-                          <td>{integrante.persona?.apellido}</td>
-                          <td>{integrante.persona?.numero_documento}</td>
-                          <td>
-                            <select
-                              value={integrante.rol}
-                              onChange={(e) => handleRolChange(integrante.persona_id, e.target.value)}
-                            >
-                              <option value="titular">Titular</option>
-                              <option value="adherente">Adherente</option>
-                            </select>
-                          </td>
-                          <td>
-                            <ActionButton
-                              variant="icon"
-                              icon="⚙️"
-                              onClick={() => integrante.id && setServiciosModalOpen(integrante.id)}
-                              disabled={!integrante.id}
-                              title="Servicios"
-                            />
-                          </td>
-                          <td>
-                            <ActionButton
-                              variant="icon"
-                              icon="✎"
-                              onClick={() => handleIntegranteEdit(integrante.persona_id)}
-                              title="Editar"
-                            />
-                            <ActionButton
-                              variant="icon"
-                              icon="🗑"
-                              onClick={() => handleIntegranteRemove(integrante.persona_id)}
-                              title="Quitar"
-                            />
-                          </td>
+                  <DragDropContext onDragEnd={handleDragEnd}>
+                    <table className="plan-v1-modal__afiliados-tabla">
+                      <thead>
+                        <tr>
+                          <th>Orden</th>
+                          <th>Nombre</th>
+                          <th>Apellido</th>
+                          <th>DNI</th>
+                          <th>Rol</th>
+                          <th>Estado</th>
+                          <th>Servicios</th>
+                          <th>Acciones</th>
                         </tr>
-                      ))}
-                    </tbody>
-                  </table>
+                      </thead>
+                      <Droppable droppableId="afiliados">
+                        {(provided, snapshot) => (
+                          <tbody
+                            {...provided.droppableProps}
+                            ref={provided.innerRef}
+                            className={snapshot.isDraggingOver ? 'dragging-over' : ''}
+                          >
+                            {form.integrantes.map((integrante, index) => (
+                              <Draggable key={integrante.persona_id} draggableId={String(integrante.persona_id)} index={index}>
+                                {(provided, snapshot) => (
+                                  <tr
+                                    ref={provided.innerRef}
+                                    {...provided.draggableProps}
+                                    {...provided.dragHandleProps}
+                                    className={snapshot.isDragging ? 'dragging' : ''}
+                                  >
+                                    <td>{index + 1}</td>
+                                    <td>{integrante.persona?.nombre}</td>
+                                    <td>{integrante.persona?.apellido}</td>
+                                    <td>{integrante.persona?.numero_documento}</td>
+                                    <td>
+                                      <select
+                                        value={integrante.rol}
+                                        onChange={(e) => handleRolChange(integrante.persona_id, e.target.value)}
+                                      >
+                                        <option value="titular">Titular</option>
+                                        <option value="adherente">Adherente</option>
+                                      </select>
+                                    </td>
+                                    <td>
+                                      <select
+                                        value={integrante.estado || 'Activo'}
+                                        onChange={(e) => handleEstadoChange(integrante.persona_id, e.target.value)}
+                                      >
+                                        <option value="Activo">Activo</option>
+                                        <option value="Suspendido">Suspendido</option>
+                                        <option value="Eliminado">Eliminado</option>
+                                        <option value="Promocion">Promoción</option>
+                                      </select>
+                                    </td>
+                                    <td>
+                                      <ActionButton
+                                        variant="icon"
+                                        icon="⚙️"
+                                        onClick={() => integrante.id && setServiciosModalOpen(integrante.id)}
+                                        disabled={!integrante.id}
+                                        title="Servicios"
+                                      />
+                                    </td>
+                                    <td>
+                                      <ActionButton
+                                        variant="icon"
+                                        icon="✎"
+                                        onClick={() => handleIntegranteEdit(integrante.persona_id)}
+                                        title="Editar"
+                                      />
+                                      <ActionButton
+                                        variant="icon"
+                                        icon="🗑"
+                                        onClick={() => handleIntegranteRemove(integrante.persona_id)}
+                                        title="Quitar"
+                                      />
+                                    </td>
+                                  </tr>
+                                )}
+                              </Draggable>
+                            ))}
+                            {provided.placeholder}
+                          </tbody>
+                        )}
+                      </Droppable>
+                    </table>
+                  </DragDropContext>
                 )}
               </div>
             )}
