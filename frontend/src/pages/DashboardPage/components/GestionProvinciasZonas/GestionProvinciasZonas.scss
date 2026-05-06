@@ -1,0 +1,58 @@
+@import '../../../../styles/_colors.scss';
+@import '../../../../styles/_components.scss';
+
+.gestion-provincias-zonas {
+  padding: 20px;
+  background-color: $bg-light;
+  border-radius: 8px;
+
+  .filter-bar {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 20px;
+    padding-bottom: 15px;
+    border-bottom: 1px solid $border-color;
+
+    h2 {
+      margin: 0;
+      font-size: 20px;
+      color: $text-dark;
+    }
+
+    .btn-primary {
+      padding: 10px 20px;
+      background-color: $primary-color;
+      color: white;
+      border: none;
+      border-radius: 4px;
+      cursor: pointer;
+      font-size: 14px;
+      font-weight: 500;
+
+      &:hover {
+        background-color: darken($primary-color, 10%);
+      }
+    }
+  }
+
+  .provincias-list {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+
+    .empty-state {
+      text-align: center;
+      padding: 40px 20px;
+      color: $text-light;
+      font-size: 14px;
+    }
+  }
+
+  .loading {
+    text-align: center;
+    padding: 40px 20px;
+    color: $text-light;
+    font-size: 14px;
+  }
+}
