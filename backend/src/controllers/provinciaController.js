@@ -1,5 +1,4 @@
 const { Provincia, Zona } = require('../models');
-const logger = require('../utils/logger');
 
 const provinciaController = {
   async list(req, res) {
@@ -10,7 +9,7 @@ const provinciaController = {
       });
       res.json({ success: true, data: provincias });
     } catch (error) {
-      logger.error('Error listing provincias:', error);
+      console.error('Error listing provincias:', error);
       res.status(500).json({ success: false, message: error.message });
     }
   },
@@ -29,7 +28,7 @@ const provinciaController = {
       if (error.name === 'SequelizeUniqueConstraintError') {
         return res.status(409).json({ success: false, message: 'El nombre o código ya existe' });
       }
-      logger.error('Error creating provincia:', error);
+      console.error('Error creating provincia:', error);
       res.status(500).json({ success: false, message: error.message });
     }
   },
@@ -53,7 +52,7 @@ const provinciaController = {
       if (error.name === 'SequelizeUniqueConstraintError') {
         return res.status(409).json({ success: false, message: 'El nombre o código ya existe' });
       }
-      logger.error('Error updating provincia:', error);
+      console.error('Error updating provincia:', error);
       res.status(500).json({ success: false, message: error.message });
     }
   },
@@ -78,7 +77,7 @@ const provinciaController = {
       await provincia.destroy();
       res.json({ success: true, message: 'Provincia eliminada' });
     } catch (error) {
-      logger.error('Error deleting provincia:', error);
+      console.error('Error deleting provincia:', error);
       res.status(500).json({ success: false, message: error.message });
     }
   }

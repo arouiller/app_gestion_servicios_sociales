@@ -1,5 +1,4 @@
 const { Zona, Provincia, PlanIntegrante } = require('../models');
-const logger = require('../utils/logger');
 
 const zonaController = {
   async list(req, res) {
@@ -19,7 +18,7 @@ const zonaController = {
 
       res.json({ success: true, data: zonas });
     } catch (error) {
-      logger.error('Error listing zonas:', error);
+      console.error('Error listing zonas:', error);
       res.status(500).json({ success: false, message: error.message });
     }
   },
@@ -40,7 +39,7 @@ const zonaController = {
 
       res.json({ success: true, data: zonas });
     } catch (error) {
-      logger.error('Error listing zonas by provincia:', error);
+      console.error('Error listing zonas by provincia:', error);
       res.status(500).json({ success: false, message: error.message });
     }
   },
@@ -75,7 +74,7 @@ const zonaController = {
           message: 'El código ya existe para esta provincia'
         });
       }
-      logger.error('Error creating zona:', error);
+      console.error('Error creating zona:', error);
       res.status(500).json({ success: false, message: error.message });
     }
   },
@@ -102,7 +101,7 @@ const zonaController = {
           message: 'El código ya existe para esta provincia'
         });
       }
-      logger.error('Error updating zona:', error);
+      console.error('Error updating zona:', error);
       res.status(500).json({ success: false, message: error.message });
     }
   },
@@ -127,7 +126,7 @@ const zonaController = {
       await zona.destroy();
       res.json({ success: true, message: 'Zona eliminada' });
     } catch (error) {
-      logger.error('Error deleting zona:', error);
+      console.error('Error deleting zona:', error);
       res.status(500).json({ success: false, message: error.message });
     }
   }
