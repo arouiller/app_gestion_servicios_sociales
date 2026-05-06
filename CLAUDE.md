@@ -169,6 +169,7 @@ See `docs/DEPLOYMENT.md` for step-by-step. **Avoid dependencies that require roo
 - Do not change the DB schema directly — always use the migration system
 - Do not delete or merge `v1.0` legacy folders (controllers, routes, services, models)
 - Do not add dependencies incompatible with Hostinger shared hosting
+- **No hay Node.js disponible en el entorno** — No es posible ejecutar `npm install`, `npm run dev`, `npm run build`, o hacer testing/debugging local. Todas las pruebas y despliegues deben realizarse en el servidor de Hostinger o en un entorno externo
 
 ---
 
