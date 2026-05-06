@@ -1,4 +1,5 @@
 import React, { useState, useEffect, useCallback, useMemo, useRef } from 'react';
+import { DragDropContext, Droppable, Draggable } from 'react-beautiful-dnd';
 import { usePlanV1Form } from '../hooks/usePlanV1Form';
 import ActionButton from '../../../../../components/ActionButton/ActionButton';
 import { formatNumeroAfiliado, formatZona } from '../../../../../utils/formatters';
