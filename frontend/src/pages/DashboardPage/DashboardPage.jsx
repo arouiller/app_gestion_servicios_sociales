@@ -17,6 +17,7 @@ import TiposDePlan from './components/TiposDePlan/TiposDePlan';
 import GestionUsuarios from './components/GestionUsuarios/GestionUsuarios';
 import ConfiguracionNotificaciones from './components/ConfiguracionNotificaciones/ConfiguracionNotificaciones';
 import GestionBugs from './components/GestionBugs/GestionBugs';
+import GestionProvinciasZonas from './components/GestionProvinciasZonas/GestionProvinciasZonas';
 import GestionAuditoria from './components/GestionAuditoria/GestionAuditoria';
 import QueryExecPage from './components/QueryExec/QueryExecPage';
 import configService from '../../services/configService';
@@ -71,6 +72,7 @@ function buildMenu(isAdmin) {
       key: 'administracion',
       label: 'Administración',
       children: [
+        { key: 'provincias-zonas', label: 'Provincias y Zonas' },
         { key: 'auditoria', label: 'Auditoría' },
         { key: 'herramienta-queries', label: 'Herramienta de Queries' },
         { key: 'gestion-usuarios', label: 'Gestión de Usuarios' },
@@ -294,6 +296,7 @@ function DashboardPageContent() {
           {activeModule === 'gestion-usuarios' && <GestionUsuarios />}
           {activeModule === 'configuracion-notificaciones' && <ConfiguracionNotificaciones />}
           {activeModule === 'migraciones-bd' && <MigrationsDashboard />}
+          {activeModule === 'provincias-zonas' && <GestionProvinciasZonas />}
           {activeModule === 'cobradores' && <Cobradores />}
           {activeModule === 'obras-sociales' && <ObrasSociales />}
           {activeModule === 'servicios-adicionales' && <ServiciosAdicionales />}
