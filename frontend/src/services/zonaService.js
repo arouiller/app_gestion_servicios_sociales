@@ -1,31 +1,29 @@
-import axios from 'axios';
-
-const API_URL = '/api/admin';
+import api from './api';
 
 const zonaService = {
   async getAll(provinciaId) {
     const params = provinciaId ? { provincia_id: provinciaId } : {};
-    const response = await axios.get(`${API_URL}/zonas`, { params });
-    return response.data;
+    const { data } = await api.get('/admin/zonas', { params });
+    return data;
   },
 
   async getByProvincia(provinciaId) {
-    const response = await axios.get(`${API_URL}/provincias/${provinciaId}/zonas`);
-    return response.data;
+    const { data } = await api.get(`/admin/provincias/${provinciaId}/zonas`);
+    return data;
   },
 
   async create(data) {
-    const response = await axios.post(`${API_URL}/zonas`, data);
+    const response = await api.post('/admin/zonas', data);
     return response.data;
   },
 
   async update(id, data) {
-    const response = await axios.put(`${API_URL}/zonas/${id}`, data);
+    const response = await api.put(`/admin/zonas/${id}`, data);
     return response.data;
   },
 
   async delete(id) {
-    const response = await axios.delete(`${API_URL}/zonas/${id}`);
+    const response = await api.delete(`/admin/zonas/${id}`);
     return response.data;
   }
 };
