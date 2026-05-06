@@ -1,6 +1,6 @@
 import api from './api';
 
-const ENDPOINT = '/provincias';
+const ENDPOINT = '/admin/provincias';
 
 const provinciaService = {
   /**
