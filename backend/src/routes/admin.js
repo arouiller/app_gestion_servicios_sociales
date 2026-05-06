@@ -3,6 +3,8 @@ const { ConfiguracionApp } = require('../models');
 const db = require('../models');
 const { verifyToken, requireAdmin } = require('../middleware/auth');
 const queryExecController = require('../controllers/queryExecController');
+const provinciaController = require('../controllers/provinciaController');
+const zonaController = require('../controllers/zonaController');
 
 const router = express.Router();
 
@@ -134,5 +136,18 @@ router.get('/auditoria', verifyToken, requireAdmin, async (req, res) => {
 
 // POST /api/admin/query-exec - Ejecutar queries SQL (Admin only)
 router.post('/query-exec', verifyToken, requireAdmin, queryExecController.executeQuery);
+
+// Provincias CRUD
+router.get('/provincias', verifyToken, requireAdmin, provinciaController.list);
+router.post('/provincias', verifyToken, requireAdmin, provinciaController.create);
+router.put('/provincias/:id', verifyToken, requireAdmin, provinciaController.update);
+router.delete('/provincias/:id', verifyToken, requireAdmin, provinciaController.delete);
+
+// Zonas CRUD
+router.get('/provincias/:id/zonas', verifyToken, requireAdmin, zonaController.byProvincia);
+router.get('/zonas', verifyToken, requireAdmin, zonaController.list);
+router.post('/zonas', verifyToken, requireAdmin, zonaController.create);
+router.put('/zonas/:id', verifyToken, requireAdmin, zonaController.update);
+router.delete('/zonas/:id', verifyToken, requireAdmin, zonaController.delete);
 
 module.exports = router;
