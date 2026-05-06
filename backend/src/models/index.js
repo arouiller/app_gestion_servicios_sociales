@@ -115,10 +115,16 @@ if (db.Provincia && db.Zona) {
   db.Zona.belongsTo(db.Provincia, { foreignKey: 'provincia_id', as: 'provincia', onDelete: 'RESTRICT' });
 }
 
+// PlanV1 and Zona associations
+if (db.PlanV1 && db.Zona) {
+  db.PlanV1.belongsTo(db.Zona, { foreignKey: 'zona', as: 'zonaRelation' });
+  db.Zona.hasMany(db.PlanV1, { foreignKey: 'zona', as: 'planes' });
+}
+
 // PlanIntegrante and Zona associations
 if (db.PlanIntegrante && db.Zona) {
   db.PlanIntegrante.belongsTo(db.Zona, { foreignKey: 'zona_id', as: 'zona' });
-  db.Zona.hasMany(db.PlanIntegrante, { foreignKey: 'zona_id', as: 'planes' });
+  db.Zona.hasMany(db.PlanIntegrante, { foreignKey: 'zona_id', as: 'integrantes' });
 }
 
 module.exports = db;
