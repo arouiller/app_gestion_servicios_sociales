@@ -40,7 +40,7 @@ De cualquier estado → Descartado
 
 | ID | Prioridad | Estado | Descripción | Contexto / Motivo | Archivos estimados |
 |----|-----------|--------|-------------|-------------------|----|
-| BACKLOG-055 | 🟡 Media | 🚀 Desarrollado | Historial de aumentos de cuota - listado centralizado con pop-up | Crear un registro específico y centralizado de los aumentos de cuota (fecha, porcentaje, usuario que lo realizó). Accesible desde GestionPlanesV1 a través de botón "Ver historial de aumentos" al lado del botón de aumento masivo. Listado ordenado en forma descendente (más recientes primero). Mejora trazabilidad y consulta de cambios históricos. Commits: 9f78d77, f12e55a, 4bf6481, d517701, 0ca3d58 | HistorialAumentosModal.jsx, planesService.js, planesController.js, GestionPlanesV1.jsx |
+| BACKLOG-055 | 🟡 Media | 🚀 Desarrollado | Historial de aumentos de cuota - listado centralizado con pop-up | Crear tabla `aumentos_masivos` (fecha, porcentaje, usuario) para registrar cada operación de aumento masivo. Accesible desde GestionPlanesV1 a través de botón "Ver historial de aumentos" al lado del botón de aumento masivo. Listado ordenado en forma descendente (más recientes primero). Mejora trazabilidad y consulta de cambios históricos. Commits: adb523f, 13d95cf, ec8ba58, 52e4fc9 | migrations/2.0.26, AumentoMasivo.js, planesController.js, HistorialAumentosModal.jsx |
 | BACKLOG-054 | 🔴 Alta | 📋 Registrado | Aumento de cuotas masivo: solo porcentajes, redondeo configurable | Mejorar funcionalidad de aumento masivo: (1) eliminar opción de aumento fijo, solo permitir porcentajes; (2) redondeo siempre hacia arriba (ceil); (3) precisión decimal del redondeo configurable desde UI. | BulkUpdateCuotaModal.jsx, planesController.js, ConfiguracionApp.jsx, migrations |
 | BACKLOG-053 | 🟡 Media | 📋 Registrado | Posicionamiento automático de nuevo plan en grilla ordenada | Al crear un nuevo plan, este debe insertarse en la posición correcta según orden zona + número de afiliado, en lugar de aparecer al final. Mejora UX y mantiene consistencia en la visualización de datos. | GestionPlanesV1.jsx, planesService.js |
 | BACKLOG-052 | 🟡 Media | ✅ Solucionado | Redimensionamiento manual de columnas con persistencia en localStorage | Permitir que los usuarios cambien manualmente el ancho de las columnas en las tablas (GestionPlanesV1, LookupCRUD). Las preferencias de ancho se guardan en localStorage y persisten entre sesiones del navegador. Mejora UX: usuarios pueden ajustar columnas según sus preferencias. Hook useColumnResize con drag & drop en headers. Completado en todas las 17 tablas del sistema. Commits: 2c816f9, 56a3e0b, effa576, 2d2b9c5, 5448447, 54e636c, 044754c, 6da9a82, c17531d, ff405ba, d882cc7, f4d1fd5, 700555b, 036adf0 | useColumnResize hook, todas las tablas, _table-standard.scss |
@@ -4836,87 +4836,89 @@ onSave: async (newPlan) => {
 ### BACKLOG-055: Historial de Aumentos de Cuota - Listado Centralizado con Pop-up
 
 **Descripción:**
-Crear un registro específico y centralizado de los aumentos de cuota aplicados masivamente. El historial debe ser consultable a través de un pop-up desde la gestión de planes, accesible mediante un botón "Ver historial de aumentos" ubicado al lado del botón de aumento masivo.
+Crear tabla `aumentos_masivos` para registrar cada operación de aumento masivo realizada (fecha, porcentaje ingresado, usuario). El historial debe ser consultable a través de un pop-up desde la gestión de planes, accesible mediante un botón "Ver historial de aumentos" ubicado al lado del botón de aumento masivo.
 
-**Requerimientos Funcionales:**
+**Estructura de Datos:**
 
-1. **Fuente de Datos**
-   - ✅ Utilizar tabla existente `historial_cuota` que ya registra cada cambio de cuota
-   - ✅ Campos: plan_numero, valor_anterior, valor_nuevo, fecha_cambio, usuario_id
-   - ✅ El backend ya crea estos registros en `bulkUpdateCuota()` del planesController
+1. **Nueva Tabla: `aumentos_masivos`**
+   - `id` (INTEGER PRIMARY KEY)
+   - `fecha` (DATETIME) — momento en que se ejecutó el aumento
+   - `porcentaje` (DECIMAL(10,2)) — porcentaje que ingresó el usuario
+   - `usuario_id` (INTEGER FK) — usuario que ejecutó el aumento
+   - Índices: `idx_aumentos_fecha`, `idx_aumentos_usuario`
+   - Asociación con Usuario
 
 2. **Pop-up Modal**
    - ✅ Botón "Ver historial de aumentos" en GestionPlanesV1.jsx junto a botón "Aumento Masivo"
-   - ✅ Al hacer click, abre modal (HistorialAumentosModal.jsx)
-   - ✅ Modal muestra: plan_numero, valor_anterior, valor_nuevo, diferencia (%), fecha_cambio, usuario (apellido, nombre)
+   - ✅ Al hacer click, abre HistorialAumentosModal.jsx
+   - ✅ Modal muestra registros de la tabla `aumentos_masivos`
 
 3. **Listado**
-   - ✅ Tabla con historial de todos los aumentos registrados
-   - ✅ Ordenado en forma **descendente por fecha_cambio** (más recientes primero)
-   - ✅ Paginación si hay más de 10 registros
-   - ✅ Búsqueda opcional por número de plan
+   - ✅ Tabla con historial de todos los aumentos masivos ejecutados
+   - ✅ Ordenado en forma **descendente por fecha** (más recientes primero)
+   - ✅ Paginación (10 registros por página)
+   - ✅ Sin búsqueda (historial completo y breve)
 
 4. **Columnas en Tabla**
-   - Fecha (fecha_cambio formateada)
-   - Plan # (plan_numero)
-   - Usuario (apellido, nombre del usuario que realizó aumento)
-   - Porcentaje (%) (calculado: ((valor_nuevo - valor_anterior) / valor_anterior) * 100)
-   - Valor Anterior ($)
-   - Valor Nuevo ($)
+   - Fecha (fecha formateada: DD/MM/YYYY HH:mm:ss)
+   - Porcentaje (%) (porcentaje que se aplicó)
+   - Usuario (apellido, nombre del usuario que ejecutó el aumento)
 
-**Requerimientos Backend:**
+**Implementación Backend:**
 
-1. **Nuevo Endpoint**
-   - `GET /api/historial-cuotas?limit=10&offset=0&plan_numero=?`
-   - Retorna: { success, data: [historials], count, total }
-   - Incluir JOIN con tabla Usuario para obtener datos del usuario
+1. **Migración 2.0.26**
+   - ✅ Crear tabla `aumentos_masivos` con FK a usuarios
+   - ✅ Índices en fecha y usuario_id
+   - Archivo: `migrations/versions/2.0.26_aumentos_masivos/`
 
-2. **Query**
-   - Order by: `fecha_cambio DESC`
-   - Include: Usuario (id, apellido, nombre)
-   - Filter opcional: plan_numero
+2. **Modelo AumentoMasivo**
+   - ✅ Archivo: `models/AumentoMasivo.js`
+   - ✅ Asociación `belongsTo(Usuario)` en `models/index.js`
 
-**Requerimientos Frontend:**
+3. **Modificación bulkUpdateCuota()**
+   - ✅ Al terminar actualización, insertar registro en `aumentos_masivos`
+   - ✅ Campos: fecha=timestamp, porcentaje=valor, usuario_id=req.user.id
+
+4. **Endpoint GET /api/planes/historial-cuota**
+   - ✅ Cambiar para traer de `aumentos_masivos` en lugar de `historial_cuota`
+   - ✅ Include: Usuario (id, apellido, nombre)
+   - ✅ Order by: fecha DESC
+
+**Implementación Frontend:**
 
 1. **GestionPlanesV1.jsx**
-   - Agregar botón "Ver historial de aumentos" junto a "Aumento Masivo"
-   - Botón abre HistorialAumentosModal
+   - ✅ Agregar botón "Ver historial de aumentos"
+   - ✅ Import y montar HistorialAumentosModal
 
-2. **Nuevo Componente: HistorialAumentosModal.jsx**
-   - Modal con tabla de historial
-   - Carga datos desde `GET /api/historial-cuotas`
-   - Paginación
-   - Búsqueda por plan_numero (opcional)
-   - Formateo de fechas, moneda y porcentaje
+2. **HistorialAumentosModal.jsx**
+   - ✅ Tabla con 3 columnas: Fecha | Porcentaje | Usuario
+   - ✅ Carga datos desde planesService.getHistorialCuota()
+   - ✅ Paginación (10 por página)
+   - ✅ Columnas redimensionables con useColumnResize
 
-3. **Nuevo Servicio: historialCuotasService.js**
-   - `getHistorialCuotas(limit, offset, plan_numero?)`
-   - Llamada a `/api/historial-cuotas`
-
-**Archivos Estimados:**
-- `backend/src/controllers/historialController.js` (nuevo endpoint `getCuotasHistory`)
-- `backend/src/routes/historial.js` (nueva ruta GET /api/historial-cuotas)
-- `frontend/src/pages/DashboardPage/components/GestionPlanesV1/GestionPlanesV1.jsx` (agregar botón)
-- `frontend/src/pages/DashboardPage/components/GestionPlanesV1/modals/HistorialAumentosModal.jsx` (nuevo modal)
-- `frontend/src/services/historialCuotasService.js` (nuevo servicio)
+**Archivos Modificados/Creados:**
+- ✅ `backend/src/migrations/versions/2.0.26_aumentos_masivos/` (upgrade.sql, downgrade.sql)
+- ✅ `backend/src/models/AumentoMasivo.js` (nuevo modelo)
+- ✅ `backend/src/models/index.js` (agregar import y asociación)
+- ✅ `backend/src/controllers/planesController.js` (modificar bulkUpdateCuota y getHistorialCuota)
+- ✅ `frontend/src/pages/DashboardPage/components/HistorialAumentosModal/HistorialAumentosModal.jsx` (actualizar para nuevos datos)
+- ✅ `frontend/src/pages/DashboardPage/components/GestionPlanesV1/GestionPlanesV1.jsx` (ya estaba integrado)
 
 **Testing:**
-- ✅ Ejecutar aumento masivo, verificar que historial_cuota se actualiza
+- ✅ Ejecutar aumento masivo, verificar que se inserta en tabla `aumentos_masivos`
 - ✅ Abrir modal "Ver historial de aumentos"
 - ✅ Verificar que aparecen los registros ordenados descendente por fecha
-- ✅ Verificar cálculo de porcentaje
+- ✅ Verificar que columnas muestran: Fecha | Porcentaje | Usuario (correcto)
 - ✅ Probar paginación con >10 registros
-- ✅ Probar búsqueda por plan_numero
-- ✅ Verificar formateo de fechas y moneda
+- ✅ Verificar formateo de fechas (DD/MM/YYYY HH:mm:ss)
 
 **Estado:** 🚀 Desarrollado (2026-05-07)
 
 **Commits:**
-- `9f78d77` — feat(planes): agregar endpoint GET historial de cuota global con join Usuario
-- `f12e55a` — feat(planes-service): agregar método getHistorialCuota
-- `4bf6481` — feat(historial-aumentos): crear modal de historial global de aumentos de cuota
-- `d517701` — style(historial-aumentos): agregar estilos del modal
-- `0ca3d58` — feat(gestion-planes): agregar botón y modal de historial de aumentos
+- `adb523f` — feat(migrations): 2.0.26 crear tabla aumentos_masivos para registrar aumentos masivos
+- `13d95cf` — feat(models): agregar modelo AumentoMasivo y asociación con Usuario
+- `ec8ba58` — feat(planes): registrar aumentos masivos en tabla aumentos_masivos y cambiar endpoint historial
+- `52e4fc9` — feat(historial-aumentos): actualizar modal para mostrar registros de aumentos masivos
 
 ---
 
