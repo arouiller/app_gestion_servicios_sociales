@@ -29,6 +29,7 @@ const ReciboIntegrante = require('./ReciboIntegrante');
 const PeriodosRecibos = require('./PeriodosRecibos');
 const Bug = require('./Bug');
 const AuditLog = require('./AuditLog');
+const AumentoMasivo = require('./AumentoMasivo');
 
 // Initialize all models
 const db = {
@@ -57,6 +58,7 @@ const db = {
   PeriodosRecibos,
   Bug,
   AuditLog,
+  AumentoMasivo,
 };
 
 // Define associations for 1.0.x
@@ -119,6 +121,11 @@ if (db.Bug && db.Usuario) {
 // AuditLog associations
 if (db.AuditLog && db.Usuario) {
   db.AuditLog.belongsTo(db.Usuario, { foreignKey: 'usuario_id', as: 'usuario' });
+}
+
+// AumentoMasivo associations
+if (db.AumentoMasivo && db.Usuario) {
+  db.AumentoMasivo.belongsTo(db.Usuario, { foreignKey: 'usuario_id' });
 }
 
 // Provincia and Localidad associations
