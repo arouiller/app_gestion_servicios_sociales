@@ -92,6 +92,10 @@ if (db.PlanIntegrante && db.Persona) {
 if (db.IntegranteServicio && db.ServicioAdicional) {
   db.IntegranteServicio.belongsTo(db.ServicioAdicional, { foreignKey: 'servicio_adicional_numero' });
 }
+if (db.PlanIntegrante && db.IntegranteServicio) {
+  db.PlanIntegrante.hasMany(db.IntegranteServicio, { foreignKey: 'plan_integrante_id' });
+  db.IntegranteServicio.belongsTo(db.PlanIntegrante, { foreignKey: 'plan_integrante_id' });
+}
 // HistorialCuota associations
 if (db.HistorialCuota && db.Usuario) {
   db.HistorialCuota.belongsTo(db.Usuario, { foreignKey: 'usuario_id' });
