@@ -10,6 +10,7 @@ import Pagination from '../Pagination/Pagination';
 import useDebounce from '../../hooks/useDebounce';
 import usePagination from '../../hooks/usePagination';
 import useColumnResize from '../../hooks/useColumnResize';
+import useSortable from '../../hooks/useSortable';
 import '../../styles/_table-standard.scss';
 import './LookupCRUD.scss';
 
@@ -61,12 +62,12 @@ const LookupCRUD = ({ titulo, singularName, endpoint, campos, tableKey = 'lookup
   // Cargar lista
   useEffect(() => {
     loadRegistros();
-  }, [entidad]);
+  }, [entidad, sortBy, order]);
 
   const loadRegistros = async () => {
     try {
       setLoading(true);
-      const data = await lookupService.list(entidad);
+      const data = await lookupService.list(entidad, { sortBy, order });
       setRegistros(data);
       setError(null);
     } catch (err) {
@@ -195,6 +196,9 @@ const LookupCRUD = ({ titulo, singularName, endpoint, campos, tableKey = 'lookup
 
   const { widths, getResizeHandle } = useColumnResize(tableKey, defaultWidths);
 
+  // Sort hook para ordenamiento dinámico
+  const { sortBy, order, handleSort, getSortIcon } = useSortable(`lookup-${entidad}-sort`, entidad === 'cobradores' ? 'cobrador_numero' : 'id', 'ASC');
+
   const registrosFiltered = registros
     .filter(registro => {
       const searchLower = effectiveSearchText.toLowerCase();
@@ -248,8 +252,12 @@ const LookupCRUD = ({ titulo, singularName, endpoint, campos, tableKey = 'lookup
           <thead>
             <tr>
               {camposVisibles.map(campo => (
-                <th key={campo.name} style={{ width: widths[campo.name] }}>
-                  {campo.label}{getResizeHandle(campo.name)}
+                <th
+                  key={campo.name}
+                  style={{ width: widths[campo.name], cursor: 'pointer' }}
+                  onClick={() => handleSort(campo.name)}
+                >
+                  {campo.label}{getSortIcon(campo.name)}{getResizeHandle(campo.name)}
                 </th>
               ))}
               <th style={{ width: widths.acciones }}>Acciones</th>

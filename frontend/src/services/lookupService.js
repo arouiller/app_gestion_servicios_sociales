@@ -4,9 +4,15 @@ const lookupService = {
   /**
    * GET /api/lookup/:entidad
    * Obtiene la lista de registros para una entidad de lookup
+   * @param {string} entidad - Nombre de la entidad
+   * @param {object} options - { sortBy, order } parámetros de ordenamiento
    */
-  list: async (entidad) => {
-    const response = await api.get(`/lookup/${entidad}`);
+  list: async (entidad, options = {}) => {
+    const { sortBy, order } = options;
+    const params = {};
+    if (sortBy) params.sortBy = sortBy;
+    if (order) params.order = order;
+    const response = await api.get(`/lookup/${entidad}`, { params });
     return response.data;
   },
 
