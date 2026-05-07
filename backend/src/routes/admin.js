@@ -7,7 +7,7 @@ const queryExecController = require('../controllers/queryExecController');
 const router = express.Router();
 
 // Tipos de notificación y configuración válidos
-const VALID_TYPES = ['error', 'warning', 'success', 'info', 'debounce_delay_ms', 'items_per_page', 'audit_enabled', 'audit_retention_days'];
+const VALID_TYPES = ['error', 'warning', 'success', 'info', 'debounce_delay_ms', 'items_per_page', 'audit_enabled', 'audit_retention_days', 'redondeo_precision'];
 
 // GET /api/admin/configuracion - Público (lectura de configuración)
 router.get('/configuracion', async (req, res) => {
@@ -71,6 +71,13 @@ router.put('/configuracion/:tipo', verifyToken, requireAdmin, async (req, res) =
         return res.status(400).json({
           success: false,
           message: 'audit_retention_days debe estar entre 1 y 365 días',
+        });
+      }
+    } else if (tipo === 'redondeo_precision') {
+      if (duracion_ms <= 0 || !Number.isFinite(duracion_ms)) {
+        return res.status(400).json({
+          success: false,
+          message: 'redondeo_precision debe ser un valor positivo (ej: 0.01, 1, 10, 100, 500)',
         });
       }
     }
