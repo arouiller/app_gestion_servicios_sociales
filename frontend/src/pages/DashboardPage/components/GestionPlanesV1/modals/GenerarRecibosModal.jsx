@@ -16,6 +16,7 @@ function GenerarRecibosModal({ isOpen, onClose, onSuccess }) {
   const [showConfirmClose, setShowConfirmClose] = useState(false);
   const [periodoExistentePreview, setPeriodoExistentePreview] = useState(null);
   const [verificandoPeriodo, setVerificandoPeriodo] = useState(false);
+  const [ultimoAumento, setUltimoAumento] = useState(null);
 
   // Derivar período en formato YYYY-MM-01
   const periodo = useMemo(() => {
@@ -49,8 +50,20 @@ function GenerarRecibosModal({ isOpen, onClose, onSuccess }) {
   useEffect(() => {
     if (isOpen) {
       resetForm();
+      loadUltimoAumento();
     }
   }, [isOpen]);
+
+  const loadUltimoAumento = async () => {
+    try {
+      const res = await recibosService.getUltimoAumentoMasivo();
+      if (res.success && res.data) {
+        setUltimoAumento(res.data);
+      }
+    } catch (err) {
+      console.error('Error cargando último aumento:', err);
+    }
+  };
 
   // Verificación inmediata al abrir modal (sin debounce)
   useEffect(() => {
@@ -242,6 +255,15 @@ function GenerarRecibosModal({ isOpen, onClose, onSuccess }) {
                     <p className="periodo-display">
                       Generarás recibos para <strong>{getPeriodoDisplay()}</strong> para todos los planes ACTIVO
                     </p>
+                    {ultimoAumento && (
+                      <div className="generar-recibos-modal__ultimo-aumento">
+                        <strong>Último aumento masivo:</strong> {ultimoAumento.porcentaje}% realizado el{' '}
+                        {new Date(ultimoAumento.fecha).toLocaleString('es-AR')} por{' '}
+                        {ultimoAumento.Usuario
+                          ? `${ultimoAumento.Usuario.apellido}, ${ultimoAumento.Usuario.nombre}`
+                          : 'Usuario desconocido'}
+                      </div>
+                    )}
                     {verificandoPeriodo && (
                       <div className="periodo-checking">
                         <span className="spinner-mini"></span>
