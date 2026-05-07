@@ -645,7 +645,7 @@ function PlanV1Modal({ mode, planData, onClose, onSave }) {
                   <p className="plan-v1-modal__empty">Aún no hay afiliados. Agregá al menos uno.</p>
                 ) : (
                   <DragDropContext onDragEnd={handleDragEnd}>
-                    <table className="plan-v1-modal__afiliados-tabla">
+                    <table className="plan-v1-modal__afiliados-tabla table-standard">
                       <thead>
                         <tr>
                           <th style={{ width: widthsAfiliados.afiliado }}>Afiliado{getResizeHandleAfiliados('afiliado')}</th>
@@ -730,7 +730,7 @@ function PlanV1Modal({ mode, planData, onClose, onSave }) {
                   <p className="plan-v1-modal__empty">No hay recibos generados aún.</p>
                 ) : (
                   <>
-                    <table className="plan-v1-modal__recibos-tabla">
+                    <table className="plan-v1-modal__recibos-tabla table-standard">
                       <thead>
                         <tr>
                           <th style={{ width: widthsRecibos.periodo }}>Período{getResizeHandleRecibos('periodo')}</th>
@@ -799,7 +799,7 @@ function PlanV1Modal({ mode, planData, onClose, onSave }) {
                 ) : !historialCuota || historialCuota.length === 0 ? (
                   <p className="plan-v1-modal__empty">No hay cambios de cuota registrados.</p>
                 ) : (
-                  <table className="plan-v1-modal__historial-tabla">
+                  <table className="plan-v1-modal__historial-tabla table-standard">
                     <thead>
                       <tr>
                         <th style={{ width: widthsHistorial.fecha }}>Fecha de Cambio{getResizeHandleHistorial('fecha')}</th>
