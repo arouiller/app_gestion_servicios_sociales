@@ -13,6 +13,7 @@ import StatusBadge from '../../../../components/StatusBadge/StatusBadge';
 import Pagination from '../../../../components/Pagination/Pagination';
 import useDebounce from '../../../../hooks/useDebounce';
 import usePagination from '../../../../hooks/usePagination';
+import useColumnResize from '../../../../hooks/useColumnResize';
 import '../../../../styles/_table-standard.scss';
 import './GestionPlanesV1.scss';
 
@@ -34,6 +35,18 @@ function GestionPlanesV1() {
   const [bulkUpdateModalOpen, setBulkUpdateModalOpen] = useState(false);
   const [generarRecibosModalOpen, setGenerarRecibosModalOpen] = useState(false);
   const [configItemsPerPage, setConfigItemsPerPage] = useState(null);
+
+  const DEFAULT_WIDTHS_PLANES = {
+    identificador: 110,
+    titular: 200,
+    tipoPlan: 140,
+    cobrador: 160,
+    obraSocial: 140,
+    estado: 100,
+    acciones: 100,
+  };
+
+  const { widths, getResizeHandle } = useColumnResize('planes', DEFAULT_WIDTHS_PLANES);
 
   // Debouncificar el texto de búsqueda
   const debouncedSearchText = useDebounce(searchText, debounceDelay);
@@ -220,13 +233,13 @@ function GestionPlanesV1() {
           <table className="table-standard gestion-planes-v1__tabla">
             <thead>
               <tr>
-                <th>Identificador</th>
-                <th>Titular</th>
-                <th>Tipo de Plan</th>
-                <th>Cobrador</th>
-                <th>Obra Social</th>
-                <th>Estado</th>
-                <th>Acciones</th>
+                <th style={{ width: widths.identificador }}>Identificador{getResizeHandle('identificador')}</th>
+                <th style={{ width: widths.titular }}>Titular{getResizeHandle('titular')}</th>
+                <th style={{ width: widths.tipoPlan }}>Tipo de Plan{getResizeHandle('tipoPlan')}</th>
+                <th style={{ width: widths.cobrador }}>Cobrador{getResizeHandle('cobrador')}</th>
+                <th style={{ width: widths.obraSocial }}>Obra Social{getResizeHandle('obraSocial')}</th>
+                <th style={{ width: widths.estado }}>Estado{getResizeHandle('estado')}</th>
+                <th style={{ width: widths.acciones }}>Acciones</th>
               </tr>
             </thead>
             <tbody>
