@@ -25,13 +25,12 @@ Un bug solo puede pasar a estado solucionado, Descartado a traves del pedido exp
 
 ## Registros Activos
 
-Actualmente hay 2 bugs activos: 2 críticos.
+Actualmente hay 1 bug activo: 1 crítico en análisis.
 
 ### Historial reciente (últimos 7 días)
 
 | ID | Severidad | Fase | Descripción | Reportado | Estado |
 |----|-----------|------|-------------|-----------|--------|
-| BUG-028 | 🔴 CRÍTICO | BACKLOG-048 | Drag & drop de integrantes: rol guarda como vacío (ENUM 'adherente' inválido) | 2026-05-07 | 📋 Registrado |
 | BUG-025 | 🔴 CRÍTICO | BACKLOG-024 | npm install falló: conflicto de versiones al agregar 22 dependencias explícitamente | 2026-04-18 | 🔬 En análisis |
 
 ---
@@ -68,10 +67,23 @@ MySQL rechaza el valor inválido y guarda como cadena vacía.
 **Archivos Afectados:**
 - `backend/src/controllers/v1.0/planIntegrantesController.js` línea 133
 
-**Fix Requerido:**
-Cambiar 'adherente' → 'integrante' en línea 133
+**Fixes Aplicados:**
 
-**Estado:** 📋 Registrado → 🚀 Desarrollando
+1. **Cambiar ENUM inválido (81b379f):**
+   - Línea 133 en planIntegrantesController.js
+   - 'adherente' → 'integrante'
+
+2. **Sincronizar orden y rol (a3fcc44):**
+   - Backend: Agregar `order: [['orden', 'ASC']]` en include de PlanIntegrante
+   - Frontend: Sortear integrantes por `orden` al cargar
+   - Frontend: Usar `integrante.rol` en tabla en lugar de inferir de index
+   - Incluir campo `orden` en mapeo de integrantes
+
+**Commits de Resolución:**
+- 81b379f: fix(reorder): cambiar rol 'adherente' a 'integrante' para match con ENUM
+- a3fcc44: fix(integrantes): ordenar por campo 'orden' en BD y frontend, usar rol de BD en tabla
+
+**Estado:** ✅ Solucionado (2026-05-07)
 
 ---
 
@@ -79,6 +91,7 @@ Cambiar 'adherente' → 'integrante' en línea 133
 
 | ID | Fase | Descripción | Resuelto | Commits |
 |----|------|-------------|----------|---------|
+| BUG-028 | BACKLOG-048 | Drag & drop de integrantes: rol guarda como vacío (ENUM 'adherente' inválido) | 2026-05-07 | 81b379f, a3fcc44 |
 | BUG-027 | BACKLOG-014 | Listado de Recibos: obra social no aparece en lista (pero sí en detalle) | 2026-05-06 | (cerrado por usuario) |
 | BUG-026 | BACKLOG-014 | Gestión de Recibos: período Abril 2026 muestra "No hay recibos" pese a tener 12 registrados | 2026-05-06 | (cerrado por usuario) |
 | BUG-024 | BACKLOG-N/A | Migraciones BD - Tab "Estadísticas" muestra página en blanco | 2026-05-06 | (cerrado por usuario) |
