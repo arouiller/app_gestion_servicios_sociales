@@ -1,0 +1,30 @@
+.draggable-list {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+
+  &__item {
+    padding: 8px;
+    background: #fff;
+    border: 2px solid transparent;
+    border-radius: 4px;
+    cursor: move;
+    transition: all 0.2s ease;
+    user-select: none;
+
+    &.is-dragging {
+      opacity: 0.5;
+      background: #f5f5f5;
+    }
+
+    &.is-drag-over {
+      border-color: #0066cc;
+      border-style: dashed;
+      background: #f0f7ff;
+    }
+
+    &:hover {
+      background: #f9f9f9;
+    }
+  }
+}
