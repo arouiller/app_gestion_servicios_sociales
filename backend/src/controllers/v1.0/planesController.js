@@ -24,6 +24,12 @@ const listar = async (req, res, next) => {
         { model: db.ObraSocial, attributes: ['os_numero', 'os_nombre'] },
         { model: db.Zona, attributes: ['id', 'codigo', 'nombre'] },
         { model: db.Localidad, attributes: ['id', 'codigo', 'nombre'] },
+        {
+          model: db.PlanIntegrante,
+          where: { orden: 1 },
+          required: false,
+          include: [{ model: db.Persona, attributes: ['apellido', 'nombre'] }],
+        },
       ],
       order: [['plan_numero', 'DESC']],
     });
