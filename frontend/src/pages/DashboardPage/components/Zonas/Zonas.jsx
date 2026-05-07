@@ -8,9 +8,9 @@ const Zonas = () => {
       singularName="Zona"
       endpoint="/lookup/zonas"
       campos={[
-        { name: 'id', label: 'ID', tipo: 'numero_pk', disabled: true },
-        { name: 'codigo', label: 'Código', tipo: 'texto', maxLength: 2 },
-        { name: 'nombre', label: 'Nombre', tipo: 'texto' },
+        { name: 'id', label: 'ID', tipo: 'numero_pk' },
+        { name: 'codigo', label: 'Código', maxLength: 2 },
+        { name: 'nombre', label: 'Nombre' },
       ]}
     />
   );
