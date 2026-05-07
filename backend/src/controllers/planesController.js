@@ -187,3 +187,30 @@ exports.countByFilter = async (req, res, next) => {
     next(err);
   }
 };
+
+/**
+ * GET /api/planes/historial-cuota
+ * Historial global de cambios de cuota con datos del usuario
+ * Query: plan_numero (opcional, filtra por plan específico)
+ */
+exports.getHistorialCuota = async (req, res, next) => {
+  try {
+    const { plan_numero } = req.query;
+    const where = plan_numero ? { plan_numero: parseInt(plan_numero) } : {};
+
+    const historial = await db.HistorialCuota.findAll({
+      where,
+      include: [
+        {
+          model: db.Usuario,
+          attributes: ['id', 'nombre', 'apellido'],
+        },
+      ],
+      order: [['fecha_cambio', 'DESC']],
+    });
+
+    res.json({ success: true, data: historial });
+  } catch (err) {
+    next(err);
+  }
+};

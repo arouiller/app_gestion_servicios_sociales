@@ -3,6 +3,10 @@ const router = express.Router();
 const { verifyToken, requireAdmin } = require('../middleware/auth');
 const planesController = require('../controllers/planesController');
 
+// GET /api/planes/historial-cuota
+// Historial global de cambios de cuota
+router.get('/historial-cuota', verifyToken, planesController.getHistorialCuota);
+
 // GET /api/planes/filter/:filtro
 // Obtiene planes filtrados por tipo_plan, cobrador, os, estado
 router.get('/filter/:filtro', verifyToken, planesController.filter);
