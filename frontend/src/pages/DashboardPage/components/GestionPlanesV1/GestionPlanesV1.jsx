@@ -77,22 +77,8 @@ function GestionPlanesV1() {
     loadConfig();
   }, []);
 
-  // Cargar planes sin usar filtros como dependencia inicial
+  // Cargar planes al montar (initial load)
   useEffect(() => {
-    const cargar = async () => {
-      setError(null);
-      setLoading(true);
-      try {
-        const data = await planesV1Service.listar(filtros);
-        setPlanes(Array.isArray(data) ? data : []);
-      } catch (err) {
-        console.error('Error al cargar planes:', err);
-        setError(err.response?.data?.message || err.message || 'Error al cargar planes');
-        setPlanes([]);
-      } finally {
-        setLoading(false);
-      }
-    };
     cargar();
   }, []);
 
@@ -110,6 +96,11 @@ function GestionPlanesV1() {
       setLoading(false);
     }
   }, [filtros, sortBy, order]);
+
+  // Recargar planes cuando cambia el ordenamiento
+  useEffect(() => {
+    cargar();
+  }, [sortBy, order, cargar]);
 
   // Usar searchText inmediatamente si se presionó Enter, si no usar debouncedSearchText
   const effectiveSearchText = forceSearchNow ? searchText : debouncedSearchText;
