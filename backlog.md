@@ -163,12 +163,126 @@ Estandarizar el formato del número de afiliado a exactamente **5 dígitos** con
    - En `getMaxAfiliadoNumber()`: ya implementado (retorna suggestedNumber)
    - Mantener la lógica actual que funciona correctamente
 
-**Testing:**
+**Migración de Datos Existentes (CRÍTICO):**
 
+1. **Migración 2.0.24 - Adaptar números de afiliado existentes**
+   - upgrade.sql:
+     ```sql
+     -- Crear columna temporal para almacenar valores padded
+     ALTER TABLE planes ADD COLUMN numero_afiliado_temp VARCHAR(5) NULL;
+     
+     -- Convertir todos los números existentes a formato 5 dígitos
+     UPDATE planes
+     SET numero_afiliado_temp = LPAD(TRIM(numero_afiliado), 5, '0')
+     WHERE numero_afiliado IS NOT NULL;
+     
+     -- Verificar que no hay nulos ni valores inválidos
+     SELECT COUNT(*) as problemas 
+     FROM planes 
+     WHERE numero_afiliado_temp IS NULL 
+        OR numero_afiliado_temp = '00000'
+        OR LENGTH(numero_afiliado_temp) != 5
+        OR numero_afiliado_temp NOT REGEXP '^[0-9]{5}$';
+     
+     -- Si hay problemas, lanzar error antes de continuar
+     
+     -- Remover la constraint UNIQUE anterior (si existe)
+     ALTER TABLE planes DROP INDEX IF EXISTS numero_afiliado_unique;
+     
+     -- Eliminar la columna antigua
+     ALTER TABLE planes DROP COLUMN numero_afiliado;
+     
+     -- Renombrar la columna temporal a numero_afiliado
+     ALTER TABLE planes CHANGE COLUMN numero_afiliado_temp numero_afiliado VARCHAR(5) NOT NULL;
+     
+     -- Agregar UNIQUE constraint nuevamente
+     ALTER TABLE planes ADD CONSTRAINT numero_afiliado_unique UNIQUE (numero_afiliado);
+     ```
+
+   - downgrade.sql:
+     ```sql
+     -- Revertir a formato anterior (sin padding garantizado)
+     ALTER TABLE planes ADD COLUMN numero_afiliado_temp VARCHAR(50) NULL;
+     
+     UPDATE planes
+     SET numero_afiliado_temp = numero_afiliado;
+     
+     ALTER TABLE planes DROP CONSTRAINT IF EXISTS numero_afiliado_unique;
+     ALTER TABLE planes DROP COLUMN numero_afiliado;
+     ALTER TABLE planes CHANGE COLUMN numero_afiliado_temp numero_afiliado VARCHAR(50) NOT NULL;
+     
+     -- Recrear constraint UNIQUE si existía
+     ALTER TABLE planes ADD CONSTRAINT numero_afiliado_unique UNIQUE (numero_afiliado);
+     ```
+
+2. **Auditoría Pre-Migración**
+   - Ejecutar query de verificación ANTES de hacer cambios permanentes
+   - Documentar:
+     * Cuántos registros se van a modificar
+     * Detectar valores problemáticos (NULL, "00000", formato inválido)
+     * Detectar potenciales duplicados después del padding (ej: "1" y "00001")
+   - Si hay duplicados: intervención manual requerida antes de aplicar migración
+
+3. **Ejemplos de Conversión**
+   - "1" → "00001"
+   - "100" → "00100"
+   - "1250" → "01250"
+   - "99999" → "99999"
+   - "  50  " (con espacios) → "00050" (TRIM + LPAD)
+   - NULL → ERROR (debe manejarse)
+   - "00000" → ERROR (fuera de rango válido)
+
+4. **Manejo de Errores y Rollback**
+   - Si hay valores NULL en numero_afiliado: FAIL migración (investigar qué planes sin número)
+   - Si hay duplicados después del padding: FAIL migración (requerir decisión manual)
+   - Si hay valores fuera de rango: FAIL migración (valores > 5 dígitos?)
+   - Implementar transacción: si falla cualquier paso, hacer rollback completo
+
+5. **Validación Post-Migración**
+   - Ejecutar post-upgrade:
+     ```sql
+     -- Verificar que todos los valores tienen exactamente 5 dígitos
+     SELECT COUNT(*) as registros_invalidos
+     FROM planes
+     WHERE LENGTH(numero_afiliado) != 5
+        OR numero_afiliado NOT REGEXP '^[0-9]{5}$'
+        OR numero_afiliado = '00000';
+     
+     -- Debe retornar 0
+     
+     -- Verificar que no hay duplicados
+     SELECT numero_afiliado, COUNT(*) as cantidad
+     FROM planes
+     GROUP BY numero_afiliado
+     HAVING cantidad > 1;
+     
+     -- Debe retornar 0 filas
+     ```
+
+6. **Cambio de Tipo de Dato (Opcional Futuro)**
+   - Actualmente: `numero_afiliado VARCHAR(50)`
+   - Consideración: cambiar a `VARCHAR(5)` para forzar constraint a nivel BD
+   - Decisión: aplazar para migración futura (2.0.25) después de validar estabilidad
+
+**Testing (Incluida Migración):**
+
+Fase 1: Migración de Datos
+- ✅ Ejecutar upgrade.sql en BD con datos existentes
+- ✅ Verificar que todos los registros se convirtieron correctamente
+- ✅ Verificar que no hay duplicados post-migración
+- ✅ Verificar que no hay valores fuera de rango
+- ✅ Ejecutar queries de validación post-migración (deben retornar 0)
+- ✅ Downgrade: revertir migración sin perder datos
+- ✅ Upgrade nuevamente: verificar idempotencia
+
+Fase 2: Funcionalidad Nueva
 - ✅ Crear plan con numero_afiliado "1" → se guarda como "00001"
 - ✅ Crear plan con numero_afiliado "123" → se guarda como "00123"
 - ✅ Crear plan con numero_afiliado "00100" → se guarda como "00100"
-- ✅ Intentar crear duplicado → error 409
+- ✅ Crear plan con numero_afiliado "  50  " (con espacios) → se guarda como "00050"
+- ✅ Intentar crear con numero_afiliado "0" o "00000" → error (fuera de rango)
+- ✅ Intentar crear con numero_afiliado "100000" → error (más de 5 dígitos)
+- ✅ Intentar crear duplicado → error 409 con mensaje de uniqueness
 - ✅ Editar plan: cambiar numero_afiliado "00001" → "00002" → se guarda y valida unicidad
 - ✅ Abrir modal crear → número sugerido es MAX + 1
 - ✅ Si MAX es "99999" → error al intentar sugerir "100000" (fuera de rango)
@@ -177,9 +291,14 @@ Estandarizar el formato del número de afiliado a exactamente **5 dígitos** con
 **Impacto:**
 
 - Archivos modificados: 5 (controller, model, modal, hook, service)
-- BD: No requiere migración (campo ya existe)
-- Breaking change: No (padding es automático)
-- Backward compatibility: ✅ Números existentes se convierten automáticamente
+- BD: **Requiere migración 2.0.24** para adaptar datos existentes
+  * ALTER TABLE con columna temporal
+  * UPDATE con LPAD para padding
+  * Validaciones pre y post migración
+  * Rollback disponible en downgrade.sql
+- Breaking change: No (padding es automático y transparente)
+- Backward compatibility: ✅ Números existentes se convierten automáticamente en migración
+- Tiempo de ejecución: Bajo (LPAD + UPDATE simple, sin JOINs complejos)
 
 **Notas:**
 
