@@ -164,6 +164,31 @@ $table-font-size: 0.95rem;
   }
 }
 
+// Redimensionamiento manual de columnas
+.table-standard {
+  th {
+    position: relative;
+    overflow: hidden;
+    white-space: nowrap;
+  }
+}
+
+.resize-handle {
+  position: absolute;
+  top: 0;
+  right: 0;
+  width: 4px;
+  height: 100%;
+  cursor: col-resize;
+  background: transparent;
+  user-select: none;
+
+  &:hover {
+    background: var(--color-primary, #4a90d9);
+    opacity: 0.5;
+  }
+}
+
 // Responsive para tablas en mobile
 @media (max-width: 768px) {
   .table-standard {
