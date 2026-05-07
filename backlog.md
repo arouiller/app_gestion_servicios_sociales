@@ -40,6 +40,7 @@ De cualquier estado → Descartado
 
 | ID | Prioridad | Estado | Descripción | Contexto / Motivo | Archivos estimados |
 |----|-----------|--------|-------------|-------------------|----|
+| BACKLOG-050 | 🟡 Media | 📋 Registrado | Reformatear tabla de afiliados en tab de PlanV1Modal | Mejorar presentación de integrantes en tab de afiliados. Eliminar columnas redundantes (orden, apellido, nombre individuales), agregar combinadas (apellido, nombre). Agregar fechas (nacimiento, cobertura) con cálculo de edad. Agregar servicios adicionles concatenados con 2 letras. Mejora UX: más información relevante, menos columnas, mejor legibilidad. | PlanV1Modal.jsx, usePlanV1Form.js |
 | BACKLOG-049 | 🟡 Media | ✅ Solucionado | Números de documento duplicados permitidos — remover constraint UNIQUE | Permitir que múltiples personas tengan el mismo número de documento. La migración 2.0.8 ya removió el constraint UNIQUE a nivel de BD. Se actualizó Persona.js para alinear el modelo. Se removió validación de duplicados en personasController.js. Commits: 4eec97e, 469fece, 54ec323 | Persona.js model |
 | BACKLOG-048 | 🔴 Alta | ✅ Solucionado | Integrantes ordenables con drag & drop — rol por posición | Permitir reordenar integrantes de un plan mediante drag & drop en PlanV1Modal. El rol (titular vs integrante) se determina automáticamente por posición: primeros en lista = titulares, resto = integrantes. Campo `orden` en tabla plan_integrantes refleja el reorden. Migración para actualizar rol en registros existentes donde no está definido. Mejora UX y simplifica gestión de roles. | migrations/2.0.24, PlanIntegrante.js, PlanV1Modal.jsx, usePlanV1Form.js, planesIntegrantesService.js |
 | BACKLOG-047 | 🔴 Alta | ✅ Solucionado | Número de afiliado: formato de 5 dígitos con padding y auto-incremento | Estandarizar formato de número de afiliado a exactamente 5 dígitos (00001, 00002, etc.). Implementar auto-padding a izquierda con ceros. Validar unicidad. Sugerir automáticamente MAX+1 al crear plan. Mejora consistencia, evita duplicados, simplifica auditoría. | planesController.js, PlanV1Model.js, PlanV1Modal.jsx, usePlanV1Form.js, validateors/planesValidators.js, planesV1Service.js |
@@ -4440,6 +4441,83 @@ Fase 3: Mobile (Touch)
 - ✅ Recalcular roles al eliminar integrante (nuevo titular = primero)
 - ✅ Persistencia: guardar plan actualiza integrantes en BD con nuevo orden/rol
 - ✅ Migración 2.0.24 asigna orden/rol a integrantes existentes
+
+---
+
+### BACKLOG-050: Reformatear Tabla de Afiliados en Tab de PlanV1Modal
+
+**Descripción:**
+Rediseñar la tabla de afiliados/integrantes en el tab correspondiente del formulario de edición de planes para mejorar legibilidad e información relevante. Los cambios incluyen reorganizar columnas, eliminar redundancias, agregar cálculos (edad), y mostrar servicios adicionales.
+
+**Contexto / Motivo:**
+- La tabla actual tiene columnas redundantes (apellido, nombre separados + orden)
+- Falta información importante como fechas de nacimiento, cobertura y servicios adicionales
+- Mejor densidad de información: mostrar más datos útiles en menos espacio
+- Mejora UX: presentación más profesional y datos más organizados
+
+**Requerimientos Funcionales:**
+
+1. **Eliminar Columnas:**
+   - ❌ Columna `orden` (información técnica no relevante para el usuario)
+   - ❌ Columnas individuales `apellido` y `nombre`
+
+2. **Agregar Columna Combinada:**
+   - ✅ Nueva columna `Afiliado` (o `Persona`): muestra "apellido, nombre" en formato `APELLIDO, Nombre`
+   - Ubicación: donde estaba anteriormente el apellido
+
+3. **Agregar Fechas e Información Personal (después de columna Rol):**
+   - ✅ `Nacimiento`: fecha de nacimiento en formato `DD/MM/YYYY`
+   - ✅ `Edad`: cálculo automático en años (fecha actual - fecha nacimiento)
+   - ✅ `Cobertura`: fecha de cobertura en formato `DD/MM/YYYY`
+
+4. **Agregar Servicios Adicionales (después de Cobertura):**
+   - ✅ Nueva columna `Servicios` (o `Serv. Adic.`)
+   - Muestra listado de servicios adicionales de la persona
+   - Formato: primeras 2 letras de cada servicio, separadas por coma
+   - Ejemplo: "Ser. Adic." registrados [Servicio A, Servicio B, Servicio C] → "Se, Se, Se"
+   - Si no tiene servicios: mostrar "-" o texto vacío
+
+**Estructura Final de Columnas:**
+
+| Anterior | Nueva |
+|----------|-------|
+| Orden | ❌ Eliminada |
+| Rol | Rol ← SIN CAMBIOS |
+| Apellido | ❌ Eliminada |
+| Nombre | ❌ Eliminada |
+| (nuevo) | ✅ Afiliado (apellido, nombre) |
+| (nuevo) | ✅ Nacimiento (DD/MM/YYYY) |
+| (nuevo) | ✅ Edad (años) |
+| (nuevo) | ✅ Cobertura (DD/MM/YYYY) |
+| (nuevo) | ✅ Servicios (2 letras c/u, sep. coma) |
+
+**Requerimientos de Cálculo:**
+
+1. **Edad:**
+   - Fórmula: `Math.floor((new Date() - new Date(fecha_nacimiento)) / (365.25 * 24 * 60 * 60 * 1000))`
+   - O: `new Date().getFullYear() - new Date(fecha_nacimiento).getFullYear()` (aproximado)
+   - Considerar casos edge (cumpleaños en diferentes meses)
+   - Mostrar en años (ej: "45 años" o solo "45")
+
+2. **Servicios:**
+   - Obtener lista de servicios de `integrante.Persona.IntegranteServicios` (o relación similar)
+   - Extraer las 2 primeras letras de `servicio.nombre`
+   - Concatenar con ", " (coma + espacio)
+   - Ejemplo: ["Obra Social Extra", "Medicina Privada", "Farmacia"] → "Ob, Me, Fa"
+
+**Archivos Impactados:**
+- `frontend/src/pages/DashboardPage/components/GestionPlanesV1/modals/PlanV1Modal.jsx` — tabla en tab Afiliados
+- `frontend/src/pages/DashboardPage/components/GestionPlanesV1/hooks/usePlanV1Form.js` — posible lógica de cálculo
+- `frontend/src/utils/formatters.js` — agregar función `calculateAge()` si no existe
+
+**Testing:**
+- ✅ Tabla muestra columna `Afiliado` con nombre combinado
+- ✅ Orden eliminado de vista
+- ✅ Fechas formato DD/MM/YYYY (usar formatters.js existente)
+- ✅ Edad calcula correctamente (casos normales y edge)
+- ✅ Servicios muestran 2 letras c/u, separadas por coma
+- ✅ Diseño responsive: tabla no overflow en pantalla chica
+- ✅ Acciones (editar, eliminar, reordenar) siguen funcionando
 
 ---
 
