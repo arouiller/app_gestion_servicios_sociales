@@ -312,6 +312,16 @@ function PlanV1Modal({ mode, planData, onClose, onSave }) {
 
   const handleIntegranteRemove = (personaId) => {
     removeIntegrante(personaId);
+    // Actualizar roles después de eliminar un integrante
+    setTimeout(() => {
+      const updated = form.integrantes
+        .filter((i) => i.persona_id !== personaId)
+        .map((integrante, index) => ({
+          ...integrante,
+          rol: index === 0 ? 'titular' : 'integrante', // Recalcular rol
+        }));
+      handleFieldChange('integrantes', updated);
+    }, 0);
   };
 
   const handleDragEnd = (result) => {
@@ -339,7 +349,7 @@ function PlanV1Modal({ mode, planData, onClose, onSave }) {
     const reorderedIntegrantes = integrantes.map((integrante, index) => ({
       ...integrante,
       orden: index + 1,
-      rol: index === 0 ? 'titular' : 'adherente', // Primero = titular, resto = adherente
+      rol: index === 0 ? 'titular' : 'integrante', // Primero = titular, resto = integrante
     }));
 
     handleFieldChange('integrantes', reorderedIntegrantes);
@@ -648,7 +658,7 @@ function PlanV1Modal({ mode, planData, onClose, onSave }) {
                                     <td>{integrante.persona?.nombre}</td>
                                     <td>{integrante.persona?.apellido}</td>
                                     <td>{integrante.persona?.numero_documento}</td>
-                                    <td>{index === 0 ? 'Titular' : 'Adherente'}</td>
+                                    <td>{index === 0 ? 'Titular' : 'Integrante'}</td>
                                     <td>
                                       <ActionButton
                                         variant="icon"
