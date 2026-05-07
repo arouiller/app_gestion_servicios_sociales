@@ -74,7 +74,13 @@ const obtener = async (req, res, next) => {
       include: [
         {
           model: db.PlanIntegrante,
-          include: [{ model: db.Persona, attributes: ['id', 'apellido', 'nombre', 'numero_documento', 'tipo_documento', 'fecha_nacimiento', 'fecha_cobertura'] }],
+          include: [
+            { model: db.Persona, attributes: ['id', 'apellido', 'nombre', 'numero_documento', 'tipo_documento', 'fecha_nacimiento', 'fecha_cobertura'] },
+            {
+              model: db.IntegranteServicio,
+              include: [{ model: db.ServicioAdicional, attributes: ['servicio_adicional_numero', 'servicio_adicional_nombre'] }],
+            },
+          ],
           order: [['orden', 'ASC']],
         },
         { model: db.TipoDePlan, attributes: ['tipo_plan_numero', 'tipo_plan_nombre'] },
