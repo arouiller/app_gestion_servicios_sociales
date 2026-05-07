@@ -50,6 +50,7 @@ function buildMenu(isAdmin) {
         { key: 'servicios-adicionales', label: 'Servicios Adicionales' },
         { key: 'tipos-de-grupo', label: 'Tipos de Grupo' },
         { key: 'tipos-de-plan', label: 'Tipos de Plan' },
+        { key: 'provincias-zonas', label: 'Provincias y Zonas' },
       ],
     },
     {
@@ -74,7 +75,6 @@ function buildMenu(isAdmin) {
       key: 'administracion',
       label: 'Administración',
       children: [
-        { key: 'provincias-zonas', label: 'Provincias y Zonas' },
         { key: 'auditoria', label: 'Auditoría' },
         { key: 'herramienta-queries', label: 'Herramienta de Queries' },
         { key: 'gestion-usuarios', label: 'Gestión de Usuarios' },
