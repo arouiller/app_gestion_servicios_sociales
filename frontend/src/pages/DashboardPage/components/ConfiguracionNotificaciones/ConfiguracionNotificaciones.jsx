@@ -143,7 +143,7 @@ export default function ConfiguracionNotificaciones() {
       if (isNaN(newValue) || newValue <= 0) {
         setErrors((prev) => ({
           ...prev,
-          [type]: 'Debe ser un valor positivo (ej: 0.01, 1, 10, 100, 500)',
+          [type]: 'Debe ser un valor positivo (ej: 0.01, 1, 10, 100, 500 o cualquier otro)',
         }));
         return;
       }
@@ -537,18 +537,18 @@ export default function ConfiguracionNotificaciones() {
               <td>Precisión de redondeo (hacia arriba) en aumento masivo de cuotas</td>
               <td className="configuracion-notificaciones__duration-cell">
                 <div className="configuracion-notificaciones__duration-group">
-                  <select
-                    value={values.redondeo_precision ?? 1}
-                    onChange={(e) => setValues(prev => ({ ...prev, redondeo_precision: parseFloat(e.target.value) }))}
-                    disabled={saving.redondeo_precision}
+                  <input
+                    type="number"
+                    step="0.01"
+                    min="0.01"
                     className="configuracion-notificaciones__duration-input"
-                  >
-                    <option value={0.01}>0.01 (centavo)</option>
-                    <option value={1}>1 (unidad)</option>
-                    <option value={10}>10</option>
-                    <option value={100}>100</option>
-                    <option value={500}>500</option>
-                  </select>
+                    value={values.redondeo_precision || 1}
+                    onChange={(e) => setValues(prev => ({ ...prev, redondeo_precision: parseFloat(e.target.value) || 1 }))}
+                    disabled={saving.redondeo_precision}
+                  />
+                  <span className="configuracion-notificaciones__hint">
+                    (ej: 0.01, 1, 10, 100, 500)
+                  </span>
                 </div>
                 {errors.redondeo_precision && (
                   <span className="configuracion-notificaciones__error">
@@ -575,13 +575,15 @@ export default function ConfiguracionNotificaciones() {
         <p>
           💡 <strong>Ejemplos de redondeo hacia arriba:</strong>
           <br/>
-          • Precisión 1: 105.50 → 106
+          • Precisión 1: 105.50 → 106 | 100 → 100
           <br/>
-          • Precisión 10: 105.50 → 110
+          • Precisión 10: 105.50 → 110 | 101 → 110
           <br/>
-          • Precisión 100: 150 → 200
+          • Precisión 100: 150 → 200 | 101 → 200
           <br/>
-          • Precisión 0.01: 105.523 → 105.53
+          • Precisión 0.01: 105.523 → 105.53 | 105.509 → 105.51
+          <br/>
+          Ingresa cualquier valor positivo (números decimales permitidos).
         </p>
       </div>
     </div>
