@@ -40,6 +40,7 @@ De cualquier estado → Descartado
 
 | ID | Prioridad | Estado | Descripción | Contexto / Motivo | Archivos estimados |
 |----|-----------|--------|-------------|-------------------|----|
+| BACKLOG-051 | 🟡 Media | 📋 Registrado | Reformatear tabla de listado de planes - columnas virtuales | En la tabla GestionPlanesV1 (listado principal de planes): (1) crear columna virtual "Identificador" con formato zona_codigo + "-" + numero_afiliado (ej: "01-00042"); (2) eliminar columna numero_afiliado redundante; (3) agregar columna "Titular" con datos del titular del plan (apellido, nombre). Mejora UX: información más útil e identificación clara de planes por zona. | GestionPlanesV1.jsx |
 | BACKLOG-050 | 🟡 Media | ✅ Solucionado | Reformatear tabla de afiliados en tab de PlanV1Modal | Mejorar presentación de integrantes en tab de afiliados. Eliminar columnas redundantes (orden, apellido, nombre individuales), agregar combinadas (apellido, nombre). Agregar fechas (nacimiento, cobertura) con cálculo de edad. Agregar servicios adicionales concatenados con 2 letras. Commits: 8f600d4, d1d0082, 20f55c0, 911f013 | PlanV1Modal.jsx, formatters.js, planesController.js, index.js |
 | BACKLOG-049 | 🟡 Media | ✅ Solucionado | Números de documento duplicados permitidos — remover constraint UNIQUE | Permitir que múltiples personas tengan el mismo número de documento. La migración 2.0.8 ya removió el constraint UNIQUE a nivel de BD. Se actualizó Persona.js para alinear el modelo. Se removió validación de duplicados en personasController.js. Commits: 4eec97e, 469fece, 54ec323 | Persona.js model |
 | BACKLOG-048 | 🔴 Alta | ✅ Solucionado | Integrantes ordenables con drag & drop — rol por posición | Permitir reordenar integrantes de un plan mediante drag & drop en PlanV1Modal. El rol (titular vs integrante) se determina automáticamente por posición: primeros en lista = titulares, resto = integrantes. Campo `orden` en tabla plan_integrantes refleja el reorden. Migración para actualizar rol en registros existentes donde no está definido. Mejora UX y simplifica gestión de roles. | migrations/2.0.24, PlanIntegrante.js, PlanV1Modal.jsx, usePlanV1Form.js, planesIntegrantesService.js |
@@ -4441,6 +4442,63 @@ Fase 3: Mobile (Touch)
 - ✅ Recalcular roles al eliminar integrante (nuevo titular = primero)
 - ✅ Persistencia: guardar plan actualiza integrantes en BD con nuevo orden/rol
 - ✅ Migración 2.0.24 asigna orden/rol a integrantes existentes
+
+---
+
+### BACKLOG-051: Reformatear Tabla de Listado de Planes
+
+**Descripción:**
+Optimizar la tabla principal de listado de planes en GestionPlanesV1.jsx para mejorar identificación y datos relevantes de planes. Los cambios incluyen crear una columna virtual combinada, eliminar redundancia, y agregar información del titular.
+
+**Contexto / Motivo:**
+- El listado actual muestra numero_afiliado separado de zona — difícil de identificar qué plan es cuál
+- Columna numero_afiliado se vuelve redundante al crear identificador compuesto
+- Falta información del titular del plan, que es importante para gestión
+- Mejor densidad de información: identificador único + datos del responsable del plan
+
+**Requerimientos Funcionales:**
+
+1. **Nueva Columna Virtual "Identificador":**
+   - Formato: `codigo_zona + "-" + numero_afiliado`
+   - Ejemplos:
+     * Zona 01, Afiliado 00042 → "01-00042"
+     * Zona 05, Afiliado 00100 → "05-00100"
+     * Zona 12, Afiliado 01250 → "12-01250"
+   - Utilizar `plan.zona?.codigo` (ya disponible en relación Zona) y `plan.numero_afiliado`
+   - Mostrar como identificador único del plan
+
+2. **Eliminar Columna Redundante:**
+   - ❌ Eliminar columna `numero_afiliado` individual (queda incluida en Identificador)
+
+3. **Nueva Columna "Titular":**
+   - Mostrar apellido y nombre del titular del plan
+   - Formato: "APELLIDO, Nombre"
+   - Obtener del primer integrante donde `rol === 'titular'`
+   - Si no hay titular: mostrar "-"
+   - Ubicación: después de Identificador u otro lugar estratégico
+
+**Estructura Final de Columnas (sugerida):**
+
+| Anterior | Nueva |
+|----------|-------|
+| Número Afiliado | ✅ Identificador (zona-afiliado) |
+| Tipo de Plan | Tipo de Plan |
+| (nuevo) | ✅ Titular (apellido, nombre) |
+| Cobrador | Cobrador |
+| Obra Social | Obra Social |
+| Estado | Estado |
+| Acciones | Acciones |
+
+**Archivos Impactados:**
+- `frontend/src/pages/DashboardPage/components/GestionPlanesV1/GestionPlanesV1.jsx` — tabla de listado
+- Posiblemente: `frontend/src/services/planesV1Service.js` si necesita modificar qué datos se cargan
+
+**Verificación:**
+- ✅ Columna Identificador muestra formato correcto (zona-afiliado)
+- ✅ Columna numero_afiliado eliminada del listado
+- ✅ Columna Titular muestra nombre del titular (o "-" si no hay)
+- ✅ Datos de zona y PlanIntegrantes disponibles (ya están en la relación)
+- ✅ Tabla mantiene funcionalidad de acciones (editar, eliminar, etc.)
 
 ---
 
