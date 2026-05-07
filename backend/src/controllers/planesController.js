@@ -132,6 +132,13 @@ exports.bulkUpdateCuota = async (req, res, next) => {
       });
     }
 
+    // Registrar el aumento masivo en tabla aumentos_masivos
+    await db.AumentoMasivo.create({
+      fecha: timestamp,
+      porcentaje: valorNumerico,
+      usuario_id: userId,
+    }, { transaction });
+
     await transaction.commit();
 
     res.json({
@@ -190,26 +197,21 @@ exports.countByFilter = async (req, res, next) => {
 
 /**
  * GET /api/planes/historial-cuota
- * Historial global de cambios de cuota con datos del usuario
- * Query: plan_numero (opcional, filtra por plan específico)
+ * Historial de aumentos masivos ejecutados
  */
 exports.getHistorialCuota = async (req, res, next) => {
   try {
-    const { plan_numero } = req.query;
-    const where = plan_numero ? { plan_numero: parseInt(plan_numero) } : {};
-
-    const historial = await db.HistorialCuota.findAll({
-      where,
+    const aumentos = await db.AumentoMasivo.findAll({
       include: [
         {
           model: db.Usuario,
           attributes: ['id', 'nombre', 'apellido'],
         },
       ],
-      order: [['fecha_cambio', 'DESC']],
+      order: [['fecha', 'DESC']],
     });
 
-    res.json({ success: true, data: historial });
+    res.json({ success: true, data: aumentos });
   } catch (err) {
     next(err);
   }
