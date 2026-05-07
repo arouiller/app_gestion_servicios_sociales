@@ -73,6 +73,19 @@ export const usePlanV1Form = (initialData = null) => {
     }));
   }, []);
 
+  const reorderIntegrantes = useCallback((newIntegrantes) => {
+    // Actualizar array reordenado con rol automático por posición
+    const integrantesConRol = newIntegrantes.map((integrante, index) => ({
+      ...integrante,
+      rol: index === 0 ? 'titular' : 'integrante', // Rol automático: primero = titular
+    }));
+
+    setForm((prev) => ({
+      ...prev,
+      integrantes: integrantesConRol,
+    }));
+  }, []);
+
   const validate = useCallback(() => {
     const newErrors = {};
 
@@ -129,6 +142,7 @@ export const usePlanV1Form = (initialData = null) => {
     addIntegrante,
     removeIntegrante,
     updateIntegranteRol,
+    reorderIntegrantes,
     validate,
     reset,
     setForm, // Allow direct form updates if needed
