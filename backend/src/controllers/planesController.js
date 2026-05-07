@@ -40,16 +40,17 @@ exports.filter = async (req, res, next) => {
 
 /**
  * PATCH /api/planes/bulk-update-cuota
- * Actualiza masivamente el valor_cuota de planes
+ * Actualiza masivamente el valor_cuota de planes (solo aumento porcentual)
  * Body: {
- *   valor: 500 (número),
- *   tipoAumento: 'fijo' | 'porcentual',
+ *   valor: 5 (número: porcentaje),
+ *   tipoAumento: 'porcentual',
  *   filtro?: 'tipo_plan' | 'cobrador' | 'os' | 'todos',
  *   tipo_plan_numero?: number,
  *   cobrador_numero?: number,
  *   os_numero?: number
  * }
  * Retorna: { success, updated: N, affectedPlanes: [], historialIds: [] }
+ * Nota: El redondeo se aplica según la precisión configurada en configuracion_app (redondeo_precision)
  */
 exports.bulkUpdateCuota = async (req, res, next) => {
   const transaction = await db.sequelize.transaction();
@@ -61,8 +62,8 @@ exports.bulkUpdateCuota = async (req, res, next) => {
       return res.status(400).json({ success: false, message: 'valor debe ser positivo' });
     }
 
-    if (!tipoAumento || !['fijo', 'porcentual'].includes(tipoAumento)) {
-      return res.status(400).json({ success: false, message: 'tipoAumento debe ser "fijo" o "porcentual"' });
+    if (tipoAumento && tipoAumento !== 'porcentual') {
+      return res.status(400).json({ success: false, message: 'tipoAumento debe ser "porcentual"' });
     }
 
     let planesToUpdate = [];
@@ -83,6 +84,13 @@ exports.bulkUpdateCuota = async (req, res, next) => {
       return res.status(400).json({ success: false, message: 'No se encontraron planes para actualizar' });
     }
 
+    // Cargar precisión de redondeo desde configuración
+    const precisionConfig = await db.ConfiguracionApp.findOne({
+      where: { tipo_notificacion: 'redondeo_precision' },
+      transaction,
+    });
+    const precision = parseFloat(precisionConfig?.duracion_ms) || 1;
+
     const historialIds = [];
     const affectedPlanes = [];
     const timestamp = new Date();
@@ -92,16 +100,13 @@ exports.bulkUpdateCuota = async (req, res, next) => {
       const valorAnterior = parseFloat(plan.valor_cuota);
       let valorNuevo;
 
-      // Calcular nuevo valor según tipo
-      if (tipoAumento === 'fijo') {
-        valorNuevo = valorAnterior + valorNumerico;
-      } else {
-        // porcentual
-        valorNuevo = valorAnterior * (1 + valorNumerico / 100);
-      }
+      // Calcular nuevo valor (solo porcentual)
+      valorNuevo = valorAnterior * (1 + valorNumerico / 100);
 
-      // Redondear a 2 decimales
-      valorNuevo = Math.round(valorNuevo * 100) / 100;
+      // Redondear hacia arriba según precisión configurada
+      valorNuevo = Math.ceil(valorNuevo / precision) * precision;
+      // Corrección de punto flotante para evitar errores numéricos
+      valorNuevo = Math.round(valorNuevo * 10000) / 10000;
 
       // Registrar en historial
       const historial = await db.HistorialCuota.create({
