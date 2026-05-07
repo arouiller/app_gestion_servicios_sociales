@@ -40,6 +40,7 @@ De cualquier estado → Descartado
 
 | ID | Prioridad | Estado | Descripción | Contexto / Motivo | Archivos estimados |
 |----|-----------|--------|-------------|-------------------|----|
+| BACKLOG-048 | 🔴 Alta | 📋 Registrado | Integrantes ordenables con drag & drop — rol por posición | Permitir reordenar integrantes de un plan mediante drag & drop en PlanV1Modal. El rol (titular vs integrante) se determina automáticamente por posición: primeros en lista = titulares, resto = integrantes. Campo `orden` en tabla plan_integrantes refleja el reorden. Migración para actualizar rol en registros existentes donde no está definido. Mejora UX y simplifica gestión de roles. | migrations/2.0.24, PlanIntegrante.js, PlanV1Modal.jsx, usePlanV1Form.js, planesIntegrantesService.js |
 | BACKLOG-047 | 🔴 Alta | ✅ Solucionado | Número de afiliado: formato de 5 dígitos con padding y auto-incremento | Estandarizar formato de número de afiliado a exactamente 5 dígitos (00001, 00002, etc.). Implementar auto-padding a izquierda con ceros. Validar unicidad. Sugerir automáticamente MAX+1 al crear plan. Mejora consistencia, evita duplicados, simplifica auditoría. | planesController.js, PlanV1Model.js, PlanV1Modal.jsx, usePlanV1Form.js, validateors/planesValidators.js, planesV1Service.js |
 | BACKLOG-046 | 🟡 Media | 📋 Registrado | Eliminar tablas legacy: afiliados, grupos_familiares, historial_grupo_familiar, planes_v2_backup | Limpieza de tablas no utilizadas y legacy que generan ruido en el schema. afiliados, grupos_familiares, historial_grupo_familiar no tienen modelos Sequelize ni endpoints. planes_v2_backup es tabla de respaldo sin funcionalidad activa. Requiere auditoría de dependencias, migración SQL de eliminación, y verificación de que no haya referencias en el código. | migrations/2.0.23, models/Plan.js (eliminar), modelos relacionados |
 | BACKLOG-045 | 🔴 Alta | ✅ Solucionado | Agregar zona y localidad a planes con dropdowns en UI | Cada plan debe tener asociado una zona (FK zona_id) y una localidad (FK localidad_id) en BD. UI debe permitir seleccionar zona y localidad mediante dropdowns en PlanV1Modal. Migración 2.0.22 para agregar campos. Mejora geolocalización y gestión territorial de planes. | migrations/2.0.22, PlanV1.js, planesController.js, PlanV1Modal.jsx, usePlanV1Form.js |
@@ -4229,6 +4230,179 @@ Crear una nueva entidad Zona como tabla independiente (sin jerarquía con Provin
 - Frontend: components/Zonas/Zonas.jsx, components/LookupCRUD/LookupCRUD.jsx, pages/DashboardPage/DashboardPage.jsx
 
 **Estado:** ✅ Solucionado (2026-05-07)
+
+---
+
+### BACKLOG-048: Integrantes Ordenables con Drag & Drop — Rol por Posición
+
+**Descripción:**
+Permitir que los usuarios reordenen los integrantes (afiliados) de un plan mediante drag & drop en PlanV1Modal. El rol de cada integrante (titular vs integrante adherente) se determina automáticamente por su posición en la lista: los primeros N integrantes son titulares, el resto son integrantes. El campo `orden` en tabla `plan_integrantes` refleja el reorden realizado por el usuario.
+
+**Requerimientos Funcionales:**
+
+1. **Interfaz de Drag & Drop**
+   - En PlanV1Modal, tab "Integrantes": lista de integrantes es reordenable mediante drag & drop
+   - Visual feedback durante drag: fila se destaca/opacifica, línea de drop visible
+   - Soporte tanto desktop (mouse) como mobile (touch)
+   - Reorder se aplica solo cuando usuario suelta (drop), no en tiempo real
+
+2. **Determinación de Rol por Posición**
+   - **Titular**: El primer integrante en la lista (orden = 1 o simplemente el primero)
+   - **Integrante**: Todos los demás en la lista (orden >= 2)
+   - Cuando usuario reordena:
+     * Integrante que estaba primero pierde rol "titular", pasa a "integrante"
+     * Nuevo primer integrante recibe rol "titular"
+   - El rol se actualiza automáticamente sin acción explícita del usuario
+   - Display en UI: mostrar rol del integrante (o inferirlo por posición)
+
+3. **Persistencia del Orden**
+   - Campo `orden` en tabla `plan_integrantes` almacena la posición (1, 2, 3, ...)
+   - Al actualizar plan:
+     * Recolectar nuevo orden desde UI (array de integrantes reordenados)
+     * Actualizar `orden` y `rol` para cada integrante en BD
+     * Mantener `persona_id` y otros campos sin cambios
+
+4. **Validaciones**
+   - Debe haber al menos un titular (primer integrante no puede estar vacío)
+   - No permitir reorden que deje el plan sin titular
+   - Al crear plan: primer integrante agregado = titular automáticamente
+
+**Requerimientos Backend:**
+
+1. **Modelo PlanIntegrante.js**
+   - Verificar que exista campo `orden` (INT, nullable actualmente)
+   - Verificar que exista campo `rol` (ENUM o similar para "titular"/"integrante")
+   - Si faltan campos: agregarlos vía migración 2.0.24
+
+2. **Controller planesIntegrantesController.js**
+   - En `actualizar()` (cuando se actualiza un plan):
+     * Recibir array de integrantes reordenados: `[{ persona_id, rol }, ...]`
+     * Para cada integrante: calcular nuevo `orden` (1-based index)
+     * Si `rol` no viene en payload: inferir de posición (1 = titular, resto = integrante)
+     * Actualizar BD: DELETE registros viejos, INSERT nuevos en orden correcto
+     * O: UPDATE donde sea posible, DELETE lo faltante, INSERT lo nuevo
+
+3. **Service planesIntegrantesService.js**
+   - Función `actualizarIntegrantes(planNumero, integrantes)`:
+     * Valida que haya al menos 1 integrante
+     * Valida que primer integrante tenga rol "titular"
+     * Actualiza BD en transacción (para evitar inconsistencias)
+     * Retorna plan actualizado con integrantes en nuevo orden
+
+**Requerimientos Frontend:**
+
+1. **PlanV1Modal.jsx — Tab Integrantes**
+   - Lista de integrantes con capacidad de drag & drop
+   - Cada fila tiene ícono "⋮⋮" (drag handle) a la izquierda
+   - Fila muestra: [Drag Handle] | Rol Badge | Nombre | Teléfono | [Eliminar]
+   - Rol Badge: "Titular" (color especial) o vacío/nada para integrantes
+
+2. **usePlanV1Form.js**
+   - Manejar array de integrantes con capacidad de reorden
+   - Hook `useIntegranteDragDrop()` para lógica de drag & drop
+   - Al cambiar orden: actualizar automáticamente rol (primero = titular)
+   - Mantener estado sincronizado: `form.integrantes = [{ id, persona_id, persona, rol, orden }, ...]`
+
+3. **Componente Reutilizable (opcional)**
+   - Si hay múltiples listas reordenables: crear `DraggableList.jsx`
+   - Props: items, onReorder, renderItem
+   - Maneja lógica de drag & drop (mouse + touch)
+
+**Migración de Datos (2.0.24 - CRÍTICA):**
+
+1. **Auditoría Pre-Migración**
+   - Verificar estado actual de `plan_integrantes`:
+     * ¿Cuántos registros tienen `rol` = NULL?
+     * ¿Cuántos tienen `orden` = NULL?
+     * ¿Hay planes con múltiples titulares?
+
+2. **Upgrade SQL**
+   ```sql
+   -- Migración 2.0.24: Inducir rol a partir de orden y validar integrantes
+   
+   -- 1. Asegurar que plan_integrantes tiene campos orden y rol
+   ALTER TABLE plan_integrantes
+   ADD COLUMN IF NOT EXISTS orden INT DEFAULT NULL,
+   ADD COLUMN IF NOT EXISTS rol VARCHAR(20) DEFAULT NULL;
+   
+   -- 2. Para cada plan, ordenar integrantes por ID (proxy de orden natural)
+   -- y asignar orden secuencial (1, 2, 3, ...)
+   SET @plan_numero = 0;
+   SET @orden = 0;
+   
+   UPDATE plan_integrantes pi
+   JOIN (
+     SELECT id, plan_numero,
+            ROW_NUMBER() OVER (PARTITION BY plan_numero ORDER BY id) as new_orden
+     FROM plan_integrantes
+   ) ranked ON pi.id = ranked.id
+   SET pi.orden = ranked.new_orden;
+   
+   -- 3. Asignar rol basado en orden: orden = 1 → "titular", orden > 1 → "integrante"
+   UPDATE plan_integrantes
+   SET rol = CASE WHEN orden = 1 THEN 'titular' ELSE 'integrante' END
+   WHERE rol IS NULL;
+   
+   -- 4. Verificación: asegurarse que no hay planes sin titular
+   SELECT plan_numero, COUNT(*) as titulares
+   FROM plan_integrantes
+   WHERE rol = 'titular'
+   GROUP BY plan_numero
+   HAVING titulares != 1;
+   -- Este query debe retornar 0 filas (cada plan tiene exactamente 1 titular)
+   ```
+
+3. **Downgrade SQL**
+   ```sql
+   -- No eliminar columnas para backward compatibility
+   -- Solo limpiar datos de rol en casos necesarios
+   UPDATE plan_integrantes SET rol = NULL WHERE 1=0;
+   -- (No-op: no hacemos cambios reales)
+   ```
+
+**Testing (Plan):**
+
+Fase 1: Migración de Datos
+- ✅ Ejecutar upgrade.sql en BD con datos existentes
+- ✅ Verificar que todos los `plan_integrantes` tienen `orden` y `rol` asignados
+- ✅ Verificar query de validación retorna 0 filas (cada plan tiene 1 titular)
+- ✅ Ejecutar downgrade (no-op, sin errores)
+
+Fase 2: Funcionalidad Drag & Drop
+- ✅ Abrir PlanV1Modal en modo edición de plan con integrantes
+- ✅ Drag integrante 1 → integrante 2: reorder visual, rol cambia automáticamente
+- ✅ Integrante que era titular pasa a "integrante", nuevo primero pasa a "titular"
+- ✅ Guardar plan: BD actualiza `orden` y `rol` correctamente
+- ✅ Recargar: integrantes aparecen en nuevo orden con roles correctos
+- ✅ No permitir eliminar todos los integrantes (validación)
+- ✅ No permitir reorder que deje sin titular (si fuera posible)
+
+Fase 3: Mobile (Touch)
+- ✅ En dispositivo/navegador mobile: drag con touch funciona correctamente
+- ✅ Integrantes reordenan y persisten correctamente
+
+**Archivos Estimados para Modificar:**
+- `backend/src/migrations/versions/2.0.24_integrantes_orden_rol/upgrade.sql` (nuevo)
+- `backend/src/migrations/versions/2.0.24_integrantes_orden_rol/downgrade.sql` (nuevo)
+- `backend/src/models/PlanIntegrante.js` (actualizar campos si faltan)
+- `backend/src/controllers/v1.0/planesController.js` (actualizar método para procesar integrantes reordenados)
+- `backend/src/services/v1.0/planesIntegrantesService.js` (nueva función actualizarIntegrantes)
+- `frontend/src/pages/DashboardPage/components/GestionPlanesV1/modals/PlanV1Modal.jsx` (tab integrantes con drag & drop)
+- `frontend/src/pages/DashboardPage/components/GestionPlanesV1/hooks/usePlanV1Form.js` (manejo de reorden)
+- `frontend/src/components/DraggableList/DraggableList.jsx` (opcional, si reutilizable)
+
+**Impacto:**
+- Archivos modificados: 6-7
+- BD: Requiere migración 2.0.24 para validar y asignar rol/orden
+- Breaking change: No (rol es inducido automáticamente)
+- Backward compatibility: ✅ Planes existentes se adaptan vía migración
+- UX: Mejora significativa en gestión de roles y orden de integrantes
+
+**Notas Importantes:**
+- El rol DEBE determinarse SIEMPRE por posición (no guardar explícitamente en algunos casos)
+- El campo `orden` es crítico para persistencia
+- Considerar usar librería de drag & drop (react-beautiful-dnd, react-dnd) o implementación simple con mouse/touch events
+- Validar que plan tenga al menos 1 integrante y que el primero sea titular
 
 ---
 
