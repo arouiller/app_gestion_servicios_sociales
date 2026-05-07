@@ -5,7 +5,6 @@ import NotificationToast from '../../components/NotificationToast';
 import ThemeSwitcher from '../../components/ThemeSwitcher/ThemeSwitcher';
 import DatosPersonales from './components/DatosPersonales/DatosPersonales';
 import MigrationsDashboard from './components/MigrationsDashboard/MigrationsDashboard';
-import BusquedaAfiliados from './components/v1.0/BusquedaAfiliados';
 import GestionPlanesV1 from './components/GestionPlanesV1/GestionPlanesV1';
 import GestionPlanesV1ErrorBoundary from './components/GestionPlanesV1/GestionPlanesV1ErrorBoundary';
 import RecibosPage from '../RecibosPage/RecibosPage';
@@ -42,7 +41,6 @@ function buildMenu(isAdmin) {
       key: 'gestion',
       label: 'Gestión',
       children: [
-        { key: 'busqueda-afiliados', label: 'Búsqueda de Afiliados' },
         { key: 'gestion-planes-v1', label: 'Gestión de Planes' },
         { key: 'gestion-recibos', label: 'Gestión de Recibos' },
         { key: 'listados', label: 'Listados' },
@@ -287,7 +285,6 @@ function DashboardPageContent() {
 
         <main className="dashboard__content">
           {activeModule === 'datos-personales' && <DatosPersonales />}
-          {activeModule === 'busqueda-afiliados' && <BusquedaAfiliados />}
           {activeModule === 'gestion-planes-v1' && (
             <GestionPlanesV1ErrorBoundary>
               <GestionPlanesV1 />
