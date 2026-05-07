@@ -7,19 +7,15 @@ const Zona = sequelize.define('Zona', {
     primaryKey: true,
     autoIncrement: true
   },
-  provincia_id: {
-    type: DataTypes.INTEGER,
-    allowNull: false,
-    references: {
-      model: 'provincias',
-      key: 'id'
-    }
-  },
   codigo: {
-    type: DataTypes.STRING(50),
+    type: DataTypes.STRING(2),
     allowNull: false,
+    unique: true,
     validate: {
-      notEmpty: { msg: 'El código de zona es requerido' }
+      len: {
+        args: [2, 2],
+        msg: 'El código debe tener exactamente 2 caracteres'
+      }
     }
   },
   nombre: {
@@ -28,10 +24,6 @@ const Zona = sequelize.define('Zona', {
     validate: {
       notEmpty: { msg: 'El nombre de la zona es requerido' }
     }
-  },
-  activo: {
-    type: DataTypes.BOOLEAN,
-    defaultValue: true
   }
 }, {
   tableName: 'zonas',
@@ -40,7 +32,7 @@ const Zona = sequelize.define('Zona', {
   indexes: [
     {
       unique: true,
-      fields: ['provincia_id', 'codigo']
+      fields: ['codigo']
     }
   ]
 });

@@ -6,6 +6,7 @@ const TipoDePlan = require('./TipoDePlan');
 const ObraSocial = require('./ObraSocial');
 const ServicioAdicional = require('./ServicioAdicional');
 const TipoDeGrupo = require('./TipoDeGrupo');
+const Zona = require('./Zona');
 
 // Users
 const Usuario = require('./Usuario');
@@ -38,6 +39,7 @@ const db = {
   ObraSocial,
   ServicioAdicional,
   TipoDeGrupo,
+  Zona,
   Usuario,
   // App Configuration
   ConfiguracionApp,

@@ -34,6 +34,12 @@ const ENTIDADES = {
     campos: ['tipo_de_grupo_nombre', 'abreviacion'],
     refsCheck: [{ model: db.PlanV1, fk: 'tipo_de_grupo_numero' }],
   },
+  'zonas': {
+    model: db.Zona,
+    pkField: 'id',
+    campos: ['codigo', 'nombre'],
+    refsCheck: [],
+  },
 };
 
 /**
@@ -361,6 +367,10 @@ async function deleteCascade(entidad, id, ref, transaction) {
         { tipo_de_grupo_numero: null },
         { where: { tipo_de_grupo_numero: id }, transaction }
       );
+      break;
+
+    case 'zonas':
+      // Zonas no tienen referencias, sin cascada necesaria
       break;
 
     default:
