@@ -40,6 +40,7 @@ De cualquier estado → Descartado
 
 | ID | Prioridad | Estado | Descripción | Contexto / Motivo | Archivos estimados |
 |----|-----------|--------|-------------|-------------------|----|
+| BACKLOG-047 | 🔴 Alta | 📋 Registrado | Número de afiliado: formato de 5 dígitos con padding y auto-incremento | Estandarizar formato de número de afiliado a exactamente 5 dígitos (00001, 00002, etc.). Implementar auto-padding a izquierda con ceros. Validar unicidad. Sugerir automáticamente MAX+1 al crear plan. Mejora consistencia, evita duplicados, simplifica auditoría. | planesController.js, PlanV1Model.js, PlanV1Modal.jsx, usePlanV1Form.js, validateors/planesValidators.js, planesV1Service.js |
 | BACKLOG-046 | 🟡 Media | 📋 Registrado | Eliminar tablas legacy: afiliados, grupos_familiares, historial_grupo_familiar, planes_v2_backup | Limpieza de tablas no utilizadas y legacy que generan ruido en el schema. afiliados, grupos_familiares, historial_grupo_familiar no tienen modelos Sequelize ni endpoints. planes_v2_backup es tabla de respaldo sin funcionalidad activa. Requiere auditoría de dependencias, migración SQL de eliminación, y verificación de que no haya referencias en el código. | migrations/2.0.23, models/Plan.js (eliminar), modelos relacionados |
 | BACKLOG-045 | 🔴 Alta | ✅ Solucionado | Agregar zona y localidad a planes con dropdowns en UI | Cada plan debe tener asociado una zona (FK zona_id) y una localidad (FK localidad_id) en BD. UI debe permitir seleccionar zona y localidad mediante dropdowns en PlanV1Modal. Migración 2.0.22 para agregar campos. Mejora geolocalización y gestión territorial de planes. | migrations/2.0.22, PlanV1.js, planesController.js, PlanV1Modal.jsx, usePlanV1Form.js |
 | BACKLOG-044 | 🔴 Alta | ✅ Solucionado | Migración 2.0.19 - Eliminar zona de planes y agregar nuevos estados | Eliminar campo zona de planes y zona_id de plan_integrantes (campos legados sin FK formal). Agregar nuevos estados al ENUM: ELIMINADO y PROMOCION. Crear endpoint getAll para listados sin restricción de zona. Corregir asociaciones de modelos. | migrations/2.0.19, PlanV1.js, PlanIntegrante.js, models/index.js, listadosController.js, listadosService.js |
@@ -77,6 +78,117 @@ De cualquier estado → Descartado
 | BACKLOG-001 | 🟡 Media | ✅ Solucionado | Mejorar preview de aumento de cuotas: navegación completa + comparación antes/después | Implementado y aprobado: Tabla con alineación correcta, paginación, búsqueda y contraste antes/después. BUG-009 resuelto | BulkUpdateCuotaModal.jsx, SCSS |
 
 ## Detalles de Items
+
+### BACKLOG-047: Número de Afiliado - Formato 5 Dígitos con Padding y Auto-Incremento
+
+**Descripción:**
+Estandarizar el formato del número de afiliado a exactamente **5 dígitos** con relleno automático a la izquierda con ceros. El sistema debe validar unicidad, aplicar padding automático, y sugerir el siguiente número (MAX + 1) al crear nuevos planes.
+
+**Requerimientos Funcionales:**
+
+1. **Formato de 5 Dígitos**
+   - ✅ Número de afiliado debe ser STRING de longitud **exactamente 5**
+   - ✅ Ejemplos válidos: "00001", "00100", "01250", "99999"
+   - ❌ Ejemplos inválidos: "1" (debe ser "00001"), "123" (debe ser "00123"), "123456" (más de 5)
+
+2. **Auto-Padding a Izquierda**
+   - Si usuario ingresa "1" → se convierte a "00001"
+   - Si usuario ingresa "123" → se convierte a "00123"
+   - Si usuario ingresa "1250" → se convierte a "01250"
+   - Si usuario ingresa "00100" → se mantiene "00100"
+   - El padding debe aplicarse ANTES de guardar en BD
+
+3. **Validación de Unicidad**
+   - Número de afiliado debe ser UNIQUE en tabla planes
+   - Al crear: verificar que no exista otro plan con el mismo número (después del padding)
+   - Al editar: verificar que no exista otro plan diferente con el mismo número
+   - Retornar error 409 si duplicado: "Ya existe un plan con número de afiliado {numero}"
+
+4. **Auto-Incremento y Sugerencia**
+   - Al abrir modal de creación de plan: calcular MAX(numero_afiliado) en BD
+   - Sugerir siguiente número: MAX + 1 (padded a 5 dígitos)
+   - Ejemplos:
+     - Si MAX es "00099" → sugerir "00100"
+     - Si MAX es "00999" → sugerir "01000"
+     - Si MAX es "99998" → sugerir "99999"
+     - Si BD vacía → sugerir "00001"
+
+5. **Validación de Rango**
+   - Mínimo: "00001" (0 no es válido)
+   - Máximo: "99999"
+   - Si usuario intenta ingresar fuera del rango, mostrar error
+
+**Requerimientos Backend:**
+
+1. **Modelo PlanV1.js**
+   - Campo `numero_afiliado` ya existe como STRING(50)
+   - Aplicar validación: longitud 5 después de padding
+   - Aplicar validación: UNIQUE constraint
+
+2. **Controller planesController.js (v1.0)**
+   - En `crear()`: 
+     * Aplicar padding: `numero_afiliado.padStart(5, '0')`
+     * Validar que sea numérico después del padding
+     * Validar unicidad con find({ where: { numero_afiliado: padded } })
+   - En `actualizar()`:
+     * Aplicar padding si se modifica numero_afiliado
+     * Validar unicidad (excluyendo el plan actual)
+   - En `getMaxAfiliadoNumber()`:
+     * Retornar MAX(numero_afiliado) padded a 5 dígitos
+     * Retornar suggestedNumber como MAX + 1
+
+3. **Validators**
+   - Crear función `validateNumeroAfiliado(numero)`:
+     * Verificar que sea numérico (después de trim)
+     * Verificar que no sea 0
+     * Retornar numero padded a 5 dígitos
+     * Lanzar error si > 99999
+
+**Requerimientos Frontend:**
+
+1. **PlanV1Modal.jsx**
+   - Campo "Número de Afiliado":
+     * `inputMode="numeric"` para teclado numérico en móvil
+     * `pattern="[0-9]*"` para restringir input
+     * `maxLength="5"` para limitar a 5 caracteres
+     * Helper text: "Mínimo 5 dígitos (se completan con ceros)"
+   - Mostrar número sugerido cuando se abre el modal en modo crear
+   - Pre-llenar el campo con el número sugerido
+
+2. **usePlanV1Form.js**
+   - Al cargar initialData, aplicar padding a numero_afiliado
+   - En validate(): verificar que numero_afiliado tenga exactamente 5 dígitos (después de trim)
+
+3. **planesV1Service.js**
+   - En `getMaxAfiliadoNumber()`: ya implementado (retorna suggestedNumber)
+   - Mantener la lógica actual que funciona correctamente
+
+**Testing:**
+
+- ✅ Crear plan con numero_afiliado "1" → se guarda como "00001"
+- ✅ Crear plan con numero_afiliado "123" → se guarda como "00123"
+- ✅ Crear plan con numero_afiliado "00100" → se guarda como "00100"
+- ✅ Intentar crear duplicado → error 409
+- ✅ Editar plan: cambiar numero_afiliado "00001" → "00002" → se guarda y valida unicidad
+- ✅ Abrir modal crear → número sugerido es MAX + 1
+- ✅ Si MAX es "99999" → error al intentar sugerir "100000" (fuera de rango)
+- ✅ BD vacía → sugerir "00001"
+
+**Impacto:**
+
+- Archivos modificados: 5 (controller, model, modal, hook, service)
+- BD: No requiere migración (campo ya existe)
+- Breaking change: No (padding es automático)
+- Backward compatibility: ✅ Números existentes se convierten automáticamente
+
+**Notas:**
+
+- Ya existe endpoint `getMaxAfiliadoNumber()` que funciona correctamente
+- El padding debe ser transparente para el usuario
+- Considerar casos edge: "00000" debe rechazarse (mínimo "00001")
+- Documentar que numero_afiliado está formateado siempre a 5 dígitos en respuestas API
+
+---
 
 ### BACKLOG-046: Eliminar Tablas Legacy
 
