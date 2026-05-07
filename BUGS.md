@@ -1934,3 +1934,82 @@ Cambiar línea 229 en `RecibosPage.jsx`:
 ---
 
 **Última actualización:** 2026-04-24 (BUG-027 investigado y resuelto)
+
+---
+
+## BUG-031: Aumentos Porcentuales Mostrados como "Fijos" en Historial de Cuota
+
+**Descripción:**
+Al realizar un aumento masivo con porcentaje (ej: 5%), los registros en la pestaña "Historial de Cuota" del PlanV1Modal muestran el cambio como "Fijo: +$X.XX" en lugar de "Porcentual: +X%".
+
+**Síntomas:**
+1. Usuario ejecuta aumento masivo de 5%
+2. Abre un plan afectado → pestaña "Historial de Cuota"
+3. Ve el registro con etiqueta "Fijo: +$5.00" ❌ (debería ser "Porcentual: +5.00%")
+4. Todos los aumentos masivos se muestran como "Fijo" cuando deberían ser "Porcentual"
+
+**Ambiente:**
+- Afecta: PlanV1Modal.jsx líneas 835-852 (pestaña "Historial de Cuota")
+- Tabla visualizada: historial_cuota (registro de cambios por plan)
+- Reproducible: 100% en cada aumento masivo
+
+**CAUSA RAÍZ IDENTIFICADA:**
+
+En `PlanV1Modal.jsx` línea 842, la lógica de inferencia es **INCORRECTA**:
+
+```javascript
+const esFijo = diferencia % 1 === 0 || Math.abs(diferencia) < 0.01;
+```
+
+**Problema:**
+1. Esta lógica intenta diferenciar "fijo" de "porcentual" basándose en si la diferencia es un número entero
+2. **No funciona** porque ambos tipos pueden producir el mismo resultado:
+   - Aumento FIJO de $5: valor_anterior=$100 → valor_nuevo=$105 → diferencia=$5
+   - Aumento PORCENTUAL de 5% en $100: valor_anterior=$100 → valor_nuevo=$105 → diferencia=$5
+3. Los dos son indistinguibles numéricamente sin información adicional
+
+**Contexto:**
+- En BACKLOG-054 se eliminó la opción de "aumento fijo" — **ahora SOLO se permiten porcentuales**
+- El backend SOLO escribe porcentuales en `historial_cuota`
+- Pero el frontend mantiene lógica legacy que intenta inferir el tipo
+- La heurística `diferencia % 1 === 0` es SIEMPRE verdadera cuando el resultado es un número entero (muy común)
+
+**Ejemplo Real:**
+```
+Aumento masivo: 5%
+Plan con cuota $100:
+  - valor_anterior = 100
+  - valor_nuevo = 105 (100 * 1.05)
+  - diferencia = 5
+  - esFijo = (5 % 1 === 0) = TRUE ❌
+  - Mostrado: "Fijo: +$5.00" ❌ Incorrecto
+  - Debería: "Porcentual: +5.00%" ✅
+```
+
+**Solución Recomendada:**
+
+Puesto que BACKLOG-054 eliminó los aumentos fijos y ahora SOLO aceptamos porcentuales:
+
+**Opción A (Recomendada):** Mostrar SIEMPRE como porcentual (sin inferencia):
+```javascript
+// Simplemente calcular y mostrar el %
+const porcentajeChange = valorAnterior > 0 ? ((diferencia / valorAnterior) * 100) : 0;
+return `Porcentual: +${porcentajeChange.toFixed(2)}%`;
+```
+
+**Opción B:** Mejorar inferencia (complejo y propenso a errores):
+- Buscar información del usuario o tipo de operación
+- Almacenar tipo explícitamente en BD
+
+**Severidad:** 🟡 IMPORTANTE
+- No bloquea funcionalidad (la cuota SÍ se actualiza correctamente)
+- Pero afecta UX: información incorrecta confunde al usuario
+- El registro de auditoría muestra datos falsos
+
+**Reportado:** 2026-05-07
+**Asociado a:** BACKLOG-054 (Aumento Masivo: Solo Porcentajes)
+
+**Estado:** 📋 Registrado
+- Severidad: 🟡 IMPORTANTE
+- Fase: BACKLOG-054
+- Requiere: Fix en PlanV1Modal.jsx líneas 840-852
