@@ -38,7 +38,7 @@ export default function ConfiguracionNotificaciones() {
   const [errors, setErrors] = useState({});
   const { showSuccess, showError } = useNotification();
 
-  // Column resize hooks for 4 tables
+  // Column resize hooks for 5 tables
   const { widths: widthsNotif, getResizeHandle: getResizeHandleNotif } = useColumnResize(
     'config-notificaciones',
     { tipo: 130, descripcion: 220, duracion: 140, acciones: 100 }
@@ -54,6 +54,10 @@ export default function ConfiguracionNotificaciones() {
   const { widths: widthsAudit, getResizeHandle: getResizeHandleAudit } = useColumnResize(
     'config-auditoria',
     { parametro: 130, descripcion: 220, valor: 140, acciones: 100 }
+  );
+  const { widths: widthsRedondeo, getResizeHandle: getResizeHandleRedondeo } = useColumnResize(
+    'config-redondeo',
+    { tipo: 200, descripcion: 250, valor: 200, acciones: 120 }
   );
 
   // Cargar configuración al montar
@@ -129,6 +133,17 @@ export default function ConfiguracionNotificaciones() {
         setErrors((prev) => ({
           ...prev,
           [type]: 'Debe estar entre 1 y 365 días',
+        }));
+        return;
+      }
+    }
+
+    // Validaciones específicas para redondeo_precision
+    if (type === 'redondeo_precision') {
+      if (isNaN(newValue) || newValue <= 0) {
+        setErrors((prev) => ({
+          ...prev,
+          [type]: 'Debe ser un valor positivo (ej: 0.01, 1, 10, 100, 500)',
         }));
         return;
       }
@@ -496,6 +511,77 @@ export default function ConfiguracionNotificaciones() {
           💡 <strong>Tip:</strong> Los logs se limpian automáticamente después de N días.
           El cambio de habilitación tarda hasta 30 segundos en aplicarse.
           Rango permitido: 1-365 días. Valor recomendado: 90 días.
+        </p>
+      </div>
+
+      <div className="configuracion-notificaciones__header">
+        <h2>Redondeo de Cuotas</h2>
+        <p className="configuracion-notificaciones__subtitle">
+          Precisión aplicada al calcular el nuevo valor en aumentos masivos de cuotas (redondeo hacia arriba)
+        </p>
+      </div>
+
+      <div className="configuracion-notificaciones__table-wrapper">
+        <table className="configuracion-notificaciones__table table-standard">
+          <thead>
+            <tr>
+              <th style={{ width: widthsRedondeo.tipo }}>Parámetro{getResizeHandleRedondeo('tipo')}</th>
+              <th style={{ width: widthsRedondeo.descripcion }}>Descripción{getResizeHandleRedondeo('descripcion')}</th>
+              <th style={{ width: widthsRedondeo.valor }}>Valor{getResizeHandleRedondeo('valor')}</th>
+              <th style={{ width: widthsRedondeo.acciones }}>Acciones</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td><strong>redondeo_precision</strong></td>
+              <td>Precisión de redondeo (hacia arriba) en aumento masivo de cuotas</td>
+              <td className="configuracion-notificaciones__duration-cell">
+                <div className="configuracion-notificaciones__duration-group">
+                  <select
+                    value={values.redondeo_precision ?? 1}
+                    onChange={(e) => setValues(prev => ({ ...prev, redondeo_precision: parseFloat(e.target.value) }))}
+                    disabled={saving.redondeo_precision}
+                    className="configuracion-notificaciones__duration-input"
+                  >
+                    <option value={0.01}>0.01 (centavo)</option>
+                    <option value={1}>1 (unidad)</option>
+                    <option value={10}>10</option>
+                    <option value={100}>100</option>
+                    <option value={500}>500</option>
+                  </select>
+                </div>
+                {errors.redondeo_precision && (
+                  <span className="configuracion-notificaciones__error">
+                    {errors.redondeo_precision}
+                  </span>
+                )}
+              </td>
+              <td className="configuracion-notificaciones__actions">
+                <button
+                  className="configuracion-notificaciones__btn-save"
+                  onClick={() => handleSave('redondeo_precision')}
+                  disabled={saving.redondeo_precision}
+                  title={saving.redondeo_precision ? 'Guardando...' : 'Guardar configuración'}
+                >
+                  {saving.redondeo_precision ? '⏳' : '💾'}
+                </button>
+              </td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+
+      <div className="configuracion-notificaciones__info">
+        <p>
+          💡 <strong>Ejemplos de redondeo hacia arriba:</strong>
+          <br/>
+          • Precisión 1: 105.50 → 106
+          <br/>
+          • Precisión 10: 105.50 → 110
+          <br/>
+          • Precisión 100: 150 → 200
+          <br/>
+          • Precisión 0.01: 105.523 → 105.53
         </p>
       </div>
     </div>
