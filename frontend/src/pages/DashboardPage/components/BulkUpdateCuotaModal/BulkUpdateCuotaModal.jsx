@@ -9,7 +9,6 @@ import './BulkUpdateCuotaModal.scss';
 
 function BulkUpdateCuotaModal({ isOpen, onClose, onSuccess }) {
   const [step, setStep] = useState(1); // 1: config, 2: preview, 3: confirm
-  const [tipoAumento, setTipoAumento] = useState('porcentual'); // 'fijo' | 'porcentual'
   const [valor, setValor] = useState('');
   const [filtro, setFiltro] = useState('todos'); // 'todos' | 'tipo_plan' | 'cobrador' | 'os'
   const [selectValue, setSelectValue] = useState('');
@@ -35,8 +34,8 @@ function BulkUpdateCuotaModal({ isOpen, onClose, onSuccess }) {
 
   // Detect if form has changes
   const hasChanges = useMemo(() => {
-    return step > 1 || valor !== '' || tipoAumento !== 'porcentual' || filtro !== 'todos' || selectValue !== '';
-  }, [step, valor, tipoAumento, filtro, selectValue]);
+    return step > 1 || valor !== '' || filtro !== 'todos' || selectValue !== '';
+  }, [step, valor, filtro, selectValue]);
 
   // Handle ESC key with confirmation if there are changes
   const handleEscapeWithChanges = useCallback(() => {
@@ -134,17 +133,9 @@ function BulkUpdateCuotaModal({ isOpen, onClose, onSuccess }) {
     return item[nameField];
   };
 
-  const getUnidadTexto = () => {
-    return tipoAumento === 'porcentual' ? '%' : '$';
-  };
-
   const calculateNewCuota = (valorActual) => {
     const valActualNum = parseFloat(valorActual || 0);
-    if (tipoAumento === 'porcentual') {
-      return valActualNum * (1 + parseFloat(valor) / 100);
-    } else {
-      return valActualNum + parseFloat(valor);
-    }
+    return valActualNum * (1 + parseFloat(valor) / 100);
   };
 
   const calculateDifference = (valorActual) => {
@@ -158,7 +149,7 @@ function BulkUpdateCuotaModal({ isOpen, onClose, onSuccess }) {
 
     // Validar valor
     if (!valor || parseFloat(valor) <= 0) {
-      setError(`Ingresa un valor ${tipoAumento === 'porcentual' ? 'porcentual' : 'fijo'} válido`);
+      setError('Ingresa un porcentaje válido');
       return;
     }
 
@@ -221,7 +212,7 @@ function BulkUpdateCuotaModal({ isOpen, onClose, onSuccess }) {
 
       const payload = {
         valor: parseFloat(valor),
-        tipoAumento,
+        tipoAumento: 'porcentual',
         filtro,
         ...params,
       };
@@ -262,42 +253,11 @@ function BulkUpdateCuotaModal({ isOpen, onClose, onSuccess }) {
 
           {step === 1 && (
             <>
-              {/* Tipo de Aumento */}
-              <div className="form-group">
-                <label>Tipo de aumento:</label>
-                <div className="radio-group">
-                  <label className="radio-label">
-                    <input
-                      type="radio"
-                      name="tipoAumento"
-                      value="porcentual"
-                      checked={tipoAumento === 'porcentual'}
-                      onChange={(e) => setTipoAumento(e.target.value)}
-                    />
-                    Porcentual (%)
-                  </label>
-                  <label className="radio-label">
-                    <input
-                      type="radio"
-                      name="tipoAumento"
-                      value="fijo"
-                      checked={tipoAumento === 'fijo'}
-                      onChange={(e) => setTipoAumento(e.target.value)}
-                    />
-                    Fijo ($)
-                  </label>
-                </div>
-              </div>
-
-              {/* Valor del Aumento */}
+              {/* Porcentaje de Aumento */}
               <div className="form-group">
                 <label>
-                  Valor del aumento:
-                  <span className="form-hint">
-                    {tipoAumento === 'porcentual'
-                      ? ' (ej: 10 para 10%)'
-                      : ' (ej: 50 para $50)'}
-                  </span>
+                  Porcentaje de aumento (%):
+                  <span className="form-hint"> (ej: 10 para +10%)</span>
                 </label>
                 <div className="input-with-unit">
                   <input
@@ -306,9 +266,9 @@ function BulkUpdateCuotaModal({ isOpen, onClose, onSuccess }) {
                     min="0.01"
                     value={valor}
                     onChange={(e) => setValor(e.target.value)}
-                    placeholder={tipoAumento === 'porcentual' ? '10' : '50.00'}
+                    placeholder="10"
                   />
-                  <span className="input-unit">{getUnidadTexto()}</span>
+                  <span className="input-unit">%</span>
                 </div>
               </div>
 
@@ -355,12 +315,7 @@ function BulkUpdateCuotaModal({ isOpen, onClose, onSuccess }) {
               <div className="preview-summary">
                 <p>Se afectarán <strong>{previewCount} planes</strong></p>
                 <p>
-                  Tipo de aumento: <strong>
-                    {tipoAumento === 'porcentual'
-                      ? `${valor}%`
-                      : `$${Number(valor).toFixed(2)}`
-                    }
-                  </strong>
+                  Aumento: <strong>+{valor}%</strong>
                 </p>
                 {filtro !== 'todos' && (
                   <p>
@@ -418,10 +373,7 @@ function BulkUpdateCuotaModal({ isOpen, onClose, onSuccess }) {
                                 <td>{formatNumeroAfiliado(plan.numero_afiliado)}</td>
                                 <td>${Number(plan.valor_cuota || 0).toFixed(2)}</td>
                                 <td>
-                                  {tipoAumento === 'porcentual'
-                                    ? `+${valor}% ($${difference.toFixed(2)})`
-                                    : `+$${difference.toFixed(2)} (${porcentaje}%)`
-                                  }
+                                  {`+${valor}% ($${difference.toFixed(2)})`}
                                 </td>
                                 <td>${newCuota.toFixed(2)}</td>
                               </tr>
