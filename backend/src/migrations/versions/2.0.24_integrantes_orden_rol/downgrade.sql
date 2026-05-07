@@ -1,0 +1,4 @@
+-- Downgrade 2.0.24: No eliminar columnas (backward compatibility)
+-- Este downgrade es no-op: no hacemos cambios
+-- Las columnas orden y rol permanecen en BD para compatibilidad
+-- Nota: Si es necesario limpiar datos en el futuro, crear migración nueva
