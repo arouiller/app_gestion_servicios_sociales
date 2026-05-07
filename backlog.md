@@ -40,9 +40,10 @@ De cualquier estado → Descartado
 
 | ID | Prioridad | Estado | Descripción | Contexto / Motivo | Archivos estimados |
 |----|-----------|--------|-------------|-------------------|----|
+| BACKLOG-056 | 🟡 Media | ✅ Solucionado | Mostrar último aumento masivo al generar recibos | Al generar recibos, mostrar cuál fue el último aumento masivo realizado (fecha, porcentaje, usuario que lo realizó) debajo del mensaje de qué mes se generarán recibos. Mejora transparencia: usuarios ven instantáneamente qué aumento afectará los nuevos recibos. Commits: ecac358, 5c9ed69, 09339a1 | GenerarRecibosModal.jsx, recibosService.js, recibosController.js, routes/recibos.js |
 | BACKLOG-055 | 🟡 Media | ✅ Solucionado | Historial de aumentos de cuota - listado centralizado con pop-up | Crear tabla `aumentos_masivos` (fecha, porcentaje, usuario) para registrar cada operación de aumento masivo. Accesible desde GestionPlanesV1 a través de botón "Ver historial de aumentos" al lado del botón de aumento masivo. Listado ordenado en forma descendente (más recientes primero). Mejora trazabilidad y consulta de cambios históricos. Commits: adb523f, 13d95cf, ec8ba58, 52e4fc9, 4b6f20d | migrations/2.0.26, AumentoMasivo.js, planesController.js, HistorialAumentosModal.jsx |
-| BACKLOG-054 | 🔴 Alta | 📋 Registrado | Aumento de cuotas masivo: solo porcentajes, redondeo configurable | Mejorar funcionalidad de aumento masivo: (1) eliminar opción de aumento fijo, solo permitir porcentajes; (2) redondeo siempre hacia arriba (ceil); (3) precisión decimal del redondeo configurable desde UI. | BulkUpdateCuotaModal.jsx, planesController.js, ConfiguracionApp.jsx, migrations |
-| BACKLOG-053 | 🟡 Media | 📋 Registrado | Posicionamiento automático de nuevo plan en grilla ordenada | Al crear un nuevo plan, este debe insertarse en la posición correcta según orden zona + número de afiliado, en lugar de aparecer al final. Mejora UX y mantiene consistencia en la visualización de datos. | GestionPlanesV1.jsx, planesService.js |
+| BACKLOG-054 | 🔴 Alta | ✅ Solucionado | Aumento de cuotas masivo: solo porcentajes, redondeo configurable | Mejorar funcionalidad de aumento masivo: (1) eliminar opción de aumento fijo, solo permitir porcentajes; (2) redondeo siempre hacia arriba (ceil); (3) precisión decimal del redondeo configurable desde UI. Commits: 28d4044, 3231b73, 9db9c06 | BulkUpdateCuotaModal.jsx, planesController.js, ConfiguracionNotificaciones.jsx, migrations/2.0.25, migrations/2.0.26 |
+| BACKLOG-053 | 🟡 Media | 🚫 Descartado | Posicionamiento automático de nuevo plan en grilla ordenada | **Descartado a favor de BACKLOG-057 (Sortable Headers)**: Implementación global de ordenamiento dinámico en headers supersede este requerimiento. Con sortable headers, usuarios pueden ordenar por zona + número_afiliado directamente, consiguiendo posicionamiento correcto sin reposicionamiento automático. Solución más general y reutilizable. | GestionPlanesV1.jsx, sortUtil.js, useSortable.js |
 | BACKLOG-052 | 🟡 Media | ✅ Solucionado | Redimensionamiento manual de columnas con persistencia en localStorage | Permitir que los usuarios cambien manualmente el ancho de las columnas en las tablas (GestionPlanesV1, LookupCRUD). Las preferencias de ancho se guardan en localStorage y persisten entre sesiones del navegador. Mejora UX: usuarios pueden ajustar columnas según sus preferencias. Hook useColumnResize con drag & drop en headers. Completado en todas las 17 tablas del sistema. Commits: 2c816f9, 56a3e0b, effa576, 2d2b9c5, 5448447, 54e636c, 044754c, 6da9a82, c17531d, ff405ba, d882cc7, f4d1fd5, 700555b, 036adf0 | useColumnResize hook, todas las tablas, _table-standard.scss |
 | BACKLOG-051 | 🟡 Media | ✅ Solucionado | Reformatear tabla de listado de planes - columnas virtuales | En la tabla GestionPlanesV1 (listado principal de planes): (1) crear columna virtual "Identificador" con formato zona_codigo + "-" + numero_afiliado (ej: "01-00042"); (2) eliminar columna numero_afiliado redundante; (3) agregar columna "Titular" con datos del titular del plan (apellido, nombre). Mejora UX: información más útil e identificación clara de planes por zona. Commits: ee8c18e, 636d9e4 | GestionPlanesV1.jsx, planesController.js |
 | BACKLOG-050 | 🟡 Media | ✅ Solucionado | Reformatear tabla de afiliados en tab de PlanV1Modal | Mejorar presentación de integrantes en tab de afiliados. Eliminar columnas redundantes (orden, apellido, nombre individuales), agregar combinadas (apellido, nombre). Agregar fechas (nacimiento, cobertura) con cálculo de edad. Agregar servicios adicionales concatenados con 2 letras. Commits: 8f600d4, d1d0082, 20f55c0, 911f013 | PlanV1Modal.jsx, formatters.js, planesController.js, index.js |
@@ -86,6 +87,67 @@ De cualquier estado → Descartado
 | BACKLOG-001 | 🟡 Media | ✅ Solucionado | Mejorar preview de aumento de cuotas: navegación completa + comparación antes/después | Implementado y aprobado: Tabla con alineación correcta, paginación, búsqueda y contraste antes/después. BUG-009 resuelto | BulkUpdateCuotaModal.jsx, SCSS |
 
 ## Detalles de Items
+
+### BACKLOG-056: Mostrar Último Aumento Masivo al Generar Recibos
+
+**Descripción:**
+Al generar recibos de un determinado mes/año, mostrar al usuario cuál fue el **último aumento masivo** que se realizó en el sistema (fecha, porcentaje aplicado, usuario que lo realizó). Esta información debe aparecer **debajo del mensaje** que indica qué recibos de qué mes se generarán.
+
+**Contexto:**
+Mejora la transparencia del flujo de generación de recibos. Los usuarios pueden ver instantáneamente qué aumento afectará los valores de los recibos a generar. Evita confusiones sobre qué tasa se aplicó en cada generación.
+
+**Requerimientos Funcionales:**
+
+1. **Ubicación en UI**
+   - Componente: `GenerarRecibosModal.jsx`
+   - Posición: Debajo del mensaje "Se generarán recibos para mes de XXXX/YYYY"
+   - Formato de visualización: Sección informativa destacada
+
+2. **Datos a Mostrar**
+   - Fecha del último aumento (formato: DD/MM/YYYY HH:MM:SS)
+   - Porcentaje aplicado (ej: "5.50%")
+   - Usuario que realizó el aumento (apellido, nombre)
+   - Ejemplo: "Último aumento: 5.50% realizado el 07/05/2026 14:30:22 por Juan Pérez"
+
+3. **Comportamiento**
+   - Si NO hay aumentos masivos previos en el sistema → mostrar "Sin aumentos masivos registrados"
+   - Si hay aumentos → mostrar siempre el más reciente (ORDER BY fecha DESC LIMIT 1)
+   - Información es de SOLO LECTURA (no editable)
+
+4. **Datos del Backend**
+   - Consultar tabla `aumentos_masivos` (ya existe desde BACKLOG-055)
+   - Usar la asociación `AumentoMasivo.belongsTo(Usuario)` para obtener datos del usuario
+   - Retornar en respuesta de generación de recibos o en endpoint separado de consulta
+
+**Requerimientos Backend:**
+
+1. **Endpoint Consulta (opción simple)**
+   - GET `/api/recibos/ultimo-aumento-masivo`
+   - Respuesta: `{ success: true, data: { fecha, porcentaje, usuario: { apellido, nombre } } }` o `{ success: true, data: null }`
+
+2. **Controller recibosController.js**
+   - Nueva función `getUltimoAumentoMasivo()` que consulta AumentoMasivo orderBy DESC fecha limit 1
+
+**Requerimientos Frontend:**
+
+1. **Componente GenerarRecibosModal.jsx**
+   - Hook `useEffect` para cargar último aumento masivo al abrir modal
+   - Estado: `const [ultimoAumento, setUltimoAumento] = useState(null)`
+   - Renderizar información debajo del mensaje de mes a generar
+   - Manejo de carga (loading) y error
+
+2. **Servicio recibosService.js**
+   - Nueva función: `getUltimoAumentoMasivo()` que consume `/api/recibos/ultimo-aumento-masivo`
+
+**Archivos a Modificar:**
+- `backend/src/controllers/recibosController.js` (agregar función getUltimoAumentoMasivo)
+- `backend/src/routes/recibos.js` (agregar GET /ultimo-aumento-masivo)
+- `frontend/src/services/recibosService.js` (agregar método getUltimoAumentoMasivo)
+- `frontend/src/pages/DashboardPage/components/GenerarRecibosModal/GenerarRecibosModal.jsx` (cargar y mostrar información)
+
+**Estado:** 📋 Registrado (pendiente de implementar)
+
+---
 
 ### BACKLOG-047: Número de Afiliado - Formato 5 Dígitos con Padding y Auto-Incremento
 
