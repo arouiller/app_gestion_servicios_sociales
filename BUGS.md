@@ -34,6 +34,52 @@ No hay bugs activos en este momento. Todos han sido solucionados.
 
 ---
 
+### BUG-030: Servicios Asignados a Integrante No Se Reflejan en Tabla (Solucionado)
+
+**Descripción:**
+Al asignar servicios a un integrante desde IntegranteServiciosModal y guardar, la modal se cierra pero la tabla de afiliados en PlanV1Modal no mostraba los servicios actualizados.
+
+**Síntomas:**
+1. Usuario abre PlanV1Modal de un plan existente
+2. Hace clic en el ícono ⚙️ (servicios) de un integrante
+3. Selecciona servicios y hace clic en "Guardar"
+4. Modal se cierra
+5. Vuelve a abrir la modal → servicios SÍ estaban guardados en BD ✅
+6. Pero la tabla de afiliados NO mostraba el count de servicios ❌
+
+**Causa Raíz:**
+En `PlanV1Modal.jsx` línea 868, el callback `onClose` solo cerraba la modal sin recargar datos:
+```javascript
+onClose={() => setServiciosModalOpen(null)}
+```
+
+Los servicios se guardaban en el backend, pero el frontend no sincronizaba el array `servicios` del integrante con los cambios.
+
+**Impacto:**
+- 🟡 IMPORTANTE: UX confusa - parecía que no se guardaban los cambios
+- Datos correctos en BD pero UI no se sincronizaba
+
+**Archivos Afectados:**
+- `frontend/src/pages/DashboardPage/components/GestionPlanesV1/modals/PlanV1Modal.jsx`
+
+**Fixes Aplicados:**
+
+1. **Agregar función reloadIntegrantes (f1c6d44):**
+   - Nueva función que recarga los integrantes con sus servicios desde el backend
+   - Se ejecuta como callback onClose de IntegranteServiciosModal
+   - Mantiene el patrón de carga de `loadFullPlanData` pero limitado a integrantes
+
+2. **Actualizar callback de onClose (f1c6d44):**
+   - Cambiar de `setServiciosModalOpen(null)` a `setServiciosModalOpen(null); reloadIntegrantes()`
+   - Asegura sincronización de datos cuando la modal se cierra
+
+**Commits de Resolución:**
+- f1c6d44: fix(planes): recargar integrantes después de asignar servicios
+
+**Estado:** ✅ Solucionado (2026-05-07)
+
+---
+
 ### BUG-028: Drag & Drop de Integrantes — Rol Guarda como Vacío (Solucionado)
 
 **Descripción:**
@@ -88,6 +134,7 @@ MySQL rechaza el valor inválido y guarda como cadena vacía.
 
 | ID | Fase | Descripción | Resuelto | Commits |
 |----|------|-------------|----------|---------|
+| BUG-030 | BACKLOG-052 | Servicios asignados a integrante no se reflejan en tabla (reloadIntegrantes) | 2026-05-07 | f1c6d44 |
 | BUG-029 | BACKLOG-049 | Validación de duplicados aún bloquea números_documento después del fix | 2026-05-07 | 469fece |
 | BUG-028 | BACKLOG-048 | Drag & drop de integrantes: rol guarda como vacío (ENUM 'adherente' inválido) | 2026-05-07 | 81b379f, a3fcc44 |
 | BUG-027 | BACKLOG-014 | Listado de Recibos: obra social no aparece en lista (pero sí en detalle) | 2026-05-06 | (cerrado por usuario) |
