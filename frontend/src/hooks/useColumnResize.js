@@ -20,7 +20,7 @@ const useColumnResize = (storageKey, defaultWidths) => {
 
     const onMouseMove = (e) => {
       const delta = e.clientX - startX;
-      const newWidth = Math.max(50, startWidth + delta);
+      const newWidth = Math.max(30, startWidth + delta);
       setWidths(prev => ({ ...prev, [colKey]: newWidth }));
     };
 
