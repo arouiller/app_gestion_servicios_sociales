@@ -40,6 +40,7 @@ De cualquier estado → Descartado
 
 | ID | Prioridad | Estado | Descripción | Contexto / Motivo | Archivos estimados |
 |----|-----------|--------|-------------|-------------------|----|
+| BACKLOG-046 | 🟡 Media | 📋 Registrado | Eliminar tablas legacy: afiliados, grupos_familiares, historial_grupo_familiar, planes_v2_backup | Limpieza de tablas no utilizadas y legacy que generan ruido en el schema. afiliados, grupos_familiares, historial_grupo_familiar no tienen modelos Sequelize ni endpoints. planes_v2_backup es tabla de respaldo sin funcionalidad activa. Requiere auditoría de dependencias, migración SQL de eliminación, y verificación de que no haya referencias en el código. | migrations/2.0.23, models/Plan.js (eliminar), modelos relacionados |
 | BACKLOG-045 | 🔴 Alta | ✅ Solucionado | Agregar zona y localidad a planes con dropdowns en UI | Cada plan debe tener asociado una zona (FK zona_id) y una localidad (FK localidad_id) en BD. UI debe permitir seleccionar zona y localidad mediante dropdowns en PlanV1Modal. Migración 2.0.22 para agregar campos. Mejora geolocalización y gestión territorial de planes. | migrations/2.0.22, PlanV1.js, planesController.js, PlanV1Modal.jsx, usePlanV1Form.js |
 | BACKLOG-044 | 🔴 Alta | ✅ Solucionado | Migración 2.0.19 - Eliminar zona de planes y agregar nuevos estados | Eliminar campo zona de planes y zona_id de plan_integrantes (campos legados sin FK formal). Agregar nuevos estados al ENUM: ELIMINADO y PROMOCION. Crear endpoint getAll para listados sin restricción de zona. Corregir asociaciones de modelos. | migrations/2.0.19, PlanV1.js, PlanIntegrante.js, models/index.js, listadosController.js, listadosService.js |
 | BACKLOG-043 | 🔴 Alta | ✅ Solucionado | Nueva entidad Zona independiente con CRUD | Nueva tabla Zona (código: 2 dígitos, nombre: string). Zona es una entidad **independiente** de Provincia y Localidad (no jerárquica). CRUD completo en interfaz de gestiones. Requiere migración, modelos, controladores, servicios, componente UI. | migrations/2.0.20, Zona.js model, lookupController.js, GestionZonas.jsx |
@@ -76,6 +77,70 @@ De cualquier estado → Descartado
 | BACKLOG-001 | 🟡 Media | ✅ Solucionado | Mejorar preview de aumento de cuotas: navegación completa + comparación antes/después | Implementado y aprobado: Tabla con alineación correcta, paginación, búsqueda y contraste antes/después. BUG-009 resuelto | BulkUpdateCuotaModal.jsx, SCSS |
 
 ## Detalles de Items
+
+### BACKLOG-046: Eliminar Tablas Legacy
+
+**Descripción:**
+Limpieza de esquema: eliminación de 4 tablas legacy no utilizadas que generan ruido y complejidad innecesaria en la BD. Auditoría completada confirma que NO hay referencias activas en el código.
+
+**Tablas a Eliminar:**
+
+1. **afiliados**
+   - Estado: Sin modelo Sequelize, sin endpoints, sin referencias en código
+   - Datos: Unknown (auditoría previa indica que es legacy de v1.0)
+   - Acción: DROP TABLE
+
+2. **grupos_familiares**
+   - Estado: Sin modelo Sequelize, sin endpoints, sin referencias en código
+   - Datos: Unknown (auditoría previa indica que es legacy)
+   - Acción: DROP TABLE
+
+3. **historial_grupo_familiar**
+   - Estado: Sin modelo Sequelize, sin endpoints, sin referencias en código
+   - Datos: Unknown (auditoría previa indica que es legacy)
+   - Acción: DROP TABLE
+
+4. **planes_v2_backup**
+   - Estado: Tiene modelo `Plan.js` pero sin endpoints activos, sin rutas
+   - Propósito: Tabla de respaldo/migración legacy (v2.0)
+   - Acción: DROP TABLE + Eliminar modelo `Plan.js`
+
+**Requerimientos:**
+
+1. **Migración 2.0.23 - Eliminación de tablas**
+   - Crear upgrade.sql: DROP TABLE IF EXISTS afiliados, grupos_familiares, historial_grupo_familiar, planes_v2_backup
+   - Crear downgrade.sql: Crear tablas vacías (estructura básica) para rollback de emergencia
+
+2. **Auditoría de Código Previo**
+   - ✅ Verificar que NO hay referencias en controllers/
+   - ✅ Verificar que NO hay referencias en routes/
+   - ✅ Verificar que NO hay referencias en services/
+   - ✅ Verificar que NO hay queries SQL directo que usen estas tablas
+
+3. **Eliminación de Modelos**
+   - Eliminar `backend/src/models/Plan.js` (modelo de planes_v2_backup)
+   - Actualizar `backend/src/models/index.js` para remover importación de Plan
+
+4. **Testing**
+   - Backend debe iniciarse sin errores post-migración
+   - Todos los endpoints deben funcionar normalmente
+   - No debe haber referencias rotas a modelos eliminados
+
+**Impacto:**
+- Limpieza del schema: BD más clara y menos confusa
+- Reducción de ruido: menos modelos innecesarios en el código
+- Sin impacto en funcionalidad: estas tablas NO se usan en el flujo actual
+
+**Riesgo:**
+- Bajo: Auditoría confirma que no hay dependencias
+- Reversible: Migration downgrade disponible si es necesario
+
+**Notas:**
+- Ejecutar primero la auditoría completa (grep -r) para confirmar cero referencias
+- Considerar backup de BD antes de eliminar
+- Documentar en caso que futuro desarrollo necesite recuperar información de respaldo
+
+---
 
 ### BACKLOG-045: Agregar Zona y Localidad a Planes con Dropdowns en UI
 
