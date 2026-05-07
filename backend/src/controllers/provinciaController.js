@@ -1,10 +1,10 @@
-const { Provincia, Zona } = require('../models');
+const { Provincia, Localidad } = require('../models');
 
 const provinciaController = {
   async list(req, res) {
     try {
       const provincias = await Provincia.findAll({
-        include: [{ model: Zona, as: 'zonas', attributes: ['id', 'codigo', 'nombre', 'activo'] }],
+        include: [{ model: Localidad, as: 'localidades', attributes: ['id', 'codigo', 'nombre', 'activo'] }],
         order: [['nombre', 'ASC']]
       });
       res.json({ success: true, data: provincias });
@@ -66,11 +66,11 @@ const provinciaController = {
         return res.status(404).json({ success: false, message: 'Provincia no encontrada' });
       }
 
-      const zonasCount = await Zona.count({ where: { provincia_id: id, activo: true } });
-      if (zonasCount > 0) {
+      const localidadesCount = await Localidad.count({ where: { provincia_id: id, activo: true } });
+      if (localidadesCount > 0) {
         return res.status(400).json({
           success: false,
-          message: 'No se puede eliminar provincia con zonas activas'
+          message: 'No se puede eliminar provincia con localidades activas'
         });
       }
 
