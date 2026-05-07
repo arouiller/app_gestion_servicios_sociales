@@ -40,6 +40,7 @@ De cualquier estado → Descartado
 
 | ID | Prioridad | Estado | Descripción | Contexto / Motivo | Archivos estimados |
 |----|-----------|--------|-------------|-------------------|----|
+| BACKLOG-049 | 🟡 Media | 📋 Registrado | Números de documento duplicados permitidos — remover constraint UNIQUE | Permitir que múltiples personas tengan el mismo número de documento. Actualmente tabla personas tiene UNIQUE en numero_documento, lo que impide registrar documentos duplicados (ej: múltiples personas con mismo DNI en diferentes contextos, o datos incompletos compartiendo el mismo valor por defecto). Requiere migración SQL para remover constraint y auditoría de datos existentes. | migrations/2.0.25, Persona.js model |
 | BACKLOG-048 | 🔴 Alta | ✅ Solucionado | Integrantes ordenables con drag & drop — rol por posición | Permitir reordenar integrantes de un plan mediante drag & drop en PlanV1Modal. El rol (titular vs integrante) se determina automáticamente por posición: primeros en lista = titulares, resto = integrantes. Campo `orden` en tabla plan_integrantes refleja el reorden. Migración para actualizar rol en registros existentes donde no está definido. Mejora UX y simplifica gestión de roles. | migrations/2.0.24, PlanIntegrante.js, PlanV1Modal.jsx, usePlanV1Form.js, planesIntegrantesService.js |
 | BACKLOG-047 | 🔴 Alta | ✅ Solucionado | Número de afiliado: formato de 5 dígitos con padding y auto-incremento | Estandarizar formato de número de afiliado a exactamente 5 dígitos (00001, 00002, etc.). Implementar auto-padding a izquierda con ceros. Validar unicidad. Sugerir automáticamente MAX+1 al crear plan. Mejora consistencia, evita duplicados, simplifica auditoría. | planesController.js, PlanV1Model.js, PlanV1Modal.jsx, usePlanV1Form.js, validateors/planesValidators.js, planesV1Service.js |
 | BACKLOG-046 | 🟡 Media | 📋 Registrado | Eliminar tablas legacy: afiliados, grupos_familiares, historial_grupo_familiar, planes_v2_backup | Limpieza de tablas no utilizadas y legacy que generan ruido en el schema. afiliados, grupos_familiares, historial_grupo_familiar no tienen modelos Sequelize ni endpoints. planes_v2_backup es tabla de respaldo sin funcionalidad activa. Requiere auditoría de dependencias, migración SQL de eliminación, y verificación de que no haya referencias en el código. | migrations/2.0.23, models/Plan.js (eliminar), modelos relacionados |
@@ -4439,6 +4440,46 @@ Fase 3: Mobile (Touch)
 - ✅ Recalcular roles al eliminar integrante (nuevo titular = primero)
 - ✅ Persistencia: guardar plan actualiza integrantes en BD con nuevo orden/rol
 - ✅ Migración 2.0.24 asigna orden/rol a integrantes existentes
+
+---
+
+### BACKLOG-049: Números de Documento Duplicados Permitidos
+
+**Descripción:**
+Permitir que múltiples personas en el sistema tengan el mismo número de documento. Actualmente la tabla `personas` tiene una constraint `UNIQUE` en el campo `numero_documento`, lo que impide registrar documentos duplicados.
+
+**Contexto / Motivo:**
+- Casos de uso legítimos requieren números de documento duplicados:
+  * Múltiples personas con el mismo DNI en diferentes contextos o épocas
+  * Datos incompletos compartiendo un valor por defecto (ej: "0" o "0000000")
+  * Migraciones de datos donde los duplicados ya existen en fuentes externas
+- La validación de unicidad puede aplicarse a nivel de lógica de negocio si es necesario, pero a nivel de BD debe ser permisiva
+
+**Requerimientos:**
+
+1. **Cambio de Schema**
+   - Remover constraint `UNIQUE` del campo `numero_documento` en tabla `personas`
+   - Campo permanece como `VARCHAR(20)` pero sin restricción de unicidad
+
+2. **Migración 2.0.25**
+   - `upgrade.sql`: eliminar constraint UNIQUE con `ALTER TABLE personas DROP INDEX numero_documento_unique;`
+   - `downgrade.sql`: recrear constraint UNIQUE con `ALTER TABLE personas ADD UNIQUE (numero_documento);`
+
+3. **Validación Post-Migración**
+   - Verificar que la constraint fue eliminada correctamente
+   - Confirmar que se pueden insertar registros con numero_documento duplicados
+
+**Archivos Impactados:**
+- `backend/src/migrations/versions/2.0.25_numero_documento_duplicados/upgrade.sql` (nuevo)
+- `backend/src/migrations/versions/2.0.25_numero_documento_duplicados/downgrade.sql` (nuevo)
+- `backend/src/models/Persona.js` (remover unique: true si está presente)
+
+**Testing:**
+- ✅ Ejecutar upgrade.sql
+- ✅ Intentar insertar dos personas con el mismo numero_documento (debe permitir)
+- ✅ Ejecutar downgrade.sql (debe recrear la constraint)
+- ✅ Intentar insertar duplicados (debe fallar con constraint error)
+- ✅ Ejecutar upgrade nuevamente (idempotencia)
 
 ---
 
