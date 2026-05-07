@@ -131,7 +131,7 @@ function PlanV1Modal({ mode, planData, onClose, onSave }) {
       console.log('[PlanV1Modal] Max affiliate number data:', data);
       if (data && data.suggestedNumber) {
         setMaxAfiliadoNumber(data.suggestedNumber);
-        handleFieldChange('numero_afiliado', String(data.suggestedNumber));
+        handleFieldChange('numero_afiliado', String(data.suggestedNumber).padStart(5, '0'));
         console.log('[PlanV1Modal] Set suggested number:', data.suggestedNumber);
       }
     } catch (err) {
@@ -439,6 +439,8 @@ function PlanV1Modal({ mode, planData, onClose, onSave }) {
                   type="text"
                   inputMode="numeric"
                   pattern="[0-9]*"
+                  maxLength={5}
+                  placeholder="00001"
                   value={form.numero_afiliado}
                   onChange={(e) => handleFieldChange('numero_afiliado', e.target.value)}
                 />
