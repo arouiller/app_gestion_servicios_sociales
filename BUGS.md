@@ -25,13 +25,53 @@ Un bug solo puede pasar a estado solucionado, Descartado a traves del pedido exp
 
 ## Registros Activos
 
-Actualmente hay 1 bug activo: 1 crítico en análisis con dependencias.
+Actualmente hay 2 bugs activos: 2 críticos.
 
 ### Historial reciente (últimos 7 días)
 
 | ID | Severidad | Fase | Descripción | Reportado | Estado |
 |----|-----------|------|-------------|-----------|--------|
+| BUG-028 | 🔴 CRÍTICO | BACKLOG-048 | Drag & drop de integrantes: rol guarda como vacío (ENUM 'adherente' inválido) | 2026-05-07 | 📋 Registrado |
 | BUG-025 | 🔴 CRÍTICO | BACKLOG-024 | npm install falló: conflicto de versiones al agregar 22 dependencias explícitamente | 2026-04-18 | 🔬 En análisis |
+
+---
+
+## Detalle de Bugs Activos
+
+### BUG-028: Drag & Drop de Integrantes — Rol Guarda como Vacío
+
+**Descripción:**
+Al reordenar integrantes en PlanV1Modal mediante drag & drop y guardar, el rol de los integrantes se corrompe:
+- El integrante que queda primero (titular) se guarda correctamente
+- Los demás integrantes se guardan con rol = "" (vacío)
+
+**Síntomas:**
+1. Usuario reordena integrantes (ej: persona 12 → primero, persona 6 → segundo)
+2. Guarda el plan
+3. En BD: persona 12 tiene rol='titular' ✅, pero persona 6 tiene rol="" ❌
+4. Al recargar el modal, persona 6 aparece como "Integrante" (inferido por posición, no por BD)
+
+**Causa Raíz:**
+En `backend/src/controllers/v1.0/planIntegrantesController.js` línea 133, el código intenta guardar:
+```javascript
+const rol = index === 0 ? 'titular' : 'adherente';
+```
+
+Pero el ENUM en `PlanIntegrante.js` es `ENUM('titular','integrante')`, no 'adherente'.
+MySQL rechaza el valor inválido y guarda como cadena vacía.
+
+**Impacto:**
+- 🔴 CRÍTICO: Corrupción de datos en BD
+- Los datos se guardan incorrectamente pero la UI sigue funcionando (rol se infiere por posición)
+- Futura sincronización de datos podría fallar
+
+**Archivos Afectados:**
+- `backend/src/controllers/v1.0/planIntegrantesController.js` línea 133
+
+**Fix Requerido:**
+Cambiar 'adherente' → 'integrante' en línea 133
+
+**Estado:** 📋 Registrado → 🚀 Desarrollando
 
 ---
 

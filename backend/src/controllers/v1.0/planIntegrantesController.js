@@ -130,7 +130,7 @@ const reorder = async (req, res) => {
     // Actualizar orden y rol basado en posición para cada integrante
     for (let index = 0; index < integrantes.length; index++) {
       const integrante = integrantes[index];
-      const rol = index === 0 ? 'titular' : 'adherente'; // Primero = titular, resto = adherente
+      const rol = index === 0 ? 'titular' : 'integrante'; // Primero = titular, resto = integrante
 
       await db.PlanIntegrante.update(
         {
