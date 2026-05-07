@@ -196,6 +196,53 @@
       font-style: italic;
     }
   }
+
+  .localidades-list {
+    padding: 12px;
+    background: white;
+    border-top: 1px solid $color-border;
+
+    .localidad-row {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 10px;
+      border-left: 4px solid $color-primary;
+      margin-bottom: 8px;
+      background: #f8fafc;
+      border-radius: 4px;
+
+      &:last-child {
+        margin-bottom: 0;
+      }
+
+      .localidad-info {
+        flex: 1;
+        font-size: 14px;
+        color: $color-text;
+
+        .codigo {
+          color: $color-text-muted;
+          font-size: 12px;
+          margin-left: 4px;
+        }
+      }
+
+      .localidad-actions {
+        display: flex;
+        gap: 8px;
+        flex-shrink: 0;
+      }
+    }
+
+    .empty-localidades {
+      text-align: center;
+      padding: 20px;
+      color: $color-text-light;
+      font-size: 12px;
+      font-style: italic;
+    }
+  }
 }
 
 .modal-overlay {
