@@ -1,15 +1,17 @@
 const db = require('../models');
 const { Op, literal } = require('sequelize');
+const { buildOrderByClause } = require('../utils/sortUtil');
 
 /**
  * GET /api/planes/filter/:filtro
  * Obtiene planes filtrados por: todos, tipo_plan, cobrador, os, estado
+ * Query params: sortBy, order (ASC|DESC)
  * Retorna: { success, data: [planes], count }
  */
 exports.filter = async (req, res, next) => {
   try {
     const { filtro } = req.params;
-    const { tipo_plan_numero, cobrador_numero, os_numero, estado } = req.query;
+    const { tipo_plan_numero, cobrador_numero, os_numero, estado, sortBy, order } = req.query;
 
     let where = {};
 
@@ -23,9 +25,16 @@ exports.filter = async (req, res, next) => {
       where.estado = estado.toUpperCase();
     }
 
+    // Build ORDER BY clause
+    const allowedColumns = ['plan_numero', 'numero_afiliado', 'estado', 'zona_codigo', 'valor_cuota', 'fecha_creacion'];
+    let orderBy = [['plan_numero', 'ASC']]; // default
+    if (sortBy) {
+      orderBy = buildOrderByClause(sortBy, order, allowedColumns);
+    }
+
     const planes = await db.PlanV1.findAll({
       where,
-      order: [['plan_numero', 'ASC']],
+      order: orderBy,
     });
 
     res.json({
