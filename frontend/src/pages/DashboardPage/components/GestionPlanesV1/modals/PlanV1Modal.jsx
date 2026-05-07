@@ -837,19 +837,12 @@ function PlanV1Modal({ mode, planData, onClose, onSave }) {
                         const diferencia = valorNuevo - valorAnterior;
                         const porcentajeChange = valorAnterior > 0 ? ((diferencia / valorAnterior) * 100) : 0;
 
-                        // Determinar si fue fijo o porcentual (inferir del cálculo)
-                        // Si el cambio es muy cercano a un múltiplo de 0.01 y no es 0, probablemente fue fijo
-                        const esFijo = diferencia % 1 === 0 || Math.abs(diferencia) < 0.01;
-
                         return (
                           <tr key={idx}>
                             <td>{new Date(cambio.fecha_cambio).toLocaleDateString('es-AR')}</td>
                             <td>${valorAnterior.toFixed(2)}</td>
                             <td className="plan-v1-modal__cambio-cell">
-                              {esFijo
-                                ? `Fijo: +$${diferencia.toFixed(2)}`
-                                : `Porcentual: +${porcentajeChange.toFixed(1)}%`
-                              }
+                              {`+${porcentajeChange.toFixed(2)}% ($${diferencia.toFixed(2)})`}
                             </td>
                             <td>${valorNuevo.toFixed(2)}</td>
                           </tr>
