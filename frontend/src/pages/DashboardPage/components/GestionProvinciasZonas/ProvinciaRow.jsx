@@ -1,4 +1,6 @@
 import React from 'react';
+import ActionButton from '../../../../components/ActionButton/ActionButton';
+import IconButton from '../../../../components/IconButton/IconButton';
 
 const ProvinciaRow = ({
   provincia,
@@ -21,15 +23,24 @@ const ProvinciaRow = ({
           <span className="codigo">({provincia.codigo})</span>
         </div>
         <div className="provincia-actions">
-          <button className="btn-icon" onClick={onEdit} title="Editar">
-            ✎
-          </button>
-          <button className="btn-icon btn-danger" onClick={onDelete} title="Eliminar">
-            ✕
-          </button>
-          <button className="btn-icon btn-success" onClick={onNewLocalidad} title="Agregar localidad">
-            +
-          </button>
+          <ActionButton
+            variant="icon"
+            icon="✎"
+            title="Editar"
+            onClick={onEdit}
+          />
+          <IconButton
+            icon="delete"
+            title="Eliminar"
+            onClick={onDelete}
+            className="icon-button--danger"
+          />
+          <ActionButton
+            variant="icon"
+            icon="+"
+            title="Agregar localidad"
+            onClick={onNewLocalidad}
+          />
         </div>
       </div>
 
@@ -41,12 +52,18 @@ const ProvinciaRow = ({
                 {localidad.nombre} <span className="codigo">({localidad.codigo})</span>
               </span>
               <div className="localidad-actions">
-                <button className="btn-icon" onClick={() => onEditLocalidad(localidad)} title="Editar">
-                  ✎
-                </button>
-                <button className="btn-icon btn-danger" onClick={() => onDeleteLocalidad(localidad.id)} title="Eliminar">
-                  ✕
-                </button>
+                <ActionButton
+                  variant="icon"
+                  icon="✎"
+                  title="Editar"
+                  onClick={() => onEditLocalidad(localidad)}
+                />
+                <IconButton
+                  icon="delete"
+                  title="Eliminar"
+                  onClick={() => onDeleteLocalidad(localidad.id)}
+                  className="icon-button--danger"
+                />
               </div>
             </div>
           ))}
