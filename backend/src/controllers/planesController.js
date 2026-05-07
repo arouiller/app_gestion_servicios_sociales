@@ -34,6 +34,20 @@ exports.filter = async (req, res, next) => {
 
     const planes = await db.PlanV1.findAll({
       where,
+      include: [
+        { model: db.TipoDePlan, attributes: ['tipo_plan_numero', 'tipo_plan_nombre'] },
+        { model: db.Cobrador, attributes: ['cobrador_numero', 'cobrador_apellido', 'cobrador_nombre'] },
+        { model: db.TipoDeGrupo, attributes: ['tipo_de_grupo_numero', 'tipo_de_grupo_nombre'] },
+        { model: db.ObraSocial, attributes: ['os_numero', 'os_nombre'] },
+        { model: db.Zona, attributes: ['id', 'codigo', 'nombre'] },
+        { model: db.Localidad, attributes: ['id', 'codigo', 'nombre'] },
+        {
+          model: db.PlanIntegrante,
+          where: { orden: 1 },
+          required: false,
+          include: [{ model: db.Persona, attributes: ['apellido', 'nombre'] }],
+        },
+      ],
       order: orderBy,
     });
 
