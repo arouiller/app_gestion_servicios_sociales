@@ -1,6 +1,7 @@
 import React, { useState, useEffect, useCallback, useMemo } from 'react';
 import planesService from '../../../../services/planesService';
 import lookupService from '../../../../services/lookupService';
+import configService from '../../../../services/configService';
 import { formatNumeroAfiliado } from '../../../../utils/formatters';
 import ConfirmCloseDialog from '../../../../components/ConfirmCloseDialog/ConfirmCloseDialog';
 import { useModalEscapeKey } from '../../../../hooks/useModalEscapeKey';
@@ -25,6 +26,7 @@ function BulkUpdateCuotaModal({ isOpen, onClose, onSuccess }) {
   const planesPerPage = 10;
   const [searchFilter, setSearchFilter] = useState('');
   const [showConfirmClose, setShowConfirmClose] = useState(false);
+  const [precision, setPrecision] = useState(1);
 
   // Column resize hook for preview table
   const { widths, getResizeHandle } = useColumnResize(
@@ -57,6 +59,7 @@ function BulkUpdateCuotaModal({ isOpen, onClose, onSuccess }) {
   useEffect(() => {
     if (isOpen) {
       loadLookupData();
+      loadPrecision();
       resetForm();
     }
   }, [isOpen]);
@@ -77,6 +80,17 @@ function BulkUpdateCuotaModal({ isOpen, onClose, onSuccess }) {
     } catch (err) {
       console.error('Error loading lookup data:', err);
       setError('Error al cargar datos de filtros');
+    }
+  };
+
+  const loadPrecision = async () => {
+    try {
+      const config = await configService.getConfig();
+      const precisionValue = parseFloat(config.redondeo_precision) || 1;
+      setPrecision(precisionValue);
+    } catch (err) {
+      console.error('Error loading rounding precision:', err);
+      setPrecision(1);
     }
   };
 
@@ -134,7 +148,10 @@ function BulkUpdateCuotaModal({ isOpen, onClose, onSuccess }) {
 
   const calculateNewCuota = (valorActual) => {
     const valActualNum = parseFloat(valorActual || 0);
-    return valActualNum * (1 + parseFloat(valor) / 100);
+    let valorNuevo = valActualNum * (1 + parseFloat(valor) / 100);
+    valorNuevo = Math.ceil(valorNuevo / precision) * precision;
+    valorNuevo = Math.round(valorNuevo * 10000) / 10000;
+    return valorNuevo;
   };
 
   const calculateDifference = (valorActual) => {
