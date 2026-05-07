@@ -44,6 +44,10 @@ app.use('/api/admin', require('./routes/admin'));
 // Lookup (compartida por todas las versiones)
 app.use('/api/lookup', require('./routes/lookup'));
 
+// Provincias y Localidades
+app.use('/api/provincias', require('./routes/provincias'));
+app.use('/api/localidades', require('./routes/localidades'));
+
 // 1.0.x routes (refactor completado)
 app.use('/api/personas', require('./routes/personas'));
 app.use('/api/listados', require('./routes/listados'));
