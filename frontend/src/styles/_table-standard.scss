@@ -24,6 +24,9 @@ $table-font-size: 0.95rem;
     text-align: left;
     font-size: $table-font-size;
     border-right: 1px solid $table-header-border;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
 
     &:last-child {
       border-right: none;
