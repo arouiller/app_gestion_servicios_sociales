@@ -1,4 +1,5 @@
 const db = require('../models');
+const { buildOrderByClause } = require('../utils/sortUtil');
 
 /**
  * Mapeo de entidades lookup con su configuración (modelo, PK, campos, referencias)
@@ -44,11 +45,13 @@ const ENTIDADES = {
 
 /**
  * GET /api/lookup/:entidad
- * Devuelve todos los registros de la entidad ordenados por PK
+ * Devuelve todos los registros de la entidad
+ * Query params: sortBy, order (ASC|DESC)
  */
 exports.list = async (req, res, next) => {
   try {
     const { entidad } = req.params;
+    const { sortBy, order } = req.query;
     const config = ENTIDADES[entidad];
 
     if (!config) {
@@ -58,8 +61,15 @@ exports.list = async (req, res, next) => {
       });
     }
 
+    // Build ORDER BY clause: allow sorting by PK and all campos
+    const allowedColumns = [config.pkField, ...config.campos];
+    let orderBy = [[config.pkField, 'ASC']]; // default
+    if (sortBy) {
+      orderBy = buildOrderByClause(sortBy, order, allowedColumns);
+    }
+
     const registros = await config.model.findAll({
-      order: [[config.pkField, 'ASC']],
+      order: orderBy,
     });
 
     res.status(200).json(registros);
