@@ -15,6 +15,7 @@ import Pagination from '../../../../components/Pagination/Pagination';
 import useDebounce from '../../../../hooks/useDebounce';
 import usePagination from '../../../../hooks/usePagination';
 import useColumnResize from '../../../../hooks/useColumnResize';
+import useSortable from '../../../../hooks/useSortable';
 import '../../../../styles/_table-standard.scss';
 import './GestionPlanesV1.scss';
 
@@ -49,6 +50,9 @@ function GestionPlanesV1() {
   };
 
   const { widths, getResizeHandle } = useColumnResize('planes', DEFAULT_WIDTHS_PLANES);
+
+  // Sort hook para ordenamiento dinámico
+  const { sortBy, order, handleSort, getSortIcon } = useSortable('gestion-planes-sort', 'plan_numero', 'ASC');
 
   // Debouncificar el texto de búsqueda
   const debouncedSearchText = useDebounce(searchText, debounceDelay);
@@ -95,7 +99,7 @@ function GestionPlanesV1() {
     setError(null);
     setLoading(true);
     try {
-      const data = await planesV1Service.listar(filtros);
+      const data = await planesV1Service.listar({ ...filtros, sortBy, order });
       setPlanes(Array.isArray(data) ? data : []);
     } catch (err) {
       console.error('Error al cargar planes:', err);
@@ -104,7 +108,7 @@ function GestionPlanesV1() {
     } finally {
       setLoading(false);
     }
-  }, [filtros]);
+  }, [filtros, sortBy, order]);
 
   // Usar searchText inmediatamente si se presionó Enter, si no usar debouncedSearchText
   const effectiveSearchText = forceSearchNow ? searchText : debouncedSearchText;
@@ -241,12 +245,27 @@ function GestionPlanesV1() {
           <table className="table-standard gestion-planes-v1__tabla">
             <thead>
               <tr>
-                <th style={{ width: widths.identificador }}>Identificador{getResizeHandle('identificador')}</th>
+                <th
+                  style={{ width: widths.identificador, cursor: 'pointer' }}
+                  onClick={() => handleSort('numero_afiliado')}
+                >
+                  Identificador{getSortIcon('numero_afiliado')}{getResizeHandle('identificador')}
+                </th>
                 <th style={{ width: widths.titular }}>Titular{getResizeHandle('titular')}</th>
                 <th style={{ width: widths.tipoPlan }}>Tipo de Plan{getResizeHandle('tipoPlan')}</th>
-                <th style={{ width: widths.cobrador }}>Cobrador{getResizeHandle('cobrador')}</th>
+                <th
+                  style={{ width: widths.cobrador, cursor: 'pointer' }}
+                  onClick={() => handleSort('cobrador_numero')}
+                >
+                  Cobrador{getSortIcon('cobrador_numero')}{getResizeHandle('cobrador')}
+                </th>
                 <th style={{ width: widths.obraSocial }}>Obra Social{getResizeHandle('obraSocial')}</th>
-                <th style={{ width: widths.estado }}>Estado{getResizeHandle('estado')}</th>
+                <th
+                  style={{ width: widths.estado, cursor: 'pointer' }}
+                  onClick={() => handleSort('estado')}
+                >
+                  Estado{getSortIcon('estado')}{getResizeHandle('estado')}
+                </th>
                 <th style={{ width: widths.acciones }}>Acciones</th>
               </tr>
             </thead>

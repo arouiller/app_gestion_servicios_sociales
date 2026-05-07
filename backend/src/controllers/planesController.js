@@ -26,7 +26,7 @@ exports.filter = async (req, res, next) => {
     }
 
     // Build ORDER BY clause
-    const allowedColumns = ['plan_numero', 'numero_afiliado', 'estado', 'zona_codigo', 'valor_cuota', 'fecha_creacion'];
+    const allowedColumns = ['plan_numero', 'numero_afiliado', 'estado', 'zona_codigo', 'valor_cuota', 'fecha_creacion', 'cobrador_numero', 'tipo_plan_numero', 'os_numero'];
     let orderBy = [['plan_numero', 'ASC']]; // default
     if (sortBy) {
       orderBy = buildOrderByClause(sortBy, order, allowedColumns);
