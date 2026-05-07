@@ -132,17 +132,20 @@ const crear = async (req, res, next) => {
       localidad_id,
     } = req.body;
 
-    // Validar que el número de afiliado sea numérico
-    if (!/^\d+$/.test(String(numero_afiliado).trim())) {
+    // Aplicar padding a 5 dígitos
+    const numeroAfiliadoPadded = String(numero_afiliado).trim().padStart(5, '0');
+
+    // Validar que el resultado sea exactamente 5 dígitos numéricos
+    if (!/^\d{5}$/.test(numeroAfiliadoPadded)) {
       return res.status(422).json({
         success: false,
-        message: 'El número de afiliado debe ser numérico',
-        errors: { numero_afiliado: 'Solo se permiten números' },
+        message: 'El número de afiliado debe ser numérico de hasta 5 dígitos',
+        errors: { numero_afiliado: 'Solo se permiten números (máximo 5 dígitos)' },
       });
     }
 
-    // Verificar que el número de afiliado sea único
-    const existente = await db.PlanV1.findOne({ where: { numero_afiliado } });
+    // Verificar que el número de afiliado sea único con el valor padded
+    const existente = await db.PlanV1.findOne({ where: { numero_afiliado: numeroAfiliadoPadded } });
     if (existente) {
       return res.status(409).json({
         success: false,
@@ -156,7 +159,7 @@ const crear = async (req, res, next) => {
       cobrador_numero,
       tipo_de_grupo_numero,
       os_numero,
-      numero_afiliado,
+      numero_afiliado: numeroAfiliadoPadded,
       telefono_1,
       telefono_2,
       domicilio,
@@ -189,27 +192,28 @@ const actualizar = async (req, res, next) => {
       return res.status(404).json({ success: false, message: 'Plan no encontrado' });
     }
 
-    // Validar que el número de afiliado sea numérico (si se proporciona)
-    if (req.body.numero_afiliado && !/^\d+$/.test(String(req.body.numero_afiliado).trim())) {
-      return res.status(422).json({
-        success: false,
-        message: 'El número de afiliado debe ser numérico',
-        errors: { numero_afiliado: 'Solo se permiten números' },
-      });
-    }
-
-    // Si se intenta cambiar el número de afiliado, verificar unicidad
-    if (req.body.numero_afiliado && req.body.numero_afiliado !== plan.numero_afiliado) {
-      const existente = await db.PlanV1.findOne({
-        where: { numero_afiliado: req.body.numero_afiliado },
-      });
-      if (existente) {
-        return res.status(409).json({
+    // Si se proporciona número de afiliado, aplicar padding y validar
+    if (req.body.numero_afiliado) {
+      const padded = String(req.body.numero_afiliado).trim().padStart(5, '0');
+      if (!/^\d{5}$/.test(padded)) {
+        return res.status(422).json({
           success: false,
-          message: 'Ya existe un plan con ese número de afiliado',
-          errors: { numero_afiliado: 'Ya existe un plan con ese número de afiliado' },
+          message: 'El número de afiliado debe ser numérico de hasta 5 dígitos',
+          errors: { numero_afiliado: 'Solo se permiten números (máximo 5 dígitos)' },
         });
       }
+      // Si se intenta cambiar el número de afiliado, verificar unicidad con el valor padded
+      if (padded !== plan.numero_afiliado) {
+        const existente = await db.PlanV1.findOne({ where: { numero_afiliado: padded } });
+        if (existente) {
+          return res.status(409).json({
+            success: false,
+            message: 'Ya existe un plan con ese número de afiliado',
+            errors: { numero_afiliado: 'Ya existe un plan con ese número de afiliado' },
+          });
+        }
+      }
+      req.body.numero_afiliado = padded;
     }
 
     const camposPermitidos = [
@@ -279,7 +283,7 @@ const getMaxAfiliadoNumber = async (req, res, next) => {
     const maxNumber = parseInt(maxStr, 10) || 0;
     const suggestedNumber = maxNumber + 1;
 
-    return res.json({ success: true, data: { maxNumber, suggestedNumber: String(suggestedNumber).padStart(3, '0') } });
+    return res.json({ success: true, data: { maxNumber, suggestedNumber: String(suggestedNumber).padStart(5, '0') } });
   } catch (error) {
     next(error);
   }
