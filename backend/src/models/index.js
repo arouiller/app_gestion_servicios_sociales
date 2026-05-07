@@ -13,9 +13,9 @@ const Usuario = require('./Usuario');
 // App Configuration
 const ConfiguracionApp = require('./ConfiguracionApp');
 
-// Provincias y Zonas
+// Provincias y Localidades
 const Provincia = require('./Provincia');
-const Zona = require('./Zona');
+const Localidad = require('./Localidad');
 
 // 1.0.x Models
 const Persona = require('./Persona');
@@ -41,9 +41,9 @@ const db = {
   Usuario,
   // App Configuration
   ConfiguracionApp,
-  // Provincias y Zonas
+  // Provincias y Localidades
   Provincia,
-  Zona,
+  Localidad,
   // 1.0.x Models
   Persona,
   PlanV1,
@@ -109,22 +109,22 @@ if (db.AuditLog && db.Usuario) {
   db.AuditLog.belongsTo(db.Usuario, { foreignKey: 'usuario_id', as: 'usuario' });
 }
 
-// Provincia and Zona associations
-if (db.Provincia && db.Zona) {
-  db.Provincia.hasMany(db.Zona, { foreignKey: 'provincia_id', as: 'zonas', onDelete: 'RESTRICT' });
-  db.Zona.belongsTo(db.Provincia, { foreignKey: 'provincia_id', as: 'provincia', onDelete: 'RESTRICT' });
+// Provincia and Localidad associations
+if (db.Provincia && db.Localidad) {
+  db.Provincia.hasMany(db.Localidad, { foreignKey: 'provincia_id', as: 'localidades', onDelete: 'RESTRICT' });
+  db.Localidad.belongsTo(db.Provincia, { foreignKey: 'provincia_id', as: 'provincia', onDelete: 'RESTRICT' });
 }
 
-// PlanV1 and Zona associations
-if (db.PlanV1 && db.Zona) {
-  db.PlanV1.belongsTo(db.Zona, { foreignKey: 'zona', as: 'zonaRelation' });
-  db.Zona.hasMany(db.PlanV1, { foreignKey: 'zona', as: 'planes' });
+// PlanV1 and Localidad associations
+if (db.PlanV1 && db.Localidad) {
+  db.PlanV1.belongsTo(db.Localidad, { foreignKey: 'zona', as: 'localidadRelation' });
+  db.Localidad.hasMany(db.PlanV1, { foreignKey: 'zona', as: 'planes' });
 }
 
-// PlanIntegrante and Zona associations
-if (db.PlanIntegrante && db.Zona) {
-  db.PlanIntegrante.belongsTo(db.Zona, { foreignKey: 'zona_id', as: 'zona' });
-  db.Zona.hasMany(db.PlanIntegrante, { foreignKey: 'zona_id', as: 'integrantes' });
+// PlanIntegrante and Localidad associations
+if (db.PlanIntegrante && db.Localidad) {
+  db.PlanIntegrante.belongsTo(db.Localidad, { foreignKey: 'localidad_id', as: 'localidad' });
+  db.Localidad.hasMany(db.PlanIntegrante, { foreignKey: 'localidad_id', as: 'integrantes' });
 }
 
 module.exports = db;

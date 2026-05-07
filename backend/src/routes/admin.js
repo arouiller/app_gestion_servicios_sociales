@@ -156,30 +156,30 @@ router.delete('/provincias/:id', verifyToken, requireAdmin, (req, res, next) => 
   provinciaController.delete(req, res).catch(next);
 });
 
-// Zonas CRUD (lazy load controllers)
-router.get('/provincias/:id/zonas', verifyToken, requireAdmin, (req, res, next) => {
-  const zonaController = require('../controllers/zonaController');
-  zonaController.byProvincia(req, res).catch(next);
+// Localidades CRUD (lazy load controllers)
+router.get('/provincias/:id/localidades', verifyToken, requireAdmin, (req, res, next) => {
+  const localidadController = require('../controllers/localidadController');
+  localidadController.byProvincia(req, res).catch(next);
 });
 
-router.get('/zonas', verifyToken, requireAdmin, (req, res, next) => {
-  const zonaController = require('../controllers/zonaController');
-  zonaController.list(req, res).catch(next);
+router.get('/localidades', verifyToken, requireAdmin, (req, res, next) => {
+  const localidadController = require('../controllers/localidadController');
+  localidadController.list(req, res).catch(next);
 });
 
-router.post('/zonas', verifyToken, requireAdmin, (req, res, next) => {
-  const zonaController = require('../controllers/zonaController');
-  zonaController.create(req, res).catch(next);
+router.post('/localidades', verifyToken, requireAdmin, (req, res, next) => {
+  const localidadController = require('../controllers/localidadController');
+  localidadController.create(req, res).catch(next);
 });
 
-router.put('/zonas/:id', verifyToken, requireAdmin, (req, res, next) => {
-  const zonaController = require('../controllers/zonaController');
-  zonaController.update(req, res).catch(next);
+router.put('/localidades/:id', verifyToken, requireAdmin, (req, res, next) => {
+  const localidadController = require('../controllers/localidadController');
+  localidadController.update(req, res).catch(next);
 });
 
-router.delete('/zonas/:id', verifyToken, requireAdmin, (req, res, next) => {
-  const zonaController = require('../controllers/zonaController');
-  zonaController.delete(req, res).catch(next);
+router.delete('/localidades/:id', verifyToken, requireAdmin, (req, res, next) => {
+  const localidadController = require('../controllers/localidadController');
+  localidadController.delete(req, res).catch(next);
 });
 
 module.exports = router;

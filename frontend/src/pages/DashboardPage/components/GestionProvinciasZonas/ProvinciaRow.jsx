@@ -6,9 +6,9 @@ const ProvinciaRow = ({
   onToggleExpand,
   onEdit,
   onDelete,
-  onNewZona,
-  onEditZona,
-  onDeleteZona
+  onNewLocalidad,
+  onEditLocalidad,
+  onDeleteLocalidad
 }) => {
   return (
     <div className="provincia-row">
@@ -27,24 +27,24 @@ const ProvinciaRow = ({
           <button className="btn-icon btn-danger" onClick={onDelete} title="Eliminar">
             ✕
           </button>
-          <button className="btn-icon btn-success" onClick={onNewZona} title="Agregar zona">
+          <button className="btn-icon btn-success" onClick={onNewLocalidad} title="Agregar localidad">
             +
           </button>
         </div>
       </div>
 
-      {expanded && provincia.zonas && provincia.zonas.length > 0 && (
-        <div className="zonas-list">
-          {provincia.zonas.map(zona => (
-            <div key={zona.id} className="zona-row">
-              <span className="zona-info">
-                {zona.nombre} <span className="codigo">({zona.codigo})</span>
+      {expanded && provincia.localidades && provincia.localidades.length > 0 && (
+        <div className="localidades-list">
+          {provincia.localidades.map(localidad => (
+            <div key={localidad.id} className="localidad-row">
+              <span className="localidad-info">
+                {localidad.nombre} <span className="codigo">({localidad.codigo})</span>
               </span>
-              <div className="zona-actions">
-                <button className="btn-icon" onClick={() => onEditZona(zona)} title="Editar">
+              <div className="localidad-actions">
+                <button className="btn-icon" onClick={() => onEditLocalidad(localidad)} title="Editar">
                   ✎
                 </button>
-                <button className="btn-icon btn-danger" onClick={() => onDeleteZona(zona.id)} title="Eliminar">
+                <button className="btn-icon btn-danger" onClick={() => onDeleteLocalidad(localidad.id)} title="Eliminar">
                   ✕
                 </button>
               </div>
@@ -53,9 +53,9 @@ const ProvinciaRow = ({
         </div>
       )}
 
-      {expanded && (!provincia.zonas || provincia.zonas.length === 0) && (
-        <div className="zonas-list">
-          <div className="empty-zonas">Sin zonas</div>
+      {expanded && (!provincia.localidades || provincia.localidades.length === 0) && (
+        <div className="localidades-list">
+          <div className="empty-localidades">Sin localidades</div>
         </div>
       )}
     </div>

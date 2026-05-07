@@ -1,9 +1,9 @@
 import React, { useState, useEffect } from 'react';
 import provinciaService from '../../../../services/provinciaService';
-import zonaService from '../../../../services/zonaService';
+import localidadService from '../../../../services/localidadService';
 import ProvinciaRow from './ProvinciaRow';
 import ProvinciaFormModal from './ProvinciaFormModal';
-import ZonaFormModal from './ZonaFormModal';
+import LocalidadFormModal from './LocalidadFormModal';
 import './GestionProvinciasZonas.scss';
 
 const GestionProvinciasZonas = () => {
@@ -15,10 +15,10 @@ const GestionProvinciasZonas = () => {
   const [provinciaModalOpen, setProvinciaModalOpen] = useState(false);
   const [selectedProvincia, setSelectedProvincia] = useState(null);
 
-  // Zona modal state
-  const [zonaModalOpen, setZonaModalOpen] = useState(false);
-  const [selectedZona, setSelectedZona] = useState(null);
-  const [provinciaForZona, setProvinciaForZona] = useState(null);
+  // Localidad modal state
+  const [localidadModalOpen, setLocalidadModalOpen] = useState(false);
+  const [selectedLocalidad, setSelectedLocalidad] = useState(null);
+  const [provinciaForLocalidad, setProvinciaForLocalidad] = useState(null);
 
   useEffect(() => {
     loadProvincias();
@@ -78,43 +78,43 @@ const GestionProvinciasZonas = () => {
     }
   };
 
-  const handleNewZona = (provincia) => {
-    setProvinciaForZona(provincia);
-    setSelectedZona(null);
-    setZonaModalOpen(true);
+  const handleNewLocalidad = (provincia) => {
+    setProvinciaForLocalidad(provincia);
+    setSelectedLocalidad(null);
+    setLocalidadModalOpen(true);
   };
 
-  const handleEditZona = (zona, provincia) => {
-    setProvinciaForZona(provincia);
-    setSelectedZona(zona);
-    setZonaModalOpen(true);
+  const handleEditLocalidad = (localidad, provincia) => {
+    setProvinciaForLocalidad(provincia);
+    setSelectedLocalidad(localidad);
+    setLocalidadModalOpen(true);
   };
 
-  const handleDeleteZona = async (id) => {
-    if (window.confirm('¿Eliminar esta zona?')) {
+  const handleDeleteLocalidad = async (id) => {
+    if (window.confirm('¿Eliminar esta localidad?')) {
       try {
-        await zonaService.delete(id);
+        await localidadService.delete(id);
         loadProvincias();
       } catch (error) {
-        console.error('Error deleting zona:', error);
+        console.error('Error deleting localidad:', error);
       }
     }
   };
 
-  const handleSaveZona = async (data) => {
+  const handleSaveLocalidad = async (data) => {
     try {
-      if (selectedZona) {
-        await zonaService.update(selectedZona.id, data);
+      if (selectedLocalidad) {
+        await localidadService.update(selectedLocalidad.id, data);
       } else {
-        await zonaService.create({
+        await localidadService.create({
           ...data,
-          provincia_id: provinciaForZona.id
+          provincia_id: provinciaForLocalidad.id
         });
       }
       loadProvincias();
-      setZonaModalOpen(false);
+      setLocalidadModalOpen(false);
     } catch (error) {
-      console.error('Error saving zona:', error);
+      console.error('Error saving localidad:', error);
     }
   };
 
@@ -125,7 +125,7 @@ const GestionProvinciasZonas = () => {
   return (
     <div className="gestion-provincias-zonas">
       <div className="filter-bar">
-        <h2>Provincias y Zonas</h2>
+        <h2>Provincias y Localidades</h2>
         <button className="btn-primary" onClick={handleNewProvincia}>
           + Nueva Provincia
         </button>
@@ -143,9 +143,9 @@ const GestionProvinciasZonas = () => {
               onToggleExpand={() => toggleExpand(provincia.id)}
               onEdit={() => handleEditProvincia(provincia)}
               onDelete={() => handleDeleteProvincia(provincia.id)}
-              onNewZona={() => handleNewZona(provincia)}
-              onEditZona={(zona) => handleEditZona(zona, provincia)}
-              onDeleteZona={handleDeleteZona}
+              onNewLocalidad={() => handleNewLocalidad(provincia)}
+              onEditLocalidad={(localidad) => handleEditLocalidad(localidad, provincia)}
+              onDeleteLocalidad={handleDeleteLocalidad}
             />
           ))
         )}
@@ -159,12 +159,12 @@ const GestionProvinciasZonas = () => {
         />
       )}
 
-      {zonaModalOpen && provinciaForZona && (
-        <ZonaFormModal
-          zona={selectedZona}
-          provincia={provinciaForZona}
-          onSave={handleSaveZona}
-          onClose={() => setZonaModalOpen(false)}
+      {localidadModalOpen && provinciaForLocalidad && (
+        <LocalidadFormModal
+          localidad={selectedLocalidad}
+          provincia={provinciaForLocalidad}
+          onSave={handleSaveLocalidad}
+          onClose={() => setLocalidadModalOpen(false)}
         />
       )}
     </div>
