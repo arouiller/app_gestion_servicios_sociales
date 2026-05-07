@@ -105,15 +105,29 @@ const lookupService = {
   },
 
   /**
+   * Obtener zonas
+   */
+  getZonas: async () => {
+    try {
+      const { data } = await api.get('/lookup/zonas');
+      return data || [];
+    } catch (error) {
+      console.error('Error loading zonas:', error);
+      return [];
+    }
+  },
+
+  /**
    * Cargar todos los lookups necesarios para planes en paralelo
    */
   loadAllLookupsForPlans: async () => {
     try {
-      const [tiposDeplan, cobradores, obrasSociales, tiposDeGrupo] = await Promise.all([
+      const [tiposDeplan, cobradores, obrasSociales, tiposDeGrupo, zonas] = await Promise.all([
         lookupService.getTiposDePlan(),
         lookupService.getCobradores(),
         lookupService.getObrasSociales(),
         lookupService.getTiposDeGrupo(),
+        lookupService.getZonas(),
       ]);
 
       return {
@@ -121,6 +135,7 @@ const lookupService = {
         cobradores,
         obrasSociales,
         tiposDeGrupo,
+        zonas,
       };
     } catch (error) {
       console.error('Error loading all lookups:', error);
@@ -129,6 +144,7 @@ const lookupService = {
         cobradores: [],
         obrasSociales: [],
         tiposDeGrupo: [],
+        zonas: [],
       };
     }
   },
