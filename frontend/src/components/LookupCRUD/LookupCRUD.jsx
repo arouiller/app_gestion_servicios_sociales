@@ -236,7 +236,7 @@ const LookupCRUD = ({ titulo, singularName, endpoint, campos }) => {
           <table className="table-standard lookup-table">
           <thead>
             <tr>
-              {campos.map(campo => (
+              {campos.filter(campo => !campo.hidden).map(campo => (
                 <th key={campo.name}>{campo.label}</th>
               ))}
               <th>Acciones</th>
@@ -245,7 +245,7 @@ const LookupCRUD = ({ titulo, singularName, endpoint, campos }) => {
           <tbody>
             {pagination.paginatedItems.map(registro => (
               <tr key={Object.values(registro)[0]}>
-                {campos.map(campo => (
+                {campos.filter(campo => !campo.hidden).map(campo => (
                   <td key={campo.name}>{registro[campo.name]}</td>
                 ))}
                 <td className="table-actions">
@@ -286,7 +286,7 @@ const LookupCRUD = ({ titulo, singularName, endpoint, campos }) => {
         <div className="modal-overlay" onClick={handleCloseForm}>
           <form className="modal-form" onClick={(e) => e.stopPropagation()} onSubmit={handleSave}>
             <h3>{editingId ? 'Editando' : 'Nuevo'} {singularName || titulo}</h3>
-            {campos.map(campo => (
+            {campos.filter(campo => !campo.hidden).map(campo => (
               <div key={campo.name} className="form-group">
                 <label>{campo.label}</label>
                 <input
