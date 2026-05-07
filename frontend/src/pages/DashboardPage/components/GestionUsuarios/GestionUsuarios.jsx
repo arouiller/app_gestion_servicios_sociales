@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import './GestionUsuarios.scss';
 import usuariosService from '../../../../services/usuariosService';
+import useColumnResize from '../../../../hooks/useColumnResize';
 import UsuarioFormModal from './modals/UsuarioFormModal';
 
 export default function GestionUsuarios() {
@@ -8,6 +9,16 @@ export default function GestionUsuarios() {
   const [loading, setLoading] = useState(false);
   const [showFormModal, setShowFormModal] = useState(false);
   const [editingUsuario, setEditingUsuario] = useState(null);
+
+  // Redimensionamiento de columnas
+  const { widths, getResizeHandle } = useColumnResize('gestion-usuarios', {
+    email: 200,
+    nombre: 140,
+    apellido: 140,
+    rol: 110,
+    estado: 100,
+    acciones: 100,
+  });
 
   useEffect(() => {
     loadUsuarios();
@@ -89,12 +100,12 @@ export default function GestionUsuarios() {
           <table className="gestion-usuarios__table">
             <thead>
               <tr>
-                <th>Email</th>
-                <th>Nombre</th>
-                <th>Apellido</th>
-                <th>Rol</th>
-                <th>Estado</th>
-                <th>Acciones</th>
+                <th style={{ width: widths.email }}>Email{getResizeHandle('email')}</th>
+                <th style={{ width: widths.nombre }}>Nombre{getResizeHandle('nombre')}</th>
+                <th style={{ width: widths.apellido }}>Apellido{getResizeHandle('apellido')}</th>
+                <th style={{ width: widths.rol }}>Rol{getResizeHandle('rol')}</th>
+                <th style={{ width: widths.estado }}>Estado{getResizeHandle('estado')}</th>
+                <th style={{ width: widths.acciones }}>Acciones</th>
               </tr>
             </thead>
             <tbody>
