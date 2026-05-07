@@ -89,8 +89,9 @@ exports.create = async (req, res, next) => {
 
     const datos = req.body;
 
-    // Validar que TODOS los campos estén presentes
-    const camposRequeridos = [config.pkField, ...config.campos];
+    // Validar que TODOS los campos NO-PK estén presentes
+    // El pkField es opcional y será auto-calculado si no se provee
+    const camposRequeridos = config.campos;
     const camposFaltantes = camposRequeridos.filter(
       (campo) => datos[campo] === undefined || datos[campo] === null || datos[campo] === ''
     );
