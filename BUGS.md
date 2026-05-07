@@ -25,13 +25,12 @@ Un bug solo puede pasar a estado solucionado, Descartado a traves del pedido exp
 
 ## Registros Activos
 
-Actualmente hay 2 bugs activos: 1 crítico en análisis, 1 importante recién reportado.
+Actualmente hay 1 bug activo: 1 crítico en análisis.
 
 ### Historial reciente (últimos 7 días)
 
 | ID | Severidad | Fase | Descripción | Reportado | Estado |
 |----|-----------|------|-------------|-----------|--------|
-| BUG-029 | 🟡 IMPORTANTE | BACKLOG-049 | Validación de duplicados aún bloquea números de documento duplicados después del fix | 2026-05-07 | 📋 Registrado |
 | BUG-025 | 🔴 CRÍTICO | BACKLOG-024 | npm install falló: conflicto de versiones al agregar 22 dependencias explícitamente | 2026-04-18 | 🔬 En análisis |
 
 ---
@@ -129,10 +128,23 @@ Esta validación debe ser removida o comentada para permitir duplicados.
 - Bloquea la funcionalidad deseada de permitir duplicados
 - Pero no es crítico para otras operaciones (afecta solo a personas con DNI duplicado)
 
+**Investigación:**
+- Encontrada validación explícita en `personasController.js` métodos `crear()` (líneas 54-62) y `actualizar()` (líneas 131-139)
+- Ambas validaciones verificaban duplicados y rechazaban con error 409
+- Root cause: lógica de negocio no se actualizó al remover constraint de BD
+
+**Solución Implementada:**
+- Removida validación de duplicados en método `crear()` (líneas 54-62)
+- Removida validación de duplicados en método `actualizar()` (líneas 131-139)
+- El controlador ahora permite crear/actualizar personas con numero_documento duplicado
+
+**Commit de Resolución:**
+- 469fece: fix(personas): remover validación de unicidad en numero_documento - BUG-029
+
 **Reportado:** 2026-05-07
 **Fase:** BACKLOG-049
 
-**Estado:** 📋 Registrado (pendiente investigación y fix)
+**Estado:** 🚀 Desarrollado (pendiente confirmación del usuario)
 
 ---
 
