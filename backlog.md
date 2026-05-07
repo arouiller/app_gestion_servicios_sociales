@@ -41,7 +41,7 @@ De cualquier estado → Descartado
 | ID | Prioridad | Estado | Descripción | Contexto / Motivo | Archivos estimados |
 |----|-----------|--------|-------------|-------------------|----|
 | BACKLOG-044 | 🔴 Alta | 🚀 Desarrollado | Migración 2.0.19 - Eliminar zona de planes y agregar nuevos estados | Eliminar campo zona de planes y zona_id de plan_integrantes (campos legados sin FK formal). Agregar nuevos estados al ENUM: ELIMINADO y PROMOCION. Crear endpoint getAll para listados sin restricción de zona. Corregir asociaciones de modelos. | migrations/2.0.19, PlanV1.js, PlanIntegrante.js, models/index.js, listadosController.js, listadosService.js |
-| BACKLOG-043 | 🔴 Alta | 📋 Registrado | Nueva entidad Zona independiente con CRUD | Nueva tabla Zona (código: 2 dígitos, nombre: string). Zona es una entidad **independiente** de Provincia y Localidad (no jerárquica). CRUD completo en interfaz de gestiones. Requiere migración, modelos, controladores, servicios, componente UI. | migrations/v2.0.x, Zona.js model, zonaController.js, zonasService.js, GestionZonas.jsx |
+| BACKLOG-043 | 🔴 Alta | ✅ Solucionado | Nueva entidad Zona independiente con CRUD | Nueva tabla Zona (código: 2 dígitos, nombre: string). Zona es una entidad **independiente** de Provincia y Localidad (no jerárquica). CRUD completo en interfaz de gestiones. Requiere migración, modelos, controladores, servicios, componente UI. | migrations/2.0.20, Zona.js model, lookupController.js, GestionZonas.jsx |
 | BACKLOG-042 | 🔴 Alta | 📋 Registrado | Mover enlace de Gestión Provincias/Localidades a sección de Gestiones | Actualmente el link está fuera del flujo principal. Debe integrase junto con: Cobradores, Obras Sociales, Servicios, Tipos de Grupo, Tipos de Plan. Mejora UX y discoverability. | DashboardPage.jsx, Sidebar.jsx |
 | BACKLOG-040 | 🔴 Alta | ✅ Solucionado | Selector de Zona en Formulario de Afiliados | Dropdown de zona en PlanV1Modal. Carga zonas disponibles de tabla zonas. Asigna zona a nivel de plan, no a cada afiliado. Mejora UX permitiendo designar zona geográfica para cada plan. | PlanV1Modal.jsx, planesIntegrantesController.js, zonaService.js, planesIntegrantesService.js |
 | BACKLOG-036 | 🔴 Alta | ✅ Solucionado | Entidad Provincias y Zonas - CRUD jerárquico | Estructura jerárquica: Provincia (1) → (N) Zonas. CRUD unificado en pantalla con tree view. Requiere 2 tablas con FK, migración de datos, endpoints API dual, pantalla jerárquica. Base para otros requerimientos. | migrations/v2.0.x, Provincia/Zona models, controllers, GestionProvinciasZonas.jsx, servicios |
@@ -3779,6 +3779,50 @@ Provincia (1) → (N) Zonas
 **Prioridad:** 🔴 Alta — Requerimiento core de reportes
 
 **Estado:** 📋 Registrado
+
+---
+
+### BACKLOG-043: Nueva entidad Zona independiente con CRUD
+
+**Descripción:**
+Crear una nueva entidad Zona como tabla independiente (sin jerarquía con Provincia/Localidad). Zona es una entidad autónoma utilizada para clasificar territorios de forma independiente. Se integra en el menú de Gestiones con CRUD completo usando el componente reutilizable LookupCRUD.
+
+**Implementación Completada (2026-05-07):**
+
+1. ✅ **Migración 2.0.20** (`backend/src/migrations/versions/2.0.20_zonas/`)
+   - `upgrade.sql`: Crea tabla zonas con campos id (PK auto-increment), codigo (VARCHAR(2), UNIQUE), nombre (VARCHAR(255))
+   - `downgrade.sql`: Revierte la migración eliminando la tabla
+
+2. ✅ **Backend**
+   - Modelo `Zona.js`: Entidad independiente con validaciones (código: exactamente 2 caracteres, único y requerido; nombre: requerido)
+   - Integración en `models/index.js`: Importado y expuesto como entidad lookup
+   - Controlador: Configurado en `lookupController.js` con ENTIDADES['zonas']
+   - Ruta: Automática vía `/api/lookup/zonas` (GET, POST, PUT, DELETE)
+
+3. ✅ **Frontend**
+   - Componente `GestionZonas.jsx`: Reutiliza LookupCRUD con campos ocultos/visibles
+   - Campo ID: Auto-incremental, oculto en UI, usado internamente como PK
+   - Campos editables: Código (max 2 caracteres), Nombre
+   - Dashboard: Link agregado en sección "Gestión" (entre Tipos de Plan y Provincias/Localidades)
+
+4. ✅ **Mejoras a LookupCRUD**
+   - Soporte para `hidden: true` en campos: oculta del UI pero mantiene como PK internamente
+   - Búsqueda y botón "Nuevo" siempre visibles (incluso sin registros)
+   - Validación relajada: pkField es opcional en create (auto-calculado si no se provee)
+
+5. ✅ **Commits realizados:**
+   - `feat(backend): crear migración 2.0.20 y modelo Zona independiente`
+   - `feat(frontend): agregar componente Zonas y link en Dashboard dentro de Gestión`
+   - `refactor(zonas): alinear interfaz con patrón de ObrasSociales y TiposDePlan`
+   - `fix(LookupCRUD): mostrar búsqueda y botón 'Nuevo' incluso sin registros`
+   - `feat(zonas): ID automático no accesible desde UI - agregar soporte hidden en LookupCRUD`
+   - `fix(lookup): no requerir pkField en validación de create - permitir auto-incremental`
+
+**Archivos modificados:**
+- Backend: migrations/2.0.20, models/Zona.js, models/index.js, controllers/lookupController.js
+- Frontend: components/Zonas/Zonas.jsx, components/LookupCRUD/LookupCRUD.jsx, pages/DashboardPage/DashboardPage.jsx
+
+**Estado:** ✅ Solucionado (2026-05-07)
 
 ---
 
