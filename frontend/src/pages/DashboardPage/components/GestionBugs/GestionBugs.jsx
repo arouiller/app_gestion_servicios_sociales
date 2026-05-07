@@ -8,6 +8,7 @@ import StatusBadge from '../../../../components/StatusBadge/StatusBadge';
 import Pagination from '../../../../components/Pagination/Pagination';
 import useDebounce from '../../../../hooks/useDebounce';
 import usePagination from '../../../../hooks/usePagination';
+import useColumnResize from '../../../../hooks/useColumnResize';
 import BugFormModal from './modals/BugFormModal';
 import BugDetalleModal from './modals/BugDetalleModal';
 import '../../../../styles/_table-standard.scss';
@@ -27,6 +28,16 @@ function GestionBugs() {
   const [configItemsPerPage, setConfigItemsPerPage] = useState(null);
 
   const debouncedSearchText = useDebounce(searchText, 2000);
+
+  // Redimensionamiento de columnas
+  const { widths, getResizeHandle } = useColumnResize('gestion-bugs', {
+    numero: 100,
+    titulo: 200,
+    reportadoPor: 150,
+    fecha: 120,
+    estado: 110,
+    acciones: 80,
+  });
 
   // Cargar configuración al montar
   useEffect(() => {
@@ -157,12 +168,12 @@ function GestionBugs() {
           <table className="table-standard gestion-bugs__tabla">
             <thead>
               <tr>
-                <th>Número</th>
-                <th>Título</th>
-                <th>Reportado por</th>
-                <th>Fecha</th>
-                <th>Estado</th>
-                <th>Acciones</th>
+                <th style={{ width: widths.numero }}>Número{getResizeHandle('numero')}</th>
+                <th style={{ width: widths.titulo }}>Título{getResizeHandle('titulo')}</th>
+                <th style={{ width: widths.reportadoPor }}>Reportado por{getResizeHandle('reportadoPor')}</th>
+                <th style={{ width: widths.fecha }}>Fecha{getResizeHandle('fecha')}</th>
+                <th style={{ width: widths.estado }}>Estado{getResizeHandle('estado')}</th>
+                <th style={{ width: widths.acciones }}>Acciones</th>
               </tr>
             </thead>
             <tbody>

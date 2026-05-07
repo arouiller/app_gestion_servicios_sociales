@@ -6,6 +6,7 @@ import SearchContainer from '../../../../components/SearchContainer/SearchContai
 import Pagination from '../../../../components/Pagination/Pagination';
 import useDebounce from '../../../../hooks/useDebounce';
 import usePagination from '../../../../hooks/usePagination';
+import useColumnResize from '../../../../hooks/useColumnResize';
 import '../../../../styles/_table-standard.scss';
 import './GestionAuditoria.scss';
 
@@ -27,6 +28,17 @@ function GestionAuditoria() {
   const [selectedLogParams, setSelectedLogParams] = useState(null);
 
   const debouncedSearchText = useDebounce(searchText, 2000);
+
+  // Redimensionamiento de columnas
+  const { widths, getResizeHandle } = useColumnResize('gestion-auditoria', {
+    usuario: 120,
+    fecha: 160,
+    metodo: 90,
+    endpoint: 220,
+    status: 80,
+    parametros: 150,
+    ms: 70,
+  });
 
   // Cargar configuración y usuarios al montar
   useEffect(() => {
@@ -205,13 +217,13 @@ function GestionAuditoria() {
           <table className="table-standard gestion-auditoria__tabla">
             <thead>
               <tr>
-                <th>Usuario</th>
-                <th>Fecha/Hora</th>
-                <th>Método</th>
-                <th>Endpoint</th>
-                <th>Status</th>
-                <th>Parámetros</th>
-                <th>ms</th>
+                <th style={{ width: widths.usuario }}>Usuario{getResizeHandle('usuario')}</th>
+                <th style={{ width: widths.fecha }}>Fecha/Hora{getResizeHandle('fecha')}</th>
+                <th style={{ width: widths.metodo }}>Método{getResizeHandle('metodo')}</th>
+                <th style={{ width: widths.endpoint }}>Endpoint{getResizeHandle('endpoint')}</th>
+                <th style={{ width: widths.status }}>Status{getResizeHandle('status')}</th>
+                <th style={{ width: widths.parametros }}>Parámetros{getResizeHandle('parametros')}</th>
+                <th style={{ width: widths.ms }}>ms{getResizeHandle('ms')}</th>
               </tr>
             </thead>
             <tbody>
