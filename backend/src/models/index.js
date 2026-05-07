@@ -115,11 +115,4 @@ if (db.Provincia && db.Localidad) {
   db.Localidad.belongsTo(db.Provincia, { foreignKey: 'provincia_id', as: 'provincia', onDelete: 'RESTRICT' });
 }
 
-// PlanV1 and Localidad associations
-if (db.PlanV1 && db.Localidad) {
-  db.PlanV1.belongsTo(db.Localidad, { foreignKey: 'zona', as: 'localidadRelation' });
-  db.Localidad.hasMany(db.PlanV1, { foreignKey: 'zona', as: 'planes' });
-}
-
-
 module.exports = db;
