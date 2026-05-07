@@ -83,6 +83,20 @@ const recibosService = {
       return [];
     }
   },
+
+  /**
+   * GET /api/recibos/ultimo-aumento-masivo
+   * Obtiene el último aumento masivo realizado (BACKLOG-056)
+   */
+  getUltimoAumentoMasivo: async () => {
+    try {
+      const response = await api.get('/recibos/ultimo-aumento-masivo');
+      return response.data;
+    } catch (error) {
+      console.error('Error fetching último aumento masivo:', error);
+      return { success: false, data: null };
+    }
+  },
 };
 
 export default recibosService;
