@@ -5,6 +5,7 @@ import configService from '../../../../services/configService';
 import { formatNumeroAfiliado } from '../../../../utils/formatters';
 import PlanV1Modal from './modals/PlanV1Modal';
 import BulkUpdateCuotaModal from '../BulkUpdateCuotaModal/BulkUpdateCuotaModal';
+import HistorialAumentosModal from '../HistorialAumentosModal/HistorialAumentosModal';
 import GenerarRecibosModal from './modals/GenerarRecibosModal';
 import SearchContainer from '../../../../components/SearchContainer/SearchContainer';
 import ActionButton from '../../../../components/ActionButton/ActionButton';
@@ -34,6 +35,7 @@ function GestionPlanesV1() {
   const [forceSearchNow, setForceSearchNow] = useState(false);
   const [bulkUpdateModalOpen, setBulkUpdateModalOpen] = useState(false);
   const [generarRecibosModalOpen, setGenerarRecibosModalOpen] = useState(false);
+  const [historialAumentosModalOpen, setHistorialAumentosModalOpen] = useState(false);
   const [configItemsPerPage, setConfigItemsPerPage] = useState(null);
 
   const DEFAULT_WIDTHS_PLANES = {
@@ -217,6 +219,12 @@ function GestionPlanesV1() {
             >
               Aumento Masivo
             </ActionButton>
+            <ActionButton
+              variant="primary"
+              onClick={() => setHistorialAumentosModalOpen(true)}
+            >
+              Ver historial de aumentos
+            </ActionButton>
             <ActionButton variant="primary" onClick={() => setGenerarRecibosModalOpen(true)}>
               Generar Recibos
             </ActionButton>
@@ -313,6 +321,11 @@ function GestionPlanesV1() {
           mostrarMensaje(`${result.updated} planes actualizados exitosamente`, 'success');
           cargar();
         }}
+      />
+
+      <HistorialAumentosModal
+        isOpen={historialAumentosModalOpen}
+        onClose={() => setHistorialAumentosModalOpen(false)}
       />
 
       <GenerarRecibosModal
