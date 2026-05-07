@@ -82,7 +82,6 @@ function BulkUpdateCuotaModal({ isOpen, onClose, onSuccess }) {
 
   const resetForm = () => {
     setStep(1);
-    setTipoAumento('porcentual');
     setValor('');
     setFiltro('todos');
     setSelectValue('');
