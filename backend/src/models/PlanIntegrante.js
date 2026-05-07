@@ -5,7 +5,6 @@ const PlanIntegrante = sequelize.define('PlanIntegrante', {
   id: { type: DataTypes.INTEGER, primaryKey: true, autoIncrement: true },
   plan_numero: { type: DataTypes.INTEGER, allowNull: false },
   persona_id: { type: DataTypes.INTEGER, allowNull: false },
-  zona_id: { type: DataTypes.INTEGER, allowNull: true }, // FK a localidades (tabla renombrada de zonas)
   rol: { type: DataTypes.ENUM('titular','integrante'), allowNull: false },
   credencial: { type: DataTypes.CHAR(1), allowNull: false },
   orden: {

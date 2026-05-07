@@ -115,13 +115,6 @@ const localidadController = {
         return res.status(404).json({ success: false, message: 'Localidad no encontrada' });
       }
 
-      const planesCount = await PlanIntegrante.count({ where: { zona_id: id } });
-      if (planesCount > 0) {
-        return res.status(400).json({
-          success: false,
-          message: 'No se puede eliminar localidad con planes asociados'
-        });
-      }
 
       await localidad.destroy();
       res.json({ success: true, message: 'Localidad eliminada' });
