@@ -14,6 +14,7 @@ import ObrasSociales from './components/ObrasSociales/ObrasSociales';
 import ServiciosAdicionales from './components/ServiciosAdicionales/ServiciosAdicionales';
 import TiposDeGrupo from './components/TiposDeGrupo/TiposDeGrupo';
 import TiposDePlan from './components/TiposDePlan/TiposDePlan';
+import Zonas from './components/Zonas/Zonas';
 import GestionUsuarios from './components/GestionUsuarios/GestionUsuarios';
 import ConfiguracionNotificaciones from './components/ConfiguracionNotificaciones/ConfiguracionNotificaciones';
 import GestionBugs from './components/GestionBugs/GestionBugs';
@@ -50,6 +51,7 @@ function buildMenu(isAdmin) {
         { key: 'servicios-adicionales', label: 'Servicios Adicionales' },
         { key: 'tipos-de-grupo', label: 'Tipos de Grupo' },
         { key: 'tipos-de-plan', label: 'Tipos de Plan' },
+        { key: 'zonas', label: 'Zonas' },
         { key: 'provincias-zonas', label: 'Provincias y Localidades' },
       ],
     },
@@ -305,6 +307,7 @@ function DashboardPageContent() {
           {activeModule === 'servicios-adicionales' && <ServiciosAdicionales />}
           {activeModule === 'tipos-de-grupo' && <TiposDeGrupo />}
           {activeModule === 'tipos-de-plan' && <TiposDePlan />}
+          {activeModule === 'zonas' && <Zonas />}
           {!activeModule && <Bienvenida user={user} />}
         </main>
       </div>
