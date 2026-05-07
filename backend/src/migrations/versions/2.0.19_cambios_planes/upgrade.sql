@@ -1,5 +1,5 @@
 -- Eliminar campo zona de planes (integer suelto, sin FK formal)
-ALTER TABLE planes DROP COLUMN zona;
+ALTER TABLE planes DROP COLUMN IF EXISTS zona;
 
 -- Agregar nuevos estados al ENUM
 ALTER TABLE planes MODIFY COLUMN estado ENUM('ACTIVO', 'SUSPENDIDO', 'ELIMINADO', 'PROMOCION') NOT NULL DEFAULT 'ACTIVO';
