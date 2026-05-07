@@ -40,6 +40,7 @@ De cualquier estado → Descartado
 
 | ID | Prioridad | Estado | Descripción | Contexto / Motivo | Archivos estimados |
 |----|-----------|--------|-------------|-------------------|----|
+| BACKLOG-053 | 🟡 Media | 📋 Registrado | Posicionamiento automático de nuevo plan en grilla ordenada | Al crear un nuevo plan, este debe insertarse en la posición correcta según orden zona + número de afiliado, en lugar de aparecer al final. Mejora UX y mantiene consistencia en la visualización de datos. | GestionPlanesV1.jsx, planesService.js |
 | BACKLOG-052 | 🟡 Media | ✅ Solucionado | Redimensionamiento manual de columnas con persistencia en localStorage | Permitir que los usuarios cambien manualmente el ancho de las columnas en las tablas (GestionPlanesV1, LookupCRUD). Las preferencias de ancho se guardan en localStorage y persisten entre sesiones del navegador. Mejora UX: usuarios pueden ajustar columnas según sus preferencias. Hook useColumnResize con drag & drop en headers. Completado en todas las 17 tablas del sistema. Commits: 2c816f9, 56a3e0b, effa576, 2d2b9c5, 5448447, 54e636c, 044754c, 6da9a82, c17531d, ff405ba, d882cc7, f4d1fd5, 700555b, 036adf0 | useColumnResize hook, todas las tablas, _table-standard.scss |
 | BACKLOG-051 | 🟡 Media | ✅ Solucionado | Reformatear tabla de listado de planes - columnas virtuales | En la tabla GestionPlanesV1 (listado principal de planes): (1) crear columna virtual "Identificador" con formato zona_codigo + "-" + numero_afiliado (ej: "01-00042"); (2) eliminar columna numero_afiliado redundante; (3) agregar columna "Titular" con datos del titular del plan (apellido, nombre). Mejora UX: información más útil e identificación clara de planes por zona. Commits: ee8c18e, 636d9e4 | GestionPlanesV1.jsx, planesController.js |
 | BACKLOG-050 | 🟡 Media | ✅ Solucionado | Reformatear tabla de afiliados en tab de PlanV1Modal | Mejorar presentación de integrantes en tab de afiliados. Eliminar columnas redundantes (orden, apellido, nombre individuales), agregar combinadas (apellido, nombre). Agregar fechas (nacimiento, cobertura) con cálculo de edad. Agregar servicios adicionales concatenados con 2 letras. Commits: 8f600d4, d1d0082, 20f55c0, 911f013 | PlanV1Modal.jsx, formatters.js, planesController.js, index.js |
@@ -4617,6 +4618,90 @@ Permitir que múltiples personas en el sistema tengan el mismo número de docume
 - ✅ Ejecutar downgrade.sql (debe recrear la constraint)
 - ✅ Intentar insertar duplicados (debe fallar con constraint error)
 - ✅ Ejecutar upgrade nuevamente (idempotencia)
+
+---
+
+### BACKLOG-053: Posicionamiento Automático de Nuevo Plan en Grilla Ordenada
+
+**Descripción:**
+Al crear un nuevo plan, este debe insertarse en la posición correcta de la tabla GestionPlanesV1 según el orden natural de **zona + número de afiliado**, en lugar de aparecer siempre al final o inicio de la lista.
+
+**Requerimientos Funcionales:**
+
+1. **Ordenamiento de Datos**
+   - Los planes deben estar ordenados por: `zona_id ASC, numero_afiliado ASC`
+   - Cuando se crea un nuevo plan, se recalcula el orden y se inserta en la posición correspondiente
+
+2. **Comportamiento al Crear Plan**
+   - Usuario crea nuevo plan (ej: zona=2, numero_afiliado=00042)
+   - Modal se cierra
+   - Tabla se actualiza
+   - El nuevo plan aparece en la posición correcta según su zona y número
+
+3. **Mantener Paginación**
+   - Si tabla está paginada, el nuevo plan puede aparecer en otra página
+   - No necesariamente debe permanecer en la página actual
+
+**Requerimientos Backend:**
+
+1. **Controller planesController.js (v1.0)**
+   - En `crear()`: cuando se crea exitosamente un plan, debe retornar el plan creado con todos sus datos (incluyendo zona_id e identificador virtual)
+
+2. **Service planesService.js**
+   - Ya maneja la lista, debe garantizar que `listByBusqueda()` ordenar por `zona_id, numero_afiliado`
+   - Verificar que el ORDER BY esté configurado en Sequelize
+
+**Requerimientos Frontend:**
+
+1. **GestionPlanesV1.jsx**
+   - Cuando `handleGuardar()` completa con éxito:
+     * Si modo = 'crear': buscar el nuevo plan en la lista ordenada
+     * Insertarlo en la posición correcta basado en zona + numero_afiliado
+     * O simplemente recargar la lista completa (más simple, acepta pequeño delay)
+   - Alternativa: después de crear, hacer un nuevo `busqueda()` para refrescar la tabla ordenada
+
+2. **usePlanV1Form.js**
+   - En `handleGuardar()`: después de crear exitosamente, retornar el nuevo plan para que GestionPlanesV1 lo pueda posicionar
+
+**Archivos Estimados:**
+- `frontend/src/pages/DashboardPage/components/GestionPlanesV1/GestionPlanesV1.jsx` (lógica de inserción o recarga)
+- `backend/src/controllers/v1.0/planesController.js` (garantizar retorno de datos completos)
+- `frontend/src/pages/DashboardPage/components/GestionPlanesV1/modals/PlanV1Modal.jsx` (retornar nuevoPlan)
+
+**Implementación Recomendada:**
+
+Opción 1 (Simple - Recargar):
+```javascript
+// En GestionPlanesV1.jsx, después de handleGuardarPlan exitoso
+onSave: async (newPlan) => {
+  setEditingPlan(null);
+  await busqueda(); // Recarga tabla con nuevo plan en posición correcta
+}
+```
+
+Opción 2 (Optimizada - Insertar):
+```javascript
+// En GestionPlanesV1.jsx
+onSave: async (newPlan) => {
+  if (newPlan) {
+    const nuevaLista = [...planes, newPlan].sort((a, b) => {
+      if (a.zona_id !== b.zona_id) return a.zona_id - b.zona_id;
+      return a.numero_afiliado.localeCompare(b.numero_afiliado);
+    });
+    setPlanes(nuevaLista);
+  }
+  setEditingPlan(null);
+}
+```
+
+**Testing:**
+- ✅ Crear plan zona=1, numero=00005
+- ✅ Crear plan zona=1, numero=00001 (debe aparecer antes que 00005)
+- ✅ Crear plan zona=2, numero=00003 (debe aparecer en zona 2)
+- ✅ Verificar paginación si hay más de 10 planes
+- ✅ Verificar orden en tabla después de cada creación
+
+**Estado:** 📋 Registrado (2026-05-07)
 
 ---
 
