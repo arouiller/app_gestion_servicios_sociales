@@ -361,3 +361,28 @@ exports.listPeriodos = async (req, res, next) => {
     next(error);
   }
 };
+
+/**
+ * GET /api/recibos/ultimo-aumento-masivo
+ * Obtiene el último aumento masivo realizado (BACKLOG-056)
+ */
+exports.getUltimoAumentoMasivo = async (req, res, next) => {
+  try {
+    const ultimoAumento = await db.AumentoMasivo.findOne({
+      include: [
+        {
+          model: db.Usuario,
+          attributes: ['id', 'nombre', 'apellido'],
+        },
+      ],
+      order: [['fecha', 'DESC']],
+    });
+
+    res.json({
+      success: true,
+      data: ultimoAumento,
+    });
+  } catch (err) {
+    next(err);
+  }
+};

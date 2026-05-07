@@ -11,6 +11,10 @@ router.post('/generar', verifyToken, recibosController.generar);
 // Listar todos los períodos con recibos generados
 router.get('/periodos', verifyToken, recibosController.listPeriodos);
 
+// GET /api/recibos/ultimo-aumento-masivo
+// Obtener el último aumento masivo realizado
+router.get('/ultimo-aumento-masivo', verifyToken, recibosController.getUltimoAumentoMasivo);
+
 // GET /api/recibos?periodo=YYYY-MM-DD
 // Listar recibos de un período
 router.get('/', verifyToken, recibosController.list);
