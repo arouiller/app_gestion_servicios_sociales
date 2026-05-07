@@ -2,7 +2,7 @@ import React, { useState, useEffect, useCallback, useMemo, useRef } from 'react'
 import { DragDropContext, Droppable, Draggable } from 'react-beautiful-dnd';
 import { usePlanV1Form } from '../hooks/usePlanV1Form';
 import ActionButton from '../../../../../components/ActionButton/ActionButton';
-import { formatNumeroAfiliado } from '../../../../../utils/formatters';
+import { formatNumeroAfiliado, formatDate, calculateAge } from '../../../../../utils/formatters';
 import planesV1Service from '../../../../../services/planesV1Service';
 import planesIntegrantesService from '../../../../../services/planesIntegrantesService';
 import lookupService from '../../../../../services/lookupService';
@@ -164,6 +164,7 @@ function PlanV1Modal({ mode, planData, onClose, onSave }) {
               persona: pi.Persona,
               rol: pi.rol,
               orden: pi.orden,
+              servicios: pi.IntegranteServicios || [],
             }));
           console.log('[PlanV1Modal] Integrantes encontrados (ordenados):', integrantes);
           handleFieldChange('integrantes', integrantes);
@@ -632,12 +633,13 @@ function PlanV1Modal({ mode, planData, onClose, onSave }) {
                     <table className="plan-v1-modal__afiliados-tabla">
                       <thead>
                         <tr>
-                          <th>Orden</th>
-                          <th>Nombre</th>
-                          <th>Apellido</th>
+                          <th>Afiliado</th>
                           <th>DNI</th>
                           <th>Rol</th>
-                          <th>Servicios</th>
+                          <th>Nacimiento</th>
+                          <th>Edad</th>
+                          <th>Cobertura</th>
+                          <th>Serv.</th>
                           <th>Acciones</th>
                         </tr>
                       </thead>
@@ -657,11 +659,17 @@ function PlanV1Modal({ mode, planData, onClose, onSave }) {
                                     {...provided.dragHandleProps}
                                     className={snapshot.isDragging ? 'dragging' : ''}
                                   >
-                                    <td>{index + 1}</td>
-                                    <td>{integrante.persona?.nombre}</td>
-                                    <td>{integrante.persona?.apellido}</td>
+                                    <td>{integrante.persona?.apellido}, {integrante.persona?.nombre}</td>
                                     <td>{integrante.persona?.numero_documento}</td>
                                     <td>{integrante.rol === 'titular' ? 'Titular' : 'Integrante'}</td>
+                                    <td>{formatDate(integrante.persona?.fecha_nacimiento)}</td>
+                                    <td>{calculateAge(integrante.persona?.fecha_nacimiento)}</td>
+                                    <td>{formatDate(integrante.persona?.fecha_cobertura)}</td>
+                                    <td>
+                                      {integrante.servicios?.length > 0
+                                        ? integrante.servicios.map(s => s.ServicioAdicional?.servicio_adicional_nombre?.substring(0, 2)).join(', ')
+                                        : '-'}
+                                    </td>
                                     <td>
                                       <ActionButton
                                         variant="icon"
@@ -670,8 +678,6 @@ function PlanV1Modal({ mode, planData, onClose, onSave }) {
                                         disabled={!integrante.id}
                                         title="Servicios"
                                       />
-                                    </td>
-                                    <td>
                                       <ActionButton
                                         variant="icon"
                                         icon="✎"
