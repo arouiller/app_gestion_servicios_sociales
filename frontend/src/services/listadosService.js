@@ -1,6 +1,13 @@
 import api from './api';
 
 const listadosService = {
+  getAll: async (search = '', page = 1, limit = 10) => {
+    const { data } = await api.get('/listados', {
+      params: { search, page, limit },
+    });
+    return data;
+  },
+
   getPorZona: async (zonaId, search = '', page = 1, limit = 10) => {
     const { data } = await api.get(`/v1.0/listados/por-zona/${zonaId}`, {
       params: { search, page, limit },

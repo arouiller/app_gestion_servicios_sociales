@@ -46,6 +46,7 @@ app.use('/api/lookup', require('./routes/lookup'));
 
 // 1.0.x routes (refactor completado)
 app.use('/api/personas', require('./routes/personas'));
+app.use('/api/listados', require('./routes/listados'));
 app.use('/api/v1.0/planes', require('./routes/v1.0-planes'));
 app.use('/api/v1.0/plan-integrantes', require('./routes/v1.0-plan-integrantes'));
 app.use('/api/v1.0/listados', require('./routes/v1.0-listados'));
