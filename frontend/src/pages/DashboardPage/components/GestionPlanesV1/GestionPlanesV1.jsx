@@ -1,6 +1,7 @@
 import React, { useCallback, useEffect, useState } from 'react';
 import { useAuth } from '../../../../context/AuthContext';
 import planesV1Service from '../../../../services/planesV1Service';
+import planesService from '../../../../services/planesService';
 import configService from '../../../../services/configService';
 import { formatNumeroAfiliado } from '../../../../utils/formatters';
 import PlanV1Modal from './modals/PlanV1Modal';
@@ -99,8 +100,8 @@ function GestionPlanesV1() {
     setError(null);
     setLoading(true);
     try {
-      const data = await planesV1Service.listar({ ...filtros, sortBy, order });
-      setPlanes(Array.isArray(data) ? data : []);
+      const result = await planesService.getByFilter('todos', { ...filtros, sortBy, order });
+      setPlanes(Array.isArray(result.data) ? result.data : []);
     } catch (err) {
       console.error('Error al cargar planes:', err);
       setError(err.response?.data?.message || err.message || 'Error al cargar planes');
