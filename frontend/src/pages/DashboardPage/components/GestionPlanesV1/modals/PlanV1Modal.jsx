@@ -655,7 +655,7 @@ function PlanV1Modal({ mode, planData, onClose, onSave }) {
                           <th style={{ width: widthsAfiliados.edad }}>Edad{getResizeHandleAfiliados('edad')}</th>
                           <th style={{ width: widthsAfiliados.cobertura }}>Cobertura{getResizeHandleAfiliados('cobertura')}</th>
                           <th style={{ width: widthsAfiliados.servicios }}>Serv.{getResizeHandleAfiliados('servicios')}</th>
-                          <th style={{ width: widthsAfiliados.acciones }}>Acciones</th>
+                          <th style={{ width: widthsAfiliados.acciones }}>Acciones{getResizeHandleAfiliados('acciones')}</th>
                         </tr>
                       </thead>
                       <Droppable droppableId="afiliados">
@@ -736,7 +736,7 @@ function PlanV1Modal({ mode, planData, onClose, onSave }) {
                           <th style={{ width: widthsRecibos.periodo }}>Período{getResizeHandleRecibos('periodo')}</th>
                           <th style={{ width: widthsRecibos.integrantes }}>Número de Integrantes{getResizeHandleRecibos('integrantes')}</th>
                           <th style={{ width: widthsRecibos.valor }}>Valor Cuota{getResizeHandleRecibos('valor')}</th>
-                          <th style={{ width: widthsRecibos.acciones }}>Acciones</th>
+                          <th style={{ width: widthsRecibos.acciones }}>Acciones{getResizeHandleRecibos('acciones')}</th>
                         </tr>
                       </thead>
                       <tbody>
