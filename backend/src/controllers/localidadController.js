@@ -115,7 +115,7 @@ const localidadController = {
         return res.status(404).json({ success: false, message: 'Localidad no encontrada' });
       }
 
-      const planesCount = await PlanIntegrante.count({ where: { localidad_id: id } });
+      const planesCount = await PlanIntegrante.count({ where: { zona_id: id } });
       if (planesCount > 0) {
         return res.status(400).json({
           success: false,

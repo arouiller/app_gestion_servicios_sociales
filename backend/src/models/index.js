@@ -123,8 +123,8 @@ if (db.PlanV1 && db.Localidad) {
 
 // PlanIntegrante and Localidad associations
 if (db.PlanIntegrante && db.Localidad) {
-  db.PlanIntegrante.belongsTo(db.Localidad, { foreignKey: 'localidad_id', as: 'localidad' });
-  db.Localidad.hasMany(db.PlanIntegrante, { foreignKey: 'localidad_id', as: 'integrantes' });
+  db.PlanIntegrante.belongsTo(db.Localidad, { foreignKey: 'zona_id', as: 'localidad' });
+  db.Localidad.hasMany(db.PlanIntegrante, { foreignKey: 'zona_id', as: 'integrantes' });
 }
 
 module.exports = db;
