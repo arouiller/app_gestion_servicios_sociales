@@ -4641,16 +4641,25 @@ Mejorar la funcionalidad de aumento masivo de cuotas (BulkUpdateCuotaModal) para
 2. **Redondeo Hacia Arriba**
    - Cálculo actual: `valor_nuevo = valor_actual * (1 + porcentaje/100)`
    - Nuevo cálculo: `valor_nuevo = Math.ceil(valor_actual * (1 + porcentaje/100) / precision) * precision`
-   - Ejemplo con precision=0.01:
-     * valor_actual=100, aumento=5% → 100 * 1.05 = 105.00 → redondea a 105.00 ✓
-     * valor_actual=100.50, aumento=5% → 105.525 → redondea a 105.53 (hacia arriba)
-     * valor_actual=100.33, aumento=5% → 105.3465 → redondea a 105.35
+   - Ejemplos con precision=1 (peso completo):
+     * valor_actual=100, aumento=5% → 100 * 1.05 = 105.00 → redondea a 105 ✓
+     * valor_actual=100.50, aumento=5% → 105.525 → redondea a 106 (hacia arriba)
+     * valor_actual=200, aumento=10% → 220.00 → redondea a 220 ✓
+   - Ejemplos con precision=10:
+     * valor_actual=105, aumento=5% → 110.25 → redondea a 120 (hacia arriba)
+     * valor_actual=150, aumento=5% → 157.50 → redondea a 160 (hacia arriba)
 
 3. **Precisión Configurable**
    - Nueva sección en ConfiguracionApp o ConfiguracionUI (o donde corresponda)
    - Campo: "Precisión de Redondeo en Aumento de Cuotas" 
-   - Valores presets: 0.01, 0.05, 0.10 (o permitir input custom)
-   - Default: 0.01 (centavo)
+   - Valores permitidos: Centavos (0.01) o valores enteros (1, 10, 100, 500, etc.)
+   - Ejemplos de precisiones:
+     * 0.01 = centavo (redondea al centavo más cercano)
+     * 1 = peso/dólar completo
+     * 10 = diez pesos/dólares
+     * 100 = cien pesos/dólares
+     * 500 = quinientos pesos/dólares
+   - Default: 1 (peso/dólar completo)
    - Se almacena en tabla de configuración
 
 **Requerimientos Backend:**
@@ -4665,7 +4674,8 @@ Mejorar la funcionalidad de aumento masivo de cuotas (BulkUpdateCuotaModal) para
 
 2. **Modelo Configuracion**
    - Si no existe tabla de configuración, crear migración
-   - Campo: `redondeo_precision` (DECIMAL(10,4), default=0.01)
+   - Campo: `redondeo_precision` (DECIMAL(10,2), default=1)
+   - Almacena valores: 0.01 (centavos), 1, 10, 100, 500, etc.
 
 **Requerimientos Frontend:**
 
@@ -4678,11 +4688,14 @@ Mejorar la funcionalidad de aumento masivo de cuotas (BulkUpdateCuotaModal) para
 
 2. **ConfiguracionApp.jsx** o **ConfiguracionUI.jsx**
    - Nueva sección: "Redondeo de Cuotas"
-   - Campo: "Precisión decimal" con opciones:
-     * 0.01 (centavo) - recomendado
-     * 0.05 (5 centavos)
-     * 0.10 (10 centavos)
-     * Custom: allow input manual
+   - Campo: "Precisión de Redondeo" con opciones predefinidas:
+     * 0.01 (centavo)
+     * 1 (peso/dólar completo)
+     * 10 (diez pesos/dólares)
+     * 100 (cien pesos/dólares)
+     * 500 (quinientos pesos/dólares)
+     * Permitir input custom (otro valor numérico)
+   - Default seleccionado: 1
    - Guardar en tabla de configuración
    - Cargar en BulkUpdateCuotaModal al abrir
 
@@ -4701,23 +4714,35 @@ Mejorar la funcionalidad de aumento masivo de cuotas (BulkUpdateCuotaModal) para
 
 ```javascript
 // Helper function
-const roundUpToPrecision = (value, precision = 0.01) => {
+const roundUpToPrecision = (value, precision = 1) => {
   return Math.ceil(value / precision) * precision;
 };
 
-// Ejemplo
+// Ejemplos con precision 1 (peso completo)
+roundUpToPrecision(105.50, 1) // → 106
+roundUpToPrecision(105.01, 1) // → 106
+
+// Ejemplos con precision 10
+roundUpToPrecision(105.50, 10) // → 110
+roundUpToPrecision(108.50, 10) // → 110
+
+// Ejemplos con precision 100
+roundUpToPrecision(150, 100) // → 200
+roundUpToPrecision(101, 100) // → 200
+
+// Ejemplos con precision 0.01 (centavo)
 roundUpToPrecision(105.523, 0.01) // → 105.53
-roundUpToPrecision(105.523, 0.05) // → 105.55
-roundUpToPrecision(105.523, 0.10) // → 105.60
+roundUpToPrecision(105.509, 0.01) // → 105.51
 ```
 
 **Testing:**
 - ✅ Verificar que radio "Aumento Fijo" está eliminado
 - ✅ Ingresar porcentaje (ej: 5%) y ver preview redondeado
-- ✅ Cambiar configuración de precisión (0.01 → 0.05)
+- ✅ Cambiar configuración de precisión (1 → 10 → 100)
 - ✅ Verificar que preview se actualiza con nueva precisión
 - ✅ Guardar aumento y verificar en BD con redondeo aplicado
-- ✅ Probar diferentes precisions: 0.01, 0.05, 0.10
+- ✅ Probar diferentes precisions: 0.01, 1, 10, 100, 500
+- ✅ Verificar redondeo hacia arriba (no hacia abajo) en todos los casos
 
 **Estado:** 📋 Registrado (2026-05-07)
 
