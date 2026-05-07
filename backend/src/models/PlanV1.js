@@ -24,7 +24,7 @@ const Plan = sequelize.define('planes', {
     allowNull: true,
   },
   numero_afiliado: {
-    type: DataTypes.STRING(50),
+    type: DataTypes.STRING(5),
     allowNull: false,
     unique: true,
   },
