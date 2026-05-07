@@ -3,6 +3,7 @@ import recibosService from '../../services/recibosService';
 import { formatNumeroAfiliado } from '../../utils/formatters';
 import GenerarRecibosModal from '../DashboardPage/components/GestionPlanesV1/modals/GenerarRecibosModal';
 import ReciboDetalleModal from '../DashboardPage/components/GestionPlanesV1/modals/ReciboDetalleModal';
+import useColumnResize from '../../hooks/useColumnResize';
 import './RecibosPage.scss';
 
 const ITEMS_PER_PAGE = 10;
@@ -41,6 +42,16 @@ function RecibosPage() {
   // Modal states
   const [generarModalOpen, setGenerarModalOpen] = useState(false);
   const [reciboDetalleId, setReciboDetalleId] = useState(null);
+
+  // Redimensionamiento de columnas
+  const { widths: widthsPeriodos, getResizeHandle: getResizeHandlePeriodos } = useColumnResize(
+    'recibos-periodos',
+    { periodo: 140, cantidad: 140, fecha: 160, accion: 100 }
+  );
+  const { widths: widthsRecibos, getResizeHandle: getResizeHandleRecibos } = useColumnResize(
+    'recibos-detalle',
+    { id: 80, numeroAfiliado: 110, titular: 180, obraSocial: 140, valor: 110, accion: 100 }
+  );
 
   // Load periodos on mount
   useEffect(() => {
@@ -142,10 +153,10 @@ function RecibosPage() {
               <table className="table-standard recibos-page__table">
                 <thead>
                   <tr>
-                    <th>Período</th>
-                    <th>Cantidad de Recibos</th>
-                    <th>Fecha de Generación</th>
-                    <th>Acción</th>
+                    <th style={{ width: widthsPeriodos.periodo }}>Período{getResizeHandlePeriodos('periodo')}</th>
+                    <th style={{ width: widthsPeriodos.cantidad }}>Cantidad de Recibos{getResizeHandlePeriodos('cantidad')}</th>
+                    <th style={{ width: widthsPeriodos.fecha }}>Fecha de Generación{getResizeHandlePeriodos('fecha')}</th>
+                    <th style={{ width: widthsPeriodos.accion }}>Acción</th>
                   </tr>
                 </thead>
                 <tbody>
@@ -212,12 +223,12 @@ function RecibosPage() {
                 <table className="table-standard recibos-page__table">
                   <thead>
                     <tr>
-                      <th>ID</th>
-                      <th>N° Afiliado</th>
-                      <th>Titular</th>
-                      <th>Obra Social</th>
-                      <th>Valor Cuota</th>
-                      <th>Acción</th>
+                      <th style={{ width: widthsRecibos.id }}>ID{getResizeHandleRecibos('id')}</th>
+                      <th style={{ width: widthsRecibos.numeroAfiliado }}>N° Afiliado{getResizeHandleRecibos('numeroAfiliado')}</th>
+                      <th style={{ width: widthsRecibos.titular }}>Titular{getResizeHandleRecibos('titular')}</th>
+                      <th style={{ width: widthsRecibos.obraSocial }}>Obra Social{getResizeHandleRecibos('obraSocial')}</th>
+                      <th style={{ width: widthsRecibos.valor }}>Valor Cuota{getResizeHandleRecibos('valor')}</th>
+                      <th style={{ width: widthsRecibos.accion }}>Acción</th>
                     </tr>
                   </thead>
                   <tbody>

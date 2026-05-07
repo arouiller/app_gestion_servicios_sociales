@@ -1,5 +1,6 @@
-import React, { useState } from 'react';
+import React, { useState, useMemo } from 'react';
 import queryExecService from '../../../../services/queryExecService';
+import useColumnResize from '../../../../hooks/useColumnResize';
 import '../../../../styles/_table-standard.scss';
 import './QueryExecPage.scss';
 
@@ -10,6 +11,15 @@ function QueryExecPage() {
   const [error, setError] = useState(null);
   const [message, setMessage] = useState(null);
   const [columns, setColumns] = useState([]);
+
+  // Redimensionamiento de columnas dinámico
+  const defaultWidths = useMemo(() => {
+    const w = {};
+    columns.forEach(col => { w[col] = 150; });
+    return w;
+  }, [columns.length]);
+
+  const { widths, getResizeHandle } = useColumnResize('query-exec', defaultWidths);
 
   const handleExecute = async (e) => {
     e.preventDefault();
@@ -114,7 +124,9 @@ function QueryExecPage() {
               <thead>
                 <tr>
                   {columns.map((col) => (
-                    <th key={col}>{col}</th>
+                    <th key={col} style={{ width: widths[col] }}>
+                      {col}{getResizeHandle(col)}
+                    </th>
                   ))}
                 </tr>
               </thead>
