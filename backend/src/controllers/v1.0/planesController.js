@@ -22,6 +22,8 @@ const listar = async (req, res, next) => {
         { model: db.Cobrador, attributes: ['cobrador_numero', 'cobrador_apellido', 'cobrador_nombre'] },
         { model: db.TipoDeGrupo, attributes: ['tipo_de_grupo_numero', 'tipo_de_grupo_nombre'] },
         { model: db.ObraSocial, attributes: ['os_numero', 'os_nombre'] },
+        { model: db.Zona, attributes: ['id', 'codigo', 'nombre'] },
+        { model: db.Localidad, attributes: ['id', 'codigo', 'nombre'] },
       ],
       order: [['plan_numero', 'DESC']],
     });
@@ -51,6 +53,8 @@ const getByPersona = async (req, res, next) => {
         { model: db.TipoDePlan, attributes: ['tipo_plan_numero', 'tipo_plan_nombre'] },
         { model: db.Cobrador, attributes: ['cobrador_numero', 'cobrador_apellido', 'cobrador_nombre'] },
         { model: db.ObraSocial, attributes: ['os_numero', 'os_nombre'] },
+        { model: db.Zona, attributes: ['id', 'codigo', 'nombre'] },
+        { model: db.Localidad, attributes: ['id', 'codigo', 'nombre'] },
       ],
     });
 
@@ -76,6 +80,8 @@ const obtener = async (req, res, next) => {
         { model: db.Cobrador, attributes: ['cobrador_numero', 'cobrador_apellido', 'cobrador_nombre'] },
         { model: db.TipoDeGrupo, attributes: ['tipo_de_grupo_numero', 'tipo_de_grupo_nombre'] },
         { model: db.ObraSocial, attributes: ['os_numero', 'os_nombre'] },
+        { model: db.Zona, attributes: ['id', 'codigo', 'nombre'] },
+        { model: db.Localidad, attributes: ['id', 'codigo', 'nombre'] },
       ],
     });
 
@@ -122,6 +128,8 @@ const crear = async (req, res, next) => {
       valor_cuota,
       estado,
       zona,
+      zona_id,
+      localidad_id,
     } = req.body;
 
     // Validar que el número de afiliado sea numérico
@@ -156,6 +164,8 @@ const crear = async (req, res, next) => {
       valor_cuota,
       estado: estado || 'ACTIVO',
       zona: zona ?? 0,
+      zona_id: zona_id || null,
+      localidad_id: localidad_id || null,
     });
 
     return res.status(201).json({
@@ -215,6 +225,8 @@ const actualizar = async (req, res, next) => {
       'valor_cuota',
       'estado',
       'zona',
+      'zona_id',
+      'localidad_id',
     ];
 
     const actualizaciones = {};
