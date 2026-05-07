@@ -6,6 +6,7 @@ import { formatNumeroAfiliado } from '../../../../../utils/formatters';
 import planesV1Service from '../../../../../services/planesV1Service';
 import planesIntegrantesService from '../../../../../services/planesIntegrantesService';
 import lookupService from '../../../../../services/lookupService';
+import localidadService from '../../../../../services/localidadService';
 import recibosService from '../../../../../services/recibosService';
 import AfiladoSearchModal from './AfiladoSearchModal';
 import AfiladoEditModal from './AfiladoEditModal';
@@ -26,6 +27,8 @@ function PlanV1Modal({ mode, planData, onClose, onSave }) {
     os_numero: 'datos',
     tipo_de_grupo_numero: 'datos',
     valor_cuota: 'datos',
+    zona_id: 'datos',
+    localidad_id: 'datos',
     integrantes: 'afiliados',
   };
   const TAB_ORDER = ['datos', 'afiliados'];
@@ -36,6 +39,8 @@ function PlanV1Modal({ mode, planData, onClose, onSave }) {
     cobradores: [],
     obrasSociales: [],
     tiposDeGrupo: [],
+    zonas: [],
+    localidades: [],
   });
 
   const [activeTab, setActiveTab] = useState('datos'); // 'datos' | 'afiliados' | 'recibos' | 'historial'
@@ -99,8 +104,14 @@ function PlanV1Modal({ mode, planData, onClose, onSave }) {
 
   const loadLookupData = async () => {
     try {
-      const lookups = await lookupService.loadAllLookupsForPlans();
-      setLookupData(lookups);
+      const [lookups, localidades] = await Promise.all([
+        lookupService.loadAllLookupsForPlans(),
+        localidadService.getAll(),
+      ]);
+      setLookupData({
+        ...lookups,
+        localidades: localidades?.data || [],
+      });
     } catch (err) {
       console.error('Error loading lookups:', err);
       setLookupData({
@@ -108,6 +119,8 @@ function PlanV1Modal({ mode, planData, onClose, onSave }) {
         cobradores: [],
         obrasSociales: [],
         tiposDeGrupo: [],
+        zonas: [],
+        localidades: [],
       });
     }
   };
@@ -196,6 +209,8 @@ function PlanV1Modal({ mode, planData, onClose, onSave }) {
         valor_cuota: parseFloat(form.valor_cuota),
         domicilio: form.domicilio || null,
         telefono_1: form.telefono_1 || null,
+        zona_id: form.zona_id || null,
+        localidad_id: form.localidad_id || null,
       };
 
       if (mode === 'crear') {
@@ -530,6 +545,40 @@ function PlanV1Modal({ mode, planData, onClose, onSave }) {
                   value={form.telefono_1}
                   onChange={(e) => handleFieldChange('telefono_1', e.target.value)}
                 />
+              </div>
+
+              <div className="plan-v1-modal__field">
+                <label>Zona</label>
+                <select
+                  id="field-zona_id"
+                  value={form.zona_id}
+                  onChange={(e) => handleFieldChange('zona_id', e.target.value)}
+                >
+                  <option value="">Seleccionar...</option>
+                  {lookupData.zonas.map((z) => (
+                    <option key={z.id} value={z.id}>
+                      {z.codigo} — {z.nombre}
+                    </option>
+                  ))}
+                </select>
+                {errors.zona_id && <span className="plan-v1-modal__error">{errors.zona_id}</span>}
+              </div>
+
+              <div className="plan-v1-modal__field">
+                <label>Localidad</label>
+                <select
+                  id="field-localidad_id"
+                  value={form.localidad_id}
+                  onChange={(e) => handleFieldChange('localidad_id', e.target.value)}
+                >
+                  <option value="">Seleccionar...</option>
+                  {lookupData.localidades.map((l) => (
+                    <option key={l.id} value={l.id}>
+                      {l.nombre} ({l.codigo})
+                    </option>
+                  ))}
+                </select>
+                {errors.localidad_id && <span className="plan-v1-modal__error">{errors.localidad_id}</span>}
               </div>
             </div>
             </div>
