@@ -40,6 +40,7 @@ De cualquier estado → Descartado
 
 | ID | Prioridad | Estado | Descripción | Contexto / Motivo | Archivos estimados |
 |----|-----------|--------|-------------|-------------------|----|
+| BACKLOG-054 | 🔴 Alta | 📋 Registrado | Aumento de cuotas masivo: solo porcentajes, redondeo configurable | Mejorar funcionalidad de aumento masivo: (1) eliminar opción de aumento fijo, solo permitir porcentajes; (2) redondeo siempre hacia arriba (ceil); (3) precisión decimal del redondeo configurable desde UI. | BulkUpdateCuotaModal.jsx, planesController.js, ConfiguracionApp.jsx, migrations |
 | BACKLOG-053 | 🟡 Media | 📋 Registrado | Posicionamiento automático de nuevo plan en grilla ordenada | Al crear un nuevo plan, este debe insertarse en la posición correcta según orden zona + número de afiliado, en lugar de aparecer al final. Mejora UX y mantiene consistencia en la visualización de datos. | GestionPlanesV1.jsx, planesService.js |
 | BACKLOG-052 | 🟡 Media | ✅ Solucionado | Redimensionamiento manual de columnas con persistencia en localStorage | Permitir que los usuarios cambien manualmente el ancho de las columnas en las tablas (GestionPlanesV1, LookupCRUD). Las preferencias de ancho se guardan en localStorage y persisten entre sesiones del navegador. Mejora UX: usuarios pueden ajustar columnas según sus preferencias. Hook useColumnResize con drag & drop en headers. Completado en todas las 17 tablas del sistema. Commits: 2c816f9, 56a3e0b, effa576, 2d2b9c5, 5448447, 54e636c, 044754c, 6da9a82, c17531d, ff405ba, d882cc7, f4d1fd5, 700555b, 036adf0 | useColumnResize hook, todas las tablas, _table-standard.scss |
 | BACKLOG-051 | 🟡 Media | ✅ Solucionado | Reformatear tabla de listado de planes - columnas virtuales | En la tabla GestionPlanesV1 (listado principal de planes): (1) crear columna virtual "Identificador" con formato zona_codigo + "-" + numero_afiliado (ej: "01-00042"); (2) eliminar columna numero_afiliado redundante; (3) agregar columna "Titular" con datos del titular del plan (apellido, nombre). Mejora UX: información más útil e identificación clara de planes por zona. Commits: ee8c18e, 636d9e4 | GestionPlanesV1.jsx, planesController.js |
@@ -4618,6 +4619,107 @@ Permitir que múltiples personas en el sistema tengan el mismo número de docume
 - ✅ Ejecutar downgrade.sql (debe recrear la constraint)
 - ✅ Intentar insertar duplicados (debe fallar con constraint error)
 - ✅ Ejecutar upgrade nuevamente (idempotencia)
+
+---
+
+### BACKLOG-054: Aumento de Cuotas Masivo - Solo Porcentajes y Redondeo Configurable
+
+**Descripción:**
+Mejorar la funcionalidad de aumento masivo de cuotas (BulkUpdateCuotaModal) para:
+1. Eliminar la opción de aumento fijo (solo permitir porcentaje)
+2. Implementar redondeo siempre hacia arriba (Math.ceil) en el cálculo final
+3. Permitir que la precisión del redondeo sea configurable desde la sección de configuración de UI
+
+**Requerimientos Funcionales:**
+
+1. **Eliminar Aumento Fijo**
+   - UI actual presenta opciones: "Aumento Fijo" / "Aumento Porcentual"
+   - Se debe **eliminar completamente** la opción de aumento fijo
+   - Solo permitir aumento porcentual (ej: +5%, +10%, +15%)
+   - Simplificar UI: un campo numérico para ingresar el porcentaje
+
+2. **Redondeo Hacia Arriba**
+   - Cálculo actual: `valor_nuevo = valor_actual * (1 + porcentaje/100)`
+   - Nuevo cálculo: `valor_nuevo = Math.ceil(valor_actual * (1 + porcentaje/100) / precision) * precision`
+   - Ejemplo con precision=0.01:
+     * valor_actual=100, aumento=5% → 100 * 1.05 = 105.00 → redondea a 105.00 ✓
+     * valor_actual=100.50, aumento=5% → 105.525 → redondea a 105.53 (hacia arriba)
+     * valor_actual=100.33, aumento=5% → 105.3465 → redondea a 105.35
+
+3. **Precisión Configurable**
+   - Nueva sección en ConfiguracionApp o ConfiguracionUI (o donde corresponda)
+   - Campo: "Precisión de Redondeo en Aumento de Cuotas" 
+   - Valores presets: 0.01, 0.05, 0.10 (o permitir input custom)
+   - Default: 0.01 (centavo)
+   - Se almacena en tabla de configuración
+
+**Requerimientos Backend:**
+
+1. **Controller planesController.js**
+   - En `bulkUpdateCuota()`:
+     * Recibir parámetro `tipoAumento` (eliminar, solo aceptar "porcentaje")
+     * Recibir parámetro `precision` desde configuración
+     * Cálculo: `newValue = Math.ceil(oldValue * (1 + porcentaje/100) / precision) * precision`
+     * Validar que porcentaje sea positivo
+   - Retornar valores antes/después con precisión aplicada
+
+2. **Modelo Configuracion**
+   - Si no existe tabla de configuración, crear migración
+   - Campo: `redondeo_precision` (DECIMAL(10,4), default=0.01)
+
+**Requerimientos Frontend:**
+
+1. **BulkUpdateCuotaModal.jsx**
+   - UI actual muestra radio buttons: "Fijo" / "Porcentual"
+   - Eliminar radio buttons
+   - Mostrar solo: "Porcentaje de aumento (%)" con campo numérico
+   - Helper text: "Ingrese el porcentaje a aplicar (ej: 5 para +5%)"
+   - En preview, mostrar valores redondeados según configuración
+
+2. **ConfiguracionApp.jsx** o **ConfiguracionUI.jsx**
+   - Nueva sección: "Redondeo de Cuotas"
+   - Campo: "Precisión decimal" con opciones:
+     * 0.01 (centavo) - recomendado
+     * 0.05 (5 centavos)
+     * 0.10 (10 centavos)
+     * Custom: allow input manual
+   - Guardar en tabla de configuración
+   - Cargar en BulkUpdateCuotaModal al abrir
+
+3. **planesService.js**
+   - Función `bulkUpdateCuota()` debe cargar precision desde config
+   - Pasar al backend para cálculo consistente
+
+**Archivos Estimados:**
+- `frontend/src/pages/DashboardPage/components/BulkUpdateCuotaModal/BulkUpdateCuotaModal.jsx` (eliminar opciones fijas, simplificar UI)
+- `frontend/src/pages/DashboardPage/components/ConfiguracionApp.jsx` o similar (nueva sección configuración)
+- `backend/src/controllers/v1.0/planesController.js` (cambiar cálculo, aplicar ceil)
+- `backend/src/migrations/versions/` (nueva migración para tabla configuración, si no existe)
+- `frontend/src/services/planesService.js` (cargar precision)
+
+**Implementación de Redondeo:**
+
+```javascript
+// Helper function
+const roundUpToPrecision = (value, precision = 0.01) => {
+  return Math.ceil(value / precision) * precision;
+};
+
+// Ejemplo
+roundUpToPrecision(105.523, 0.01) // → 105.53
+roundUpToPrecision(105.523, 0.05) // → 105.55
+roundUpToPrecision(105.523, 0.10) // → 105.60
+```
+
+**Testing:**
+- ✅ Verificar que radio "Aumento Fijo" está eliminado
+- ✅ Ingresar porcentaje (ej: 5%) y ver preview redondeado
+- ✅ Cambiar configuración de precisión (0.01 → 0.05)
+- ✅ Verificar que preview se actualiza con nueva precisión
+- ✅ Guardar aumento y verificar en BD con redondeo aplicado
+- ✅ Probar diferentes precisions: 0.01, 0.05, 0.10
+
+**Estado:** 📋 Registrado (2026-05-07)
 
 ---
 
