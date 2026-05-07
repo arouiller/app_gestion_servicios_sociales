@@ -51,16 +51,6 @@ exports.crear = async (req, res, next) => {
   try {
     const { nombre, apellido, tipo_documento, numero_documento, fecha_nacimiento, fecha_cobertura } = req.body;
 
-    // Verificar documento único
-    const existente = await db.Persona.findOne({ where: { numero_documento } });
-    if (existente) {
-      return res.status(409).json({
-        success: false,
-        message: 'Ya existe una persona con ese número de documento',
-        errors: { numero_documento: 'Ya existe' },
-      });
-    }
-
     const persona = await db.Persona.create({
       nombre: nombre.trim(),
       apellido: apellido.trim(),
@@ -126,17 +116,6 @@ exports.actualizar = async (req, res, next) => {
     }
 
     const { nombre, apellido, tipo_documento, numero_documento, fecha_nacimiento, fecha_cobertura } = req.body;
-
-    // Validar unicidad de documento si cambia
-    if (numero_documento && numero_documento !== persona.numero_documento) {
-      const existe = await db.Persona.findOne({ where: { numero_documento } });
-      if (existe) {
-        return res.status(409).json({
-          success: false,
-          message: 'Ya existe una persona con ese número de documento',
-        });
-      }
-    }
 
     await persona.update({
       nombre: nombre?.trim() || persona.nombre,

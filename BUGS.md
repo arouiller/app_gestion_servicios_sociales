@@ -25,12 +25,13 @@ Un bug solo puede pasar a estado solucionado, Descartado a traves del pedido exp
 
 ## Registros Activos
 
-Actualmente hay 1 bug activo: 1 crítico en análisis.
+Actualmente hay 2 bugs activos: 1 crítico en análisis, 1 importante recién reportado.
 
 ### Historial reciente (últimos 7 días)
 
 | ID | Severidad | Fase | Descripción | Reportado | Estado |
 |----|-----------|------|-------------|-----------|--------|
+| BUG-029 | 🟡 IMPORTANTE | BACKLOG-049 | Validación de duplicados aún bloquea números de documento duplicados después del fix | 2026-05-07 | 📋 Registrado |
 | BUG-025 | 🔴 CRÍTICO | BACKLOG-024 | npm install falló: conflicto de versiones al agregar 22 dependencias explícitamente | 2026-04-18 | 🔬 En análisis |
 
 ---
@@ -84,6 +85,54 @@ MySQL rechaza el valor inválido y guarda como cadena vacía.
 - a3fcc44: fix(integrantes): ordenar por campo 'orden' en BD y frontend, usar rol de BD en tabla
 
 **Estado:** ✅ Solucionado (2026-05-07)
+
+---
+
+### BUG-029: Validación de Duplicados Aún Bloquea números_documento Duplicados
+
+**Descripción:**
+Después de aplicar el fix de BACKLOG-049 (remover `unique: true` del modelo Persona.js), el backend aún rechaza personas con número de documento duplicado retornando error:
+```json
+{
+  "success": false,
+  "message": "Ya existe una persona con ese número de documento",
+  "errors": { "numero_documento": "Ya existe" }
+}
+```
+
+**Síntomas:**
+1. Usuario intenta cargar/crear una persona con numero_documento duplicado
+2. Backend retorna error 400 o 409 con mensaje "Ya existe una persona con ese número de documento"
+3. La operación es rechazada aunque la BD permite duplicados (migración 2.0.8 eliminó UNIQUE)
+
+**Contexto:**
+- BACKLOG-049 removió `unique: true` del modelo Persona.js (commit 4eec97e)
+- La validación de duplicados aparentemente está hardcoded en el controlador/servicio de personas
+- Existe una migración 2.0.8 que removió el UNIQUE constraint en BD a nivel de columna
+- El modelo ya no fuerza la constraint, pero la lógica de negocio sí
+
+**Causa probable:**
+Hay validación explícita de duplicados en `backend/src/controllers/personasController.js` o similar que verifica:
+```javascript
+const existente = await db.Persona.findOne({ where: { numero_documento } });
+if (existente) return error("Ya existe");
+```
+
+Esta validación debe ser removida o comentada para permitir duplicados.
+
+**Archivos a investigar:**
+- `backend/src/controllers/personasController.js` (método crear/actualizar)
+- `backend/src/routes/personas.js` (posible middleware de validación)
+- `backend/src/middleware/validate.js` (posible validación global)
+
+**Severidad:** 🟡 IMPORTANTE
+- Bloquea la funcionalidad deseada de permitir duplicados
+- Pero no es crítico para otras operaciones (afecta solo a personas con DNI duplicado)
+
+**Reportado:** 2026-05-07
+**Fase:** BACKLOG-049
+
+**Estado:** 📋 Registrado (pendiente investigación y fix)
 
 ---
 
