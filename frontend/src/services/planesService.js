@@ -56,6 +56,25 @@ const planesService = {
       };
     }
   },
+
+  /**
+   * GET /api/planes/historial-cuota
+   * Historial global de cambios de cuota
+   * @param {number} planNumero - (opcional) filtra por plan específico
+   */
+  getHistorialCuota: async (planNumero = null) => {
+    try {
+      const params = planNumero ? { plan_numero: planNumero } : {};
+      const response = await api.get('/planes/historial-cuota', { params });
+      return response.data;
+    } catch (error) {
+      return {
+        success: false,
+        message: error.response?.data?.message || error.message,
+        data: [],
+      };
+    }
+  },
 };
 
 export default planesService;
