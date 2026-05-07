@@ -40,7 +40,7 @@ De cualquier estado → Descartado
 
 | ID | Prioridad | Estado | Descripción | Contexto / Motivo | Archivos estimados |
 |----|-----------|--------|-------------|-------------------|----|
-| BACKLOG-047 | 🔴 Alta | 📋 Registrado | Número de afiliado: formato de 5 dígitos con padding y auto-incremento | Estandarizar formato de número de afiliado a exactamente 5 dígitos (00001, 00002, etc.). Implementar auto-padding a izquierda con ceros. Validar unicidad. Sugerir automáticamente MAX+1 al crear plan. Mejora consistencia, evita duplicados, simplifica auditoría. | planesController.js, PlanV1Model.js, PlanV1Modal.jsx, usePlanV1Form.js, validateors/planesValidators.js, planesV1Service.js |
+| BACKLOG-047 | 🔴 Alta | ✅ Solucionado | Número de afiliado: formato de 5 dígitos con padding y auto-incremento | Estandarizar formato de número de afiliado a exactamente 5 dígitos (00001, 00002, etc.). Implementar auto-padding a izquierda con ceros. Validar unicidad. Sugerir automáticamente MAX+1 al crear plan. Mejora consistencia, evita duplicados, simplifica auditoría. | planesController.js, PlanV1Model.js, PlanV1Modal.jsx, usePlanV1Form.js, validateors/planesValidators.js, planesV1Service.js |
 | BACKLOG-046 | 🟡 Media | 📋 Registrado | Eliminar tablas legacy: afiliados, grupos_familiares, historial_grupo_familiar, planes_v2_backup | Limpieza de tablas no utilizadas y legacy que generan ruido en el schema. afiliados, grupos_familiares, historial_grupo_familiar no tienen modelos Sequelize ni endpoints. planes_v2_backup es tabla de respaldo sin funcionalidad activa. Requiere auditoría de dependencias, migración SQL de eliminación, y verificación de que no haya referencias en el código. | migrations/2.0.23, models/Plan.js (eliminar), modelos relacionados |
 | BACKLOG-045 | 🔴 Alta | ✅ Solucionado | Agregar zona y localidad a planes con dropdowns en UI | Cada plan debe tener asociado una zona (FK zona_id) y una localidad (FK localidad_id) en BD. UI debe permitir seleccionar zona y localidad mediante dropdowns en PlanV1Modal. Migración 2.0.22 para agregar campos. Mejora geolocalización y gestión territorial de planes. | migrations/2.0.22, PlanV1.js, planesController.js, PlanV1Modal.jsx, usePlanV1Form.js |
 | BACKLOG-044 | 🔴 Alta | ✅ Solucionado | Migración 2.0.19 - Eliminar zona de planes y agregar nuevos estados | Eliminar campo zona de planes y zona_id de plan_integrantes (campos legados sin FK formal). Agregar nuevos estados al ENUM: ELIMINADO y PROMOCION. Crear endpoint getAll para listados sin restricción de zona. Corregir asociaciones de modelos. | migrations/2.0.19, PlanV1.js, PlanIntegrante.js, models/index.js, listadosController.js, listadosService.js |
@@ -306,6 +306,31 @@ Fase 2: Funcionalidad Nueva
 - El padding debe ser transparente para el usuario
 - Considerar casos edge: "00000" debe rechazarse (mínimo "00001")
 - Documentar que numero_afiliado está formateado siempre a 5 dígitos en respuestas API
+
+**Status de Implementación (2026-05-07):**
+
+✅ **Completado** — 5 commits ejecutados y pusheados a rama V_1.0.7:
+
+1. `feat(migrations): migración 2.0.23 - normalizar numero_afiliado a 5 dígitos` (commit 7559bf5)
+   - Crear: upgrade.sql con LPAD + MODIFY VARCHAR(5)
+   - Crear: downgrade.sql con revert a VARCHAR(50)
+
+2. `refactor(models): reducir numero_afiliado a STRING(5) en PlanV1` (commit 187e0be)
+   - Cambiar DataTypes.STRING(50) → STRING(5)
+
+3. `refactor(controller): aplicar padding de 5 dígitos en crear, actualizar y getMax` (commit 12094a5)
+   - Padding en crear() antes de validar y guardar
+   - Padding en actualizar() con validación de unicidad
+   - Cambiar padStart(3) → padStart(5) en getMaxAfiliadoNumber()
+
+4. `refactor(form): padding y validación de rango en numero_afiliado` (commit d4d45a2)
+   - Padding en initialData load
+   - Validación de rango (rechaza 0 y > 99999)
+
+5. `feat(frontend): maxLength y padding en numero_afiliado al crear/editar plan` (commit eed876b)
+   - maxLength={5} en input
+   - placeholder="00001" en input
+   - Padding en loadMaxAfiliadoNumber()
 
 ---
 
