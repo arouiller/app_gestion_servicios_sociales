@@ -190,6 +190,28 @@ function PlanV1Modal({ mode, planData, onClose, onSave }) {
     }
   };
 
+  const reloadIntegrantes = async () => {
+    try {
+      const fullPlan = await planesV1Service.obtener(planData.plan_numero);
+      if (fullPlan?.PlanIntegrantes) {
+        const integrantes = fullPlan.PlanIntegrantes
+          .sort((a, b) => a.orden - b.orden)
+          .map(pi => ({
+            id: pi.id,
+            persona_id: pi.persona_id,
+            persona: pi.Persona,
+            rol: pi.rol,
+            orden: pi.orden,
+            servicios: pi.IntegranteServicios || [],
+          }));
+        console.log('[PlanV1Modal] Integrantes reloaded after servicios change:', integrantes);
+        handleFieldChange('integrantes', integrantes);
+      }
+    } catch (err) {
+      console.error('Error reloading integrantes:', err);
+    }
+  };
+
   const loadHistorialCuota = async () => {
     try {
       setHistorialLoading(true);
@@ -865,7 +887,10 @@ function PlanV1Modal({ mode, planData, onClose, onSave }) {
       {serviciosModalOpen && (
         <IntegranteServiciosModal
           planIntegranteId={serviciosModalOpen}
-          onClose={() => setServiciosModalOpen(null)}
+          onClose={async () => {
+            setServiciosModalOpen(null);
+            await reloadIntegrantes();
+          }}
         />
       )}
 
