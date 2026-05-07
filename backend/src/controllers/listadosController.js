@@ -16,7 +16,7 @@ const listadosController = {
         });
       }
 
-      let where = { zona: zona_id };
+      let where = { zona_id: zona_id };
 
       // Filtro de búsqueda (texto en número de plan o tipo)
       if (search) {
