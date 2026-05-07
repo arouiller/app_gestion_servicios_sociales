@@ -17,7 +17,9 @@ export const usePlanV1Form = (initialData = null) => {
   const [form, setForm] = useState(
     initialData
       ? {
-          numero_afiliado: initialData.numero_afiliado || '',
+          numero_afiliado: initialData.numero_afiliado
+            ? String(initialData.numero_afiliado).padStart(5, '0')
+            : '',
           tipo_plan_numero: initialData.tipo_plan_numero || '',
           cobrador_numero: initialData.cobrador_numero || '',
           tipo_de_grupo_numero: initialData.tipo_de_grupo_numero || '',
@@ -78,6 +80,10 @@ export const usePlanV1Form = (initialData = null) => {
       newErrors.numero_afiliado = 'Número de afiliado es requerido';
     } else if (!/^\d+$/.test(String(form.numero_afiliado).trim())) {
       newErrors.numero_afiliado = 'Solo se permiten números';
+    } else if (parseInt(form.numero_afiliado.trim(), 10) === 0) {
+      newErrors.numero_afiliado = 'El número de afiliado no puede ser 0';
+    } else if (parseInt(form.numero_afiliado.trim(), 10) > 99999) {
+      newErrors.numero_afiliado = 'El número de afiliado no puede superar 99999';
     }
     if (!form.tipo_plan_numero) {
       newErrors.tipo_plan_numero = 'Tipo de Plan es requerido';
