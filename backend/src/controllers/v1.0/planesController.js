@@ -238,6 +238,44 @@ const actualizar = async (req, res, next) => {
       if (req.body[campo] !== undefined) actualizaciones[campo] = req.body[campo];
     });
 
+    // Procesar integrantes reordenados si se proporciona
+    if (req.body.integrantes && Array.isArray(req.body.integrantes)) {
+      try {
+        // Validar que hay al menos 1 integrante
+        if (req.body.integrantes.length === 0) {
+          return res.status(422).json({
+            success: false,
+            message: 'Un plan debe tener al menos 1 integrante',
+            errors: { integrantes: 'Mínimo 1 integrante requerido' },
+          });
+        }
+
+        // Actualizar integrantes en BD
+        const { PlanIntegrante } = db;
+
+        // Eliminar integrantes viejos para este plan
+        await PlanIntegrante.destroy({ where: { plan_numero: plan.plan_numero } });
+
+        // Insertar integrantes nuevos en orden correcto
+        const integrantesNuevos = req.body.integrantes.map((integrante, index) => ({
+          plan_numero: plan.plan_numero,
+          persona_id: integrante.persona_id,
+          orden: index + 1, // 1-based
+          rol: index === 0 ? 'titular' : 'integrante', // Primero = titular, resto = integrante
+          credencial: integrante.credencial || 'N', // Default si no viene
+          fecha_creacion: new Date(),
+        }));
+
+        await PlanIntegrante.bulkCreate(integrantesNuevos);
+      } catch (error) {
+        return res.status(500).json({
+          success: false,
+          message: 'Error al procesar integrantes',
+          errors: { integrantes: error.message },
+        });
+      }
+    }
+
     await plan.update(actualizaciones);
 
     return res.json({
