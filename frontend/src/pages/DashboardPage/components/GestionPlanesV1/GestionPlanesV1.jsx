@@ -2,7 +2,7 @@ import React, { useCallback, useEffect, useState } from 'react';
 import { useAuth } from '../../../../context/AuthContext';
 import planesV1Service from '../../../../services/planesV1Service';
 import configService from '../../../../services/configService';
-import { formatNumeroAfiliado, formatZona } from '../../../../utils/formatters';
+import { formatNumeroAfiliado } from '../../../../utils/formatters';
 import PlanV1Modal from './modals/PlanV1Modal';
 import BulkUpdateCuotaModal from '../BulkUpdateCuotaModal/BulkUpdateCuotaModal';
 import GenerarRecibosModal from './modals/GenerarRecibosModal';
@@ -103,8 +103,7 @@ function GestionPlanesV1() {
         plan.TipoDePlan?.tipo_plan_nombre?.toLowerCase().includes(searchLower) ||
         plan.Cobrador?.cobrador_apellido?.toLowerCase().includes(searchLower) ||
         plan.Cobrador?.cobrador_nombre?.toLowerCase().includes(searchLower) ||
-        plan.ObraSocial?.os_nombre?.toLowerCase().includes(searchLower) ||
-        String(plan.zona || 0).padStart(2, '0').includes(searchLower)
+        plan.ObraSocial?.os_nombre?.toLowerCase().includes(searchLower)
       );
     });
 
@@ -219,7 +218,6 @@ function GestionPlanesV1() {
             <thead>
               <tr>
                 <th>Número de Afiliado</th>
-                <th>Zona</th>
                 <th>Tipo de Plan</th>
                 <th>Cobrador</th>
                 <th>Obra Social</th>
@@ -231,7 +229,6 @@ function GestionPlanesV1() {
               {pagination.paginatedItems.map((plan) => (
                 <tr key={plan.plan_numero}>
                   <td>{formatNumeroAfiliado(plan.numero_afiliado)}</td>
-                  <td>{formatZona(plan.zona)}</td>
                   <td>{plan.TipoDePlan?.tipo_plan_nombre || '—'}</td>
                   <td>{plan.Cobrador?.cobrador_apellido}, {plan.Cobrador?.cobrador_nombre}</td>
                   <td>{plan.ObraSocial?.os_nombre || '—'}</td>
