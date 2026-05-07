@@ -40,6 +40,7 @@ De cualquier estado → Descartado
 
 | ID | Prioridad | Estado | Descripción | Contexto / Motivo | Archivos estimados |
 |----|-----------|--------|-------------|-------------------|----|
+| BACKLOG-045 | 🔴 Alta | 📋 Registrado | Agregar zona y localidad a planes con dropdowns en UI | Cada plan debe tener asociado una zona (FK zona_id) y una localidad (FK localidad_id) en BD. UI debe permitir seleccionar zona y localidad mediante dropdowns en PlanV1Modal. Migración 2.0.22 para agregar campos. Mejora geolocalización y gestión territorial de planes. | migrations/2.0.22, PlanV1.js, planesController.js, PlanV1Modal.jsx, usePlanV1Form.js |
 | BACKLOG-044 | 🔴 Alta | 🚀 Desarrollado | Migración 2.0.19 - Eliminar zona de planes y agregar nuevos estados | Eliminar campo zona de planes y zona_id de plan_integrantes (campos legados sin FK formal). Agregar nuevos estados al ENUM: ELIMINADO y PROMOCION. Crear endpoint getAll para listados sin restricción de zona. Corregir asociaciones de modelos. | migrations/2.0.19, PlanV1.js, PlanIntegrante.js, models/index.js, listadosController.js, listadosService.js |
 | BACKLOG-043 | 🔴 Alta | ✅ Solucionado | Nueva entidad Zona independiente con CRUD | Nueva tabla Zona (código: 2 dígitos, nombre: string). Zona es una entidad **independiente** de Provincia y Localidad (no jerárquica). CRUD completo en interfaz de gestiones. Requiere migración, modelos, controladores, servicios, componente UI. | migrations/2.0.20, Zona.js model, lookupController.js, GestionZonas.jsx |
 | BACKLOG-042 | 🔴 Alta | ✅ Solucionado | Mover enlace de Gestión Provincias/Localidades a sección de Gestiones | Enlace integrado en sección Gestión del Dashboard junto con Cobradores, Obras Sociales, Servicios, Tipos de Grupo, Tipos de Plan. Mejora UX y discoverability. Iconos estandarizados con ActionButton/IconButton. | DashboardPage.jsx, ProvinciaRow.jsx, GestionProvinciasZonas.scss |
@@ -75,6 +76,68 @@ De cualquier estado → Descartado
 | BACKLOG-001 | 🟡 Media | ✅ Solucionado | Mejorar preview de aumento de cuotas: navegación completa + comparación antes/después | Implementado y aprobado: Tabla con alineación correcta, paginación, búsqueda y contraste antes/después. BUG-009 resuelto | BulkUpdateCuotaModal.jsx, SCSS |
 
 ## Detalles de Items
+
+### BACKLOG-045: Agregar Zona y Localidad a Planes con Dropdowns en UI
+
+**Descripción:**
+Cada plan debe tener asociado una zona y una localidad, permitiendo mejor geolocalización y gestión territorial. Los usuarios deben poder seleccionar zona y localidad mediante dropdowns en el formulario de creación/edición de planes.
+
+**Requerimientos Backend:**
+
+1. **Migración 2.0.22 - Agregar campos a tabla planes**
+   - Agregar columna `zona_id` (INT, FK a zonas.id, NOT NULL)
+   - Agregar columna `localidad_id` (INT, FK a localidades.id, NOT NULL)
+   - Índice en `(zona_id, localidad_id)` para búsquedas rápidas
+   - Validación: ON DELETE RESTRICT (no permitir eliminar zona/localidad si hay planes)
+   - Upgrade: para registros existentes, asignar valores por defecto (zona_id=1, localidad_id=1)
+   - Downgrade: eliminar columnas
+
+2. **Modelo PlanV1.js**
+   - Agregar propiedades `zona_id` (DataTypes.INTEGER, NOT NULL)
+   - Agregar propiedad `localidad_id` (DataTypes.INTEGER, NOT NULL)
+   - Agregar validaciones: notEmpty, notNull
+
+3. **Asociaciones (models/index.js)**
+   - `PlanV1.belongsTo(Zona, { foreignKey: 'zona_id', as: 'zona' })`
+   - `PlanV1.belongsTo(Localidad, { foreignKey: 'localidad_id', as: 'localidad' })`
+   - `Zona.hasMany(PlanV1, { foreignKey: 'zona_id' })`
+   - `Localidad.hasMany(PlanV1, { foreignKey: 'localidad_id' })`
+
+4. **Controller planesController.js**
+   - En `list()`: incluir zonas y localidades asociadas
+   - En `create()`: validar que zona_id y localidad_id existan antes de crear
+   - En `update()`: validar que zona_id y localidad_id existan antes de actualizar
+
+**Requerimientos Frontend:**
+
+1. **PlanV1Modal.jsx**
+   - Agregar dropdown para seleccionar zona (carga desde zonaService.getAll())
+   - Agregar dropdown para seleccionar localidad (carga desde localidadService.getByProvincia(zona_id))
+   - Localidades deben filtrarse automáticamente según zona seleccionada
+   - Campos deben ser requeridos (validación visual)
+   - Ubicar en tab principal o tab de información
+
+2. **usePlanV1Form.js**
+   - Agregar `zona_id` al estado inicial (null o 0)
+   - Agregar `localidad_id` al estado inicial (null o 0)
+   - Agregar validación: zona_id y localidad_id deben ser != null
+   - Incluir en payload de create/update
+
+3. **GestionPlanesV1.jsx**
+   - Mostrar zona y localidad en tabla de planes (columnas adicionales o en detalles)
+   - Opcional: filtro por zona
+
+**Impacto:**
+- Archivos: migrations/2.0.22, PlanV1.js, planesController.js, PlanV1Modal.jsx, usePlanV1Form.js, models/index.js
+- Testing: validar cascada de eliminación, validar carga de localidades por zona, validar persistencia en BD
+- Backward compatibility: migración debe manejar datos existentes
+
+**Notas:**
+- BACKLOG-044 (eliminar zona antigua de planes) debe ejecutarse ANTES que este item
+- Las localidades deben cargarse dinámicamente al seleccionar zona (carga reactiva)
+- Considerar UX: zona es obligatoria, localidad se filtra según zona
+
+---
 
 ### BACKLOG-013: Mejora de Flujo de Login para Usuarios con Contraseña Blanqueada
 
