@@ -40,7 +40,7 @@ De cualquier estado → Descartado
 
 | ID | Prioridad | Estado | Descripción | Contexto / Motivo | Archivos estimados |
 |----|-----------|--------|-------------|-------------------|----|
-| BACKLOG-055 | 🟡 Media | 🚀 Desarrollado | Historial de aumentos de cuota - listado centralizado con pop-up | Crear tabla `aumentos_masivos` (fecha, porcentaje, usuario) para registrar cada operación de aumento masivo. Accesible desde GestionPlanesV1 a través de botón "Ver historial de aumentos" al lado del botón de aumento masivo. Listado ordenado en forma descendente (más recientes primero). Mejora trazabilidad y consulta de cambios históricos. Commits: adb523f, 13d95cf, ec8ba58, 52e4fc9 | migrations/2.0.26, AumentoMasivo.js, planesController.js, HistorialAumentosModal.jsx |
+| BACKLOG-055 | 🟡 Media | ✅ Solucionado | Historial de aumentos de cuota - listado centralizado con pop-up | Crear tabla `aumentos_masivos` (fecha, porcentaje, usuario) para registrar cada operación de aumento masivo. Accesible desde GestionPlanesV1 a través de botón "Ver historial de aumentos" al lado del botón de aumento masivo. Listado ordenado en forma descendente (más recientes primero). Mejora trazabilidad y consulta de cambios históricos. Commits: adb523f, 13d95cf, ec8ba58, 52e4fc9, 4b6f20d | migrations/2.0.26, AumentoMasivo.js, planesController.js, HistorialAumentosModal.jsx |
 | BACKLOG-054 | 🔴 Alta | 📋 Registrado | Aumento de cuotas masivo: solo porcentajes, redondeo configurable | Mejorar funcionalidad de aumento masivo: (1) eliminar opción de aumento fijo, solo permitir porcentajes; (2) redondeo siempre hacia arriba (ceil); (3) precisión decimal del redondeo configurable desde UI. | BulkUpdateCuotaModal.jsx, planesController.js, ConfiguracionApp.jsx, migrations |
 | BACKLOG-053 | 🟡 Media | 📋 Registrado | Posicionamiento automático de nuevo plan en grilla ordenada | Al crear un nuevo plan, este debe insertarse en la posición correcta según orden zona + número de afiliado, en lugar de aparecer al final. Mejora UX y mantiene consistencia en la visualización de datos. | GestionPlanesV1.jsx, planesService.js |
 | BACKLOG-052 | 🟡 Media | ✅ Solucionado | Redimensionamiento manual de columnas con persistencia en localStorage | Permitir que los usuarios cambien manualmente el ancho de las columnas en las tablas (GestionPlanesV1, LookupCRUD). Las preferencias de ancho se guardan en localStorage y persisten entre sesiones del navegador. Mejora UX: usuarios pueden ajustar columnas según sus preferencias. Hook useColumnResize con drag & drop en headers. Completado en todas las 17 tablas del sistema. Commits: 2c816f9, 56a3e0b, effa576, 2d2b9c5, 5448447, 54e636c, 044754c, 6da9a82, c17531d, ff405ba, d882cc7, f4d1fd5, 700555b, 036adf0 | useColumnResize hook, todas las tablas, _table-standard.scss |
@@ -4912,13 +4912,14 @@ Crear tabla `aumentos_masivos` para registrar cada operación de aumento masivo 
 - ✅ Probar paginación con >10 registros
 - ✅ Verificar formateo de fechas (DD/MM/YYYY HH:mm:ss)
 
-**Estado:** 🚀 Desarrollado (2026-05-07)
+**Estado:** ✅ Solucionado (2026-05-07)
 
 **Commits:**
 - `adb523f` — feat(migrations): 2.0.26 crear tabla aumentos_masivos para registrar aumentos masivos
 - `13d95cf` — feat(models): agregar modelo AumentoMasivo y asociación con Usuario
 - `ec8ba58` — feat(planes): registrar aumentos masivos en tabla aumentos_masivos y cambiar endpoint historial
 - `52e4fc9` — feat(historial-aumentos): actualizar modal para mostrar registros de aumentos masivos
+- `4b6f20d` — docs(backlog): actualizar BACKLOG-055 con implementación correcta de tabla aumentos_masivos
 
 ---
 
