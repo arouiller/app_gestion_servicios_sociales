@@ -144,17 +144,27 @@ function PlanV1Modal({ mode, planData, onClose, onSave }) {
       const fullPlan = await planesV1Service.obtener(planData.plan_numero);
       console.log('[PlanV1Modal] Loaded full plan data:', fullPlan);
 
-      // Actualizar el form con los datos completos incluyendo integrantes
-      if (fullPlan && fullPlan.PlanIntegrantes) {
-        // Convertir PlanIntegrantes al formato esperado por el form
-        const integrantes = fullPlan.PlanIntegrantes.map(pi => ({
-          id: pi.id,
-          persona_id: pi.persona_id,
-          persona: pi.Persona,
-          rol: pi.rol,
-        }));
-        console.log('[PlanV1Modal] Integrantes encontrados:', integrantes);
-        handleFieldChange('integrantes', integrantes);
+      // Actualizar el form con los datos completos incluyendo integrantes, zona y localidad
+      if (fullPlan) {
+        // Actualizar zona_id y localidad_id
+        if (fullPlan.zona_id) {
+          handleFieldChange('zona_id', String(fullPlan.zona_id));
+        }
+        if (fullPlan.localidad_id) {
+          handleFieldChange('localidad_id', String(fullPlan.localidad_id));
+        }
+
+        // Actualizar integrantes
+        if (fullPlan.PlanIntegrantes) {
+          const integrantes = fullPlan.PlanIntegrantes.map(pi => ({
+            id: pi.id,
+            persona_id: pi.persona_id,
+            persona: pi.Persona,
+            rol: pi.rol,
+          }));
+          console.log('[PlanV1Modal] Integrantes encontrados:', integrantes);
+          handleFieldChange('integrantes', integrantes);
+        }
       }
     } catch (err) {
       console.error('Error loading full plan data:', err);
