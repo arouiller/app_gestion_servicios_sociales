@@ -100,10 +100,13 @@ function GestionPlanesV1() {
       const searchLower = effectiveSearchText.toLowerCase();
       return (
         plan.numero_afiliado?.toLowerCase().includes(searchLower) ||
+        plan.Zona?.codigo?.toLowerCase().includes(searchLower) ||
         plan.TipoDePlan?.tipo_plan_nombre?.toLowerCase().includes(searchLower) ||
         plan.Cobrador?.cobrador_apellido?.toLowerCase().includes(searchLower) ||
         plan.Cobrador?.cobrador_nombre?.toLowerCase().includes(searchLower) ||
-        plan.ObraSocial?.os_nombre?.toLowerCase().includes(searchLower)
+        plan.ObraSocial?.os_nombre?.toLowerCase().includes(searchLower) ||
+        plan.PlanIntegrantes?.[0]?.Persona?.apellido?.toLowerCase().includes(searchLower) ||
+        plan.PlanIntegrantes?.[0]?.Persona?.nombre?.toLowerCase().includes(searchLower)
       );
     });
 
@@ -184,7 +187,7 @@ function GestionPlanesV1() {
       {planes.length > 0 && (
         <div className="gestion-planes-v1__filters">
           <SearchContainer
-            placeholder="Buscar por número de afiliado, tipo de plan, cobrador u obra social... (presiona Enter para buscar inmediatamente)"
+            placeholder="Buscar por identificador, titular, tipo de plan, cobrador u obra social... (presiona Enter para buscar inmediatamente)"
             value={searchText}
             onChange={setSearchText}
             onKeyDown={handleSearchKeyDown}
@@ -217,7 +220,8 @@ function GestionPlanesV1() {
           <table className="table-standard gestion-planes-v1__tabla">
             <thead>
               <tr>
-                <th>Número de Afiliado</th>
+                <th>Identificador</th>
+                <th>Titular</th>
                 <th>Tipo de Plan</th>
                 <th>Cobrador</th>
                 <th>Obra Social</th>
@@ -228,7 +232,16 @@ function GestionPlanesV1() {
             <tbody>
               {pagination.paginatedItems.map((plan) => (
                 <tr key={plan.plan_numero}>
-                  <td>{formatNumeroAfiliado(plan.numero_afiliado)}</td>
+                  <td>
+                    {plan.Zona?.codigo
+                      ? `${plan.Zona.codigo}-${formatNumeroAfiliado(plan.numero_afiliado)}`
+                      : formatNumeroAfiliado(plan.numero_afiliado)}
+                  </td>
+                  <td>
+                    {plan.PlanIntegrantes?.[0]?.Persona
+                      ? `${plan.PlanIntegrantes[0].Persona.apellido}, ${plan.PlanIntegrantes[0].Persona.nombre}`
+                      : '—'}
+                  </td>
                   <td>{plan.TipoDePlan?.tipo_plan_nombre || '—'}</td>
                   <td>{plan.Cobrador?.cobrador_apellido}, {plan.Cobrador?.cobrador_nombre}</td>
                   <td>{plan.ObraSocial?.os_nombre || '—'}</td>
