@@ -64,6 +64,7 @@ $table-font-size: 0.95rem;
 // Mixin para tabla completa (encabezado + cuerpo)
 @mixin table-standard {
   border-collapse: collapse;
+  table-layout: fixed;
   width: 100%;
   border: 1px solid $table-border-color;
   border-radius: 4px;
