@@ -75,6 +75,7 @@ const obtener = async (req, res, next) => {
         {
           model: db.PlanIntegrante,
           include: [{ model: db.Persona, attributes: ['id', 'apellido', 'nombre', 'numero_documento', 'tipo_documento', 'fecha_nacimiento', 'fecha_cobertura'] }],
+          order: [['orden', 'ASC']],
         },
         { model: db.TipoDePlan, attributes: ['tipo_plan_numero', 'tipo_plan_nombre'] },
         { model: db.Cobrador, attributes: ['cobrador_numero', 'cobrador_apellido', 'cobrador_nombre'] },

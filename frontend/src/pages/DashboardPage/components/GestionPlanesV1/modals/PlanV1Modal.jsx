@@ -154,15 +154,18 @@ function PlanV1Modal({ mode, planData, onClose, onSave }) {
           handleFieldChange('localidad_id', String(fullPlan.localidad_id));
         }
 
-        // Actualizar integrantes
+        // Actualizar integrantes (ordenados por campo orden de BD)
         if (fullPlan.PlanIntegrantes) {
-          const integrantes = fullPlan.PlanIntegrantes.map(pi => ({
-            id: pi.id,
-            persona_id: pi.persona_id,
-            persona: pi.Persona,
-            rol: pi.rol,
-          }));
-          console.log('[PlanV1Modal] Integrantes encontrados:', integrantes);
+          const integrantes = fullPlan.PlanIntegrantes
+            .sort((a, b) => a.orden - b.orden) // Ordenar por campo orden
+            .map(pi => ({
+              id: pi.id,
+              persona_id: pi.persona_id,
+              persona: pi.Persona,
+              rol: pi.rol,
+              orden: pi.orden,
+            }));
+          console.log('[PlanV1Modal] Integrantes encontrados (ordenados):', integrantes);
           handleFieldChange('integrantes', integrantes);
         }
       }
@@ -658,7 +661,7 @@ function PlanV1Modal({ mode, planData, onClose, onSave }) {
                                     <td>{integrante.persona?.nombre}</td>
                                     <td>{integrante.persona?.apellido}</td>
                                     <td>{integrante.persona?.numero_documento}</td>
-                                    <td>{index === 0 ? 'Titular' : 'Integrante'}</td>
+                                    <td>{integrante.rol === 'titular' ? 'Titular' : 'Integrante'}</td>
                                     <td>
                                       <ActionButton
                                         variant="icon"
