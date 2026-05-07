@@ -31,6 +31,7 @@ No hay bugs activos en este momento. Todos han sido solucionados.
 
 | ID | Severidad | Fase | Descripción | Reportado | Estado |
 |----|-----------|------|-------------|-----------|--------|
+| BUG-031 | 🟡 IMPORTANTE | BACKLOG-054 | Aumentos porcentuales mostrados como "fijos" en historial de cuota | 2026-05-07 | ✅ Solucionado |
 
 ---
 
@@ -2009,7 +2010,28 @@ return `Porcentual: +${porcentajeChange.toFixed(2)}%`;
 **Reportado:** 2026-05-07
 **Asociado a:** BACKLOG-054 (Aumento Masivo: Solo Porcentajes)
 
-**Estado:** 📋 Registrado
-- Severidad: 🟡 IMPORTANTE
-- Fase: BACKLOG-054
-- Requiere: Fix en PlanV1Modal.jsx líneas 840-852
+**Estado:** ✅ Solucionado (2026-05-07)
+
+**Solución Implementada:**
+
+Línea 849-852 en `PlanV1Modal.jsx` — Eliminar condicional `esFijo`:
+
+```javascript
+// ANTES
+{esFijo
+  ? `Fijo: +$${diferencia.toFixed(2)}`
+  : `Porcentual: +${porcentajeChange.toFixed(1)}%`
+}
+
+// DESPUÉS
+{`+${porcentajeChange.toFixed(2)}% ($${diferencia.toFixed(2)})`}
+```
+
+- ✅ Eliminar lógica de inferencia (líneas 840-842)
+- ✅ Mostrar siempre porcentaje + diferencia en pesos como contexto
+- ✅ Commit: `3231b73`
+
+**Verificación:**
+- ✅ Aumento masivo: 5% en plan con cuota $100
+- ✅ Historial de Cuota muestra: "+5.00% ($5.00)" ✓
+- ✅ No hay etiqueta "Fijo" ✓
