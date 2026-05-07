@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
 import ActionButton from '../../../../../components/ActionButton/ActionButton';
+import useColumnResize from '../../../../../hooks/useColumnResize';
 
 /**
  * EstadisticasTab: Tab de visualización de estadísticas de BD
@@ -7,6 +8,12 @@ import ActionButton from '../../../../../components/ActionButton/ActionButton';
  */
 function EstadisticasTab({ stats, isLoading, onRefresh }) {
   const [localLoading, setLocalLoading] = useState(false);
+
+  // Column resize hook
+  const { widths, getResizeHandle } = useColumnResize(
+    'migrations-estadisticas',
+    { tabla: 200, cantidad: 180 }
+  );
 
   const handleRefresh = async () => {
     setLocalLoading(true);
@@ -53,8 +60,8 @@ function EstadisticasTab({ stats, isLoading, onRefresh }) {
         <table className="estadisticas-table">
           <thead>
             <tr>
-              <th>Tabla</th>
-              <th className="estadisticas-table__count">Cantidad de Registros</th>
+              <th style={{ width: widths.tabla }}>Tabla{getResizeHandle('tabla')}</th>
+              <th style={{ width: widths.cantidad }} className="estadisticas-table__count">Cantidad de Registros{getResizeHandle('cantidad')}</th>
             </tr>
           </thead>
           <tbody>

@@ -1,5 +1,6 @@
 import React, { useCallback, useEffect, useState } from 'react';
 import afiliadosService from '../../../../services/afiliadosService';
+import useColumnResize from '../../../../hooks/useColumnResize';
 import './GrupoDetalleModal.scss';
 
 // ── Constante compartida ─────────────────────────────────────────────────────
@@ -308,6 +309,16 @@ function GrupoDetalleModal({ grupoId, onClose, onRefresh }) {
   const [historial, setHistorial] = useState([]);
   const [historialLoading, setHistorialLoading] = useState(false);
 
+  // Column resize hooks for 2 tables
+  const { widths: widthsMiembros, getResizeHandle: getResizeHandleMiembros } = useColumnResize(
+    'grupo-detalle-miembros',
+    { nombre: 160, documento: 140, rol: 100, estado: 110, acciones: 120 }
+  );
+  const { widths: widthsHistorial, getResizeHandle: getResizeHandleHistorial } = useColumnResize(
+    'grupo-detalle-historial',
+    { fecha: 180, afiliado: 160, accion: 140, ejecutadoPor: 140 }
+  );
+
   const cargar = useCallback(async () => {
     setLoading(true);
     setError(null);
@@ -472,11 +483,11 @@ function GrupoDetalleModal({ grupoId, onClose, onRefresh }) {
               <table className="grupo-detalle__tabla">
                 <thead>
                   <tr>
-                    <th>Nombre</th>
-                    <th>Documento</th>
-                    <th>Rol</th>
-                    <th>Estado</th>
-                    <th>Acciones</th>
+                    <th style={{ width: widthsMiembros.nombre }}>Nombre{getResizeHandleMiembros('nombre')}</th>
+                    <th style={{ width: widthsMiembros.documento }}>Documento{getResizeHandleMiembros('documento')}</th>
+                    <th style={{ width: widthsMiembros.rol }}>Rol{getResizeHandleMiembros('rol')}</th>
+                    <th style={{ width: widthsMiembros.estado }}>Estado{getResizeHandleMiembros('estado')}</th>
+                    <th style={{ width: widthsMiembros.acciones }}>Acciones</th>
                   </tr>
                 </thead>
                 <tbody>
@@ -535,10 +546,10 @@ function GrupoDetalleModal({ grupoId, onClose, onRefresh }) {
                     <table className="grupo-detalle__tabla">
                       <thead>
                         <tr>
-                          <th>Fecha</th>
-                          <th>Afiliado</th>
-                          <th>Acción</th>
-                          <th>Ejecutado por</th>
+                          <th style={{ width: widthsHistorial.fecha }}>Fecha{getResizeHandleHistorial('fecha')}</th>
+                          <th style={{ width: widthsHistorial.afiliado }}>Afiliado{getResizeHandleHistorial('afiliado')}</th>
+                          <th style={{ width: widthsHistorial.accion }}>Acción{getResizeHandleHistorial('accion')}</th>
+                          <th style={{ width: widthsHistorial.ejecutadoPor }}>Ejecutado por{getResizeHandleHistorial('ejecutadoPor')}</th>
                         </tr>
                       </thead>
                       <tbody>

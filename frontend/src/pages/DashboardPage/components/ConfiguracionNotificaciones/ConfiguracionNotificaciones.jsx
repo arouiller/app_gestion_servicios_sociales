@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { useNotification } from '../../../../context/NotificationContext';
 import configService from '../../../../services/configService';
+import useColumnResize from '../../../../hooks/useColumnResize';
 import './ConfiguracionNotificaciones.scss';
 
 const NOTIFICATION_TYPES = [
@@ -36,6 +37,24 @@ export default function ConfiguracionNotificaciones() {
   const [loading, setLoading] = useState(true);
   const [errors, setErrors] = useState({});
   const { showSuccess, showError } = useNotification();
+
+  // Column resize hooks for 4 tables
+  const { widths: widthsNotif, getResizeHandle: getResizeHandleNotif } = useColumnResize(
+    'config-notificaciones',
+    { tipo: 130, descripcion: 220, duracion: 140, acciones: 100 }
+  );
+  const { widths: widthsBusqueda, getResizeHandle: getResizeHandleBusqueda } = useColumnResize(
+    'config-busqueda',
+    { funcion: 130, descripcion: 220, tiempo: 140, acciones: 100 }
+  );
+  const { widths: widthsUI, getResizeHandle: getResizeHandleUI } = useColumnResize(
+    'config-ui',
+    { parametro: 130, descripcion: 220, valor: 140, acciones: 100 }
+  );
+  const { widths: widthsAudit, getResizeHandle: getResizeHandleAudit } = useColumnResize(
+    'config-auditoria',
+    { parametro: 130, descripcion: 220, valor: 140, acciones: 100 }
+  );
 
   // Cargar configuración al montar
   useEffect(() => {
@@ -156,10 +175,10 @@ export default function ConfiguracionNotificaciones() {
         <table className="configuracion-notificaciones__table table-standard">
           <thead>
             <tr>
-              <th>Tipo</th>
-              <th>Descripción</th>
-              <th>Duración (ms)</th>
-              <th>Acciones</th>
+              <th style={{ width: widthsNotif.tipo }}>Tipo{getResizeHandleNotif('tipo')}</th>
+              <th style={{ width: widthsNotif.descripcion }}>Descripción{getResizeHandleNotif('descripcion')}</th>
+              <th style={{ width: widthsNotif.duracion }}>Duración (ms){getResizeHandleNotif('duracion')}</th>
+              <th style={{ width: widthsNotif.acciones }}>Acciones</th>
             </tr>
           </thead>
           <tbody>
@@ -235,10 +254,10 @@ export default function ConfiguracionNotificaciones() {
         <table className="configuracion-notificaciones__table table-standard">
           <thead>
             <tr>
-              <th>Función</th>
-              <th>Descripción</th>
-              <th>Tiempo (ms)</th>
-              <th>Acciones</th>
+              <th style={{ width: widthsBusqueda.funcion }}>Función{getResizeHandleBusqueda('funcion')}</th>
+              <th style={{ width: widthsBusqueda.descripcion }}>Descripción{getResizeHandleBusqueda('descripcion')}</th>
+              <th style={{ width: widthsBusqueda.tiempo }}>Tiempo (ms){getResizeHandleBusqueda('tiempo')}</th>
+              <th style={{ width: widthsBusqueda.acciones }}>Acciones</th>
             </tr>
           </thead>
           <tbody>
@@ -307,10 +326,10 @@ export default function ConfiguracionNotificaciones() {
         <table className="configuracion-notificaciones__table table-standard">
           <thead>
             <tr>
-              <th>Parámetro</th>
-              <th>Descripción</th>
-              <th>Valor</th>
-              <th>Acciones</th>
+              <th style={{ width: widthsUI.parametro }}>Parámetro{getResizeHandleUI('parametro')}</th>
+              <th style={{ width: widthsUI.descripcion }}>Descripción{getResizeHandleUI('descripcion')}</th>
+              <th style={{ width: widthsUI.valor }}>Valor{getResizeHandleUI('valor')}</th>
+              <th style={{ width: widthsUI.acciones }}>Acciones</th>
             </tr>
           </thead>
           <tbody>
@@ -379,10 +398,10 @@ export default function ConfiguracionNotificaciones() {
         <table className="configuracion-notificaciones__table table-standard">
           <thead>
             <tr>
-              <th>Parámetro</th>
-              <th>Descripción</th>
-              <th>Valor</th>
-              <th>Acciones</th>
+              <th style={{ width: widthsAudit.parametro }}>Parámetro{getResizeHandleAudit('parametro')}</th>
+              <th style={{ width: widthsAudit.descripcion }}>Descripción{getResizeHandleAudit('descripcion')}</th>
+              <th style={{ width: widthsAudit.valor }}>Valor{getResizeHandleAudit('valor')}</th>
+              <th style={{ width: widthsAudit.acciones }}>Acciones</th>
             </tr>
           </thead>
           <tbody>

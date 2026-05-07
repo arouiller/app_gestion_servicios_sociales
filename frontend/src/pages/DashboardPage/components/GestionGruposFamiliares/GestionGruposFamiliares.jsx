@@ -1,5 +1,6 @@
 import React, { useCallback, useEffect, useState } from 'react';
 import afiliadosService from '../../../../services/afiliadosService';
+import useColumnResize from '../../../../hooks/useColumnResize';
 import GrupoDetalleModal from '../GrupoDetalleModal/GrupoDetalleModal';
 import './GestionGruposFamiliares.scss';
 
@@ -11,6 +12,12 @@ function GestionGruposFamiliares() {
   const [error, setError] = useState(null);
   const [grupoDetalleId, setGrupoDetalleId] = useState(null);
   const [busqueda, setBusqueda] = useState('');
+
+  // Column resize hook
+  const { widths, getResizeHandle } = useColumnResize(
+    'grupos-familiares',
+    { nombre: 180, titular: 160, miembros: 100, estado: 110, acciones: 120 }
+  );
 
   const cargar = useCallback(async () => {
     setLoading(true);
@@ -62,11 +69,11 @@ function GestionGruposFamiliares() {
           <table className="grupos-fam__tabla">
             <thead>
               <tr>
-                <th>Nombre del grupo</th>
-                <th>Titular</th>
-                <th>Miembros</th>
-                <th>Estado</th>
-                <th>Acciones</th>
+                <th style={{ width: widths.nombre }}>Nombre del grupo{getResizeHandle('nombre')}</th>
+                <th style={{ width: widths.titular }}>Titular{getResizeHandle('titular')}</th>
+                <th style={{ width: widths.miembros }}>Miembros{getResizeHandle('miembros')}</th>
+                <th style={{ width: widths.estado }}>Estado{getResizeHandle('estado')}</th>
+                <th style={{ width: widths.acciones }}>Acciones</th>
               </tr>
             </thead>
             <tbody>

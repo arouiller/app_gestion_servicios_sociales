@@ -1,5 +1,6 @@
 import React from 'react';
 import ActionButton from '../../../../../components/ActionButton/ActionButton';
+import useColumnResize from '../../../../../hooks/useColumnResize';
 
 /**
  * VersionesTab: Tab de visualización de versiones disponibles
@@ -13,6 +14,11 @@ function VersionesTab({
   onDowngrade,
   onReapply,
 }) {
+  // Column resize hook
+  const { widths, getResizeHandle } = useColumnResize(
+    'migrations-versiones',
+    { version: 100, descripcion: 220, estado: 140, acciones: 160 }
+  );
   if (!versions || versions.length === 0) {
     return (
       <div className="migrations-dashboard__content">
@@ -33,10 +39,10 @@ function VersionesTab({
       <table className="migrations-dashboard__versions-table">
         <thead>
           <tr>
-            <th>Versión</th>
-            <th>Descripción</th>
-            <th>Estado</th>
-            <th>Acciones</th>
+            <th style={{ width: widths.version }}>Versión{getResizeHandle('version')}</th>
+            <th style={{ width: widths.descripcion }}>Descripción{getResizeHandle('descripcion')}</th>
+            <th style={{ width: widths.estado }}>Estado{getResizeHandle('estado')}</th>
+            <th style={{ width: widths.acciones }}>Acciones{getResizeHandle('acciones')}</th>
           </tr>
         </thead>
         <tbody>

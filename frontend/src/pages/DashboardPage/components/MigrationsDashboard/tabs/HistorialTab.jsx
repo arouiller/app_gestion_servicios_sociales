@@ -1,10 +1,16 @@
 import React from 'react';
+import useColumnResize from '../../../../../hooks/useColumnResize';
 
 /**
  * HistorialTab: Tab de visualización del historial de migraciones
  * Muestra tabla de todas las migraciones ejecutadas (upgrades y downgrades)
  */
 function HistorialTab({ history }) {
+  // Column resize hook
+  const { widths, getResizeHandle } = useColumnResize(
+    'migrations-historial',
+    { version: 100, descripcion: 200, tipo: 100, estado: 110, fecha: 160, duracion: 100 }
+  );
   if (!history || history.length === 0) {
     return (
       <div className="migrations-dashboard__content">
@@ -25,12 +31,12 @@ function HistorialTab({ history }) {
       <table className="historial-table">
         <thead>
           <tr>
-            <th>Versión</th>
-            <th>Descripción</th>
-            <th>Tipo</th>
-            <th>Estado</th>
-            <th>Fecha de Ejecución</th>
-            <th>Duración</th>
+            <th style={{ width: widths.version }}>Versión{getResizeHandle('version')}</th>
+            <th style={{ width: widths.descripcion }}>Descripción{getResizeHandle('descripcion')}</th>
+            <th style={{ width: widths.tipo }}>Tipo{getResizeHandle('tipo')}</th>
+            <th style={{ width: widths.estado }}>Estado{getResizeHandle('estado')}</th>
+            <th style={{ width: widths.fecha }}>Fecha de Ejecución{getResizeHandle('fecha')}</th>
+            <th style={{ width: widths.duracion }}>Duración{getResizeHandle('duracion')}</th>
           </tr>
         </thead>
         <tbody>

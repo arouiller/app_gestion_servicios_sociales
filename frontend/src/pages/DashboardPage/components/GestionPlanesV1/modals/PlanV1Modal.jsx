@@ -8,6 +8,7 @@ import planesIntegrantesService from '../../../../../services/planesIntegrantesS
 import lookupService from '../../../../../services/lookupService';
 import localidadService from '../../../../../services/localidadService';
 import recibosService from '../../../../../services/recibosService';
+import useColumnResize from '../../../../../hooks/useColumnResize';
 import AfiladoSearchModal from './AfiladoSearchModal';
 import AfiladoEditModal from './AfiladoEditModal';
 import ReciboDetalleModal from './ReciboDetalleModal';
@@ -51,6 +52,20 @@ function PlanV1Modal({ mode, planData, onClose, onSave }) {
   const [recibosLoading, setRecibosLoading] = useState(false);
   const [recibosPage, setRecibosPage] = useState(1);
   const recibosPerPage = 10;
+
+  // Column resize hooks for 3 tables
+  const { widths: widthsAfiliados, getResizeHandle: getResizeHandleAfiliados } = useColumnResize(
+    'plan-v1-afiliados',
+    { afiliado: 180, dni: 110, rol: 80, nacimiento: 120, edad: 70, cobertura: 120, servicios: 80, acciones: 100 }
+  );
+  const { widths: widthsRecibos, getResizeHandle: getResizeHandleRecibos } = useColumnResize(
+    'plan-v1-recibos',
+    { periodo: 140, integrantes: 150, valor: 120, acciones: 100 }
+  );
+  const { widths: widthsHistorial, getResizeHandle: getResizeHandleHistorial } = useColumnResize(
+    'plan-v1-historial',
+    { fecha: 160, valorAnterior: 130, cambio: 140, valorNuevo: 130 }
+  );
 
   // Secondary modals
   const [afiladoSearchOpen, setAfiladoSearchOpen] = useState(false);
@@ -633,14 +648,14 @@ function PlanV1Modal({ mode, planData, onClose, onSave }) {
                     <table className="plan-v1-modal__afiliados-tabla">
                       <thead>
                         <tr>
-                          <th>Afiliado</th>
-                          <th>DNI</th>
-                          <th>Rol</th>
-                          <th>Nacimiento</th>
-                          <th>Edad</th>
-                          <th>Cobertura</th>
-                          <th>Serv.</th>
-                          <th>Acciones</th>
+                          <th style={{ width: widthsAfiliados.afiliado }}>Afiliado{getResizeHandleAfiliados('afiliado')}</th>
+                          <th style={{ width: widthsAfiliados.dni }}>DNI{getResizeHandleAfiliados('dni')}</th>
+                          <th style={{ width: widthsAfiliados.rol }}>Rol{getResizeHandleAfiliados('rol')}</th>
+                          <th style={{ width: widthsAfiliados.nacimiento }}>Nacimiento{getResizeHandleAfiliados('nacimiento')}</th>
+                          <th style={{ width: widthsAfiliados.edad }}>Edad{getResizeHandleAfiliados('edad')}</th>
+                          <th style={{ width: widthsAfiliados.cobertura }}>Cobertura{getResizeHandleAfiliados('cobertura')}</th>
+                          <th style={{ width: widthsAfiliados.servicios }}>Serv.{getResizeHandleAfiliados('servicios')}</th>
+                          <th style={{ width: widthsAfiliados.acciones }}>Acciones</th>
                         </tr>
                       </thead>
                       <Droppable droppableId="afiliados">
@@ -718,10 +733,10 @@ function PlanV1Modal({ mode, planData, onClose, onSave }) {
                     <table className="plan-v1-modal__recibos-tabla">
                       <thead>
                         <tr>
-                          <th>Período</th>
-                          <th>Número de Integrantes</th>
-                          <th>Valor Cuota</th>
-                          <th>Acciones</th>
+                          <th style={{ width: widthsRecibos.periodo }}>Período{getResizeHandleRecibos('periodo')}</th>
+                          <th style={{ width: widthsRecibos.integrantes }}>Número de Integrantes{getResizeHandleRecibos('integrantes')}</th>
+                          <th style={{ width: widthsRecibos.valor }}>Valor Cuota{getResizeHandleRecibos('valor')}</th>
+                          <th style={{ width: widthsRecibos.acciones }}>Acciones</th>
                         </tr>
                       </thead>
                       <tbody>
@@ -787,10 +802,10 @@ function PlanV1Modal({ mode, planData, onClose, onSave }) {
                   <table className="plan-v1-modal__historial-tabla">
                     <thead>
                       <tr>
-                        <th>Fecha de Cambio</th>
-                        <th>Valor Anterior</th>
-                        <th>Cambio</th>
-                        <th>Valor Nuevo</th>
+                        <th style={{ width: widthsHistorial.fecha }}>Fecha de Cambio{getResizeHandleHistorial('fecha')}</th>
+                        <th style={{ width: widthsHistorial.valorAnterior }}>Valor Anterior{getResizeHandleHistorial('valorAnterior')}</th>
+                        <th style={{ width: widthsHistorial.cambio }}>Cambio{getResizeHandleHistorial('cambio')}</th>
+                        <th style={{ width: widthsHistorial.valorNuevo }}>Valor Nuevo{getResizeHandleHistorial('valorNuevo')}</th>
                       </tr>
                     </thead>
                     <tbody>

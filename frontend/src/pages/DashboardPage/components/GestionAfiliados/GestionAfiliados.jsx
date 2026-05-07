@@ -1,6 +1,7 @@
 import React, { useCallback, useEffect, useState } from 'react';
 import afiliadosService from '../../../../services/afiliadosService';
 import SearchContainer from '../../../../components/SearchContainer/SearchContainer';
+import useColumnResize from '../../../../hooks/useColumnResize';
 import GrupoDetalleModal, { ModalSeleccionNuevoTitular } from '../GrupoDetalleModal/GrupoDetalleModal';
 import './GestionAfiliados.scss';
 
@@ -262,6 +263,12 @@ function FormAfiliado({ inicial, preset, grupos, onGuardar, onCancelar, cargando
 function TablaAfiliados({ afiliados, grupos, pagination, onEditar, onEliminar, onVerGrupo, onPaginar, filtros, onFiltroChange }) {
   const grupoMap = Object.fromEntries((grupos || []).map((g) => [g.id, g]));
 
+  // Column resize hook
+  const { widths, getResizeHandle } = useColumnResize(
+    'gestion-afiliados',
+    { nombre: 140, documento: 130, rol: 100, grupoFamiliar: 150, email: 140, estado: 110, acciones: 120 }
+  );
+
   return (
     <div>
       <div className="gestion-afiliados__filtros">
@@ -299,13 +306,13 @@ function TablaAfiliados({ afiliados, grupos, pagination, onEditar, onEliminar, o
             <table className="gestion-afiliados__tabla">
               <thead>
                 <tr>
-                  <th>Nombre</th>
-                  <th>Documento</th>
-                  <th>Rol</th>
-                  <th>Grupo familiar</th>
-                  <th>Email</th>
-                  <th>Estado</th>
-                  <th>Acciones</th>
+                  <th style={{ width: widths.nombre }}>Nombre{getResizeHandle('nombre')}</th>
+                  <th style={{ width: widths.documento }}>Documento{getResizeHandle('documento')}</th>
+                  <th style={{ width: widths.rol }}>Rol{getResizeHandle('rol')}</th>
+                  <th style={{ width: widths.grupoFamiliar }}>Grupo familiar{getResizeHandle('grupoFamiliar')}</th>
+                  <th style={{ width: widths.email }}>Email{getResizeHandle('email')}</th>
+                  <th style={{ width: widths.estado }}>Estado{getResizeHandle('estado')}</th>
+                  <th style={{ width: widths.acciones }}>Acciones</th>
                 </tr>
               </thead>
               <tbody>

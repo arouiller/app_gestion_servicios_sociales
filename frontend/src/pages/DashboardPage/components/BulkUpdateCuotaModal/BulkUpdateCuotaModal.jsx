@@ -4,6 +4,7 @@ import lookupService from '../../../../services/lookupService';
 import { formatNumeroAfiliado } from '../../../../utils/formatters';
 import ConfirmCloseDialog from '../../../../components/ConfirmCloseDialog/ConfirmCloseDialog';
 import { useModalEscapeKey } from '../../../../hooks/useModalEscapeKey';
+import useColumnResize from '../../../../hooks/useColumnResize';
 import './BulkUpdateCuotaModal.scss';
 
 function BulkUpdateCuotaModal({ isOpen, onClose, onSuccess }) {
@@ -25,6 +26,12 @@ function BulkUpdateCuotaModal({ isOpen, onClose, onSuccess }) {
   const planesPerPage = 10;
   const [searchFilter, setSearchFilter] = useState('');
   const [showConfirmClose, setShowConfirmClose] = useState(false);
+
+  // Column resize hook for preview table
+  const { widths, getResizeHandle } = useColumnResize(
+    'bulk-update-preview',
+    { plan: 100, afiliado: 120, cuotaActual: 130, aumento: 140, cuotaNueva: 130 }
+  );
 
   // Detect if form has changes
   const hasChanges = useMemo(() => {
@@ -385,11 +392,11 @@ function BulkUpdateCuotaModal({ isOpen, onClose, onSuccess }) {
                     <table className="bulk-cuota-modal__table">
                       <thead>
                         <tr>
-                          <th>Plan</th>
-                          <th>Afiliado</th>
-                          <th>Cuota Actual</th>
-                          <th>Aumento</th>
-                          <th>Cuota Nueva</th>
+                          <th style={{ width: widths.plan }}>Plan{getResizeHandle('plan')}</th>
+                          <th style={{ width: widths.afiliado }}>Afiliado{getResizeHandle('afiliado')}</th>
+                          <th style={{ width: widths.cuotaActual }}>Cuota Actual{getResizeHandle('cuotaActual')}</th>
+                          <th style={{ width: widths.aumento }}>Aumento{getResizeHandle('aumento')}</th>
+                          <th style={{ width: widths.cuotaNueva }}>Cuota Nueva{getResizeHandle('cuotaNueva')}</th>
                         </tr>
                       </thead>
                       <tbody>
