@@ -85,7 +85,7 @@ function BulkUpdateCuotaModal({ isOpen, onClose, onSuccess }) {
 
   const loadPrecision = async () => {
     try {
-      const config = await configService.getConfig();
+      const config = await configService.getConfiguracion();
       const precisionValue = parseFloat(config.redondeo_precision) || 1;
       setPrecision(precisionValue);
     } catch (err) {
