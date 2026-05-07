@@ -7,6 +7,7 @@ const Cobradores = () => {
       titulo="Cobradores"
       singularName="Cobrador"
       endpoint="/lookup/cobradores"
+      tableKey="cobradores"
       campos={[
         { name: 'cobrador_numero', label: 'Número', tipo: 'numero_pk' },
         { name: 'cobrador_apellido', label: 'Apellido' },

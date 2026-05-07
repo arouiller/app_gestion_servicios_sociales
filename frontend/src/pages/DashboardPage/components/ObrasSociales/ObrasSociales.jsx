@@ -7,6 +7,7 @@ const ObrasSociales = () => {
       titulo="Obras Sociales"
       singularName="Obra Social"
       endpoint="/lookup/obras-sociales"
+      tableKey="obrasSociales"
       campos={[
         { name: 'os_numero', label: 'Número', tipo: 'numero_pk' },
         { name: 'os_nombre', label: 'Nombre' },

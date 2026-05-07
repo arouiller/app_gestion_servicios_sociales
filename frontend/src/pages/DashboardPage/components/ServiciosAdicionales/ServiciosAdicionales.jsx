@@ -7,6 +7,7 @@ const ServiciosAdicionales = () => {
       titulo="Servicios Adicionales"
       singularName="Servicio Adicional"
       endpoint="/lookup/servicios-adicionales"
+      tableKey="serviciosAdicionales"
       campos={[
         { name: 'servicio_adicional_numero', label: 'Número', tipo: 'numero_pk' },
         { name: 'servicio_adicional_nombre', label: 'Nombre' },

@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useState, useMemo } from 'react';
 import lookupService from '../../services/lookupService';
 import configService from '../../services/configService';
 import ErrorDisplay from '../ErrorDisplay/ErrorDisplay';
@@ -9,10 +9,11 @@ import ConfirmDeleteWithRefsModal from '../ConfirmDeleteWithRefsModal/ConfirmDel
 import Pagination from '../Pagination/Pagination';
 import useDebounce from '../../hooks/useDebounce';
 import usePagination from '../../hooks/usePagination';
+import useColumnResize from '../../hooks/useColumnResize';
 import '../../styles/_table-standard.scss';
 import './LookupCRUD.scss';
 
-const LookupCRUD = ({ titulo, singularName, endpoint, campos }) => {
+const LookupCRUD = ({ titulo, singularName, endpoint, campos, tableKey = 'lookup' }) => {
   const [registros, setRegistros] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
@@ -184,6 +185,16 @@ const LookupCRUD = ({ titulo, singularName, endpoint, campos }) => {
   // Usar searchText inmediatamente si se presionó Enter, si no usar debouncedSearchText
   const effectiveSearchText = forceSearchNow ? searchText : debouncedSearchText;
 
+  // Redimensionamiento de columnas
+  const camposVisibles = campos.filter(campo => !campo.hidden);
+  const defaultWidths = useMemo(() => {
+    const w = { acciones: 100 };
+    camposVisibles.forEach(c => { w[c.name] = 150; });
+    return w;
+  }, [camposVisibles.length]);
+
+  const { widths, getResizeHandle } = useColumnResize(tableKey, defaultWidths);
+
   const registrosFiltered = registros
     .filter(registro => {
       const searchLower = effectiveSearchText.toLowerCase();
@@ -236,16 +247,18 @@ const LookupCRUD = ({ titulo, singularName, endpoint, campos }) => {
           <table className="table-standard lookup-table">
           <thead>
             <tr>
-              {campos.filter(campo => !campo.hidden).map(campo => (
-                <th key={campo.name}>{campo.label}</th>
+              {camposVisibles.map(campo => (
+                <th key={campo.name} style={{ width: widths[campo.name] }}>
+                  {campo.label}{getResizeHandle(campo.name)}
+                </th>
               ))}
-              <th>Acciones</th>
+              <th style={{ width: widths.acciones }}>Acciones</th>
             </tr>
           </thead>
           <tbody>
             {pagination.paginatedItems.map(registro => (
               <tr key={Object.values(registro)[0]}>
-                {campos.filter(campo => !campo.hidden).map(campo => (
+                {camposVisibles.map(campo => (
                   <td key={campo.name}>{registro[campo.name]}</td>
                 ))}
                 <td className="table-actions">
