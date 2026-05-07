@@ -5,11 +5,17 @@ const planesService = {
    * GET /api/planes/filter/:filtro
    * Obtiene planes filtrados
    * @param {string} filtro - todos, tipo_plan, cobrador, os, estado
-   * @param {object} params - parámetros de filtro según el tipo
+   * @param {object} params - parámetros de filtro según el tipo + sortBy, order para ordenamiento
    */
   getByFilter: async (filtro, params = {}) => {
     try {
-      const response = await api.get(`/planes/filter/${filtro}`, { params });
+      const { sortBy, order, ...otherParams } = params;
+      const queryParams = {
+        ...otherParams,
+        ...(sortBy && { sortBy }),
+        ...(order && { order }),
+      };
+      const response = await api.get(`/planes/filter/${filtro}`, { params: queryParams });
       return response.data;
     } catch (error) {
       return {
