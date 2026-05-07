@@ -40,7 +40,7 @@ De cualquier estado → Descartado
 
 | ID | Prioridad | Estado | Descripción | Contexto / Motivo | Archivos estimados |
 |----|-----------|--------|-------------|-------------------|----|
-| BACKLOG-048 | 🔴 Alta | 📋 Registrado | Integrantes ordenables con drag & drop — rol por posición | Permitir reordenar integrantes de un plan mediante drag & drop en PlanV1Modal. El rol (titular vs integrante) se determina automáticamente por posición: primeros en lista = titulares, resto = integrantes. Campo `orden` en tabla plan_integrantes refleja el reorden. Migración para actualizar rol en registros existentes donde no está definido. Mejora UX y simplifica gestión de roles. | migrations/2.0.24, PlanIntegrante.js, PlanV1Modal.jsx, usePlanV1Form.js, planesIntegrantesService.js |
+| BACKLOG-048 | 🔴 Alta | ✅ Solucionado | Integrantes ordenables con drag & drop — rol por posición | Permitir reordenar integrantes de un plan mediante drag & drop en PlanV1Modal. El rol (titular vs integrante) se determina automáticamente por posición: primeros en lista = titulares, resto = integrantes. Campo `orden` en tabla plan_integrantes refleja el reorden. Migración para actualizar rol en registros existentes donde no está definido. Mejora UX y simplifica gestión de roles. | migrations/2.0.24, PlanIntegrante.js, PlanV1Modal.jsx, usePlanV1Form.js, planesIntegrantesService.js |
 | BACKLOG-047 | 🔴 Alta | ✅ Solucionado | Número de afiliado: formato de 5 dígitos con padding y auto-incremento | Estandarizar formato de número de afiliado a exactamente 5 dígitos (00001, 00002, etc.). Implementar auto-padding a izquierda con ceros. Validar unicidad. Sugerir automáticamente MAX+1 al crear plan. Mejora consistencia, evita duplicados, simplifica auditoría. | planesController.js, PlanV1Model.js, PlanV1Modal.jsx, usePlanV1Form.js, validateors/planesValidators.js, planesV1Service.js |
 | BACKLOG-046 | 🟡 Media | 📋 Registrado | Eliminar tablas legacy: afiliados, grupos_familiares, historial_grupo_familiar, planes_v2_backup | Limpieza de tablas no utilizadas y legacy que generan ruido en el schema. afiliados, grupos_familiares, historial_grupo_familiar no tienen modelos Sequelize ni endpoints. planes_v2_backup es tabla de respaldo sin funcionalidad activa. Requiere auditoría de dependencias, migración SQL de eliminación, y verificación de que no haya referencias en el código. | migrations/2.0.23, models/Plan.js (eliminar), modelos relacionados |
 | BACKLOG-045 | 🔴 Alta | ✅ Solucionado | Agregar zona y localidad a planes con dropdowns en UI | Cada plan debe tener asociado una zona (FK zona_id) y una localidad (FK localidad_id) en BD. UI debe permitir seleccionar zona y localidad mediante dropdowns en PlanV1Modal. Migración 2.0.22 para agregar campos. Mejora geolocalización y gestión territorial de planes. | migrations/2.0.22, PlanV1.js, planesController.js, PlanV1Modal.jsx, usePlanV1Form.js |
@@ -4403,6 +4403,42 @@ Fase 3: Mobile (Touch)
 - El campo `orden` es crítico para persistencia
 - Considerar usar librería de drag & drop (react-beautiful-dnd, react-dnd) o implementación simple con mouse/touch events
 - Validar que plan tenga al menos 1 integrante y que el primero sea titular
+
+**Status de Implementación (2026-05-07):**
+
+✅ **Completado** — 5 commits ejecutados y pusheados a rama V_1.0.7:
+
+1. `feat(migrations): migración 2.0.24 - validar y asignar rol/orden a integrantes` (commit 52d86e8)
+   - upgrade.sql: ALTER TABLE para agregar campos, UPDATE con LPAD, asignar rol por orden
+   - downgrade.sql: no-op (sin cambios, backward compatible)
+
+2. `feat(components): crear DraggableList - componente reutilizable para reordenar items` (commit 48004df)
+   - DraggableList.jsx: Componente vanilla drag & drop (mouse + touch)
+   - DraggableList.scss: Estilos para feedback visual (dragging, drag-over)
+
+3. `refactor(controller): procesar integrantes reordenados en actualizar plan` (commit 7e5ca92)
+   - Lógica en actualizar() para procesar array de integrantes reordenados
+   - Valida al menos 1 integrante, elimina viejos, inserta nuevos en orden correcto
+
+4. `refactor(form): agregar método reorderIntegrantes con rol automático por posición` (commit 6dd4ec3)
+   - Nuevo hook useCallback: reorderIntegrantes()
+   - Actualiza rol automáticamente: primero=titular, resto=integrante
+
+5. `refactor(modal): actualizar rol a 'integrante' y recalcular roles al eliminar afiliado` (commit d191d03)
+   - Cambio: 'adherente' → 'integrante' en handleDragEnd para consistencia con ENUM
+   - Mejora: handleIntegranteRemove recalcula roles al eliminar un integrante
+
+**Archivos Modificados:**
+- Backend: migrations/2.0.24, controllers/v1.0/planesController.js
+- Frontend: components/DraggableList (nuevo), hooks/usePlanV1Form.js, modals/PlanV1Modal.jsx
+
+**Funcionalidad:**
+- ✅ Drag & drop de integrantes en tab "Afiliados" de PlanV1Modal
+- ✅ Rol automático por posición (titular = primero, integrante = resto)
+- ✅ Campo `orden` refleja la posición en BD (1, 2, 3, ...)
+- ✅ Recalcular roles al eliminar integrante (nuevo titular = primero)
+- ✅ Persistencia: guardar plan actualiza integrantes en BD con nuevo orden/rol
+- ✅ Migración 2.0.24 asigna orden/rol a integrantes existentes
 
 ---
 
