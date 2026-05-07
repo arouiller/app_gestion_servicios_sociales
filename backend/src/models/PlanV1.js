@@ -52,6 +52,14 @@ const Plan = sequelize.define('planes', {
     type: DataTypes.ENUM('ACTIVO', 'SUSPENDIDO', 'ELIMINADO', 'PROMOCION'),
     defaultValue: 'ACTIVO',
   },
+  zona_id: {
+    type: DataTypes.INTEGER,
+    allowNull: true,
+  },
+  localidad_id: {
+    type: DataTypes.INTEGER,
+    allowNull: true,
+  },
   fecha_creacion: {
     type: DataTypes.DATE,
     defaultValue: DataTypes.NOW,

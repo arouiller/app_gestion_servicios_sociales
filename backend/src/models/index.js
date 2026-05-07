@@ -73,6 +73,12 @@ if (db.PlanV1 && db.TipoDeGrupo) {
 if (db.PlanV1 && db.ObraSocial) {
   db.PlanV1.belongsTo(db.ObraSocial, { foreignKey: 'os_numero' });
 }
+if (db.PlanV1 && db.Zona) {
+  db.PlanV1.belongsTo(db.Zona, { foreignKey: 'zona_id', as: 'zona' });
+}
+if (db.PlanV1 && db.Localidad) {
+  db.PlanV1.belongsTo(db.Localidad, { foreignKey: 'localidad_id', as: 'localidad' });
+}
 if (db.PlanV1 && db.PlanIntegrante) {
   db.PlanV1.hasMany(db.PlanIntegrante, { foreignKey: 'plan_numero', sourceKey: 'plan_numero', onDelete: 'CASCADE' });
   db.PlanIntegrante.belongsTo(db.PlanV1, { foreignKey: 'plan_numero', targetKey: 'plan_numero' });
