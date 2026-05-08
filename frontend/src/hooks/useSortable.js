@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState } from 'react';
 
 /**
  * Hook para manejar ordenamiento dinámico en tablas
@@ -8,22 +8,24 @@ import { useState, useEffect } from 'react';
  * @returns {Object} { sortBy, order, handleSort, getSortIcon }
  */
 function useSortable(storageKey, defaultSortBy = '', defaultOrder = 'ASC') {
-  const [sortBy, setSortBy] = useState(defaultSortBy);
-  const [order, setOrder] = useState(defaultOrder);
-
-  // Load saved sort preference from localStorage on mount
-  useEffect(() => {
+  // Leer localStorage sincronizadamente en la inicialización (evita doble render)
+  const getInitialSort = () => {
     const savedSort = localStorage.getItem(storageKey);
     if (savedSort) {
       try {
         const { sortBy: saved, order: savedOrder } = JSON.parse(savedSort);
-        setSortBy(saved);
-        setOrder(savedOrder);
+        return { sortBy: saved, order: savedOrder };
       } catch (e) {
         console.warn(`Failed to load sort preference for ${storageKey}:`, e);
+        return { sortBy: defaultSortBy, order: defaultOrder };
       }
     }
-  }, [storageKey]);
+    return { sortBy: defaultSortBy, order: defaultOrder };
+  };
+
+  const { sortBy: initialSortBy, order: initialOrder } = getInitialSort();
+  const [sortBy, setSortBy] = useState(initialSortBy);
+  const [order, setOrder] = useState(initialOrder);
 
   // Handle column header click
   const handleSort = (column) => {
