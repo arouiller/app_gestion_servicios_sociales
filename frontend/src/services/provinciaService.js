@@ -16,8 +16,20 @@ const provinciaService = {
     return response.data;
   },
 
-  async delete(id) {
-    const response = await api.delete(`/admin/provincias/${id}`);
+  async getReferencias(id) {
+    try {
+      const response = await api.get(`/admin/provincias/${id}/referencias`);
+      return response.data;
+    } catch (error) {
+      console.error('Error fetching referencias:', error);
+      throw error;
+    }
+  },
+
+  async delete(id, options = {}) {
+    const { force = false } = options;
+    const url = force ? `/admin/provincias/${id}?force=true` : `/admin/provincias/${id}`;
+    const response = await api.delete(url);
     return response.data;
   }
 };

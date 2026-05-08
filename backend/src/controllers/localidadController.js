@@ -1,4 +1,4 @@
-const { Localidad, Provincia, PlanIntegrante } = require('../models');
+const { Localidad, Provincia, PlanIntegrante, PlanV1 } = require('../models');
 
 const localidadController = {
   async list(req, res) {
@@ -106,7 +106,7 @@ const localidadController = {
     }
   },
 
-  async delete(req, res) {
+  async getReferencias(req, res) {
     try {
       const { id } = req.params;
 
@@ -115,9 +115,62 @@ const localidadController = {
         return res.status(404).json({ success: false, message: 'Localidad no encontrada' });
       }
 
+      const referencias = await PlanV1.count({
+        where: { localidad_id: id }
+      });
+
+      res.json({
+        success: true,
+        referencias,
+        referenciaEn: 'planes'
+      });
+    } catch (error) {
+      console.error('Error getting referencias for localidad:', error);
+      res.status(500).json({ success: false, message: error.message });
+    }
+  },
+
+  async delete(req, res) {
+    try {
+      const { id } = req.params;
+      const { force } = req.query;
+      const forceDelete = force === 'true' || force === '1';
+
+      const localidad = await Localidad.findByPk(id);
+      if (!localidad) {
+        return res.status(404).json({ success: false, message: 'Localidad no encontrada' });
+      }
+
+      // Contar referencias a planes
+      const referencias = await PlanV1.count({
+        where: { localidad_id: id }
+      });
+
+      // Si hay referencias y no es force delete, retornar 409
+      if (referencias > 0 && !forceDelete) {
+        return res.status(409).json({
+          success: false,
+          error: 'No se puede eliminar, está en uso',
+          message: `Hay ${referencias} ${referencias === 1 ? 'plan' : 'planes'} usando esta localidad. ¿Deseas proceder eliminando las referencias?`,
+          referencias,
+          referenciaEn: 'planes'
+        });
+      }
+
+      // Si es force delete, desasociar planes primero
+      if (forceDelete && referencias > 0) {
+        await PlanV1.update(
+          { localidad_id: null },
+          { where: { localidad_id: id } }
+        );
+      }
 
       await localidad.destroy();
-      res.json({ success: true, message: 'Localidad eliminada' });
+      res.json({
+        success: true,
+        message: 'Localidad eliminada correctamente',
+        referencesAffected: referencias
+      });
     } catch (error) {
       console.error('Error deleting localidad:', error);
       res.status(500).json({ success: false, message: error.message });

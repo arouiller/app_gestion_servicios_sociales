@@ -6,6 +6,7 @@ const provinciaController = require('../controllers/provinciaController');
 router.use(verifyToken);
 
 router.get('/', provinciaController.list);
+router.get('/:id/referencias', provinciaController.getReferencias);
 router.post('/', provinciaController.create);
 router.put('/:id', provinciaController.update);
 router.delete('/:id', provinciaController.delete);

@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import provinciaService from '../../../../services/provinciaService';
 import localidadService from '../../../../services/localidadService';
+import ConfirmDeleteWithRefsModal from '../../../../components/ConfirmDeleteWithRefsModal/ConfirmDeleteWithRefsModal';
 import ProvinciaRow from './ProvinciaRow';
 import ProvinciaFormModal from './ProvinciaFormModal';
 import LocalidadFormModal from './LocalidadFormModal';
@@ -19,6 +20,18 @@ const GestionProvinciasZonas = () => {
   const [localidadModalOpen, setLocalidadModalOpen] = useState(false);
   const [selectedLocalidad, setSelectedLocalidad] = useState(null);
   const [provinciaForLocalidad, setProvinciaForLocalidad] = useState(null);
+
+  // Delete confirmation modal state
+  const [deleteModal, setDeleteModal] = useState({
+    isOpen: false,
+    entidad: null,
+    registroId: null,
+    registroNombre: null,
+    referencias: 0,
+    referenciaEn: '',
+    isLoading: false,
+    error: null,
+  });
 
   useEffect(() => {
     loadProvincias();
@@ -55,28 +68,25 @@ const GestionProvinciasZonas = () => {
 
   const handleDeleteProvincia = async (id) => {
     try {
-      // Paso 1: Intenta eliminar sin forzar
-      await provinciaService.delete(id);
-      loadProvincias();
+      const provincia = provincias.find(p => p.id === id);
+      if (!provincia) return;
+
+      // Obtener referencias
+      const refData = await provinciaService.getReferencias(id);
+
+      setDeleteModal({
+        isOpen: true,
+        entidad: 'provincias',
+        registroId: id,
+        registroNombre: provincia.nombre,
+        referencias: refData.referencias || 0,
+        referenciaEn: refData.referenciaEn || '',
+        isLoading: false,
+        error: null,
+      });
     } catch (error) {
-      // Paso 2: Si hay referencias (409), pedir confirmación
-      if (error.response?.status === 409) {
-        const { referencias, referenciaEn } = error.response.data;
-        const mensaje = `Esta provincia está siendo usada por ${referencias} ${referencias === 1 ? 'referencia' : 'referencias'} en ${referenciaEn}.\n\n¿Estás seguro de que querés eliminarla? Se actualizarán las referencias automáticamente.`;
-        if (window.confirm(mensaje)) {
-          try {
-            // Paso 3: Intenta eliminar forzando cascada
-            await provinciaService.delete(id, { force: true });
-            loadProvincias();
-          } catch (err) {
-            console.error('Error al eliminar provincia con cascada:', err);
-            alert('Error al eliminar provincia: ' + (err.response?.data?.message || err.message));
-          }
-        }
-      } else {
-        console.error('Error deleting provincia:', error);
-        alert('Error al eliminar provincia: ' + (error.response?.data?.message || error.message));
-      }
+      console.error('Error fetching provincia referencias:', error);
+      alert('Error al obtener información: ' + (error.response?.data?.message || error.message));
     }
   };
 
@@ -108,28 +118,33 @@ const GestionProvinciasZonas = () => {
 
   const handleDeleteLocalidad = async (id) => {
     try {
-      // Paso 1: Intenta eliminar sin forzar
-      await localidadService.delete(id);
-      loadProvincias();
-    } catch (error) {
-      // Paso 2: Si hay referencias (409), pedir confirmación
-      if (error.response?.status === 409) {
-        const { referencias, referenciaEn } = error.response.data;
-        const mensaje = `Esta localidad está siendo usada por ${referencias} ${referencias === 1 ? 'referencia' : 'referencias'} en ${referenciaEn}.\n\n¿Estás seguro de que querés eliminarla? Se actualizarán las referencias automáticamente.`;
-        if (window.confirm(mensaje)) {
-          try {
-            // Paso 3: Intenta eliminar forzando cascada
-            await localidadService.delete(id, { force: true });
-            loadProvincias();
-          } catch (err) {
-            console.error('Error al eliminar localidad con cascada:', err);
-            alert('Error al eliminar localidad: ' + (err.response?.data?.message || err.message));
-          }
+      // Buscar localidad en el árbol de provincias
+      let localidad = null;
+      for (let provincia of provincias) {
+        const found = provincia.localidades?.find(l => l.id === id);
+        if (found) {
+          localidad = found;
+          break;
         }
-      } else {
-        console.error('Error deleting localidad:', error);
-        alert('Error al eliminar localidad: ' + (error.response?.data?.message || error.message));
       }
+      if (!localidad) return;
+
+      // Obtener referencias
+      const refData = await localidadService.getReferencias(id);
+
+      setDeleteModal({
+        isOpen: true,
+        entidad: 'localidades',
+        registroId: id,
+        registroNombre: localidad.nombre,
+        referencias: refData.referencias || 0,
+        referenciaEn: refData.referenciaEn || '',
+        isLoading: false,
+        error: null,
+      });
+    } catch (error) {
+      console.error('Error fetching localidad referencias:', error);
+      alert('Error al obtener información: ' + (error.response?.data?.message || error.message));
     }
   };
 
@@ -148,6 +163,39 @@ const GestionProvinciasZonas = () => {
     } catch (error) {
       console.error('Error saving localidad:', error);
     }
+  };
+
+  const handleConfirmDelete = async () => {
+    const { entidad, registroId } = deleteModal;
+
+    setDeleteModal(prev => ({ ...prev, isLoading: true, error: null }));
+
+    try {
+      if (entidad === 'provincias') {
+        await provinciaService.delete(registroId, { force: true });
+      } else if (entidad === 'localidades') {
+        await localidadService.delete(registroId, { force: true });
+      }
+
+      await loadProvincias();
+      setDeleteModal(prev => ({ ...prev, isOpen: false }));
+    } catch (err) {
+      setDeleteModal(prev => ({
+        ...prev,
+        error: err.response?.data?.error || err.response?.data?.message || 'Error al eliminar',
+        isLoading: false,
+      }));
+    }
+  };
+
+  const handleCancelDelete = () => {
+    setDeleteModal(prev => ({
+      ...prev,
+      isOpen: false,
+      registroId: null,
+      error: null,
+      isLoading: false,
+    }));
   };
 
   if (loading) {
@@ -199,6 +247,18 @@ const GestionProvinciasZonas = () => {
           onClose={() => setLocalidadModalOpen(false)}
         />
       )}
+
+      <ConfirmDeleteWithRefsModal
+        isOpen={deleteModal.isOpen}
+        entidad={deleteModal.entidad}
+        registroNombre={deleteModal.registroNombre}
+        referencias={deleteModal.referencias}
+        referenciaEn={deleteModal.referenciaEn}
+        onConfirm={handleConfirmDelete}
+        onCancel={handleCancelDelete}
+        isLoading={deleteModal.isLoading}
+        error={deleteModal.error}
+      />
     </div>
   );
 };

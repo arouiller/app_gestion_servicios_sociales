@@ -1,4 +1,4 @@
-const { Provincia, Localidad } = require('../models');
+const { Provincia, Localidad, PlanV1 } = require('../models');
 
 const provinciaController = {
   async list(req, res) {
@@ -57,7 +57,7 @@ const provinciaController = {
     }
   },
 
-  async delete(req, res) {
+  async getReferencias(req, res) {
     try {
       const { id } = req.params;
 
@@ -66,16 +66,106 @@ const provinciaController = {
         return res.status(404).json({ success: false, message: 'Provincia no encontrada' });
       }
 
-      const localidadesCount = await Localidad.count({ where: { provincia_id: id, activo: true } });
-      if (localidadesCount > 0) {
-        return res.status(400).json({
+      // Contar planes asociados a localidades de esta provincia
+      const referencias = await PlanV1.count({
+        include: [{
+          model: Localidad,
+          as: 'localidad',
+          where: { provincia_id: id },
+          attributes: []
+        }]
+      });
+
+      res.json({
+        success: true,
+        referencias,
+        referenciaEn: 'planes'
+      });
+    } catch (error) {
+      console.error('Error getting referencias for provincia:', error);
+      res.status(500).json({ success: false, message: error.message });
+    }
+  },
+
+  async delete(req, res) {
+    try {
+      const { id } = req.params;
+      const { force } = req.query;
+      const forceDelete = force === 'true' || force === '1';
+
+      const provincia = await Provincia.findByPk(id);
+      if (!provincia) {
+        return res.status(404).json({ success: false, message: 'Provincia no encontrada' });
+      }
+
+      // Contar planes asociados a localidades de esta provincia
+      const referencias = await PlanV1.count({
+        include: [{
+          model: Localidad,
+          as: 'localidad',
+          where: { provincia_id: id },
+          attributes: []
+        }]
+      });
+
+      // Si hay referencias y no es force delete, retornar 409
+      if (referencias > 0 && !forceDelete) {
+        return res.status(409).json({
           success: false,
-          message: 'No se puede eliminar provincia con localidades activas'
+          error: 'No se puede eliminar, está en uso',
+          message: `Hay ${referencias} ${referencias === 1 ? 'plan' : 'planes'} asociados a localidades de esta provincia. ¿Deseas proceder eliminando las referencias?`,
+          referencias,
+          referenciaEn: 'planes'
         });
       }
 
-      await provincia.destroy();
-      res.json({ success: true, message: 'Provincia eliminada' });
+      // Si es force delete, ejecutar en transacción
+      if (forceDelete && referencias > 0) {
+        const transaction = await require('../models').sequelize.transaction();
+
+        try {
+          // Obtener IDs de localidades de esta provincia
+          const localidadesIds = await Localidad.findAll({
+            where: { provincia_id: id },
+            attributes: ['id'],
+            raw: true,
+            transaction
+          });
+
+          const ids = localidadesIds.map(l => l.id);
+
+          // Desasociar planes (localidad_id = NULL)
+          if (ids.length > 0) {
+            await PlanV1.update(
+              { localidad_id: null },
+              { where: { localidad_id: ids }, transaction }
+            );
+          }
+
+          // Eliminar localidades
+          await Localidad.destroy({
+            where: { provincia_id: id },
+            transaction
+          });
+
+          // Eliminar provincia
+          await provincia.destroy({ transaction });
+
+          await transaction.commit();
+        } catch (err) {
+          await transaction.rollback();
+          throw err;
+        }
+      } else {
+        // Eliminación simple (sin referencias)
+        await provincia.destroy();
+      }
+
+      res.json({
+        success: true,
+        message: 'Provincia eliminada correctamente',
+        referencesAffected: referencias
+      });
     } catch (error) {
       console.error('Error deleting provincia:', error);
       res.status(500).json({ success: false, message: error.message });

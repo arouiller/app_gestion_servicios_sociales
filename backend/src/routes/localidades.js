@@ -6,6 +6,7 @@ const localidadController = require('../controllers/localidadController');
 router.use(verifyToken);
 
 router.get('/', localidadController.list);
+router.get('/:id/referencias', localidadController.getReferencias);
 router.get('/by-provincia/:id', localidadController.byProvincia);
 router.post('/', localidadController.create);
 router.put('/:id', localidadController.update);

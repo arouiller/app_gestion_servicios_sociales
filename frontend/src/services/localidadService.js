@@ -22,8 +22,20 @@ const localidadService = {
     return response.data;
   },
 
-  async delete(id) {
-    const response = await api.delete(`/admin/localidades/${id}`);
+  async getReferencias(id) {
+    try {
+      const response = await api.get(`/admin/localidades/${id}/referencias`);
+      return response.data;
+    } catch (error) {
+      console.error('Error fetching referencias:', error);
+      throw error;
+    }
+  },
+
+  async delete(id, options = {}) {
+    const { force = false } = options;
+    const url = force ? `/admin/localidades/${id}?force=true` : `/admin/localidades/${id}`;
+    const response = await api.delete(url);
     return response.data;
   }
 };
