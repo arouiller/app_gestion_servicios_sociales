@@ -37,6 +37,9 @@ const LookupCRUD = ({ titulo, singularName, endpoint, campos, tableKey = 'lookup
 
   const entidad = endpoint.split('/').pop();
 
+  // Sort hook para ordenamiento dinámico - DEBE estar antes del useEffect que lo usa
+  const { sortBy, order, handleSort, getSortIcon } = useSortable(`lookup-${entidad}-sort`, entidad === 'cobradores' ? 'cobrador_numero' : 'id', 'ASC');
+
   // Debouncificar el texto de búsqueda
   const debouncedSearchText = useDebounce(searchText, debounceDelay);
 
@@ -195,9 +198,6 @@ const LookupCRUD = ({ titulo, singularName, endpoint, campos, tableKey = 'lookup
   }, [camposVisibles.length]);
 
   const { widths, getResizeHandle } = useColumnResize(tableKey, defaultWidths);
-
-  // Sort hook para ordenamiento dinámico
-  const { sortBy, order, handleSort, getSortIcon } = useSortable(`lookup-${entidad}-sort`, entidad === 'cobradores' ? 'cobrador_numero' : 'id', 'ASC');
 
   const registrosFiltered = registros
     .filter(registro => {
