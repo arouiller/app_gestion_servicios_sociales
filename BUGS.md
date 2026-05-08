@@ -27,13 +27,13 @@ Un bug solo puede pasar a estado solucionado, Descartado a traves del pedido exp
 
 | ID | Severidad | Fase | Descripción | Reportado | Estado |
 |----|-----------|------|-------------|-----------|--------|
-| BUG-041 | 🔴 CRÍTICO | BACKLOG-060 | Intento de guardar dos veces plan nuevo genera error "Ya existe un plan con ese número de afiliado" | 2026-05-08 | 📋 Registrado |
 | BUG-032 | 🟡 IMPORTANTE | Sortable Headers | Llamadas API duplicadas y redundantes al cargar GestionPlanesV1 | 2026-05-07 | ⏸️ En pausa |
 
 ## Registros Recientemente Cerrados (Últimos 7 días)
 
 | ID | Severidad | Fase | Descripción | Reportado | Solucionado | Commit |
 |----|-----------|------|-------------|-----------|-------------|--------|
+| BUG-041 | 🔴 CRÍTICO | BACKLOG-060 | Intento de guardar dos veces plan nuevo genera error de duplicado | 2026-05-08 | 2026-05-08 | `de72333` |
 | BUG-040 | 🔴 CRÍTICO | BACKLOG-060 | Tercera fila duplicada en tabla de afiliados con key null | 2026-05-08 | 2026-05-08 | `9831b49` |
 | BUG-038 | 🔴 CRÍTICO | BACKLOG-060 | Falso positivo en detección de afiliados duplicados en modo crear | 2026-05-08 | 2026-05-08 | `292d692` |
 | BUG-037 | 🔴 CRÍTICO | BACKLOG-060 | Creación prematura de personas en modo "crear plan" | 2026-05-08 | 2026-05-08 | `6f888ce` |
@@ -46,6 +46,7 @@ Un bug solo puede pasar a estado solucionado, Descartado a traves del pedido exp
 
 | ID | Severidad | Fase | Descripción | Reportado | Estado |
 |----|-----------|------|-------------|-----------|--------|
+| BUG-041 | 🔴 CRÍTICO | BACKLOG-060 | Intento de guardar dos veces plan nuevo genera error de duplicado | 2026-05-08 | 🚀 Desarrollado |
 | BUG-040 | 🔴 CRÍTICO | BACKLOG-060 | Tercera fila duplicada en tabla de afiliados con key null | 2026-05-08 | ✅ Solucionado |
 | BUG-038 | 🔴 CRÍTICO | BACKLOG-060 | Falso positivo en detección de afiliados duplicados en modo crear | 2026-05-08 | ✅ Solucionado |
 | BUG-037 | 🔴 CRÍTICO | BACKLOG-060 | Creación prematura de personas en modo "crear plan" | 2026-05-08 | ✅ Solucionado |
@@ -3229,4 +3230,7 @@ La **Opción A** es más limpia porque actualiza el estado explícitamente. La *
 7. Reabrir plan en modo editar → funciona como expected ✅
 ```
 
-**Estado:** 📋 Registrado (2026-05-08)
+**Commits:**
+- `de72333` — fix(BUG-041): prevenir creación duplicada al guardar plan nuevo dos veces
+
+**Estado:** 🚀 Desarrollado (2026-05-08)
