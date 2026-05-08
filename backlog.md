@@ -5047,6 +5047,83 @@ Crear tabla `aumentos_masivos` para registrar cada operación de aumento masivo 
 
 ---
 
+### BACKLOG-056: Paginación Backend + Ordenamiento + Items por Página (Patrón Estándar)
+
+**Descripción:**
+Implementar un patrón estándar reutilizable para integrar paginación en el backend de TODOS los endpoints de listado. La paginación debe coordinarse con:
+1. **Ordenamiento dinámico** (sortBy/order desde `useSortable` hook)
+2. **Limit configurable** (items_per_page desde `ConfigContext`)
+3. **Número de página** (estado local en frontend, NO en URL)
+
+Actualmente, algunos endpoints cargan TODOS los datos del backend y pagínan en el cliente. Esto es ineficiente para tablas grandes y no escala bien. La solución mueve la paginación al backend usando `findAndCountAll()` de Sequelize.
+
+**Requerimientos:**
+
+a. **Documentación del Patrón** ✅ COMPLETADO
+   - Archivo: `docs/PATRON_PAGINACION_BACKEND.md`
+   - Define: parámetros query, respuesta, implementación backend/frontend, endpoints a migrar
+
+b. **Implementación Backend** - Orden de Prioridad
+   1. `GET /api/planes/filter/:filtro` — Tabla principal (GestionPlanesV1)
+   2. `GET /api/lookup/:entidad` — Lookups dinámicos (cobrador, os, zona, tipo_plan, etc.)
+   3. `GET /api/personas/search` — Búsqueda de personas
+   4. `GET /api/provincias` — Provincias (tabla de referencia)
+   5. `GET /api/localidades` — Localidades (tabla de referencia)
+   6. `GET /api/audit` — Auditoría del sistema (GestionAuditoria)
+   7. `GET /api/bugs` — Gestión de bugs (GestionBugs)
+
+   **Para cada endpoint:**
+   - Cambiar `findAll()` → `findAndCountAll()`
+   - Agregar parámetros query: `page`, `limit`, `sortBy`, `order`
+   - Calcular offset: `offset = (page - 1) * limit`
+   - Retornar: `{ success, data, count, page, limit, totalPages, offset }`
+
+c. **Integración Frontend**
+   - Estado local para `page` (resetea a 1 con cambios de filtro/ordenamiento/limit)
+   - Pasar `page`, `limit` junto a `sortBy`, `order` en llamadas al API
+   - Eliminar `usePagination` para datos (que actualmente pagina en cliente)
+   - Usar componente `<Pagination>` para controlar cambios de página
+
+d. **Coordinación de Parámetros**
+   - Página se resetea a 1 cuando:
+     * Cambia `sortBy` o `order`
+     * Cambia un filtro (estado, tipo_plan, etc.)
+     * Cambia `limit` (config.items_per_page)
+   - Los 3 parámetros trabajan independientes pero coordinados
+
+**Archivos Clave a Modificar:**
+
+- `backend/src/controllers/planesController.js` — Ya inició con /api/planes/filter/:filtro
+- `backend/src/controllers/lookupController.js` — Para lookups
+- `backend/src/routes/` — Verificar parámetros query en cada endpoint
+- `frontend/src/services/planesService.js` — Pasar page, limit
+- `frontend/src/pages/DashboardPage/components/GestionPlanesV1/GestionPlanesV1.jsx` — Integrar estado local page
+- `docs/PATRON_PAGINACION_BACKEND.md` — Referencia para todas las implementaciones
+
+**Testing Checklist:**
+
+Para cada endpoint implementado:
+- [ ] Backend retorna count, totalPages, offset correctos
+- [ ] Frontend pasa page, limit, sortBy, order, filtros correctos
+- [ ] Página resetea a 1 cuando cambia filtro
+- [ ] Página resetea a 1 cuando cambia ordenamiento
+- [ ] Página resetea a 1 cuando cambia limit
+- [ ] Tabla muestra SOLO items de página actual (no todos)
+- [ ] Componente Pagination navega correctamente
+- [ ] Cambio de limit recalcula totalPages y resetea página
+
+**Estimación:** 1-2 horas por endpoint (backend + frontend integración)
+
+**Prioridad:** 🔴 Alta — Optimización crítica de rendimiento, impacta experiencia con tablas grandes
+
+**Estado:** 🔄 En desarrollo
+
+**Iniciado:** 2026-05-08
+
+**Commits:** [Se actualizará durante implementación]
+
+---
+
 ## Items descartados
 
 | ID | Descripción | Motivo descarte |
