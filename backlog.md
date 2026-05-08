@@ -5116,6 +5116,73 @@ Para cada endpoint implementado:
 
 **Prioridad:** 🔴 Alta — Optimización crítica de rendimiento, impacta experiencia con tablas grandes
 
+**Estado:** ✅ Solucionado (2026-05-08)
+
+**Completado:**
+- ✅ Documentación del patrón: docs/PATRON_PAGINACION_BACKEND.md
+- ✅ Implementación en /api/planes/filter/:filtro (backend + frontend)
+
+**Commits:**
+- `ad9877f` — docs(paginacion): crear patrón estándar
+- `bb12c4a` — feat(planes): implementar paginación backend
+- `2556e74` — feat(planesService): agregar parámetros page/limit
+- `633d11f` — feat(GestionPlanesV1): integrar paginación backend
+- `e92aa95` — docs(backlog): registrar BACKLOG-056
+
+**Próximas etapas:** Aplicar patrón a otros 6 endpoints (BACKLOG-057+)
+
+---
+
+### BACKLOG-057: Aplicar Patrón de Paginación a Cobradores, Obras Sociales y Zonas
+
+**Descripción:**
+Aplicar el patrón estándar de paginación backend (BACKLOG-056) a los 3 primeros endpoints de lookup que se muestran en tablas CRUD:
+1. `GET /api/lookup/cobradores` → componente Cobradores.jsx (usa LookupCRUD genérico)
+2. `GET /api/lookup/obras-sociales` → componente ObrasSociales.jsx (usa LookupCRUD genérico)
+3. `GET /api/lookup/zonas` → componente Zonas.jsx (usa LookupCRUD genérico)
+
+Estos 3 endpoints comparten la misma arquitectura: usan el componente genérico `LookupCRUD` que llama a `lookupService.list()`.
+
+**Requerimientos:**
+
+a. **Backend (lookupController.js - método list())**
+   - Agregar parámetros query: `page`, `limit`, `sortBy`, `order`
+   - Cambiar `findAll()` → `findAndCountAll()`
+   - Calcular offset: `(page - 1) * limit`
+   - Retornar: `{ success, data, count, page, limit, totalPages, offset }`
+
+b. **Service (lookupService.js)**
+   - Método `list()`: aceptar `page`, `limit` en options
+   - Pasar como query params al API
+
+c. **Frontend (LookupCRUD.jsx)**
+   - Agregar estado: `page`, `totalCount`, `totalPages`
+   - Resetear `page` a 1 cuando cambian: filtros, ordenamiento, limit
+   - Remover `usePagination` (datos ya vienen paginados)
+   - Actualizar componente Pagination con valores del backend
+   - Búsqueda de texto: mantener en cliente (limitación temporal)
+
+**Testing Checklist:**
+
+Para cada tabla (Cobradores, Obras Sociales, Zonas):
+- [ ] Backend retorna count, totalPages, offset correctos
+- [ ] Frontend pasa page, limit, sortBy, order
+- [ ] Tabla muestra solo items de página actual
+- [ ] Paginación navega correctamente
+- [ ] Ordenamiento funciona con paginación
+- [ ] Página se resetea al cambiar filtro/ordenamiento
+
+**Archivos a Modificar:**
+- `backend/src/controllers/lookupController.js` (método list())
+- `frontend/src/services/lookupService.js` (método list())
+- `frontend/src/components/LookupCRUD/LookupCRUD.jsx` (componente genérico)
+
+Nota: Las páginas wrapper (Cobradores.jsx, ObrasSociales.jsx, Zonas.jsx) no necesitan cambios, solo pasar props al LookupCRUD.
+
+**Estimación:** 1-1.5 horas (cambios similares a BACKLOG-056, código reutilizable)
+
+**Prioridad:** 🔴 Alta — Mismo impacto de rendimiento que planes, tablas lookup suelen tener muchos registros
+
 **Estado:** 🔄 En desarrollo
 
 **Iniciado:** 2026-05-08
