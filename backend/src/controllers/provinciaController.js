@@ -69,17 +69,17 @@ const provinciaController = {
 
       // Query raw: contar planes asociados a localidades de esta provincia
       const result = await sequelize.query(
-        `SELECT COUNT(*) as count
-         FROM planes_v1 pv1
-         INNER JOIN localidades l ON pv1.localidad_id = l.id
+        `SELECT COUNT(*) as \`count\` FROM planes p
+         INNER JOIN localidades l ON p.localidad_id = l.id
          WHERE l.provincia_id = ?`,
         {
           replacements: [id],
-          type: require('sequelize').QueryTypes.SELECT
+          type: require('sequelize').QueryTypes.SELECT,
+          raw: true
         }
       );
 
-      const referencias = result[0]?.count || 0;
+      const referencias = parseInt(result[0]?.count) || 0;
 
       res.json({
         success: true,
