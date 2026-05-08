@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, Suspense, lazy } from 'react';
 import { useAuth } from '../../context/AuthContext';
 import { useConfig } from '../../hooks/useConfig';
 import { NotificationProvider, useNotification } from '../../context/NotificationContext';
@@ -8,7 +8,7 @@ import DatosPersonales from './components/DatosPersonales/DatosPersonales';
 import MigrationsDashboard from './components/MigrationsDashboard/MigrationsDashboard';
 import GestionPlanesV1 from './components/GestionPlanesV1/GestionPlanesV1';
 import GestionPlanesV1ErrorBoundary from './components/GestionPlanesV1/GestionPlanesV1ErrorBoundary';
-import RecibosPage from '../RecibosPage/RecibosPage';
+const RecibosPage = lazy(() => import('../RecibosPage/RecibosPage'));
 import Cobradores from './components/Cobradores/Cobradores';
 import ObrasSociales from './components/ObrasSociales/ObrasSociales';
 import ServiciosAdicionales from './components/ServiciosAdicionales/ServiciosAdicionales';
@@ -290,7 +290,11 @@ function DashboardPageContent() {
               <GestionPlanesV1 />
             </GestionPlanesV1ErrorBoundary>
           )}
-          {activeModule === 'gestion-recibos' && <RecibosPage />}
+          {activeModule === 'gestion-recibos' && (
+            <Suspense fallback={<div className="loading">Cargando gestión de recibos...</div>}>
+              <RecibosPage />
+            </Suspense>
+          )}
           {activeModule === 'listados' && <ListadosPage />}
           {activeModule === 'gestion-bugs' && <GestionBugs />}
           {activeModule === 'auditoria' && <GestionAuditoria />}
