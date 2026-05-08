@@ -277,8 +277,10 @@ function PlanV1Modal({ mode, planData, onClose, onSave }) {
         // Create integrantes for new plan
         if (form.integrantes.length > 0) {
           // First, create any personas that were deferred (persona_id === null) in modo crear
+          console.log('[PlanV1Modal] form.integrantes before processing:', form.integrantes);
           let integrantesToCreate = form.integrantes;
           const personasToCreate = form.integrantes.filter((i) => i.persona_id === null);
+          console.log('[PlanV1Modal] personasToCreate count:', personasToCreate.length, 'personas:', personasToCreate.map((i) => i.persona?.numero_documento));
 
           if (personasToCreate.length > 0) {
             console.log('[PlanV1Modal] Creating deferred personas:', personasToCreate.length);
