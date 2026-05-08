@@ -77,11 +77,17 @@ const lookupService = {
 
   /**
    * Obtener tipos de plan
+   * Soporta ambos formatos: array directo (legacy) o { success, data, ... } (paginado)
    */
   getTiposDePlan: async () => {
     try {
-      const { data } = await api.get('/lookup/tipos-de-plan');
-      return data || [];
+      const response = await api.get('/lookup/tipos-de-plan');
+      // Si es array directo (legacy), retornarlo
+      if (Array.isArray(response.data)) {
+        return response.data;
+      }
+      // Si es estructura paginada, extraer array del campo data
+      return response.data?.data || [];
     } catch (error) {
       console.error('Error loading tipos de plan:', error);
       return [];
@@ -90,11 +96,15 @@ const lookupService = {
 
   /**
    * Obtener cobradores
+   * Soporta ambos formatos: array directo (legacy) o { success, data, ... } (paginado)
    */
   getCobradores: async () => {
     try {
-      const { data } = await api.get('/lookup/cobradores');
-      return data || [];
+      const response = await api.get('/lookup/cobradores');
+      if (Array.isArray(response.data)) {
+        return response.data;
+      }
+      return response.data?.data || [];
     } catch (error) {
       console.error('Error loading cobradores:', error);
       return [];
@@ -103,11 +113,15 @@ const lookupService = {
 
   /**
    * Obtener obras sociales
+   * Soporta ambos formatos: array directo (legacy) o { success, data, ... } (paginado)
    */
   getObrasSociales: async () => {
     try {
-      const { data } = await api.get('/lookup/obras-sociales');
-      return data || [];
+      const response = await api.get('/lookup/obras-sociales');
+      if (Array.isArray(response.data)) {
+        return response.data;
+      }
+      return response.data?.data || [];
     } catch (error) {
       console.error('Error loading obras sociales:', error);
       return [];
@@ -116,11 +130,15 @@ const lookupService = {
 
   /**
    * Obtener tipos de grupo
+   * Soporta ambos formatos: array directo (legacy) o { success, data, ... } (paginado)
    */
   getTiposDeGrupo: async () => {
     try {
-      const { data } = await api.get('/lookup/tipos-de-grupo');
-      return data || [];
+      const response = await api.get('/lookup/tipos-de-grupo');
+      if (Array.isArray(response.data)) {
+        return response.data;
+      }
+      return response.data?.data || [];
     } catch (error) {
       console.error('Error loading tipos de grupo:', error);
       return [];
@@ -129,11 +147,15 @@ const lookupService = {
 
   /**
    * Obtener zonas
+   * Soporta ambos formatos: array directo (legacy) o { success, data, ... } (paginado)
    */
   getZonas: async () => {
     try {
-      const { data } = await api.get('/lookup/zonas');
-      return data || [];
+      const response = await api.get('/lookup/zonas');
+      if (Array.isArray(response.data)) {
+        return response.data;
+      }
+      return response.data?.data || [];
     } catch (error) {
       console.error('Error loading zonas:', error);
       return [];
