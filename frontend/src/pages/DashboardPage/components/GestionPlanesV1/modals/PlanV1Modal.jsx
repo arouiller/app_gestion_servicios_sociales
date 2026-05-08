@@ -804,7 +804,6 @@ function PlanV1Modal({ mode, planData, onClose, onSave }) {
                   <p className="plan-v1-modal__empty">Aún no hay afiliados. Agregá al menos uno.</p>
                 ) : (
                   <>
-                    {console.log('[PlanV1Modal] Rendering table with integrantes:', form.integrantes.length, form.integrantes.map(i => ({ persona_id: i.persona_id, id: i.id, nombre: i.persona?.nombre })))}
                     <DragDropContext onDragEnd={handleDragEnd}>
                     <table className="plan-v1-modal__afiliados-tabla table-standard">
                       <thead>
@@ -828,13 +827,6 @@ function PlanV1Modal({ mode, planData, onClose, onSave }) {
                           >
                             {form.integrantes.map((integrante, index) => {
                               const uniqueKey = integrante.id || integrante.persona?.numero_documento;
-                              console.log(`[PlanV1Modal] Rendering integrante[${index}]:`, {
-                                persona_id: integrante.persona_id,
-                                id: integrante.id,
-                                uniqueKey,
-                                nombre: integrante.persona?.nombre,
-                                numero_documento: integrante.persona?.numero_documento
-                              });
                               return (
                               <Draggable key={uniqueKey} draggableId={String(uniqueKey)} index={index}>
                                 {(provided, snapshot) => (

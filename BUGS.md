@@ -33,6 +33,7 @@ Un bug solo puede pasar a estado solucionado, Descartado a traves del pedido exp
 
 | ID | Severidad | Fase | Descripción | Reportado | Solucionado | Commit |
 |----|-----------|------|-------------|-----------|-------------|--------|
+| BUG-040 | 🔴 CRÍTICO | BACKLOG-060 | Tercera fila duplicada en tabla de afiliados con key null | 2026-05-08 | 2026-05-08 | `9831b49` |
 | BUG-038 | 🔴 CRÍTICO | BACKLOG-060 | Falso positivo en detección de afiliados duplicados en modo crear | 2026-05-08 | 2026-05-08 | `292d692` |
 | BUG-037 | 🔴 CRÍTICO | BACKLOG-060 | Creación prematura de personas en modo "crear plan" | 2026-05-08 | 2026-05-08 | `6f888ce` |
 | BUG-036 | 🔴 CRÍTICO | BACKLOG-060 | Integrantes sin ID al crear plan nuevo (reorder fallido) | 2026-05-08 | 2026-05-08 | `05d3b11` |
@@ -44,6 +45,7 @@ Un bug solo puede pasar a estado solucionado, Descartado a traves del pedido exp
 
 | ID | Severidad | Fase | Descripción | Reportado | Estado |
 |----|-----------|------|-------------|-----------|--------|
+| BUG-040 | 🔴 CRÍTICO | BACKLOG-060 | Tercera fila duplicada en tabla de afiliados con key null | 2026-05-08 | ✅ Solucionado |
 | BUG-038 | 🔴 CRÍTICO | BACKLOG-060 | Falso positivo en detección de afiliados duplicados en modo crear | 2026-05-08 | ✅ Solucionado |
 | BUG-037 | 🔴 CRÍTICO | BACKLOG-060 | Creación prematura de personas en modo "crear plan" | 2026-05-08 | ✅ Solucionado |
 | BUG-036 | 🔴 CRÍTICO | BACKLOG-060 | Integrantes sin ID al crear plan nuevo (reorder fallido) | 2026-05-08 | ✅ Solucionado |
@@ -3062,6 +3064,70 @@ if (isDuplicate) {
 
 **Commits:**
 - `292d692` — fix(BUG-038): falso positivo en detección de afiliados duplicados en modo crear
+
+**Estado:** ✅ Solucionado (2026-05-08)
+
+---
+
+### BUG-040: Tercera Fila Duplicada en Tabla de Afiliados con Key Null
+
+**Descripción:**
+Cuando se agrega un nuevo plan con 2 afiliados y se guarda en modo "crear", la tabla de integrantes renderiza 3 filas en lugar de 2. Una tercera fila aparece con datos incompletos o nulos.
+
+**Severidad:** 🔴 CRÍTICO
+- UX confusa: muestra integrante fantasma que no existe en form.integrantes
+- Problemas potenciales al interactuar con esa fila (click en ⚙️ podría crashear)
+
+**Síntomas:**
+1. Usuario crea plan nuevo
+2. Agrega 2 afiliados (ej: Alejandro y María)
+3. Hace click "Guardar y Seguir Editando"
+4. Modal permanece abierta, tabla muestra 3 filas:
+   - Fila 1: "Alejandro, A" (Titular)
+   - Fila 2: "Alejandro, A" (Titular) ← DUPLICADO/VACÍO
+   - Fila 3: "María, M" (Integrante)
+5. Logs muestran form.integrantes tiene solo 2 elementos
+
+**Root Cause:**
+En `PlanV1Modal.jsx` línea 837, la tabla usa `key={integrante.persona_id}` para el componente Draggable de react-beautiful-dnd. Cuando se agregan nuevos afiliados antes de guardar, ambos tienen `persona_id: null`.
+
+Esto genera dos elementos React con `key={null}` idéntico, violando la regla de keys únicas. React no puede distinguir entre ellos y reutiliza el componente incorrectamente, causando duplicación/inconsistencia en el DOM.
+
+**Análisis:**
+- form.integrantes[0]: { id: null, persona_id: null, persona: {...} }
+- form.integrantes[1]: { id: null, persona_id: null, persona: {...} }
+- Ambos generan: `<Draggable key={null} draggableId="null" ...>`
+- React reusa componentes con keys idénticas, causando desincronización
+
+**Solución:**
+Usar una key única incluso para integrantes sin `id` o `persona_id`. La solución es:
+```jsx
+const uniqueKey = integrante.id || integrante.persona?.numero_documento;
+<Draggable key={uniqueKey} draggableId={String(uniqueKey)} index={index}>
+```
+
+Por qué funciona:
+- `integrante.id` (PlanIntegrante id) es único tras guardar → usamos ese
+- Si es null, `integrante.persona?.numero_documento` es único por persona → fallback perfecto
+- Incluso antes de guardar, numero_documento nunca es null (viene del formulario)
+
+**Cambios:**
+- `frontend/src/pages/DashboardPage/components/GestionPlanesV1/modals/PlanV1Modal.jsx`
+  - Línea 837: cambiar `key={integrante.persona_id}` a `key={uniqueKey}`
+  - Línea 837: cambiar `draggableId={String(integrante.persona_id)}` a `draggableId={String(uniqueKey)}`
+  - Agregar variable `const uniqueKey = integrante.id || integrante.persona?.numero_documento;`
+
+**Flujo Correcto Después del Fix:**
+```
+1. Agregar Alejandro (DNI 12345678, id=null) → Tabla: 1 fila ✅
+2. Agregar María (DNI 87654321, id=null) → Tabla: 2 filas ✅
+3. Guardar y Seguir Editando → personas creadas con IDs reales
+4. Tabla actualizada con uniqueKey=id → 2 filas, sin duplicados ✅
+5. Hacer click en ⚙️ → abre servicios, sin crash ✅
+```
+
+**Commits:**
+- `9831b49` — fix(BUG-040): usar numero_documento como key única para integrantes
 
 **Estado:** ✅ Solucionado (2026-05-08)
 

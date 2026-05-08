@@ -36,10 +36,6 @@ export const usePlanV1Form = (initialData = null) => {
   const [errors, setErrors] = useState({});
 
   const handleFieldChange = useCallback((field, value) => {
-    if (field === 'integrantes') {
-      console.log('[usePlanV1Form] handleFieldChange integrantes:', value.length, 'items', value.map(i => ({ persona_id: i.persona_id, id: i.id })));
-      console.trace('[usePlanV1Form] handleFieldChange called from:');
-    }
     setForm((prev) => ({ ...prev, [field]: value }));
     if (errors[field]) {
       setErrors((prev) => ({ ...prev, [field]: null }));
@@ -47,7 +43,6 @@ export const usePlanV1Form = (initialData = null) => {
   }, [errors]);
 
   const addIntegrante = useCallback((persona, rol = 'adherente') => {
-    console.log('[usePlanV1Form] addIntegrante called with:', persona?.numero_documento, rol);
     setForm((prev) => ({
       ...prev,
       integrantes: [

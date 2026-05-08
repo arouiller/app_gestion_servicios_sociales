@@ -67,7 +67,6 @@ function AfiladoSearchModal({ planMode, onClose, onSelect }) {
     try {
       // En modo 'crear', no persistir persona en BD aún, solo devolverla en memoria
       if (planMode === 'crear') {
-        console.log('[AfiladoSearchModal] Modo crear: persona deferred to plan save', newPersona);
         onSelect(newPersona); // Devolver sin id, para crear en BD cuando se guarde el plan
       } else {
         // En modo 'editar' o undefined, crear persona en BD inmediatamente
