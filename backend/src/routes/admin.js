@@ -153,6 +153,11 @@ router.post('/provincias', verifyToken, requireAdmin, (req, res, next) => {
   provinciaController.create(req, res).catch(next);
 });
 
+router.get('/provincias/:id/referencias', verifyToken, requireAdmin, (req, res, next) => {
+  const provinciaController = require('../controllers/provinciaController');
+  provinciaController.getReferencias(req, res).catch(next);
+});
+
 router.put('/provincias/:id', verifyToken, requireAdmin, (req, res, next) => {
   const provinciaController = require('../controllers/provinciaController');
   provinciaController.update(req, res).catch(next);
@@ -177,6 +182,11 @@ router.get('/localidades', verifyToken, requireAdmin, (req, res, next) => {
 router.post('/localidades', verifyToken, requireAdmin, (req, res, next) => {
   const localidadController = require('../controllers/localidadController');
   localidadController.create(req, res).catch(next);
+});
+
+router.get('/localidades/:id/referencias', verifyToken, requireAdmin, (req, res, next) => {
+  const localidadController = require('../controllers/localidadController');
+  localidadController.getReferencias(req, res).catch(next);
 });
 
 router.put('/localidades/:id', verifyToken, requireAdmin, (req, res, next) => {
