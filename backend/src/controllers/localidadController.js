@@ -126,11 +126,6 @@ const localidadController = {
         }
       );
 
-      console.log('[DEBUG] localidad getReferencias - id:', id);
-      console.log('[DEBUG] localidad getReferencias - raw result:', result);
-      console.log('[DEBUG] localidad getReferencias - result[0]:', result[0]);
-      console.log('[DEBUG] localidad getReferencias - result[0]?.count:', result[0]?.count);
-
       const referencias = parseInt(result[0]?.count) || 0;
 
       res.json({
