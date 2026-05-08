@@ -27,6 +27,7 @@ Un bug solo puede pasar a estado solucionado, Descartado a traves del pedido exp
 
 | ID | Severidad | Fase | Descripción | Reportado | Estado |
 |----|-----------|------|-------------|-----------|--------|
+| BUG-042 | 🔴 CRÍTICO | BACKLOG-061 | Cambios posteriores a crear plan no se guardan (modo editar no funciona) | 2026-05-08 | 📋 Registrado |
 | BUG-032 | 🟡 IMPORTANTE | Sortable Headers | Llamadas API duplicadas y redundantes al cargar GestionPlanesV1 | 2026-05-07 | ⏸️ En pausa |
 
 ## Registros Recientemente Cerrados (Últimos 7 días)

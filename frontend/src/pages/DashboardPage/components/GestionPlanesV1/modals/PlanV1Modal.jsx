@@ -292,11 +292,16 @@ function PlanV1Modal({ mode, planData, onClose, onSave }) {
         setSavedPlanData(response);
         setActualMode('editar');
       } else {
-        // Update plan
-        await planesV1Service.actualizar(planData.plan_numero, payload);
+        // Update plan (use savedPlanData as fallback if planData is null)
+        const planNumero = (planData || savedPlanData)?.plan_numero;
+        if (!planNumero) {
+          throw new Error('No plan number available for update');
+        }
+
+        await planesV1Service.actualizar(planNumero, payload);
 
         // Sync integrantes (add/remove/update roles)
-        const existingIntegrantes = await planesIntegrantesService.obtenerPorPlan(planData.plan_numero);
+        const existingIntegrantes = await planesIntegrantesService.obtenerPorPlan(planNumero);
         const existingMap = new Map(existingIntegrantes.map((i) => [i.persona_id, i]));
         const formMap = new Map(form.integrantes.map((i) => [i.persona_id, i]));
 
@@ -311,7 +316,7 @@ function PlanV1Modal({ mode, planData, onClose, onSave }) {
         for (const integrante of form.integrantes) {
           if (!existingMap.has(integrante.persona_id)) {
             await planesIntegrantesService.crear({
-              plan_numero: planData.plan_numero,
+              plan_numero: planNumero,
               persona_id: integrante.persona_id,
               rol: integrante.rol,
             });
@@ -319,7 +324,7 @@ function PlanV1Modal({ mode, planData, onClose, onSave }) {
         }
 
         // Reload integrantes to include newly created ones with their assigned IDs
-        const updatedIntegrantes = await planesIntegrantesService.obtenerPorPlan(planData.plan_numero);
+        const updatedIntegrantes = await planesIntegrantesService.obtenerPorPlan(planNumero);
         const updatedMap = new Map(updatedIntegrantes.map((i) => [i.persona_id, i]));
 
         // Reorder integrantes - roles are assigned automatically based on position
@@ -330,7 +335,7 @@ function PlanV1Modal({ mode, planData, onClose, onSave }) {
             orden: index + 1,
           };
         });
-        await planesIntegrantesService.reorder(planData.plan_numero, integrantesWithMeta);
+        await planesIntegrantesService.reorder(planNumero, integrantesWithMeta);
       }
 
       // Si closeAfterSave es true, cierra el modal llamando a onSave()
@@ -375,8 +380,12 @@ function PlanV1Modal({ mode, planData, onClose, onSave }) {
       // In edit mode and persona exists in BD: create integrante immediately
       setLoadingAddAfiliado(true);
       try {
+        const planNumero = (planData || savedPlanData)?.plan_numero;
+        if (!planNumero) {
+          throw new Error('No plan number available');
+        }
         const created = await planesIntegrantesService.crear({
-          plan_numero: planData.plan_numero,
+          plan_numero: planNumero,
           persona_id: persona.id,
           rol,
         });
