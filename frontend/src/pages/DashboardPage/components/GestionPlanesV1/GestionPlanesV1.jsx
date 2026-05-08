@@ -14,7 +14,6 @@ import IconButton from '../../../../components/IconButton/IconButton';
 import StatusBadge from '../../../../components/StatusBadge/StatusBadge';
 import Pagination from '../../../../components/Pagination/Pagination';
 import useDebounce from '../../../../hooks/useDebounce';
-import usePagination from '../../../../hooks/usePagination';
 import useColumnResize from '../../../../hooks/useColumnResize';
 import useSortable from '../../../../hooks/useSortable';
 import '../../../../styles/_table-standard.scss';
@@ -39,7 +38,10 @@ function GestionPlanesV1() {
   const [bulkUpdateModalOpen, setBulkUpdateModalOpen] = useState(false);
   const [generarRecibosModalOpen, setGenerarRecibosModalOpen] = useState(false);
   const [historialAumentosModalOpen, setHistorialAumentosModalOpen] = useState(false);
-  const [configItemsPerPage] = useState(globalConfig?.items_per_page ?? null);
+  const [configItemsPerPage] = useState(globalConfig?.items_per_page ?? 15);
+  const [page, setPage] = useState(1);
+  const [totalCount, setTotalCount] = useState(0);
+  const [totalPages, setTotalPages] = useState(0);
 
   const DEFAULT_WIDTHS_PLANES = {
     identificador: 110,
@@ -63,43 +65,60 @@ function GestionPlanesV1() {
     setError(null);
     setLoading(true);
     try {
-      const result = await planesService.getByFilter('todos', { ...filtros, sortBy, order });
+      const result = await planesService.getByFilter('todos', {
+        ...filtros,
+        sortBy,
+        order,
+        page,
+        limit: configItemsPerPage,
+      });
       setPlanes(Array.isArray(result.data) ? result.data : []);
+      setTotalCount(result.count || 0);
+      setTotalPages(result.totalPages || 0);
     } catch (err) {
       console.error('Error al cargar planes:', err);
       setError(err.response?.data?.message || err.message || 'Error al cargar planes');
       setPlanes([]);
+      setTotalCount(0);
+      setTotalPages(0);
     } finally {
       setLoading(false);
     }
-  }, [filtros, sortBy, order]);
+  }, [filtros, sortBy, order, page, configItemsPerPage]);
 
-  // Recargar planes cuando cambia el ordenamiento o los filtros
+  // Resetear página a 1 cuando cambian filtros, ordenamiento o limit
+  useEffect(() => {
+    setPage(1);
+  }, [sortBy, order, filtros, configItemsPerPage]);
+
+  // Filtrar planes por búsqueda de texto (en cliente, solo en los items de la página actual)
+  const planesFiltered = planes.filter(plan => {
+    const searchLower = searchText.toLowerCase();
+    return (
+      plan.numero_afiliado?.toLowerCase().includes(searchLower) ||
+      plan.Zona?.codigo?.toLowerCase().includes(searchLower) ||
+      plan.TipoDePlan?.tipo_plan_nombre?.toLowerCase().includes(searchLower) ||
+      plan.Cobrador?.cobrador_apellido?.toLowerCase().includes(searchLower) ||
+      plan.Cobrador?.cobrador_nombre?.toLowerCase().includes(searchLower) ||
+      plan.ObraSocial?.os_nombre?.toLowerCase().includes(searchLower) ||
+      plan.PlanIntegrantes?.[0]?.Persona?.apellido?.toLowerCase().includes(searchLower) ||
+      plan.PlanIntegrantes?.[0]?.Persona?.nombre?.toLowerCase().includes(searchLower)
+    );
+  });
+
+  // Recargar planes cuando cambia el ordenamiento, filtros, página o búsqueda
   useEffect(() => {
     cargar();
-  }, [sortBy, order, filtros]);
+  }, [cargar]);
 
-  // Usar searchText inmediatamente si se presionó Enter, si no usar debouncedSearchText
-  const effectiveSearchText = forceSearchNow ? searchText : debouncedSearchText;
-
-  // Filtrar planes por búsqueda
-  const planesFiltered = planes
-    .filter(plan => {
-      const searchLower = effectiveSearchText.toLowerCase();
-      return (
-        plan.numero_afiliado?.toLowerCase().includes(searchLower) ||
-        plan.Zona?.codigo?.toLowerCase().includes(searchLower) ||
-        plan.TipoDePlan?.tipo_plan_nombre?.toLowerCase().includes(searchLower) ||
-        plan.Cobrador?.cobrador_apellido?.toLowerCase().includes(searchLower) ||
-        plan.Cobrador?.cobrador_nombre?.toLowerCase().includes(searchLower) ||
-        plan.ObraSocial?.os_nombre?.toLowerCase().includes(searchLower) ||
-        plan.PlanIntegrantes?.[0]?.Persona?.apellido?.toLowerCase().includes(searchLower) ||
-        plan.PlanIntegrantes?.[0]?.Persona?.nombre?.toLowerCase().includes(searchLower)
-      );
-    });
-
-  const pagination = usePagination(planesFiltered, 15, configItemsPerPage);
-  // El hook usePagination ahora resetea automáticamente cuando items.length cambia
+  // Manejar búsqueda inmediata con Enter (sin debounce)
+  const handleSearchKeyDown = (e) => {
+    if (e.key === 'Enter') {
+      e.preventDefault();
+      setForceSearchNow(true);
+      setTimeout(() => setForceSearchNow(false), 0);
+    }
+  };
 
   const mostrarMensaje = (texto, tipo = 'success') => {
     if (tipo === 'success') {
@@ -155,16 +174,6 @@ function GestionPlanesV1() {
 
   console.log('[GestionPlanesV1] Rendering component. Planes count:', planes.length, 'Error:', error);
 
-  // Manejar tecla Enter para búsqueda inmediata (sin debounce)
-  const handleSearchKeyDown = (e) => {
-    if (e.key === 'Enter') {
-      e.preventDefault();
-      setForceSearchNow(true);
-      // Resetear forceSearchNow después de que se renderice
-      setTimeout(() => setForceSearchNow(false), 0);
-    }
-  };
-
   return (
     <div className="gestion-planes-v1">
       <h2 className="gestion-planes-v1__title">Planes</h2>
@@ -179,8 +188,8 @@ function GestionPlanesV1() {
             value={searchText}
             onChange={setSearchText}
             onKeyDown={handleSearchKeyDown}
-            count={planesFiltered.length}
-            maxItems={planesFiltered.length}
+            count={planes.length}
+            maxItems={totalCount}
           />
           <div className="gestion-planes-v1__actions">
             <ActionButton variant="primary" icon="+" onClick={handleCrearPlan}>
@@ -254,7 +263,7 @@ function GestionPlanesV1() {
               </tr>
             </thead>
             <tbody>
-              {pagination.paginatedItems.map((plan) => (
+              {planesFiltered.map((plan) => (
                 <tr key={plan.plan_numero}>
                   <td>
                     {plan.Zona?.codigo
@@ -297,14 +306,17 @@ function GestionPlanesV1() {
         </div>
       )}
 
-      {pagination.showPagination && (
+      {totalPages > 1 && (
         <Pagination
-          currentPage={pagination.currentPage}
-          totalPages={pagination.totalPages}
-          totalItems={pagination.totalItems}
-          itemsPerPage={pagination.itemsPerPage}
-          onPageChange={pagination.handleChangePage}
-          onItemsPerPageChange={pagination.handleChangeItemsPerPage}
+          currentPage={page}
+          totalPages={totalPages}
+          totalItems={totalCount}
+          itemsPerPage={configItemsPerPage}
+          onPageChange={setPage}
+          onItemsPerPageChange={(newLimit) => {
+            // TODO: update configItemsPerPage in backend if needed
+            setPage(1);
+          }}
         />
       )}
 
