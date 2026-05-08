@@ -212,7 +212,11 @@
             </div>
         </div>
 
-        <div id="canvas"></div>
+        <div id="canvas">
+            <div id="zoomWrapper" style="position: relative; width: 100%; height: 100%; transform-origin: 0 0;">
+                <div id="layersWrapper" style="position: absolute; top: 0; left: 0;"></div>
+            </div>
+        </div>
 
         <div class="hint">
             💡 <strong>Controles:</strong> Arrastra nodos para mover | Arrastra fondo para pan | Rueda mouse para zoom | Click en nodo para resaltar conexiones
@@ -478,10 +482,15 @@
             }
         };
 
-        // Crear red
+        // Crear red - usar el canvas directo para que Vis.js lo maneje
         const container = document.getElementById('canvas');
         const data = { nodes: nodes, edges: edges };
         const network = new vis.Network(container, data, options);
+
+        // Variables de zoom
+        let currentZoom = 1;
+        const zoomWrapper = document.getElementById('zoomWrapper');
+        const layersWrapper = document.getElementById('layersWrapper');
 
         // Event: Click en nodo para resaltar
         network.on('click', function(params) {
@@ -619,7 +628,8 @@
 
         // Crear contenedores visuales de capas
         function createLayerContainers() {
-            const container = document.getElementById('canvas');
+            const wrapper = document.getElementById('layersWrapper');
+            wrapper.innerHTML = ''; // Limpiar contenedores previos
 
             Object.entries(layerPositions).forEach(([layer, pos]) => {
                 const layerDiv = document.createElement('div');
@@ -628,15 +638,32 @@
                 layerDiv.style.top = pos.y + 'px';
                 layerDiv.style.width = pos.width + 'px';
                 layerDiv.style.height = pos.height + 'px';
+                layerDiv.style.position = 'absolute';
+                layerDiv.style.boxSizing = 'border-box';
 
                 const title = document.createElement('div');
                 title.className = 'layer-title';
                 title.textContent = layer;
                 layerDiv.appendChild(title);
 
-                container.appendChild(layerDiv);
+                wrapper.appendChild(layerDiv);
             });
         }
+
+        // Manejar zoom proporcional
+        network.on('zoom', function(params) {
+            currentZoom = params.scale;
+
+            // Aplicar zoom proporcionalmente a los contenedores
+            zoomWrapper.style.transform = `scale(${currentZoom})`;
+
+            // También escalar el canvas interno de Vis.js
+            const canvas = container.querySelector('canvas');
+            if (canvas) {
+                canvas.style.transform = `scale(${currentZoom})`;
+                canvas.style.transformOrigin = '0 0';
+            }
+        });
 
         // Crear contenedores después de que la red esté lista
         setTimeout(() => {
