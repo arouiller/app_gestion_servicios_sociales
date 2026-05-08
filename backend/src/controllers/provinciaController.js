@@ -66,15 +66,22 @@ const provinciaController = {
         return res.status(404).json({ success: false, message: 'Provincia no encontrada' });
       }
 
-      // Contar planes asociados a localidades de esta provincia
-      const referencias = await PlanV1.count({
-        include: [{
-          model: Localidad,
-          as: 'localidad',
-          where: { provincia_id: id },
-          attributes: []
-        }]
+      // Obtener IDs de localidades de esta provincia
+      const localidadesIds = await Localidad.findAll({
+        where: { provincia_id: id },
+        attributes: ['id'],
+        raw: true
       });
+
+      const ids = localidadesIds.map(l => l.id);
+
+      // Contar planes asociados a esas localidades
+      let referencias = 0;
+      if (ids.length > 0) {
+        referencias = await PlanV1.count({
+          where: { localidad_id: ids }
+        });
+      }
 
       res.json({
         success: true,
