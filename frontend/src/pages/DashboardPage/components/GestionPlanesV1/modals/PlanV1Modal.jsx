@@ -389,9 +389,17 @@ function PlanV1Modal({ mode, planData, onClose, onSave }) {
   };
 
   const handleAfiladoSearch = async (persona) => {
-    // Use persona.id if exists, otherwise use numero_documento as identifier for duplicates check
-    const personaId = persona.id || persona.numero_documento;
-    if (form.integrantes.some((i) => (i.persona_id === persona.id) || (persona.id === null && i.persona?.numero_documento === persona.numero_documento))) {
+    // Check for duplicates: if persona has id, match by persona_id; else match by numero_documento
+    const isDuplicate = form.integrantes.some((i) => {
+      if (persona.id) {
+        // Persona exists in BD: check by persona_id
+        return i.persona_id === persona.id;
+      } else {
+        // Persona is deferred (no id): check by numero_documento
+        return i.persona?.numero_documento === persona.numero_documento;
+      }
+    });
+    if (isDuplicate) {
       alert('Este afiliado ya está asignado al plan');
       return;
     }

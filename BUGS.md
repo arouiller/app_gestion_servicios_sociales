@@ -23,18 +23,28 @@ De cualquier estado => Descartado
 
 Un bug solo puede pasar a estado solucionado, Descartado a traves del pedido explicito del usuario final
 
-## Registros Activos
+## Registros Activos (En Progress + Reportados)
 
 | ID | Severidad | Fase | Descripción | Reportado | Estado |
 |----|-----------|------|-------------|-----------|--------|
-| BUG-034 | 🔴 CRÍTICO | Zonas/Lookup | Eliminación de Zona: siempre muestra "0 referencias" aunque hay planes asociados | 2026-05-07 | ✅ Solucionado |
-| BUG-033 | 🔴 CRÍTICO | LookupCRUD | Sin confirmación al eliminar en cobradores, zonas, tipos de grupo, tipos de plan | 2026-05-07 | ✅ Solucionado |
 | BUG-032 | 🟡 IMPORTANTE | Sortable Headers | Llamadas API duplicadas y redundantes al cargar GestionPlanesV1 | 2026-05-07 | ⏸️ En pausa |
+
+## Registros Recientemente Cerrados (Últimos 7 días)
+
+| ID | Severidad | Fase | Descripción | Reportado | Solucionado | Commit |
+|----|-----------|------|-------------|-----------|-------------|--------|
+| BUG-037 | 🔴 CRÍTICO | BACKLOG-060 | Creación prematura de personas en modo "crear plan" | 2026-05-08 | 2026-05-08 | `6f888ce` |
+| BUG-036 | 🔴 CRÍTICO | BACKLOG-060 | Integrantes sin ID al crear plan nuevo (reorder fallido) | 2026-05-08 | 2026-05-08 | `05d3b11` |
+| BUG-035 | 🔴 CRÍTICO | BACKLOG-057 | TypeError: "N.tiposDeplan.map is not a function" al crear/editar planes | 2026-05-08 | 2026-05-08 | `dcd40f6` |
+| BUG-034 | 🔴 CRÍTICO | Zonas/Lookup | Eliminación de Zona: siempre muestra "0 referencias" aunque hay planes asociados | 2026-05-07 | 2026-05-08 | `c9d57d4` |
+| BUG-033 | 🔴 CRÍTICO | LookupCRUD | Sin confirmación al eliminar en cobradores, zonas, tipos de grupo, tipos de plan | 2026-05-07 | 2026-05-08 | `8b1e7e5` |
 
 ### Historial reciente (últimos 7 días)
 
 | ID | Severidad | Fase | Descripción | Reportado | Estado |
 |----|-----------|------|-------------|-----------|--------|
+| BUG-037 | 🔴 CRÍTICO | BACKLOG-060 | Creación prematura de personas en modo "crear plan" | 2026-05-08 | ✅ Solucionado |
+| BUG-036 | 🔴 CRÍTICO | BACKLOG-060 | Integrantes sin ID al crear plan nuevo (reorder fallido) | 2026-05-08 | ✅ Solucionado |
 | BUG-035 | 🔴 CRÍTICO | BACKLOG-057 | TypeError: "N.tiposDeplan.map is not a function" al crear/editar planes | 2026-05-08 | ✅ Solucionado |
 | BUG-034 | 🔴 CRÍTICO | Zonas/Lookup | Eliminación de Zona: siempre muestra "0 referencias" aunque hay planes asociados | 2026-05-07 | ✅ Solucionado |
 | BUG-033 | 🔴 CRÍTICO | LookupCRUD | Sin confirmación al eliminar en cobradores, zonas, tipos de grupo, tipos de plan | 2026-05-07 | ✅ Solucionado |
@@ -2860,6 +2870,112 @@ Recargar integrantes después de crear nuevos para obtener sus IDs asignados en 
 
 **Commits:**
 - `05d3b11` — fix(BUG-036): recargar integrantes después de crear para obtener IDs antes de reordenar
+
+**Estado:** ✅ Solucionado (2026-05-08)
+
+---
+
+### BUG-037: Creación Prematura de Personas en Modo "Crear Plan"
+
+**Descripción:**
+Cuando el usuario crea un plan nuevo (modo "crear") y agrega afiliados mediante "+ Agregar Afiliado", las personas se crean en BD inmediatamente, **antes** de que el plan sea guardado. Esto viola el requerimiento BACKLOG-060 que especifica: "cuando se genera un plan nuevo, los afiliados (persona) no se registrarán hasta que el usuario seleccione una de las opciones de guardar".
+
+**Severidad:** 🔴 CRÍTICO
+- Viola especificación explícita de BACKLOG-060
+- Crea "huérfanos de datos": personas en BD sin plan asociado
+- Flujo de datos inconsistente con UI expectations
+
+**Síntomas:**
+1. Usuario abre PlanV1Modal en modo "crear"
+2. Hace clic en "+ Agregar Afiliado"
+3. AfiladoSearchModal abre, usuario llena datos y hace clic "Crear y Agregar"
+4. **AfiladoSearchModal llama POST `/api/personas` inmediatamente** ← BUG
+5. Persona se persiste en BD antes de que plan se guarde
+6. Si usuario cancela plan después, persona queda huérfana en BD
+
+**Root Cause:**
+En `frontend/src/pages/DashboardPage/components/GestionPlanesV1/modals/AfiladoSearchModal.jsx` línea 68:
+
+```javascript
+const persona = await personasService.crear(newPersona);
+onSelect(persona);
+```
+
+El modal crea personas en BD sin considerar si estamos en modo "crear" (plan nuevo) o "editar" (plan existente).
+
+**Impacto:**
+- Datos inconsistentes: personas sin planes asociados
+- Viola contrato funcional de BACKLOG-060
+- Usuario puede cancelar plan sin afectar datos inesperadamente
+
+**Solución Implementada:**
+
+1. **AfiladoSearchModal ahora acepta `planMode` prop:**
+   - Si `planMode === 'crear'`: NO llama POST `/api/personas`, devuelve datos sin id
+   - Si `planMode !== 'crear'`: Llama POST `/api/personas` como antes
+
+2. **PlanV1Modal.handleAfiladoSearch actualizado:**
+   - Si persona tiene `id` (existe en BD): crea integrante inmediatamente (modo editar)
+   - Si persona NO tiene `id` (deferred): agrega a form.integrantes sin persistir
+
+3. **PlanV1Modal.handleGuardar modo "crear" refactorizado:**
+   ```javascript
+   // Crear personas deferred antes de crear integrantes
+   const personasToCreate = form.integrantes.filter((i) => i.persona_id === null);
+   if (personasToCreate.length > 0) {
+     const createdPersonas = await Promise.all(
+       personasToCreate.map((integ) => personasService.crear(integ.persona))
+     );
+     // Actualizar form.integrantes con persona_id reales
+     integrantesToCreate = form.integrantes.map((integ) => {
+       if (integ.persona_id === null) {
+         const createdPersona = personaMap.get(integ.persona.numero_documento);
+         return { ...integ, persona_id: createdPersona?.id };
+       }
+       return integ;
+     });
+   }
+   // Luego crear integrantes con persona_id correctos
+   await planesIntegrantesService.crearMultiples(response.plan_numero, integrantesToCreate);
+   ```
+
+**Flujo Correcto Después del Fix:**
+```
+Usuario crea plan nuevo
+  → Agrega afiliado: "+ Agregar Afiliado"
+    → AfiladoSearchModal (planMode='crear')
+    → Usuario llena datos y hace clic "Crear y Agregar"
+    → AfiladoSearchModal NO crea en BD (id=null)
+    → Retorna datos sin id
+  → handleAfiladoSearch recibe persona sin id
+    → Agrega a form.integrantes (id=null, persona_id=null)
+  → Usuario hace "Guardar y Seguir Editando"
+    → handleGuardar modo 'crear':
+      → Crea plan en BD ✅
+      → Identifica personas con persona_id=null
+      → Crea esas personas en BD ✅
+      → Obtiene IDs reales
+      → Actualiza form.integrantes con ids reales
+      → Crea integrantes en BD ✅
+  → Afiliado ahora habilitado (id presente, ⚙️ visible)
+```
+
+**Beneficios:**
+- ✅ Personas solo se crean cuando plan se guarda
+- ✅ Sin datos huérfanos en BD
+- ✅ Cumple BACKLOG-060 completamente
+- ✅ Modo editar sin cambios (efecto lateral mínimo)
+
+**Cambios:**
+- `frontend/src/pages/DashboardPage/components/GestionPlanesV1/modals/AfiladoSearchModal.jsx`: Aceptar `planMode`, condicional en handleCreatePersona
+- `frontend/src/pages/DashboardPage/components/GestionPlanesV1/modals/PlanV1Modal.jsx`:
+  - Pasar `planMode={mode}` a AfiladoSearchModal
+  - Actualizar `handleAfiladoSearch` para manejar personas sin id
+  - Refactorizar `handleGuardar` modo crear para crear personas deferred
+  - Importar `personasService`
+
+**Commits:**
+- `6f888ce` — fix(BUG-037): defer persona creation until plan save in create mode
 
 **Estado:** ✅ Solucionado (2026-05-08)
 

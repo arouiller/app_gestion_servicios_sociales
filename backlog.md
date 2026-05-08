@@ -40,7 +40,7 @@ De cualquier estado → Descartado
 
 | ID | Prioridad | Estado | Descripción | Contexto / Motivo | Archivos estimados |
 |----|-----------|--------|-------------|-------------------|----|
-| BACKLOG-060 | 🔴 Alta | 🚀 Desarrollado | Habilitar servicios para afiliados después de guardar plan nuevo | En modo crear, los afiliados se guardan todo junto con el plan (no auto-save). Después de "Guardar y Seguir Editando", habilitar selección de servicios. Botón ⚙️ se habilita automáticamente tras guardar. Commit: ab26cd4 | PlanV1Modal.jsx |
+| BACKLOG-060 | 🔴 Alta | ✅ Solucionado | Habilitar servicios para afiliados después de guardar plan nuevo | En modo crear, los afiliados se guardan todo junto con el plan (no auto-save). Después de "Guardar y Seguir Editando", habilitar selección de servicios. Botón ⚙️ se habilita automáticamente tras guardar. Commits: ab26cd4, 6f888ce (BUG-037 fix) | PlanV1Modal.jsx |
 | BACKLOG-059 | 🔴 Alta | ✅ Solucionado | Guardado automático de afiliados al agregar a plan existente | Cuando un afiliado es agregado a un plan ya registrado, se guarda automáticamente sin esperar a "Guardar y Seguir Editando". Posición = última, rol automático (titular/adherente). Simplifica flujo, reduce clicks, mejor UX. Implementado con auto-save en modo editar. Commits: 388a3a8, 051dcfc | PlanV1Modal.jsx |
 | BACKLOG-057 | 🟡 Media | ✅ Solucionado | Modal de confirmación obligatorio al eliminar servicios adicionales | Cuando un usuario intenta eliminar un servicio adicional desde la pantalla de gestión, siempre mostrar modal de confirmación, incluso si el servicio no tiene referencias (integrantes asociados). Cambio: LookupCRUD.jsx handleDelete() ahora abre modal siempre en lugar de intentar eliminar primero. Commit: c02ec29 | LookupCRUD.jsx |
 | BACKLOG-056 | 🟡 Media | ✅ Solucionado | Mostrar último aumento masivo al generar recibos | Al generar recibos, mostrar cuál fue el último aumento masivo realizado (fecha, porcentaje, usuario que lo realizó) debajo del mensaje de qué mes se generarán recibos. Mejora transparencia: usuarios ven instantáneamente qué aumento afectará los nuevos recibos. Commits: ecac358, 5c9ed69, 09339a1 | GenerarRecibosModal.jsx, recibosService.js, recibosController.js, routes/recibos.js |
@@ -4049,9 +4049,22 @@ d. **Contexto:**
 - BACKLOG-058: "Guardar y Seguir Editando" habilita servicios después de guardar
 - Complementan el flujo completo de gestión de planes y afiliados
 
-**Estado:** 🚀 Desarrollado (2026-05-08)
+**Estado:** ✅ Solucionado (2026-05-08)
 
-**Implementación:**
+**Resolución de BUG-037 (Fase Final):**
+
+Después de la implementación inicial, se descubrió BUG-037: las personas se creaban en BD inmediatamente cuando el usuario hacía "+ Agregar Afiliado", violando el requerimiento de que personas deben crearse solo cuando se guarda el plan. El fix requirió:
+
+1. **AfiladoSearchModal.jsx:** Aceptar parámetro `planMode` y NO crear personas en BD si `planMode === 'crear'`
+2. **PlanV1Modal.jsx:** 
+   - Pasar `planMode={mode}` a AfiladoSearchModal
+   - Actualizar `handleAfiladoSearch` para manejar personas sin id (deferred)
+   - Refactorizar `handleGuardar` modo crear para crear personas antes de crear integrantes
+3. **Resultado:** Personas solo se crean cuando plan se guarda, cumpliendo completamente el requerimiento
+
+Commit: `6f888ce` — fix(BUG-037): defer persona creation until plan save in create mode
+
+**Implementación Anterior:**
 
 Cambios mínimos en `PlanV1Modal.jsx`:
 
