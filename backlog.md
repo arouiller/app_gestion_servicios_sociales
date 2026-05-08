@@ -5183,11 +5183,21 @@ Nota: Las páginas wrapper (Cobradores.jsx, ObrasSociales.jsx, Zonas.jsx) no nec
 
 **Prioridad:** 🔴 Alta — Mismo impacto de rendimiento que planes, tablas lookup suelen tener muchos registros
 
-**Estado:** 🔄 En desarrollo
+**Estado:** ✅ Solucionado (2026-05-08)
 
-**Iniciado:** 2026-05-08
+**Completado:**
+- ✅ Backend: paginación en /api/lookup/:entidad para todas las entidades
+- ✅ Frontend service: lookupService.list() con page/limit
+- ✅ Frontend component: LookupCRUD.jsx integrado con backend pagination
+- ✅ Beneficiados: Cobradores, ObrasSociales, Zonas, TiposDePlan, TiposDeGrupo, ServiciosAdicionales
 
-**Commits:** [Se actualizará durante implementación]
+**Commits:**
+- `5366bff` — feat(lookup): implementar paginación backend
+- `3ca9758` — feat(lookupService): agregar parámetros page/limit
+- `e4f3c69` — feat(LookupCRUD): integrar paginación backend en componente genérico
+- `4a2af49` — docs(backlog): marcar BACKLOG-056 completo + registrar BACKLOG-057
+
+**Próximas etapas:** Aplicar patrón a personas/search, provincias, localidades, auditoría, bugs (BACKLOG-058+)
 
 ---
 
