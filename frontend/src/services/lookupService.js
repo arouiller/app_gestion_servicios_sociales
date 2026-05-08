@@ -3,13 +3,16 @@ import api from './api';
 const lookupService = {
   /**
    * GET /api/lookup/:entidad
-   * Obtiene la lista de registros para una entidad de lookup
+   * Obtiene la lista de registros para una entidad de lookup con paginación
    * @param {string} entidad - Nombre de la entidad
-   * @param {object} options - { sortBy, order } parámetros de ordenamiento
+   * @param {object} options - { page, limit, sortBy, order } parámetros de paginación y ordenamiento
    */
   list: async (entidad, options = {}) => {
-    const { sortBy, order } = options;
-    const params = {};
+    const { page = 1, limit = 15, sortBy, order } = options;
+    const params = {
+      page,
+      limit,
+    };
     if (sortBy) params.sortBy = sortBy;
     if (order) params.order = order;
     const response = await api.get(`/lookup/${entidad}`, { params });
