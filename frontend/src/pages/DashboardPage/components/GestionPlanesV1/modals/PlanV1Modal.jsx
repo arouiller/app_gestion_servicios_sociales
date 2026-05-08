@@ -364,7 +364,7 @@ function PlanV1Modal({ mode, planData, onClose, onSave }) {
         });
         const newIntegrante = { id: created.id, persona_id: persona.id, persona, rol };
         const updatedIntegrantes = [...form.integrantes, newIntegrante];
-        setForm((prev) => ({ ...prev, integrantes: updatedIntegrantes }));
+        handleFieldChange('integrantes', updatedIntegrantes);
         const integrantesWithMeta = updatedIntegrantes.map((integ, index) => ({
           id: integ.id,
           orden: index + 1,
