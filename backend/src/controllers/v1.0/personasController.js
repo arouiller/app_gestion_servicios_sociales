@@ -67,42 +67,6 @@ exports.crear = async (req, res, next) => {
 };
 
 /**
- * GET /api/personas/listar
- * Lista personas con paginación (sin requerir búsqueda)
- */
-exports.listar = async (req, res, next) => {
-  try {
-    const page = parseInt(req.query.page, 10) || 1;
-    const limit = parseInt(req.query.limit, 10) || 10;
-    const search = req.query.search?.trim() || '';
-    const { Op } = require('sequelize');
-    const where = search
-      ? {
-          [Op.or]: [
-            { apellido: { [Op.like]: `%${search}%` } },
-            { nombre: { [Op.like]: `%${search}%` } },
-            { numero_documento: { [Op.like]: `%${search}%` } },
-          ],
-        }
-      : {};
-    const offset = (page - 1) * limit;
-    const { count, rows } = await db.Persona.findAndCountAll({
-      where,
-      limit,
-      offset,
-      order: [['apellido', 'ASC'], ['nombre', 'ASC']],
-    });
-    res.json({
-      success: true,
-      data: rows,
-      pagination: { page, limit, total: count, pages: Math.ceil(count / limit) },
-    });
-  } catch (error) {
-    next(error);
-  }
-};
-
-/**
  * PUT /api/personas/:personaId
  * Actualiza una persona existente
  */
