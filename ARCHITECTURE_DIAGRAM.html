@@ -396,11 +396,12 @@
         ]);
 
         // Posicionar nodos en capas sin física dinámica
+        // Cálculo: ~19 elementos BD, ~21 API, ~10 Services, ~15 Components
         const layerPositions = {
-            'BD': { x: 100, y: 100, width: 280, height: 800, cols: 2 },
-            'API': { x: 450, y: 100, width: 280, height: 800, cols: 2 },
-            'Services': { x: 800, y: 100, width: 280, height: 600, cols: 2 },
-            'Components': { x: 1150, y: 100, width: 280, height: 700, cols: 2 }
+            'BD': { x: 50, y: 50, width: 420, height: 950, cols: 2, count: 21 },
+            'API': { x: 520, y: 50, width: 420, height: 950, cols: 2, count: 21 },
+            'Services': { x: 990, y: 50, width: 420, height: 500, cols: 2, count: 10 },
+            'Components': { x: 1460, y: 50, width: 420, height: 700, cols: 2, count: 15 }
         };
 
         let nodeIndex = {};
@@ -412,11 +413,23 @@
             if (pos) {
                 const col = nodeIndex[layer] % pos.cols;
                 const row = Math.floor(nodeIndex[layer] / pos.cols);
-                const itemHeight = 80;
+                const itemHeight = 85;
+                const itemWidth = 200;
 
-                node.x = pos.x + (col * (pos.width / pos.cols));
-                node.y = pos.y + (row * itemHeight);
-                node.fixed = false; // Permitir que se arrastren
+                // Centrar columnas dentro del contenedor
+                const colWidth = pos.width / pos.cols;
+                node.x = pos.x + (col * colWidth) + (colWidth / 2);
+                node.y = pos.y + 40 + (row * itemHeight);
+
+                // Guardar información del contenedor para validación de límites
+                node.containerLayer = layer;
+                node.containerBounds = {
+                    x: pos.x,
+                    y: pos.y,
+                    width: pos.width,
+                    height: pos.height
+                };
+                node.fixed = false;
             }
 
             nodeIndex[layer]++;
@@ -477,6 +490,35 @@
                 highlightNode(nodeId);
             } else {
                 clearHighlight();
+            }
+        });
+
+        // Event: Validar límites cuando se arrastra un nodo
+        network.on('dragging', function(params) {
+            if (params.nodes.length > 0) {
+                const nodeId = params.nodes[0];
+                const node = nodes.get(nodeId);
+
+                if (node && node.containerBounds) {
+                    const bounds = node.containerBounds;
+                    const margin = 90; // Margen para considerar dentro del contenedor
+
+                    // Verificar si el nodo está dentro de los límites
+                    if (node.x < bounds.x + margin) {
+                        node.x = bounds.x + margin;
+                    }
+                    if (node.x > bounds.x + bounds.width - margin) {
+                        node.x = bounds.x + bounds.width - margin;
+                    }
+                    if (node.y < bounds.y + margin) {
+                        node.y = bounds.y + margin;
+                    }
+                    if (node.y > bounds.y + bounds.height - margin) {
+                        node.y = bounds.y + bounds.height - margin;
+                    }
+
+                    nodes.update(node);
+                }
             }
         });
 
