@@ -40,7 +40,7 @@ De cualquier estado → Descartado
 
 | ID | Prioridad | Estado | Descripción | Contexto / Motivo | Archivos estimados |
 |----|-----------|--------|-------------|-------------------|----|
-| BACKLOG-060 | 🔴 Alta | 📋 Registrado | Habilitar servicios para afiliados después de guardar plan nuevo | En modo crear, los afiliados se guardan todo junto con el plan (no auto-save). Después de "Guardar y Seguir Editando", habilitar selección de servicios. Botón ⚙️ deshabilitado hasta que plan+afiliados existan en BD. | PlanV1Modal.jsx, IntegranteServiciosModal.jsx |
+| BACKLOG-060 | 🔴 Alta | 🚀 Desarrollado | Habilitar servicios para afiliados después de guardar plan nuevo | En modo crear, los afiliados se guardan todo junto con el plan (no auto-save). Después de "Guardar y Seguir Editando", habilitar selección de servicios. Botón ⚙️ se habilita automáticamente tras guardar. Commit: ab26cd4 | PlanV1Modal.jsx |
 | BACKLOG-059 | 🔴 Alta | ✅ Solucionado | Guardado automático de afiliados al agregar a plan existente | Cuando un afiliado es agregado a un plan ya registrado, se guarda automáticamente sin esperar a "Guardar y Seguir Editando". Posición = última, rol automático (titular/adherente). Simplifica flujo, reduce clicks, mejor UX. Implementado con auto-save en modo editar. Commits: 388a3a8, 051dcfc | PlanV1Modal.jsx |
 | BACKLOG-057 | 🟡 Media | ✅ Solucionado | Modal de confirmación obligatorio al eliminar servicios adicionales | Cuando un usuario intenta eliminar un servicio adicional desde la pantalla de gestión, siempre mostrar modal de confirmación, incluso si el servicio no tiene referencias (integrantes asociados). Cambio: LookupCRUD.jsx handleDelete() ahora abre modal siempre en lugar de intentar eliminar primero. Commit: c02ec29 | LookupCRUD.jsx |
 | BACKLOG-056 | 🟡 Media | ✅ Solucionado | Mostrar último aumento masivo al generar recibos | Al generar recibos, mostrar cuál fue el último aumento masivo realizado (fecha, porcentaje, usuario que lo realizó) debajo del mensaje de qué mes se generarán recibos. Mejora transparencia: usuarios ven instantáneamente qué aumento afectará los nuevos recibos. Commits: ecac358, 5c9ed69, 09339a1 | GenerarRecibosModal.jsx, recibosService.js, recibosController.js, routes/recibos.js |
@@ -4049,7 +4049,48 @@ d. **Contexto:**
 - BACKLOG-058: "Guardar y Seguir Editando" habilita servicios después de guardar
 - Complementan el flujo completo de gestión de planes y afiliados
 
-**Estado:** 📋 Registrado
+**Estado:** 🚀 Desarrollado (2026-05-08)
+
+**Implementación:**
+
+Cambios mínimos en `PlanV1Modal.jsx`:
+
+1. **Nuevo estado `savedPlanData`** (línea 40)
+   - Almacena la respuesta del plan creado para que `reloadIntegrantes` pueda acceder a `plan_numero` cuando `planData === null`
+
+2. **Actualizar form.integrantes después de reorder** (líneas 289-295, dentro del if crear)
+   - Mapea `form.integrantes` con los IDs reales obtenidos de `createdIntegrantes`
+   - Llama `handleFieldChange('integrantes', integrantesConId)` para actualizar el state
+   - Esto automáticamente habilita el botón ⚙️ (porque `disabled={!integrante.id}` pasa de falsy a truthy)
+
+3. **Guardar referencia del plan** (línea 298, dentro del if crear)
+   - `setSavedPlanData(response)` después del bloque de integrantes
+   - Permite que `reloadIntegrantes` funcione correctamente
+
+4. **Usar fallback en `reloadIntegrantes`** (líneas 198-201)
+   - Cambiar: `planData.plan_numero` 
+   - Por: `const planNumero = planData?.plan_numero || savedPlanData?.plan_numero;`
+   - Previene crash cuando `reloadIntegrantes` se llama en modo crear después de guardar
+
+**Resultado:**
+- En modo crear, antes de guardar: botones ⚙️ deshabilitados (integrantes sin id) ✅
+- Después de "Guardar y Seguir Editando": botones ⚙️ habilitados automáticamente ✅
+- Al abrir IntegranteServiciosModal y cerrar: `reloadIntegrantes` funciona sin crash ✅
+- En modo editar: sin cambios (planData nunca es null) ✅
+
+**Archivos modificados:**
+- `frontend/src/pages/DashboardPage/components/GestionPlanesV1/modals/PlanV1Modal.jsx`
+  - Línea 40: nuevo estado `savedPlanData`
+  - Líneas 198-201: fallback en `reloadIntegrantes`
+  - Líneas 289-298: actualizar form.integrantes y guardar referencia del plan
+
+**Commits:**
+- `ab26cd4` — feat(BACKLOG-060): habilitar servicios después de guardar plan nuevo
+
+**Sin cambios en:**
+- Botón ⚙️ (la lógica `disabled={!integrante.id}` ya era correcta)
+- IntegranteServiciosModal (funciona igual)
+- Backend, SCSS, modo editar
 
 ---
 
