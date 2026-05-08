@@ -5201,6 +5201,83 @@ Nota: Las páginas wrapper (Cobradores.jsx, ObrasSociales.jsx, Zonas.jsx) no nec
 
 ---
 
+### BACKLOG-058: Agregar "Guardar y Seguir Editando" en Formulario de Planes
+
+**Descripción:**
+Mejorar el flujo de edición/creación de planes agregando opciones más granulares para guardar. Actualmente el botón "Guardar" cierra el modal automáticamente. Se necesitan dos botones distintos:
+
+1. **"Guardar y Seguir Editando"** — Nuevo botón
+   - Guarda los cambios en la BD
+   - Mantiene el modal abierto
+   - Permite continuar editando integrantes, servicios, etc.
+   - Útil cuando el usuario quiere hacer múltiples cambios sin cerrar/abrir el modal repetidamente
+
+2. **"Guardar y Cerrar"** — Renombrar botón actual
+   - Mismo comportamiento que el actual "Guardar"
+   - Guarda los cambios
+   - Cierra el modal automáticamente
+   - Retorna a la tabla de planes
+
+**Requerimientos:**
+
+a. **UI/UX (PlanV1Modal.jsx)**
+   - Agregar nuevo botón en el footer del modal
+   - Colocar botones lado a lado (flexbox)
+   - Estilos claros y diferenciados:
+     * "Guardar y Seguir Editando" — botón primary
+     * "Guardar y Cerrar" — botón secondary o variant diferente
+   - Ambos botones deben mostrar loading state mientras se guarda
+   - Deshabilitar ambos durante submit para evitar doble-envío
+
+b. **Lógica de Guardado (usePlanV1Form.jsx o PlanV1Modal.jsx)**
+   - Crear variable de estado: `shouldCloseAfterSave` (default: false)
+   - Al hacer clic en "Guardar y Seguir Editando": 
+     * Set `shouldCloseAfterSave = false`
+     * Llamar función save()
+     * No cerrar modal, mostrar mensaje de éxito
+   - Al hacer clic en "Guardar y Cerrar":
+     * Set `shouldCloseAfterSave = true`
+     * Llamar función save()
+     * Después de save exitoso, cerrar modal (onClose)
+
+c. **Confirmación y Feedback**
+   - Después de "Guardar y Seguir Editando": mostrar toast/notification de éxito
+   - Mensaje: "Plan guardado exitosamente"
+   - Usuario puede continuar editando integrantes, servicios, recibos, etc.
+   - Evitar que usuario pierda cambios no guardados
+
+**Componentes Afectados:**
+- `frontend/src/pages/DashboardPage/components/GestionPlanesV1/modals/PlanV1Modal.jsx`
+- `frontend/src/pages/DashboardPage/components/GestionPlanesV1/hooks/usePlanV1Form.jsx` (posible)
+
+**Testing Checklist:**
+- [ ] Botones se renderizan correctamente lado a lado
+- [ ] "Guardar y Seguir Editando" guarda sin cerrar
+- [ ] "Guardar y Cerrar" guarda y cierra
+- [ ] Loading state funciona en ambos botones
+- [ ] Ambos botones deshabilitados durante submit
+- [ ] Toast/notification aparece después de "Guardar y Seguir Editando"
+- [ ] Integrantes siguen en el modal después de guardar
+- [ ] Tab "Recibos" y "Historial" permanecen accesibles
+- [ ] Cambios no perdidos si usuario hace clic en "Guardar y Seguir Editando" varias veces
+
+**Estimación:** 1-1.5 horas (cambios menores en UI/estado)
+
+**Prioridad:** 🟡 Media — Mejora UX, no es bloqueante pero muy solicitado en workflows complejos
+
+**Beneficio:**
+- ✅ Mejor UX: usuarios no necesitan cerrar/abrir modal para múltiples cambios
+- ✅ Flujo natural: crear plan → agregar integrantes → editar cuota → guardar y continuar
+- ✅ Reduce fricción: evita navegar tabla/modal repetidamente
+
+**Estado:** 📋 Registrado
+
+**Iniciado:** 2026-05-08
+
+**Commits:** [Se actualizará durante implementación]
+
+---
+
 ## Items descartados
 
 | ID | Descripción | Motivo descarte |
