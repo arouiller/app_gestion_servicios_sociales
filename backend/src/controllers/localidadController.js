@@ -118,14 +118,20 @@ const localidadController = {
 
       // Query raw: contar planes asociados a esta localidad
       const result = await sequelize.query(
-        `SELECT COUNT(*) as count FROM planes_v1 WHERE localidad_id = ?`,
+        `SELECT COUNT(*) as \`count\` FROM planes WHERE localidad_id = ?`,
         {
           replacements: [id],
-          type: require('sequelize').QueryTypes.SELECT
+          type: require('sequelize').QueryTypes.SELECT,
+          raw: true
         }
       );
 
-      const referencias = result[0]?.count || 0;
+      console.log('[DEBUG] localidad getReferencias - id:', id);
+      console.log('[DEBUG] localidad getReferencias - raw result:', result);
+      console.log('[DEBUG] localidad getReferencias - result[0]:', result[0]);
+      console.log('[DEBUG] localidad getReferencias - result[0]?.count:', result[0]?.count);
+
+      const referencias = parseInt(result[0]?.count) || 0;
 
       res.json({
         success: true,

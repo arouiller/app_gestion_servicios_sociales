@@ -79,6 +79,11 @@ const provinciaController = {
         }
       );
 
+      console.log('[DEBUG] provincia getReferencias - id:', id);
+      console.log('[DEBUG] provincia getReferencias - raw result:', result);
+      console.log('[DEBUG] provincia getReferencias - result[0]:', result[0]);
+      console.log('[DEBUG] provincia getReferencias - result[0]?.count:', result[0]?.count);
+
       const referencias = parseInt(result[0]?.count) || 0;
 
       res.json({
