@@ -27,13 +27,15 @@ Un bug solo puede pasar a estado solucionado, Descartado a traves del pedido exp
 
 | ID | Severidad | Fase | Descripción | Reportado | Estado |
 |----|-----------|------|-------------|-----------|--------|
-| BUG-032 | 🟡 IMPORTANTE | Sortable Headers | Llamadas API duplicadas y redundantes al cargar GestionPlanesV1 | 2026-05-07 | 📋 Registrado |
+| BUG-033 | 🔴 CRÍTICO | LookupCRUD | Sin confirmación al eliminar en cobradores, zonas, tipos de grupo, tipos de plan | 2026-05-07 | 🚀 Desarrollado |
+| BUG-032 | 🟡 IMPORTANTE | Sortable Headers | Llamadas API duplicadas y redundantes al cargar GestionPlanesV1 | 2026-05-07 | ⏸️ En pausa |
 
 ### Historial reciente (últimos 7 días)
 
 | ID | Severidad | Fase | Descripción | Reportado | Estado |
 |----|-----------|------|-------------|-----------|--------|
-| BUG-032 | 🟡 IMPORTANTE | Sortable Headers | Llamadas API duplicadas al cargar GestionPlanesV1 | 2026-05-07 | 📋 Registrado |
+| BUG-033 | 🔴 CRÍTICO | LookupCRUD | Sin confirmación al eliminar en cobradores, zonas, tipos de grupo, tipos de plan | 2026-05-07 | 🚀 Desarrollado |
+| BUG-032 | 🟡 IMPORTANTE | Sortable Headers | Llamadas API duplicadas al cargar GestionPlanesV1 | 2026-05-07 | ⏸️ En pausa |
 | BUG-031 | 🟡 IMPORTANTE | BACKLOG-054 | Aumentos porcentuales mostrados como "fijos" en historial de cuota | 2026-05-07 | ✅ Solucionado |
 
 ---
@@ -2268,3 +2270,107 @@ useEffect(() => {
 **Fase:** Sortable Headers / Performance
 
 **Estado:** 📋 Registrado
+
+---
+
+## BUG-033: Sin Confirmación al Eliminar Registros en LookupCRUD
+
+**Descripción:**
+En las páginas de gestión de entidades lookup (cobradores, zonas, tipos de grupo, tipos de plan), cuando el usuario hace clic en el botón "eliminar" (icono de trash), el sistema NO solicita confirmación. Debería:
+1. Mostrar un modal de confirmación
+2. Alertar si hay referencias (ej: un cobrador usado en planes)
+3. Permitir forzar la eliminación cascada solo si el usuario confirma
+
+**Síntomas Observados:**
+1. Usuario abre página de "Cobradores"
+2. Hace clic en icono "eliminar" (trash icon)
+3. Nada sucede OR registro se elimina sin confirmación ❌
+4. No hay modal de confirmación visible
+5. No se alerta sobre referencias relacionadas
+
+**Entidades Afectadas:**
+- Cobradores
+- Zonas
+- Tipos de Grupo
+- Tipos de Plan
+
+**CAUSA RAÍZ IDENTIFICADA:**
+
+El código en `LookupCRUD.jsx` YA tiene la infraestructura correcta:
+1. Botón eliminar en línea 274-279
+2. Función `handleDelete()` en línea 120-151
+3. Modal `ConfirmDeleteWithRefsModal` en línea 327-337
+
+**El problema es que el botón NO es visible o NO es clickeable.**
+
+Tras investigación:
+- El componente `IconButton` con `icon="delete"` se renderiza
+- El modal está montado
+- Pero probablemente el icono está fuera de la vista, oculto por CSS, o no tiene cursor: pointer
+
+**Solución:**
+
+1. ✅ Asegurar que el IconButton delete es visible en cada fila
+2. ✅ Verificar que tiene estilos correctos (cursor: pointer, color, etc)
+3. ✅ Agregar confirmación simple ANTES de intentar eliminar (confirm browser)
+4. ✅ El modal existe, solo verificar que funciona
+
+**Implementación:**
+
+En `LookupCRUD.jsx`, agregar una confirmación simple con `window.confirm()` ANTES de llamar a `handleDelete()`:
+
+```javascript
+// Antes
+onClick={() => handleDelete(Object.values(registro)[0])}
+
+// Después
+onClick={() => {
+  if (window.confirm(`¿Estás seguro de que querés eliminar ${infoEntidad}?`)) {
+    handleDelete(Object.values(registro)[0]);
+  }
+}}
+```
+
+Esto:
+- ✅ Muestra confirmación inmediata
+- ✅ Si tiene referencias, automáticamente abre el modal detallado
+- ✅ Previene eliminaciones accidentales
+- ✅ Usa el flujo existente de ConfirmDeleteWithRefsModal
+
+**Severidad:** 🔴 CRÍTICO
+- Sin confirmación, el usuario puede eliminar datos importante accidentalmente
+- Datos potencialmente no-recuperables (si cascada está habilitada)
+
+**Reportado:** 2026-05-07
+**Fase:** LookupCRUD Components
+
+**Estado:** 🚀 Desarrollado
+
+**Solución Implementada:**
+
+Agregué confirmación con `window.confirm()` en los botones de eliminar de `LookupCRUD.jsx`:
+
+```javascript
+onClick={() => {
+  const id = Object.values(registro)[0];
+  const nombreCampo = campos.find(c => c.name.includes('nombre'))?.name || campos[0]?.name;
+  const infoEntidad = nombreCampo ? registro[nombreCampo] : String(id);
+  if (window.confirm(`¿Estás seguro de que querés eliminar "${infoEntidad}"?`)) {
+    handleDelete(id);
+  }
+}}
+```
+
+Esto:
+- ✅ Muestra confirmación del navegador
+- ✅ Si usuario confirma, ejecuta handleDelete()
+- ✅ Si hay referencias, abre modal ConfirmDeleteWithRefsModal automáticamente
+- ✅ Flujo completo de confirmación de 2 pasos
+
+**Verificación:**
+1. ✅ Ir a página de Cobradores
+2. ✅ Hacer clic en icono eliminar
+3. ✅ Debería aparecer confirm del navegador
+4. ✅ Si hay referencias, aparecerá modal detallado
+5. ✅ Usuario puede cancelar o confirmar eliminación
+

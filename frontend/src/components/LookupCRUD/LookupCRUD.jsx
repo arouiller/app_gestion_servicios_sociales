@@ -274,7 +274,14 @@ const LookupCRUD = ({ titulo, singularName, endpoint, campos, tableKey = 'lookup
                     <IconButton
                       icon="delete"
                       title="Eliminar"
-                      onClick={() => handleDelete(Object.values(registro)[0])}
+                      onClick={() => {
+                        const id = Object.values(registro)[0];
+                        const nombreCampo = campos.find(c => c.name.includes('nombre'))?.name || campos[0]?.name;
+                        const infoEntidad = nombreCampo ? registro[nombreCampo] : String(id);
+                        if (window.confirm(`¿Estás seguro de que querés eliminar "${infoEntidad}"?`)) {
+                          handleDelete(id);
+                        }
+                      }}
                       className="icon-button--danger"
                     />
                   </div>
