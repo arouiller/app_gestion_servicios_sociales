@@ -5270,11 +5270,35 @@ c. **Confirmación y Feedback**
 - ✅ Flujo natural: crear plan → agregar integrantes → editar cuota → guardar y continuar
 - ✅ Reduce fricción: evita navegar tabla/modal repetidamente
 
-**Estado:** 📋 Registrado
+**Estado:** ✅ Solucionado (2026-05-08)
 
-**Iniciado:** 2026-05-08
+**Completado:**
+- ✅ Nuevo botón "Guardar y Seguir Editando" en PlanV1Modal
+- ✅ Renombrado "Guardar" → "Guardar y Cerrar"
+- ✅ Notificación de éxito con animación
+- ✅ Estilos para botón success (verde)
+- ✅ Flexbox layout para dos botones lado a lado
 
-**Commits:** [Se actualizará durante implementación]
+**Implementación:**
+- Estado `showSuccessNotification` para feedback de éxito
+- Parámetro `closeAfterSave` en handleGuardar
+- closeAfterSave=false → muestra notificación, mantiene modal abierto
+- closeAfterSave=true → guarda y cierra (comportamiento anterior)
+- Tooltips en botones explicando comportamiento
+- Loading state en ambos botones durante submit
+
+**Beneficios:**
+- ✅ Mejor UX: sin necesidad de cerrar/abrir modal repetidamente
+- ✅ Feedback visual de guardado exitoso
+- ✅ Flujo natural para workflows complejos
+
+**Archivos Modificados:**
+- `frontend/src/pages/DashboardPage/components/GestionPlanesV1/modals/PlanV1Modal.jsx`
+- `frontend/src/pages/DashboardPage/components/GestionPlanesV1/modals/PlanV1Modal.scss`
+
+**Commits:**
+- `c309aaa` — feat(PlanV1Modal): agregar "Guardar y Seguir Editando"
+- `46c1779` — style(PlanV1Modal): agregar estilos para notificación y botones
 
 ---
 
