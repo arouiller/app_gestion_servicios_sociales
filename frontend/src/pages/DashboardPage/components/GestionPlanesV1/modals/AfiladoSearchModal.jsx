@@ -4,7 +4,7 @@ import ConfirmCloseDialog from '../../../../../components/ConfirmCloseDialog/Con
 import { useModalEscapeKey } from '../../../../../hooks/useModalEscapeKey';
 import './AfiladoSearchModal.scss';
 
-function AfiladoSearchModal({ onClose, onSelect }) {
+function AfiladoSearchModal({ planMode, onClose, onSelect }) {
   const [newPersona, setNewPersona] = useState({
     nombre: '',
     apellido: '',
@@ -65,8 +65,15 @@ function AfiladoSearchModal({ onClose, onSelect }) {
     setLoading(true);
     setErrorMessage(null);
     try {
-      const persona = await personasService.crear(newPersona);
-      onSelect(persona);
+      // En modo 'crear', no persistir persona en BD aún, solo devolverla en memoria
+      if (planMode === 'crear') {
+        console.log('[AfiladoSearchModal] Modo crear: persona deferred to plan save', newPersona);
+        onSelect(newPersona); // Devolver sin id, para crear en BD cuando se guarde el plan
+      } else {
+        // En modo 'editar' o undefined, crear persona en BD inmediatamente
+        const persona = await personasService.crear(newPersona);
+        onSelect(persona);
+      }
     } catch (err) {
       console.error('Error creating persona:', err);
 

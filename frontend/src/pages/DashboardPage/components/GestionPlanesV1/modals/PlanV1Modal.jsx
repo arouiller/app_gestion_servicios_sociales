@@ -5,6 +5,7 @@ import ActionButton from '../../../../../components/ActionButton/ActionButton';
 import { formatNumeroAfiliado, formatDate, calculateAge } from '../../../../../utils/formatters';
 import planesV1Service from '../../../../../services/planesV1Service';
 import planesIntegrantesService from '../../../../../services/planesIntegrantesService';
+import personasService from '../../../../../services/personasService';
 import lookupService from '../../../../../services/lookupService';
 import localidadService from '../../../../../services/localidadService';
 import recibosService from '../../../../../services/recibosService';
@@ -275,10 +276,37 @@ function PlanV1Modal({ mode, planData, onClose, onSave }) {
 
         // Create integrantes for new plan
         if (form.integrantes.length > 0) {
-          await planesIntegrantesService.crearMultiples(response.plan_numero, form.integrantes);
+          // First, create any personas that were deferred (persona_id === null) in modo crear
+          let integrantesToCreate = form.integrantes;
+          const personasToCreate = form.integrantes.filter((i) => i.persona_id === null);
+
+          if (personasToCreate.length > 0) {
+            console.log('[PlanV1Modal] Creating deferred personas:', personasToCreate.length);
+            try {
+              const createdPersonas = await Promise.all(
+                personasToCreate.map((integ) => personasService.crear(integ.persona))
+              );
+
+              // Update integrantes with real persona_id
+              const personaMap = new Map(createdPersonas.map((p) => [p.numero_documento, p]));
+              integrantesToCreate = form.integrantes.map((integ) => {
+                if (integ.persona_id === null) {
+                  const createdPersona = personaMap.get(integ.persona.numero_documento);
+                  return { ...integ, persona_id: createdPersona?.id, persona: createdPersona };
+                }
+                return integ;
+              });
+              console.log('[PlanV1Modal] Updated integrantes with real persona_id:', integrantesToCreate);
+            } catch (err) {
+              console.error('Error creating deferred personas:', err);
+              throw new Error('Error al crear afiliados: ' + err.message);
+            }
+          }
+
+          await planesIntegrantesService.crearMultiples(response.plan_numero, integrantesToCreate);
           // Reload integrantes to get their assigned IDs before reordering
           const createdIntegrantes = await planesIntegrantesService.obtenerPorPlan(response.plan_numero);
-          const integrantesWithMeta = form.integrantes.map((integrante, index) => {
+          const integrantesWithMeta = integrantesToCreate.map((integrante, index) => {
             const created = createdIntegrantes.find((c) => c.persona_id === integrante.persona_id);
             return {
               id: created?.id,
@@ -288,7 +316,7 @@ function PlanV1Modal({ mode, planData, onClose, onSave }) {
           await planesIntegrantesService.reorder(response.plan_numero, integrantesWithMeta);
 
           // Update form with real IDs to enable services button (⚙️)
-          const integrantesConId = form.integrantes.map((integ) => {
+          const integrantesConId = integrantesToCreate.map((integ) => {
             const created = createdIntegrantes.find((c) => c.persona_id === integ.persona_id);
             return { ...integ, id: created?.id };
           });
@@ -361,13 +389,16 @@ function PlanV1Modal({ mode, planData, onClose, onSave }) {
   };
 
   const handleAfiladoSearch = async (persona) => {
-    if (form.integrantes.some((i) => i.persona_id === persona.id)) {
+    // Use persona.id if exists, otherwise use numero_documento as identifier for duplicates check
+    const personaId = persona.id || persona.numero_documento;
+    if (form.integrantes.some((i) => (i.persona_id === persona.id) || (persona.id === null && i.persona?.numero_documento === persona.numero_documento))) {
       alert('Este afiliado ya está asignado al plan');
       return;
     }
     const rol = form.integrantes.length === 0 ? 'titular' : 'adherente';
 
-    if (mode === 'editar') {
+    if (mode === 'editar' && persona.id) {
+      // In edit mode and persona exists in BD: create integrante immediately
       setLoadingAddAfiliado(true);
       try {
         const created = await planesIntegrantesService.crear({
@@ -391,7 +422,15 @@ function PlanV1Modal({ mode, planData, onClose, onSave }) {
         setLoadingAddAfiliado(false);
       }
     } else {
-      addIntegrante(persona, rol);
+      // In create mode or persona without id: add to state for later creation on plan save
+      const integrante = {
+        id: null,
+        persona_id: null,
+        persona,
+        rol,
+      };
+      const updatedIntegrantes = [...form.integrantes, integrante];
+      handleFieldChange('integrantes', updatedIntegrantes);
     }
     setAfiladoSearchOpen(false);
   };
@@ -950,7 +989,7 @@ function PlanV1Modal({ mode, planData, onClose, onSave }) {
       </div>
 
       {/* Secondary modals */}
-      {afiladoSearchOpen && <AfiladoSearchModal onClose={() => setAfiladoSearchOpen(false)} onSelect={handleAfiladoSearch} />}
+      {afiladoSearchOpen && <AfiladoSearchModal planMode={mode} onClose={() => setAfiladoSearchOpen(false)} onSelect={handleAfiladoSearch} />}
       {afiladoEditOpen && (
         <AfiladoEditModal
           personaId={afiladoEditOpen}
