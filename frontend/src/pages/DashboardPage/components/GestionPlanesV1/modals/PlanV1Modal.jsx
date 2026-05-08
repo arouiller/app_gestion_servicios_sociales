@@ -879,8 +879,6 @@ function PlanV1Modal({ mode, planData, onClose, onSave }) {
                               </Draggable>
                             );
                             })}
-                            {console.log('[PlanV1Modal] About to render placeholder, integrantes count:', form.integrantes.length)}
-                            {provided.placeholder}
                           </tbody>
                         )}
                       </Droppable>
