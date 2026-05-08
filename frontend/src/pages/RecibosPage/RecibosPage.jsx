@@ -50,7 +50,7 @@ function RecibosPage() {
   );
   const { widths: widthsRecibos, getResizeHandle: getResizeHandleRecibos } = useColumnResize(
     'recibos-detalle',
-    { id: 80, numeroAfiliado: 110, titular: 180, obraSocial: 140, valor: 110, accion: 100 }
+    { numeroRecibo: 100, numeroAfiliado: 140, titular: 180, obraSocial: 140, valor: 110, accion: 100 }
   );
 
   // Load periodos on mount
@@ -223,7 +223,7 @@ function RecibosPage() {
                 <table className="table-standard recibos-page__table">
                   <thead>
                     <tr>
-                      <th style={{ width: widthsRecibos.id }}>ID{getResizeHandleRecibos('id')}</th>
+                      <th style={{ width: widthsRecibos.numeroRecibo }}>N° Recibo{getResizeHandleRecibos('numeroRecibo')}</th>
                       <th style={{ width: widthsRecibos.numeroAfiliado }}>N° Afiliado{getResizeHandleRecibos('numeroAfiliado')}</th>
                       <th style={{ width: widthsRecibos.titular }}>Titular{getResizeHandleRecibos('titular')}</th>
                       <th style={{ width: widthsRecibos.obraSocial }}>Obra Social{getResizeHandleRecibos('obraSocial')}</th>
@@ -234,8 +234,8 @@ function RecibosPage() {
                   <tbody>
                     {recibosDisplayed.map((recibo, idx) => (
                       <tr key={idx}>
-                        <td>{recibo.id}</td>
-                        <td>{formatNumeroAfiliado(recibo.numero_afiliado)}</td>
+                        <td>{recibo.numero_recibo ?? recibo.id}</td>
+                        <td>{recibo.zona_codigo ? `${recibo.zona_codigo}-${formatNumeroAfiliado(recibo.numero_afiliado)}` : formatNumeroAfiliado(recibo.numero_afiliado)}</td>
                         <td>{recibo.titular_apellido}, {recibo.titular_nombre}</td>
                         <td>{recibo.obra_social_nombre || '-'}</td>
                         <td>${Number(recibo.valor_cuota).toFixed(2)}</td>
