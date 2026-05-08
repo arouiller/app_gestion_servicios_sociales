@@ -37,6 +37,7 @@ function PlanV1Modal({ mode, planData, onClose, onSave }) {
   const [loading, setLoading] = useState(false);
   const [showSuccessNotification, setShowSuccessNotification] = useState('');
   const [loadingAddAfiliado, setLoadingAddAfiliado] = useState(false);
+  const [savedPlanData, setSavedPlanData] = useState(null);
   const [lookupData, setLookupData] = useState({
     tiposDeplan: [],
     cobradores: [],
@@ -194,7 +195,9 @@ function PlanV1Modal({ mode, planData, onClose, onSave }) {
 
   const reloadIntegrantes = async () => {
     try {
-      const fullPlan = await planesV1Service.obtener(planData.plan_numero);
+      const planNumero = planData?.plan_numero || savedPlanData?.plan_numero;
+      if (!planNumero) return;
+      const fullPlan = await planesV1Service.obtener(planNumero);
       if (fullPlan?.PlanIntegrantes) {
         const integrantes = fullPlan.PlanIntegrantes
           .sort((a, b) => a.orden - b.orden)
@@ -283,7 +286,17 @@ function PlanV1Modal({ mode, planData, onClose, onSave }) {
             };
           });
           await planesIntegrantesService.reorder(response.plan_numero, integrantesWithMeta);
+
+          // Update form with real IDs to enable services button (⚙️)
+          const integrantesConId = form.integrantes.map((integ) => {
+            const created = createdIntegrantes.find((c) => c.persona_id === integ.persona_id);
+            return { ...integ, id: created?.id };
+          });
+          handleFieldChange('integrantes', integrantesConId);
         }
+
+        // Save plan reference for reloadIntegrantes and services
+        setSavedPlanData(response);
       } else {
         // Update plan
         await planesV1Service.actualizar(planData.plan_numero, payload);
