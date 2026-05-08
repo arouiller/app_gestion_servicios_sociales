@@ -1,6 +1,6 @@
 import React, { useEffect, useState, useMemo } from 'react';
 import lookupService from '../../services/lookupService';
-import configService from '../../services/configService';
+import { useConfig } from '../../hooks/useConfig';
 import ErrorDisplay from '../ErrorDisplay/ErrorDisplay';
 import SearchContainer from '../SearchContainer/SearchContainer';
 import ActionButton from '../ActionButton/ActionButton';
@@ -15,6 +15,7 @@ import '../../styles/_table-standard.scss';
 import './LookupCRUD.scss';
 
 const LookupCRUD = ({ titulo, singularName, endpoint, campos, tableKey = 'lookup' }) => {
+  const { config: globalConfig } = useConfig();
   const [registros, setRegistros] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
@@ -22,9 +23,9 @@ const LookupCRUD = ({ titulo, singularName, endpoint, campos, tableKey = 'lookup
   const [editingId, setEditingId] = useState(null);
   const [formData, setFormData] = useState({});
   const [searchText, setSearchText] = useState('');
-  const [debounceDelay, setDebounceDelay] = useState(2000);
+  const [debounceDelay] = useState(globalConfig?.debounce_delay_ms ?? 2000);
   const [forceSearchNow, setForceSearchNow] = useState(false);
-  const [configItemsPerPage, setConfigItemsPerPage] = useState(null);
+  const [configItemsPerPage] = useState(globalConfig?.items_per_page ?? null);
   const [deleteModal, setDeleteModal] = useState({
     isOpen: false,
     registroId: null,
@@ -54,25 +55,6 @@ const LookupCRUD = ({ titulo, singularName, endpoint, campos, tableKey = 'lookup
 
   // Debouncificar el texto de búsqueda
   const debouncedSearchText = useDebounce(searchText, debounceDelay);
-
-  // Cargar configuración al montar
-  useEffect(() => {
-    const loadConfig = async () => {
-      try {
-        const config = await configService.getConfiguracion();
-        if (config && config.debounce_delay_ms) {
-          setDebounceDelay(config.debounce_delay_ms);
-        }
-        if (config && config.items_per_page) {
-          setConfigItemsPerPage(config.items_per_page);
-        }
-      } catch (err) {
-        console.error('Error cargando configuración:', err);
-        // Mantener defaults si hay error
-      }
-    };
-    loadConfig();
-  }, []);
 
   // Cargar lista
   useEffect(() => {

@@ -1,8 +1,8 @@
 import React, { useCallback, useEffect, useState } from 'react';
 import { useAuth } from '../../../../context/AuthContext';
+import { useConfig } from '../../../../hooks/useConfig';
 import planesV1Service from '../../../../services/planesV1Service';
 import planesService from '../../../../services/planesService';
-import configService from '../../../../services/configService';
 import { formatNumeroAfiliado } from '../../../../utils/formatters';
 import PlanV1Modal from './modals/PlanV1Modal';
 import BulkUpdateCuotaModal from '../BulkUpdateCuotaModal/BulkUpdateCuotaModal';
@@ -23,6 +23,7 @@ import './GestionPlanesV1.scss';
 function GestionPlanesV1() {
   console.log('[GestionPlanesV1] Mounting component');
   const { isAdmin } = useAuth();
+  const { config: globalConfig } = useConfig();
   console.log('[GestionPlanesV1] isAdmin:', isAdmin);
   const [planes, setPlanes] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -33,12 +34,12 @@ function GestionPlanesV1() {
   const [planEditando, setPlanEditando] = useState(null);
   const [filtros, setFiltros] = useState({ estado: '', cobrador: '', obraSocial: '' });
   const [searchText, setSearchText] = useState('');
-  const [debounceDelay, setDebounceDelay] = useState(2000);
+  const [debounceDelay, setDebounceDelay] = useState(globalConfig?.debounce_delay_ms ?? 2000);
   const [forceSearchNow, setForceSearchNow] = useState(false);
   const [bulkUpdateModalOpen, setBulkUpdateModalOpen] = useState(false);
   const [generarRecibosModalOpen, setGenerarRecibosModalOpen] = useState(false);
   const [historialAumentosModalOpen, setHistorialAumentosModalOpen] = useState(false);
-  const [configItemsPerPage, setConfigItemsPerPage] = useState(null);
+  const [configItemsPerPage] = useState(globalConfig?.items_per_page ?? null);
 
   const DEFAULT_WIDTHS_PLANES = {
     identificador: 110,
@@ -57,25 +58,6 @@ function GestionPlanesV1() {
 
   // Debouncificar el texto de búsqueda
   const debouncedSearchText = useDebounce(searchText, debounceDelay);
-
-  // Cargar configuración al montar
-  useEffect(() => {
-    const loadConfig = async () => {
-      try {
-        const config = await configService.getConfiguracion();
-        if (config && config.debounce_delay_ms) {
-          setDebounceDelay(config.debounce_delay_ms);
-        }
-        if (config && config.items_per_page) {
-          setConfigItemsPerPage(config.items_per_page);
-        }
-      } catch (err) {
-        console.error('Error cargando configuración:', err);
-        // Mantener defaults si hay error
-      }
-    };
-    loadConfig();
-  }, []);
 
   const cargar = useCallback(async () => {
     setError(null);
