@@ -8,7 +8,6 @@ import DatosPersonales from './components/DatosPersonales/DatosPersonales';
 import MigrationsDashboard from './components/MigrationsDashboard/MigrationsDashboard';
 import GestionPlanesV1 from './components/GestionPlanesV1/GestionPlanesV1';
 import GestionPlanesV1ErrorBoundary from './components/GestionPlanesV1/GestionPlanesV1ErrorBoundary';
-const RecibosPage = lazy(() => import('../RecibosPage/RecibosPage'));
 import Cobradores from './components/Cobradores/Cobradores';
 import ObrasSociales from './components/ObrasSociales/ObrasSociales';
 import ServiciosAdicionales from './components/ServiciosAdicionales/ServiciosAdicionales';
@@ -23,6 +22,9 @@ import GestionAuditoria from './components/GestionAuditoria/GestionAuditoria';
 import QueryExecPage from './components/QueryExec/QueryExecPage';
 import ListadosPage from '../ListadosPage/ListadosPage';
 import './DashboardPage.scss';
+
+// Lazy load RecibosPage para demorar carga de periodos hasta que sea necesario
+const RecibosPage = lazy(() => import('../RecibosPage/RecibosPage'));
 
 // ── Iconos simples (SVG inline) ──────────────────────────────────────────────
 
