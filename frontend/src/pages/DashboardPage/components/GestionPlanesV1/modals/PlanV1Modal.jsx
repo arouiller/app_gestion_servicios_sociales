@@ -483,7 +483,7 @@ function PlanV1Modal({ mode, planData, onClose, onSave }) {
       <div className="plan-v1-modal__overlay" />
       <div className="plan-v1-modal">
         <div className="plan-v1-modal__header">
-          <h3>{mode === 'crear' ? 'Nuevo Plan' : `Editar Plan: ${formatNumeroAfiliado(planData?.numero_afiliado)}`}</h3>
+          <h3>{mode === 'crear' ? 'Nuevo Plan' : `Editar Plan: ${planData?.Zona?.codigo ? `${planData.Zona.codigo}-${formatNumeroAfiliado(planData?.numero_afiliado)}` : formatNumeroAfiliado(planData?.numero_afiliado)}`}</h3>
           <button
             className="plan-v1-modal__close"
             onClick={() => {
