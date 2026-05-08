@@ -92,10 +92,10 @@ function GestionPlanesV1() {
     }
   }, [filtros, sortBy, order]);
 
-  // Recargar planes cuando cambia el ordenamiento
+  // Recargar planes cuando cambia el ordenamiento o los filtros
   useEffect(() => {
     cargar();
-  }, [sortBy, order, cargar]);
+  }, [sortBy, order, filtros]);
 
   // Usar searchText inmediatamente si se presionó Enter, si no usar debouncedSearchText
   const effectiveSearchText = forceSearchNow ? searchText : debouncedSearchText;
