@@ -2821,6 +2821,45 @@ POST /api/v1.0/plan-integrantes/reorder → SQL error
    - Ventaja: Robust, tolera casos edge
    - Desventaja: Oculta el problema, no es solución real
 
-**Siguiente Paso:**
-Determinar cuál opción es mejor (probablemente Opción B: recargar integrantes) e implementar fix.
+**Solución Implementada (Opción B):**
+
+Recargar integrantes después de crear nuevos para obtener sus IDs asignados en BD antes de ejecutar reorder.
+
+**Cambios en `PlanV1Modal.jsx`:**
+
+1. **Modo "crear" (líneas 273-283):**
+   ```javascript
+   if (form.integrantes.length > 0) {
+     await planesIntegrantesService.crearMultiples(response.plan_numero, form.integrantes);
+     // Reload integrantes to get their assigned IDs before reordering
+     const createdIntegrantes = await planesIntegrantesService.obtenerPorPlan(response.plan_numero);
+     const integrantesWithMeta = form.integrantes.map((integrante, index) => {
+       const created = createdIntegrantes.find((c) => c.persona_id === integrante.persona_id);
+       return {
+         id: created?.id,
+         orden: index + 1,
+       };
+     });
+     await planesIntegrantesService.reorder(response.plan_numero, integrantesWithMeta);
+   }
+   ```
+
+2. **Modo "editar" (líneas 302-318):**
+   - Después de crear nuevos integrantes, hacer GET `/api/v1.0/plan-integrantes/:planNumero`
+   - Construir mapa `updatedMap` con todos los integrantes (viejos + nuevos)
+   - Usar este mapa para obtener IDs válidos antes de reordenar
+
+**Beneficios:**
+- ✅ Garantiza que todos los integrantes en reorder tienen IDs válidos
+- ✅ Mantiene sincronización correcta frontend-backend
+- ✅ Recupera orden inicial correctamente
+
+**Trade-offs:**
+- ⚠️ Una request adicional (GET integrantes) pero es validación de datos
+- ⚠️ Impacto mínimo en performance (se ejecuta después de crear integrantes)
+
+**Commits:**
+- `05d3b11` — fix(BUG-036): recargar integrantes después de crear para obtener IDs antes de reordenar
+
+**Estado:** ✅ Solucionado (2026-05-08)
 
