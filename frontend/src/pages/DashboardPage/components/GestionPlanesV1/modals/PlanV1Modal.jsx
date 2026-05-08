@@ -827,14 +827,16 @@ function PlanV1Modal({ mode, planData, onClose, onSave }) {
                             className={snapshot.isDraggingOver ? 'dragging-over' : ''}
                           >
                             {form.integrantes.map((integrante, index) => {
+                              const uniqueKey = integrante.id || integrante.persona?.numero_documento;
                               console.log(`[PlanV1Modal] Rendering integrante[${index}]:`, {
                                 persona_id: integrante.persona_id,
                                 id: integrante.id,
+                                uniqueKey,
                                 nombre: integrante.persona?.nombre,
                                 numero_documento: integrante.persona?.numero_documento
                               });
                               return (
-                              <Draggable key={integrante.persona_id} draggableId={String(integrante.persona_id)} index={index}>
+                              <Draggable key={uniqueKey} draggableId={String(uniqueKey)} index={index}>
                                 {(provided, snapshot) => (
                                   <tr
                                     ref={provided.innerRef}
