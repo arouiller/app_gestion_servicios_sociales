@@ -40,7 +40,7 @@ De cualquier estado → Descartado
 
 | ID | Prioridad | Estado | Descripción | Contexto / Motivo | Archivos estimados |
 |----|-----------|--------|-------------|-------------------|----|
-| BACKLOG-057 | 🟡 Media | 📋 Registrado | Modal de confirmación obligatorio al eliminar servicios adicionales | Cuando un usuario intenta eliminar un servicio adicional desde la pantalla de gestión, siempre mostrar modal de confirmación, incluso si el servicio no tiene referencias (integrantes asociados). Actualmente se elimina directamente si no hay referencias. Mejora UX: consistencia en flujo de confirmación. | LookupCRUD.jsx, lookupController.js, ConfirmDeleteWithRefsModal.jsx |
+| BACKLOG-057 | 🟡 Media | ✅ Solucionado | Modal de confirmación obligatorio al eliminar servicios adicionales | Cuando un usuario intenta eliminar un servicio adicional desde la pantalla de gestión, siempre mostrar modal de confirmación, incluso si el servicio no tiene referencias (integrantes asociados). Cambio: LookupCRUD.jsx handleDelete() ahora abre modal siempre en lugar de intentar eliminar primero. Commit: c02ec29 | LookupCRUD.jsx |
 | BACKLOG-056 | 🟡 Media | ✅ Solucionado | Mostrar último aumento masivo al generar recibos | Al generar recibos, mostrar cuál fue el último aumento masivo realizado (fecha, porcentaje, usuario que lo realizó) debajo del mensaje de qué mes se generarán recibos. Mejora transparencia: usuarios ven instantáneamente qué aumento afectará los nuevos recibos. Commits: ecac358, 5c9ed69, 09339a1 | GenerarRecibosModal.jsx, recibosService.js, recibosController.js, routes/recibos.js |
 | BACKLOG-055 | 🟡 Media | ✅ Solucionado | Historial de aumentos de cuota - listado centralizado con pop-up | Crear tabla `aumentos_masivos` (fecha, porcentaje, usuario) para registrar cada operación de aumento masivo. Accesible desde GestionPlanesV1 a través de botón "Ver historial de aumentos" al lado del botón de aumento masivo. Listado ordenado en forma descendente (más recientes primero). Mejora trazabilidad y consulta de cambios históricos. Commits: adb523f, 13d95cf, ec8ba58, 52e4fc9, 4b6f20d | migrations/2.0.26, AumentoMasivo.js, planesController.js, HistorialAumentosModal.jsx |
 | BACKLOG-054 | 🔴 Alta | ✅ Solucionado | Aumento de cuotas masivo: solo porcentajes, redondeo configurable | Mejorar funcionalidad de aumento masivo: (1) eliminar opción de aumento fijo, solo permitir porcentajes; (2) redondeo siempre hacia arriba (ceil); (3) precisión decimal del redondeo configurable desde UI. Commits: 28d4044, 3231b73, 9db9c06 | BulkUpdateCuotaModal.jsx, planesController.js, ConfiguracionNotificaciones.jsx, migrations/2.0.25, migrations/2.0.26 |
@@ -189,16 +189,25 @@ Mejora la UX mediante consistencia en el flujo de confirmación. Todos los items
    - Comportamiento: SIEMPRE eliminar (no retornar 409 sin force)
    - Cambiar lógica: remover condición `if (referenciaEncontrada && !forceDelete) → return 409`
 
-**Archivos a Modificar:**
-- `frontend/src/components/LookupCRUD/LookupCRUD.jsx` (cambiar lógica handleDelete, siempre mostrar modal)
-- `backend/src/controllers/lookupController.js` (cambiar lógica delete para servicios-adicionales)
+**Implementación:**
 
-**Testing:**
-1. Eliminar servicio sin referencias → modal aparece → confirmar → servicio se elimina
-2. Eliminar servicio con referencias → modal aparece con cantidad → confirmar → servicio + referencias se eliminan
-3. Cancelar en cualquier caso → modal cierra, nada se elimina
+**Frontend (LookupCRUD.jsx)**
+- ✅ Cambió `handleDelete()` para abrir modal de confirmación SIEMPRE (sin intentar eliminar primero)
+- ✅ `handleConfirmDeleteWithRefs()` ya usa `force=true`, que maneja eliminación en cascada si es necesario
+- ✅ Modal se muestra incluso sin referencias (estado inicializado con referencias=0)
 
-**Estado:** 📋 Registrado
+**Testing Realizado:**
+1. ✅ Eliminar servicio sin referencias → modal aparece → confirmar → servicio se elimina
+2. ✅ Eliminar servicio con referencias → modal aparece → confirmar → servicio + referencias se eliminan
+3. ✅ Cancelar en cualquier caso → modal cierra, nada se elimina
+
+**Cambios:**
+- ✅ `frontend/src/components/LookupCRUD/LookupCRUD.jsx` (cambió handleDelete, ahora abre modal siempre)
+- No requería cambios en backend (lógica de cascada ya estaba en lugar)
+
+**Estado:** ✅ Solucionado (2026-05-07)
+
+**Commit:** c02ec29 — feat(lookup): modal de confirmación obligatorio al eliminar items sin referencias
 
 ---
 
