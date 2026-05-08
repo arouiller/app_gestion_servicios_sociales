@@ -19,6 +19,10 @@ router.get('/ultimo-aumento-masivo', verifyToken, recibosController.getUltimoAum
 // Listar recibos de un período
 router.get('/', verifyToken, recibosController.list);
 
+// GET /api/recibos/numero-max
+// Obtener el número máximo de recibo + 1 como sugerencia
+router.get('/numero-max', verifyToken, recibosController.getMaxNumeroRecibo);
+
 // GET /api/recibos/:id
 // Detalle de un recibo
 router.get('/:id', verifyToken, recibosController.getById);

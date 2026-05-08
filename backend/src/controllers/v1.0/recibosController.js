@@ -12,7 +12,7 @@ const { Op, literal } = require('sequelize');
 exports.generar = async (req, res, next) => {
   const transaction = await sequelize.transaction();
   try {
-    const { periodo, planes, force } = req.body;
+    const { periodo, planes, force, numeroInicialRecibo } = req.body;
     const userId = req.user.id; // Asumiendo que auth middleware asigna esto
 
     if (!periodo) {
@@ -96,6 +96,7 @@ exports.generar = async (req, res, next) => {
     }
 
     const recibosGenerados = [];
+    let reciboIndex = 0;
 
     console.log(`[RECIBOS] Iniciando loop de generación para ${planesAGenerar.length} planes`);
 
@@ -117,12 +118,13 @@ exports.generar = async (req, res, next) => {
 
         // Obtener datos del plan con sus relaciones
         const plan = await db.PlanV1.findByPk(planNumero, {
-          attributes: ['plan_numero', 'numero_afiliado', 'domicilio', 'valor_cuota'],
+          attributes: ['plan_numero', 'numero_afiliado', 'domicilio', 'valor_cuota', 'zona_id'],
           include: [
             { model: db.TipoDePlan, attributes: ['tipo_plan_nombre'] },
             { model: db.Cobrador, attributes: ['cobrador_apellido', 'cobrador_nombre'] },
             { model: db.TipoDeGrupo, attributes: ['tipo_de_grupo_nombre'] },
             { model: db.ObraSocial, attributes: ['os_nombre'] },
+            { model: db.Zona, attributes: ['codigo'] },
           ],
           transaction,
         });
@@ -152,6 +154,7 @@ exports.generar = async (req, res, next) => {
           plan_numero: planNumero,
           periodo: periodoNormalizado,
           numero_afiliado: plan.numero_afiliado,
+          numero_recibo: numeroInicialRecibo ? numeroInicialRecibo + reciboIndex : null,
           titular_apellido: titular.Persona.apellido,
           titular_nombre: titular.Persona.nombre,
           obra_social_nombre: plan.ObraSocial?.os_nombre || '',
@@ -161,10 +164,13 @@ exports.generar = async (req, res, next) => {
           cobrador_nombre: plan.Cobrador?.cobrador_nombre || '',
           domicilio: plan.domicilio,
           valor_cuota: plan.valor_cuota,
+          zona_codigo: plan.Zona?.codigo || null,
           usuario_id: userId,
         },
         { transaction }
       );
+
+      reciboIndex++;
 
       // Crear integrantes del recibo (snapshots)
       for (const integrante of integrantes) {
@@ -382,6 +388,20 @@ exports.getUltimoAumentoMasivo = async (req, res, next) => {
       success: true,
       data: ultimoAumento,
     });
+  } catch (err) {
+    next(err);
+  }
+};
+
+/**
+ * GET /api/recibos/numero-max
+ * Obtiene el número máximo de recibo registrado + 1 como sugerencia
+ */
+exports.getMaxNumeroRecibo = async (req, res, next) => {
+  try {
+    const result = await db.Recibo.max('numero_recibo');
+    const sugerido = (result || 0) + 1;
+    res.json({ sugerido });
   } catch (err) {
     next(err);
   }
