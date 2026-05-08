@@ -27,15 +27,16 @@ Un bug solo puede pasar a estado solucionado, Descartado a traves del pedido exp
 
 | ID | Severidad | Fase | Descripción | Reportado | Estado |
 |----|-----------|------|-------------|-----------|--------|
-| BUG-034 | 🔴 CRÍTICO | Zonas/Lookup | Eliminación de Zona: siempre muestra "0 referencias" aunque hay planes asociados | 2026-05-07 | 📋 Registrado |
-| BUG-033 | 🔴 CRÍTICO | LookupCRUD | Sin confirmación al eliminar en cobradores, zonas, tipos de grupo, tipos de plan | 2026-05-07 | 🚀 Desarrollado |
+| BUG-034 | 🔴 CRÍTICO | Zonas/Lookup | Eliminación de Zona: siempre muestra "0 referencias" aunque hay planes asociados | 2026-05-07 | ✅ Solucionado |
+| BUG-033 | 🔴 CRÍTICO | LookupCRUD | Sin confirmación al eliminar en cobradores, zonas, tipos de grupo, tipos de plan | 2026-05-07 | ✅ Solucionado |
 | BUG-032 | 🟡 IMPORTANTE | Sortable Headers | Llamadas API duplicadas y redundantes al cargar GestionPlanesV1 | 2026-05-07 | ⏸️ En pausa |
 
 ### Historial reciente (últimos 7 días)
 
 | ID | Severidad | Fase | Descripción | Reportado | Estado |
 |----|-----------|------|-------------|-----------|--------|
-| BUG-033 | 🔴 CRÍTICO | LookupCRUD | Sin confirmación al eliminar en cobradores, zonas, tipos de grupo, tipos de plan | 2026-05-07 | 🚀 Desarrollado |
+| BUG-034 | 🔴 CRÍTICO | Zonas/Lookup | Eliminación de Zona: siempre muestra "0 referencias" aunque hay planes asociados | 2026-05-07 | ✅ Solucionado |
+| BUG-033 | 🔴 CRÍTICO | LookupCRUD | Sin confirmación al eliminar en cobradores, zonas, tipos de grupo, tipos de plan | 2026-05-07 | ✅ Solucionado |
 | BUG-032 | 🟡 IMPORTANTE | Sortable Headers | Llamadas API duplicadas al cargar GestionPlanesV1 | 2026-05-07 | ⏸️ En pausa |
 | BUG-031 | 🟡 IMPORTANTE | BACKLOG-054 | Aumentos porcentuales mostrados como "fijos" en historial de cuota | 2026-05-07 | ✅ Solucionado |
 
@@ -59,7 +60,7 @@ Cuando un usuario intenta eliminar una zona desde la pantalla de Gestión de Zon
 6. Zona se elimina aunque tenía planes asociados ❌
 
 **Root Cause:**
-En `backend/src/controllers/lookupController.js`, la configuración de la entidad `zonas` tiene `refsCheck: []` vacío:
+En `backend/src/controllers/lookupController.js` líneas 38-43, la entidad `zonas` tiene `refsCheck: []` vacío:
 
 ```javascript
 'zonas': {
@@ -70,9 +71,20 @@ En `backend/src/controllers/lookupController.js`, la configuración de la entida
 }
 ```
 
-El array `refsCheck` debe contener las referencias a verificar. Para zonas, la FK está en:
-- Tabla: `planes` (modelo: `db.PlanV1`)
-- Campo FK: `zona_id`
+**Comparación con otras entidades (todas correctamente configuradas):**
+
+| Entidad | refsCheck | Estado |
+|---------|-----------|--------|
+| cobradores | `[{ model: db.PlanV1, fk: 'cobrador_numero' }]` | ✅ Correcto |
+| tipos-de-plan | `[{ model: db.PlanV1, fk: 'tipo_plan_numero' }]` | ✅ Correcto |
+| tipos-de-grupo | `[{ model: db.PlanV1, fk: 'tipo_de_grupo_numero' }]` | ✅ Correcto |
+| obras-sociales | `[{ model: db.PlanV1, fk: 'os_numero' }]` | ✅ Correcto |
+| servicios-adicionales | `[{ model: db.IntegranteServicio, fk: 'servicio_adicional_numero' }]` | ✅ Correcto |
+| **zonas** | **`[]`** | **❌ VACÍO** |
+
+**Problema específico de zonas:**
+- La FK está en tabla `planes` (modelo: `db.PlanV1`), campo: `zona_id`
+- Pero `refsCheck` está vacío, por lo que nunca se verifica esta asociación
 
 **Impacto:**
 - 🔴 Integridad referencial comprometida
@@ -131,9 +143,17 @@ Actualizar configuración de zonas (líneas 38-43):
 }
 ```
 
-**Cambio 2 (Opcional pero Recomendado): Mejorar deleteCascade**
+**Cambio 2 (Requerido): Actualizar deleteCascade() para zonas**
 
-En la función `deleteCascade()` (líneas 340-390), agregar caso para zonas:
+En la función `deleteCascade()` líneas 383-385, está vacía y su comentario es incorrecto:
+
+```javascript
+case 'zonas':
+  // Zonas no tienen referencias, sin cascada necesaria  ← COMENTARIO INCORRECTO
+  break;
+```
+
+Debe ser:
 
 ```javascript
 case 'zonas':
@@ -145,7 +165,7 @@ case 'zonas':
   break;
 ```
 
-Esto hace explícita la cascada en lugar de depender de `onDelete: 'SET NULL'` de la BD.
+**Comparación:** Las otras 5 entidades YA tienen casos implementados en deleteCascade (líneas 344-381). Solo zonas está incompleta.
 
 **Validación de la Solución:**
 
@@ -159,7 +179,7 @@ Esto hace explícita la cascada en lugar de depender de `onDelete: 'SET NULL'` d
    - Usuario debe confirmar con `force=true` para proceder
 
 **Archivos a Modificar:**
-- `backend/src/controllers/lookupController.js` (líneas 38-43, después línea 383)
+- `backend/src/controllers/lookupController.js` (línea 42: actualizar refsCheck, líneas 383-385: actualizar deleteCascade)
 
 **Testing de la Solución:**
 1. Crear una zona con nombre "Test"
@@ -174,6 +194,20 @@ Esto hace explícita la cascada en lugar de depender de `onDelete: 'SET NULL'` d
 - ✅ Avisa al usuario de planes afectados
 - ✅ Previene eliminar zonas en uso sin confirmación
 - ✅ Mantiene integridad referencial
+
+**Estado:** ✅ Solucionado (2026-05-07)
+
+**Implementación:**
+- ✅ Endpoint GET `/api/lookup/:entidad/:id/referencias` creado (fe31527)
+- ✅ lookupController: método getReferencias() agregado
+- ✅ lookupService: método getReferencias() agregado
+- ✅ LookupCRUD: handleDelete() ahora consulta referencias
+- ✅ Zonas: refsCheck agregado - ahora detecta FK a PlanV1 (8696f2f)
+- ✅ Zonas: deleteCascade implementado - actualiza plan.zona_id = NULL (8696f2f)
+
+**Commits:**
+- `fe31527` — fix(lookup): obtener referencias mediante endpoint GET antes de eliminar
+- `8696f2f` — fix(BUG-034): agregar referencias de zonas y cascada en eliminación
 
 ---
 
