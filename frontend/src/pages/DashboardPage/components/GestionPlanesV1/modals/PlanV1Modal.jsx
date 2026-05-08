@@ -306,20 +306,38 @@ function PlanV1Modal({ mode, planData, onClose, onSave }) {
           await planesIntegrantesService.crearMultiples(response.plan_numero, integrantesToCreate);
           // Reload integrantes to get their assigned IDs before reordering
           const createdIntegrantes = await planesIntegrantesService.obtenerPorPlan(response.plan_numero);
+
+          // Build meta for reorder using actual order from form
           const integrantesWithMeta = integrantesToCreate.map((integrante, index) => {
             const created = createdIntegrantes.find((c) => c.persona_id === integrante.persona_id);
+            if (!created) {
+              console.error('[PlanV1Modal] Integrante not found in createdIntegrantes:', integrante.persona_id);
+            }
             return {
               id: created?.id,
               orden: index + 1,
             };
           });
+
           await planesIntegrantesService.reorder(response.plan_numero, integrantesWithMeta);
 
-          // Update form with real IDs to enable services button (⚙️)
-          const integrantesConId = integrantesToCreate.map((integ) => {
-            const created = createdIntegrantes.find((c) => c.persona_id === integ.persona_id);
-            return { ...integ, id: created?.id };
+          // Reload integrantes again after reorder to get final state from BD
+          const finalIntegrantes = await planesIntegrantesService.obtenerPorPlan(response.plan_numero);
+
+          // Map final integrantes back to form structure
+          const integrantesConId = integrantesToCreate.map((integ, index) => {
+            const created = finalIntegrantes.find((c) => c.persona_id === integ.persona_id);
+            if (!created) {
+              console.error('[PlanV1Modal] Integrante still not found after reorder:', integ.persona_id);
+            }
+            return {
+              ...integ,
+              id: created?.id,
+              persona: created?.Persona || integ.persona,
+            };
           });
+
+          console.log('[PlanV1Modal] Final integrantes to update form:', integrantesConId);
           handleFieldChange('integrantes', integrantesConId);
         }
 
