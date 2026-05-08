@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { useAuth } from '../../context/AuthContext';
+import { useConfig } from '../../hooks/useConfig';
 import { NotificationProvider, useNotification } from '../../context/NotificationContext';
 import NotificationToast from '../../components/NotificationToast';
 import ThemeSwitcher from '../../components/ThemeSwitcher/ThemeSwitcher';
@@ -21,7 +22,6 @@ import GestionProvinciasZonas from './components/GestionProvinciasZonas/GestionP
 import GestionAuditoria from './components/GestionAuditoria/GestionAuditoria';
 import QueryExecPage from './components/QueryExec/QueryExecPage';
 import ListadosPage from '../ListadosPage/ListadosPage';
-import configService from '../../services/configService';
 import './DashboardPage.scss';
 
 // ── Iconos simples (SVG inline) ──────────────────────────────────────────────
@@ -328,24 +328,7 @@ function DashboardPageWithNotification() {
 // ── Componente wrapper principal que carga configuración ─────────────────────
 
 export default function DashboardPage() {
-  const [config, setConfig] = useState(null);
-  const [loadingConfig, setLoadingConfig] = useState(true);
-
-  useEffect(() => {
-    const loadConfig = async () => {
-      try {
-        const data = await configService.getConfiguracion();
-        setConfig(data);
-      } catch (error) {
-        console.error('Error al cargar configuración:', error);
-        setConfig({});
-      } finally {
-        setLoadingConfig(false);
-      }
-    };
-
-    loadConfig();
-  }, []);
+  const { config, loading: loadingConfig } = useConfig();
 
   if (loadingConfig) return <div>Cargando configuración...</div>;
 

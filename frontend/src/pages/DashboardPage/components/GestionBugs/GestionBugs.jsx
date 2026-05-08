@@ -1,6 +1,6 @@
 import React, { useCallback, useEffect, useState } from 'react';
 import bugsService from '../../../../services/bugsService';
-import configService from '../../../../services/configService';
+import { useConfig } from '../../../../hooks/useConfig';
 import SearchContainer from '../../../../components/SearchContainer/SearchContainer';
 import ActionButton from '../../../../components/ActionButton/ActionButton';
 import IconButton from '../../../../components/IconButton/IconButton';
@@ -15,6 +15,7 @@ import '../../../../styles/_table-standard.scss';
 import './GestionBugs.scss';
 
 function GestionBugs() {
+  const { config } = useConfig();
   const [bugs, setBugs] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
@@ -25,7 +26,8 @@ function GestionBugs() {
   const [filtroEstado, setFiltroEstado] = useState('');
   const [searchText, setSearchText] = useState('');
   const [forceSearchNow, setForceSearchNow] = useState(false);
-  const [configItemsPerPage, setConfigItemsPerPage] = useState(null);
+
+  const configItemsPerPage = config?.items_per_page || null;
 
   const debouncedSearchText = useDebounce(searchText, 2000);
 
@@ -38,21 +40,6 @@ function GestionBugs() {
     estado: 110,
     acciones: 80,
   });
-
-  // Cargar configuración al montar
-  useEffect(() => {
-    const loadConfig = async () => {
-      try {
-        const config = await configService.getConfiguracion();
-        if (config && config.items_per_page) {
-          setConfigItemsPerPage(config.items_per_page);
-        }
-      } catch (err) {
-        console.error('Error cargando configuración:', err);
-      }
-    };
-    loadConfig();
-  }, []);
 
   const cargar = useCallback(async () => {
     setError(null);

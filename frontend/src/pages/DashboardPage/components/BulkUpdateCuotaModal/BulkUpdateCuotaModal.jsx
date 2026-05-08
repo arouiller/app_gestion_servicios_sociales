@@ -1,7 +1,7 @@
 import React, { useState, useEffect, useCallback, useMemo } from 'react';
 import planesService from '../../../../services/planesService';
 import lookupService from '../../../../services/lookupService';
-import configService from '../../../../services/configService';
+import { useConfig } from '../../../../hooks/useConfig';
 import { formatNumeroAfiliado } from '../../../../utils/formatters';
 import ConfirmCloseDialog from '../../../../components/ConfirmCloseDialog/ConfirmCloseDialog';
 import { useModalEscapeKey } from '../../../../hooks/useModalEscapeKey';
@@ -9,6 +9,7 @@ import useColumnResize from '../../../../hooks/useColumnResize';
 import './BulkUpdateCuotaModal.scss';
 
 function BulkUpdateCuotaModal({ isOpen, onClose, onSuccess }) {
+  const { config } = useConfig();
   const [step, setStep] = useState(1); // 1: config, 2: preview, 3: confirm
   const [valor, setValor] = useState('');
   const [filtro, setFiltro] = useState('todos'); // 'todos' | 'tipo_plan' | 'cobrador' | 'os'
@@ -26,7 +27,7 @@ function BulkUpdateCuotaModal({ isOpen, onClose, onSuccess }) {
   const planesPerPage = 10;
   const [searchFilter, setSearchFilter] = useState('');
   const [showConfirmClose, setShowConfirmClose] = useState(false);
-  const [precision, setPrecision] = useState(1);
+  const precision = config ? parseFloat(config.redondeo_precision) || 1 : 1;
 
   // Column resize hook for preview table
   const { widths, getResizeHandle } = useColumnResize(
@@ -59,7 +60,6 @@ function BulkUpdateCuotaModal({ isOpen, onClose, onSuccess }) {
   useEffect(() => {
     if (isOpen) {
       loadLookupData();
-      loadPrecision();
       resetForm();
     }
   }, [isOpen]);
@@ -80,17 +80,6 @@ function BulkUpdateCuotaModal({ isOpen, onClose, onSuccess }) {
     } catch (err) {
       console.error('Error loading lookup data:', err);
       setError('Error al cargar datos de filtros');
-    }
-  };
-
-  const loadPrecision = async () => {
-    try {
-      const config = await configService.getConfiguracion();
-      const precisionValue = parseFloat(config.redondeo_precision) || 1;
-      setPrecision(precisionValue);
-    } catch (err) {
-      console.error('Error loading rounding precision:', err);
-      setPrecision(1);
     }
   };
 

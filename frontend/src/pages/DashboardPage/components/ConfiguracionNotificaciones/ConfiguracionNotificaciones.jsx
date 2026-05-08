@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { useNotification } from '../../../../context/NotificationContext';
-import configService from '../../../../services/configService';
+import { useConfig } from '../../../../hooks/useConfig';
 import useColumnResize from '../../../../hooks/useColumnResize';
 import './ConfiguracionNotificaciones.scss';
 
@@ -32,9 +32,9 @@ const NOTIFICATION_TYPES = [
 ];
 
 export default function ConfiguracionNotificaciones() {
+  const { config, loading: loadingConfig } = useConfig();
   const [values, setValues] = useState({});
   const [saving, setSaving] = useState({});
-  const [loading, setLoading] = useState(true);
   const [errors, setErrors] = useState({});
   const { showSuccess, showError } = useNotification();
 
@@ -60,25 +60,13 @@ export default function ConfiguracionNotificaciones() {
     { tipo: 200, descripcion: 250, valor: 200, acciones: 120 }
   );
 
-  // Cargar configuración al montar
+  // Usar configuración del contexto
   useEffect(() => {
-    const loadConfig = async () => {
-      try {
-        setLoading(true);
-        const config = await configService.getConfiguracion();
-        setValues(config || {});
-        setErrors({});
-      } catch (error) {
-        console.error('Error cargando configuración:', error);
-        showError('Error al cargar configuración de notificaciones');
-        setErrors({ general: error.message });
-      } finally {
-        setLoading(false);
-      }
-    };
-
-    loadConfig();
-  }, [showError]);
+    if (config) {
+      setValues(config);
+      setErrors({});
+    }
+  }, [config]);
 
   // Manejar cambio de input
   const handleChange = (type, value) => {
@@ -173,7 +161,7 @@ export default function ConfiguracionNotificaciones() {
   // Calcular segundos a partir de ms
   const msToSeconds = (ms) => (ms / 1000).toFixed(1);
 
-  if (loading) {
+  if (loadingConfig) {
     return <div className="configuracion-notificaciones__loading">Cargando configuración...</div>;
   }
 

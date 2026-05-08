@@ -1,6 +1,6 @@
 import React, { useCallback, useEffect, useState } from 'react';
 import auditService from '../../../../services/auditService';
-import configService from '../../../../services/configService';
+import { useConfig } from '../../../../hooks/useConfig';
 import usuarioService from '../../../../services/usuarioService';
 import SearchContainer from '../../../../components/SearchContainer/SearchContainer';
 import Pagination from '../../../../components/Pagination/Pagination';
@@ -11,6 +11,7 @@ import '../../../../styles/_table-standard.scss';
 import './GestionAuditoria.scss';
 
 function GestionAuditoria() {
+  const { config } = useConfig();
   const [logs, setLogs] = useState([]);
   const [totalCount, setTotalCount] = useState(0);
   const [loading, setLoading] = useState(true);
@@ -23,9 +24,10 @@ function GestionAuditoria() {
   const [horaHasta, setHoraHasta] = useState('');
   const [usuarioSeleccionado, setUsuarioSeleccionado] = useState('');
   const [usuarios, setUsuarios] = useState([]);
-  const [configItemsPerPage, setConfigItemsPerPage] = useState(null);
-  const [auditEnabled, setAuditEnabled] = useState(true);
   const [selectedLogParams, setSelectedLogParams] = useState(null);
+
+  const configItemsPerPage = config?.items_per_page || null;
+  const auditEnabled = config ? (config.audit_enabled === 1 || config.audit_enabled === '1') : true;
 
   const debouncedSearchText = useDebounce(searchText, 2000);
 
@@ -40,21 +42,9 @@ function GestionAuditoria() {
     ms: 70,
   });
 
-  // Cargar configuración y usuarios al montar
+  // Cargar usuarios al montar
   useEffect(() => {
-    const loadData = async () => {
-      try {
-        const config = await configService.getConfiguracion();
-        if (config && config.items_per_page) {
-          setConfigItemsPerPage(config.items_per_page);
-        }
-        if (config && config.audit_enabled !== undefined) {
-          setAuditEnabled(config.audit_enabled === 1 || config.audit_enabled === '1');
-        }
-      } catch (err) {
-        console.error('Error cargando configuración:', err);
-      }
-
+    const loadUsuarios = async () => {
       try {
         const usuariosList = await usuarioService.listar();
         setUsuarios(Array.isArray(usuariosList) ? usuariosList : []);
@@ -62,7 +52,7 @@ function GestionAuditoria() {
         console.error('Error cargando usuarios:', err);
       }
     };
-    loadData();
+    loadUsuarios();
   }, []);
 
   const cargar = useCallback(async () => {
