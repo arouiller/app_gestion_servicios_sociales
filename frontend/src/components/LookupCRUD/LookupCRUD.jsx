@@ -125,29 +125,16 @@ const LookupCRUD = ({ titulo, singularName, endpoint, campos, tableKey = 'lookup
     const nombreCampo = campos.find(c => c.name.includes('nombre') || c.name.includes('nombre'))?.name || campos[1]?.name || campos[0]?.name;
     const infoEntidad = nombreCampo ? registro[nombreCampo] : JSON.stringify(registro).substring(0, 50);
 
-    // Paso 1: Intenta eliminar sin forzar
-    try {
-      await lookupService.delete(entidad, id);
-      await loadRegistros();
-      setError(null);
-    } catch (err) {
-      // Paso 2: Si recibe 409 (referencias encontradas), abre modal
-      if (err.response?.status === 409) {
-        const data = err.response.data;
-        setDeleteModal({
-          isOpen: true,
-          registroId: id,
-          registroNombre: infoEntidad,
-          referencias: data.referencias || 0,
-          referenciaEn: data.referenciaEn || '',
-          isLoading: false,
-          error: null,
-        });
-      } else {
-        // Otro error: mostrar mensaje de error
-        setError(err.response?.data?.error || err.response?.data?.message || 'Error al eliminar');
-      }
-    }
+    // Abre modal de confirmación SIEMPRE (sin intentar eliminar primero)
+    setDeleteModal({
+      isOpen: true,
+      registroId: id,
+      registroNombre: infoEntidad,
+      referencias: 0,
+      referenciaEn: '',
+      isLoading: false,
+      error: null,
+    });
   };
 
   const handleConfirmDeleteWithRefs = async () => {

@@ -40,6 +40,7 @@ De cualquier estado → Descartado
 
 | ID | Prioridad | Estado | Descripción | Contexto / Motivo | Archivos estimados |
 |----|-----------|--------|-------------|-------------------|----|
+| BACKLOG-057 | 🟡 Media | 📋 Registrado | Modal de confirmación obligatorio al eliminar servicios adicionales | Cuando un usuario intenta eliminar un servicio adicional desde la pantalla de gestión, siempre mostrar modal de confirmación, incluso si el servicio no tiene referencias (integrantes asociados). Actualmente se elimina directamente si no hay referencias. Mejora UX: consistencia en flujo de confirmación. | LookupCRUD.jsx, lookupController.js, ConfirmDeleteWithRefsModal.jsx |
 | BACKLOG-056 | 🟡 Media | ✅ Solucionado | Mostrar último aumento masivo al generar recibos | Al generar recibos, mostrar cuál fue el último aumento masivo realizado (fecha, porcentaje, usuario que lo realizó) debajo del mensaje de qué mes se generarán recibos. Mejora transparencia: usuarios ven instantáneamente qué aumento afectará los nuevos recibos. Commits: ecac358, 5c9ed69, 09339a1 | GenerarRecibosModal.jsx, recibosService.js, recibosController.js, routes/recibos.js |
 | BACKLOG-055 | 🟡 Media | ✅ Solucionado | Historial de aumentos de cuota - listado centralizado con pop-up | Crear tabla `aumentos_masivos` (fecha, porcentaje, usuario) para registrar cada operación de aumento masivo. Accesible desde GestionPlanesV1 a través de botón "Ver historial de aumentos" al lado del botón de aumento masivo. Listado ordenado en forma descendente (más recientes primero). Mejora trazabilidad y consulta de cambios históricos. Commits: adb523f, 13d95cf, ec8ba58, 52e4fc9, 4b6f20d | migrations/2.0.26, AumentoMasivo.js, planesController.js, HistorialAumentosModal.jsx |
 | BACKLOG-054 | 🔴 Alta | ✅ Solucionado | Aumento de cuotas masivo: solo porcentajes, redondeo configurable | Mejorar funcionalidad de aumento masivo: (1) eliminar opción de aumento fijo, solo permitir porcentajes; (2) redondeo siempre hacia arriba (ceil); (3) precisión decimal del redondeo configurable desde UI. Commits: 28d4044, 3231b73, 9db9c06 | BulkUpdateCuotaModal.jsx, planesController.js, ConfiguracionNotificaciones.jsx, migrations/2.0.25, migrations/2.0.26 |
@@ -146,6 +147,58 @@ Mejora la transparencia del flujo de generación de recibos. Los usuarios pueden
 - `frontend/src/pages/DashboardPage/components/GenerarRecibosModal/GenerarRecibosModal.jsx` (cargar y mostrar información)
 
 **Estado:** 📋 Registrado (pendiente de implementar)
+
+---
+
+### BACKLOG-057: Modal de Confirmación Obligatorio al Eliminar Servicios Adicionales
+
+**Descripción:**
+Cuando un usuario intenta eliminar un servicio adicional desde la pantalla de gestión de Servicios Adicionales, siempre mostrar un modal de confirmación, incluso si el servicio NO tiene referencias (integrantes asociados). Actualmente, si el servicio no tiene referencias, se elimina directamente sin pedir confirmación.
+
+**Contexto:**
+Mejora la UX mediante consistencia en el flujo de confirmación. Todos los items de lookup que se eliminen deben pasar por modal de confirmación, independientemente de si tienen referencias o no. Esto previene eliminaciones accidentales y aumenta la confiabilidad percibida de la aplicación.
+
+**Estado Actual:**
+- Si servicio NO tiene referencias → se elimina directamente (sin modal)
+- Si servicio SÍ tiene referencias → se muestra modal con opción de eliminar en cascada o cancelar
+
+**Estado Deseado:**
+- SIEMPRE mostrar modal de confirmación, incluso sin referencias
+- Modal muestra: nombre del servicio, cantidad de integrantes que lo usan (0 si ninguno), botones Confirmar/Cancelar
+
+**Requerimientos Funcionales:**
+
+1. **Modal de Confirmación**
+   - Componente: `ConfirmDeleteWithRefsModal.jsx`
+   - Mostrar: "¿Está seguro que desea eliminar '{nombre_servicio}'?"
+   - Si hay referencias: mostrar cantidad de integrantes que lo usan
+   - Si NO hay referencias: mostrar "Este servicio no tiene referencias"
+   - Botones: "Eliminar" (rojo) y "Cancelar"
+
+2. **Flujo de Eliminación**
+   - Usuario hace click en icono de eliminar
+   - Se abre modal de confirmación (siempre)
+   - Usuario elige: Eliminar o Cancelar
+   - Si Eliminar:
+     - Si NO hay referencias → eliminar servicio directamente
+     - Si HAY referencias → eliminar servicio + todos los registros de integrante_servicios
+
+3. **Backend**
+   - Endpoint: `DELETE /api/lookup/servicios-adicionales/:id`
+   - Query param: `force=true` (opcional, para forzar eliminación en cascada)
+   - Comportamiento: SIEMPRE eliminar (no retornar 409 sin force)
+   - Cambiar lógica: remover condición `if (referenciaEncontrada && !forceDelete) → return 409`
+
+**Archivos a Modificar:**
+- `frontend/src/components/LookupCRUD/LookupCRUD.jsx` (cambiar lógica handleDelete, siempre mostrar modal)
+- `backend/src/controllers/lookupController.js` (cambiar lógica delete para servicios-adicionales)
+
+**Testing:**
+1. Eliminar servicio sin referencias → modal aparece → confirmar → servicio se elimina
+2. Eliminar servicio con referencias → modal aparece con cantidad → confirmar → servicio + referencias se eliminan
+3. Cancelar en cualquier caso → modal cierra, nada se elimina
+
+**Estado:** 📋 Registrado
 
 ---
 
