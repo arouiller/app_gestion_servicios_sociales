@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { useNotification } from '../../../../context/NotificationContext';
 import { useConfig } from '../../../../hooks/useConfig';
+import configService from '../../../../services/configService';
 import useColumnResize from '../../../../hooks/useColumnResize';
 import './ConfiguracionNotificaciones.scss';
 
