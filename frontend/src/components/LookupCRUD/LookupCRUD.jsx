@@ -37,8 +37,20 @@ const LookupCRUD = ({ titulo, singularName, endpoint, campos, tableKey = 'lookup
 
   const entidad = endpoint.split('/').pop();
 
+  // Mapeo de entidades a sus claves primarias
+  const pkFieldMap = {
+    cobradores: 'cobrador_numero',
+    'tipos-de-plan': 'tipo_plan_numero',
+    'obras-sociales': 'os_numero',
+    'servicios-adicionales': 'servicio_adicional_numero',
+    'tipos-de-grupo': 'tipo_de_grupo_numero',
+    zonas: 'id',
+  };
+
+  const pkField = pkFieldMap[entidad] || 'id';
+
   // Sort hook para ordenamiento dinámico - DEBE estar antes del useEffect que lo usa
-  const { sortBy, order, handleSort, getSortIcon } = useSortable(`lookup-${entidad}-sort`, entidad === 'cobradores' ? 'cobrador_numero' : 'id', 'ASC');
+  const { sortBy, order, handleSort, getSortIcon } = useSortable(`lookup-${entidad}-sort`, pkField, 'ASC');
 
   // Debouncificar el texto de búsqueda
   const debouncedSearchText = useDebounce(searchText, debounceDelay);
