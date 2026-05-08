@@ -39,7 +39,7 @@ const ENTIDADES = {
     model: db.Zona,
     pkField: 'id',
     campos: ['codigo', 'nombre'],
-    refsCheck: [],
+    refsCheck: [{ model: db.PlanV1, fk: 'zona_id' }],
   },
 };
 
@@ -435,7 +435,11 @@ async function deleteCascade(entidad, id, ref, transaction) {
       break;
 
     case 'zonas':
-      // Zonas no tienen referencias, sin cascada necesaria
+      // Establecer zona_id = NULL en planes que la referencian
+      await db.PlanV1.update(
+        { zona_id: null },
+        { where: { zona_id: id }, transaction }
+      );
       break;
 
     default:
