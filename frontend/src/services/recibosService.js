@@ -97,6 +97,20 @@ const recibosService = {
       return { success: false, data: null };
     }
   },
+
+  /**
+   * GET /api/recibos/numero-max
+   * Obtiene el número máximo de recibo registrado + 1 como sugerencia
+   */
+  getMaxNumero: async () => {
+    try {
+      const response = await api.get('/recibos/numero-max');
+      return response.data.sugerido;
+    } catch (error) {
+      console.error('Error fetching número máximo de recibo:', error);
+      return 1;
+    }
+  },
 };
 
 export default recibosService;
