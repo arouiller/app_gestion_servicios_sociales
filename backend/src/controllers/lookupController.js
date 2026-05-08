@@ -333,6 +333,60 @@ exports.delete = async (req, res, next) => {
 };
 
 /**
+ * GET /api/lookup/:entidad/:id/referencias
+ * Obtiene cantidad de referencias a un registro sin intentar eliminarlo
+ * Retorna: { referencias: number, referenciaEn: string }
+ */
+exports.getReferencias = async (req, res, next) => {
+  try {
+    const { entidad, id } = req.params;
+    const config = ENTIDADES[entidad];
+
+    if (!config) {
+      return res.status(404).json({
+        success: false,
+        error: 'Entidad no encontrada',
+        entidad,
+      });
+    }
+
+    // Verificar existencia del registro
+    const registro = await config.model.findByPk(id);
+    if (!registro) {
+      return res.status(404).json({
+        success: false,
+        error: 'Registro no encontrado',
+        [config.pkField]: id,
+      });
+    }
+
+    // Contar referencias en cada modelo de refsCheck
+    let referenciaEncontrada = null;
+    let cantidadReferencias = 0;
+
+    for (const ref of config.refsCheck) {
+      const count = await ref.model.count({
+        where: { [ref.fk]: id },
+      });
+
+      if (count > 0) {
+        referenciaEncontrada = ref;
+        cantidadReferencias = count;
+        break;
+      }
+    }
+
+    res.status(200).json({
+      success: true,
+      referencias: cantidadReferencias,
+      referenciaEn: referenciaEncontrada?.model.tableName || '',
+    });
+  } catch (error) {
+    next(error);
+  }
+};
+
+/**
  * Función auxiliar para eliminación en cascada
  * Actualiza FKs a NULL en lugar de eliminar registros dependientes
  * Manejo diferenciado por entidad

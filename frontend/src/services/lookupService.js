@@ -43,6 +43,20 @@ const lookupService = {
   },
 
   /**
+   * GET /api/lookup/:entidad/:id/referencias
+   * Obtiene cantidad de referencias a un registro sin intentar eliminarlo
+   */
+  getReferencias: async (entidad, id) => {
+    try {
+      const response = await api.get(`/lookup/${entidad}/${id}/referencias`);
+      return response.data;
+    } catch (error) {
+      console.error('Error fetching referencias:', error);
+      throw error;
+    }
+  },
+
+  /**
    * DELETE /api/lookup/:entidad/:id
    * Elimina un registro de lookup
    *

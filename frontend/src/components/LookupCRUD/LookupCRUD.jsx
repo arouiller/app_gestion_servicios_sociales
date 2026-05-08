@@ -125,16 +125,22 @@ const LookupCRUD = ({ titulo, singularName, endpoint, campos, tableKey = 'lookup
     const nombreCampo = campos.find(c => c.name.includes('nombre') || c.name.includes('nombre'))?.name || campos[1]?.name || campos[0]?.name;
     const infoEntidad = nombreCampo ? registro[nombreCampo] : JSON.stringify(registro).substring(0, 50);
 
-    // Abre modal de confirmación SIEMPRE (sin intentar eliminar primero)
-    setDeleteModal({
-      isOpen: true,
-      registroId: id,
-      registroNombre: infoEntidad,
-      referencias: 0,
-      referenciaEn: '',
-      isLoading: false,
-      error: null,
-    });
+    // Obtener información de referencias sin intentar eliminar
+    try {
+      const refData = await lookupService.getReferencias(entidad, id);
+
+      setDeleteModal({
+        isOpen: true,
+        registroId: id,
+        registroNombre: infoEntidad,
+        referencias: refData.referencias || 0,
+        referenciaEn: refData.referenciaEn || '',
+        isLoading: false,
+        error: null,
+      });
+    } catch (err) {
+      setError(err.response?.data?.error || 'Error al obtener información del registro');
+    }
   };
 
   const handleConfirmDeleteWithRefs = async () => {

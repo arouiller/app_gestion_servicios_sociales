@@ -8,6 +8,7 @@ router.use(verifyToken);
 
 // Lookup CRUD routes
 router.get('/:entidad', lookupController.list);
+router.get('/:entidad/:id/referencias', lookupController.getReferencias);
 router.post('/:entidad', lookupController.create);
 router.put('/:entidad/:id', lookupController.update);
 router.delete('/:entidad/:id', lookupController.delete);
