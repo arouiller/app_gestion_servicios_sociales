@@ -35,7 +35,8 @@ function PlanV1Modal({ mode, planData, onClose, onSave }) {
   const TAB_ORDER = ['datos', 'afiliados'];
 
   const [loading, setLoading] = useState(false);
-  const [showSuccessNotification, setShowSuccessNotification] = useState(false);
+  const [showSuccessNotification, setShowSuccessNotification] = useState('');
+  const [loadingAddAfiliado, setLoadingAddAfiliado] = useState(false);
   const [lookupData, setLookupData] = useState({
     tiposDeplan: [],
     cobradores: [],
@@ -330,8 +331,8 @@ function PlanV1Modal({ mode, planData, onClose, onSave }) {
       if (closeAfterSave) {
         onSave();
       } else {
-        setShowSuccessNotification(true);
-        setTimeout(() => setShowSuccessNotification(false), 3000);
+        setShowSuccessNotification('Plan guardado exitosamente');
+        setTimeout(() => setShowSuccessNotification(''), 3000);
       }
     } catch (err) {
       const serverErrors = err.response?.data?.errors;
@@ -346,14 +347,39 @@ function PlanV1Modal({ mode, planData, onClose, onSave }) {
     }
   };
 
-  const handleAfiladoSearch = (persona) => {
+  const handleAfiladoSearch = async (persona) => {
     if (form.integrantes.some((i) => i.persona_id === persona.id)) {
       alert('Este afiliado ya está asignado al plan');
       return;
     }
-    // Rol se asigna automáticamente: si es el primero = titular, si no = adherente
     const rol = form.integrantes.length === 0 ? 'titular' : 'adherente';
-    addIntegrante(persona, rol);
+
+    if (mode === 'editar') {
+      setLoadingAddAfiliado(true);
+      try {
+        const created = await planesIntegrantesService.crear({
+          plan_numero: planData.plan_numero,
+          persona_id: persona.id,
+          rol,
+        });
+        const newIntegrante = { id: created.id, persona_id: persona.id, persona, rol };
+        const updatedIntegrantes = [...form.integrantes, newIntegrante];
+        setForm((prev) => ({ ...prev, integrantes: updatedIntegrantes }));
+        const integrantesWithMeta = updatedIntegrantes.map((integ, index) => ({
+          id: integ.id,
+          orden: index + 1,
+        }));
+        await planesIntegrantesService.reorder(planData.plan_numero, integrantesWithMeta);
+        setShowSuccessNotification('Afiliado agregado al plan');
+        setTimeout(() => setShowSuccessNotification(''), 3000);
+      } catch (err) {
+        console.error('Error adding integrante:', err);
+      } finally {
+        setLoadingAddAfiliado(false);
+      }
+    } else {
+      addIntegrante(persona, rol);
+    }
     setAfiladoSearchOpen(false);
   };
 
@@ -455,7 +481,7 @@ function PlanV1Modal({ mode, planData, onClose, onSave }) {
 
         {showSuccessNotification && (
           <div className="plan-v1-modal__notification plan-v1-modal__notification--success">
-            ✓ Plan guardado exitosamente
+            ✓ {showSuccessNotification}
           </div>
         )}
 
@@ -684,8 +710,9 @@ function PlanV1Modal({ mode, planData, onClose, onSave }) {
                     type="button"
                     className="plan-v1-modal__btn plan-v1-modal__btn--secondary"
                     onClick={() => setAfiladoSearchOpen(true)}
+                    disabled={loadingAddAfiliado}
                   >
-                    + Agregar Afiliado
+                    {loadingAddAfiliado ? 'Agregando...' : '+ Agregar Afiliado'}
                   </button>
                 </div>
 
