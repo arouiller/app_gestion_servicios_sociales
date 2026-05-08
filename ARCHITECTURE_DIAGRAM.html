@@ -181,99 +181,175 @@
     </div>
 
     <script>
-        // Definir nodos
+        // Definir nodos con TODOS los elementos del diagrama original
         const nodes = new vis.DataSet([
-            // Modelos BD
-            { id: 'Usuario', label: 'Usuario', color: '#e3f2fd', borderWidth: 2, borderColor: '#2196F3', group: 'models' },
-            { id: 'Persona', label: 'Persona', color: '#e3f2fd', borderWidth: 2, borderColor: '#2196F3', group: 'models' },
-            { id: 'PlanV1', label: 'PlanV1', color: '#e3f2fd', borderWidth: 2, borderColor: '#2196F3', group: 'models' },
-            { id: 'PlanIntegrante', label: 'PlanIntegrante', color: '#e3f2fd', borderWidth: 2, borderColor: '#2196F3', group: 'models' },
-            { id: 'IntegranteServicio', label: 'IntegranteServicio', color: '#e3f2fd', borderWidth: 2, borderColor: '#2196F3', group: 'models' },
-            { id: 'HistorialCuota', label: 'HistorialCuota', color: '#e3f2fd', borderWidth: 2, borderColor: '#2196F3', group: 'models' },
-            { id: 'Recibo', label: 'Recibo', color: '#e3f2fd', borderWidth: 2, borderColor: '#2196F3', group: 'models' },
-            { id: 'ReciboIntegrante', label: 'ReciboIntegrante', color: '#e3f2fd', borderWidth: 2, borderColor: '#2196F3', group: 'models' },
-            { id: 'Cobrador', label: 'Cobrador', color: '#e3f2fd', borderWidth: 2, borderColor: '#2196F3', group: 'models' },
-            { id: 'ObraSocial', label: 'ObraSocial', color: '#e3f2fd', borderWidth: 2, borderColor: '#2196F3', group: 'models' },
-            { id: 'TipoPlan', label: 'TipoPlan', color: '#e3f2fd', borderWidth: 2, borderColor: '#2196F3', group: 'models' },
-            { id: 'TipoGrupo', label: 'TipoGrupo', color: '#e3f2fd', borderWidth: 2, borderColor: '#2196F3', group: 'models' },
-            { id: 'Zona', label: 'Zona', color: '#e3f2fd', borderWidth: 2, borderColor: '#2196F3', group: 'models' },
-            { id: 'Provincia', label: 'Provincia', color: '#e3f2fd', borderWidth: 2, borderColor: '#2196F3', group: 'models' },
-            { id: 'Localidad', label: 'Localidad', color: '#e3f2fd', borderWidth: 2, borderColor: '#2196F3', group: 'models' },
-            { id: 'ServicioAdicional', label: 'ServicioAdicional', color: '#e3f2fd', borderWidth: 2, borderColor: '#2196F3', group: 'models' },
-            { id: 'AumentoMasivo', label: 'AumentoMasivo', color: '#e3f2fd', borderWidth: 2, borderColor: '#2196F3', group: 'models' },
-            { id: 'AuditLog', label: 'AuditLog', color: '#e3f2fd', borderWidth: 2, borderColor: '#2196F3', group: 'models' },
-            { id: 'PeriodosRecibos', label: 'PeriodosRecibos', color: '#e3f2fd', borderWidth: 2, borderColor: '#2196F3', group: 'models' },
+            // ============= MODELOS BD - CORE =============
+            { id: 'Persona', label: 'Persona', color: '#e3f2fd', borderWidth: 2, borderColor: '#2196F3', group: 'models', layer: 'BD' },
+            { id: 'Usuario', label: 'Usuario', color: '#e3f2fd', borderWidth: 2, borderColor: '#2196F3', group: 'models', layer: 'BD' },
+            { id: 'PlanV1', label: 'PlanV1', color: '#e3f2fd', borderWidth: 2, borderColor: '#2196F3', group: 'models', layer: 'BD' },
+            { id: 'PlanIntegrante', label: 'PlanIntegrante', color: '#e3f2fd', borderWidth: 2, borderColor: '#2196F3', group: 'models', layer: 'BD' },
 
-            // API Endpoints
-            { id: 'POST_planes', label: 'POST /planes', color: '#f1f8e9', borderWidth: 2, borderColor: '#4CAF50', group: 'api' },
-            { id: 'GET_planes', label: 'GET /planes', color: '#f1f8e9', borderWidth: 2, borderColor: '#4CAF50', group: 'api' },
-            { id: 'PUT_planes', label: 'PUT /planes/:id', color: '#f1f8e9', borderWidth: 2, borderColor: '#4CAF50', group: 'api' },
-            { id: 'POST_recibos', label: 'POST /recibos/generar', color: '#f1f8e9', borderWidth: 2, borderColor: '#4CAF50', group: 'api' },
-            { id: 'GET_recibos', label: 'GET /recibos', color: '#f1f8e9', borderWidth: 2, borderColor: '#4CAF50', group: 'api' },
-            { id: 'POST_personas', label: 'POST /personas', color: '#f1f8e9', borderWidth: 2, borderColor: '#4CAF50', group: 'api' },
-            { id: 'GET_lookup', label: 'GET /lookup/:entity', color: '#f1f8e9', borderWidth: 2, borderColor: '#4CAF50', group: 'api' },
-            { id: 'PATCH_bulk', label: 'PATCH /planes/bulk-update', color: '#f1f8e9', borderWidth: 2, borderColor: '#4CAF50', group: 'api' },
+            // ============= MODELOS BD - SERVICIOS =============
+            { id: 'IntegranteServicio', label: 'IntegranteServicio', color: '#e3f2fd', borderWidth: 2, borderColor: '#2196F3', group: 'models', layer: 'BD' },
+            { id: 'ServicioAdicional', label: 'ServicioAdicional', color: '#e3f2fd', borderWidth: 2, borderColor: '#2196F3', group: 'models', layer: 'BD' },
 
-            // Frontend Services
-            { id: 'planesV1Service', label: 'planesV1Service', color: '#fffde7', borderWidth: 2, borderColor: '#FBC02D', group: 'services' },
-            { id: 'recibosService', label: 'recibosService', color: '#fffde7', borderWidth: 2, borderColor: '#FBC02D', group: 'services' },
-            { id: 'personasService', label: 'personasService', color: '#fffde7', borderWidth: 2, borderColor: '#FBC02D', group: 'services' },
-            { id: 'lookupService', label: 'lookupService', color: '#fffde7', borderWidth: 2, borderColor: '#FBC02D', group: 'services' },
-            { id: 'zonaService', label: 'zonaService', color: '#fffde7', borderWidth: 2, borderColor: '#FBC02D', group: 'services' },
+            // ============= MODELOS BD - HISTORIAL/RECIBOS =============
+            { id: 'HistorialCuota', label: 'HistorialCuota', color: '#e3f2fd', borderWidth: 2, borderColor: '#2196F3', group: 'models', layer: 'BD' },
+            { id: 'Recibo', label: 'Recibo', color: '#e3f2fd', borderWidth: 2, borderColor: '#2196F3', group: 'models', layer: 'BD' },
+            { id: 'ReciboIntegrante', label: 'ReciboIntegrante', color: '#e3f2fd', borderWidth: 2, borderColor: '#2196F3', group: 'models', layer: 'BD' },
+            { id: 'PeriodosRecibos', label: 'PeriodosRecibos', color: '#e3f2fd', borderWidth: 2, borderColor: '#2196F3', group: 'models', layer: 'BD' },
 
-            // React Components
-            { id: 'GestionPlanesV1', label: 'GestionPlanesV1', color: '#ffe0b2', borderWidth: 2, borderColor: '#FF9800', group: 'components' },
-            { id: 'PlanV1Modal', label: 'PlanV1Modal', color: '#ffe0b2', borderWidth: 2, borderColor: '#FF9800', group: 'components' },
-            { id: 'GenerarRecibosModal', label: 'GenerarRecibosModal', color: '#ffe0b2', borderWidth: 2, borderColor: '#FF9800', group: 'components' },
-            { id: 'RecibosPage', label: 'RecibosPage', color: '#ffe0b2', borderWidth: 2, borderColor: '#FF9800', group: 'components' },
-            { id: 'DashboardPage', label: 'DashboardPage', color: '#ffe0b2', borderWidth: 2, borderColor: '#FF9800', group: 'components' },
-            { id: 'BusquedaAfiliados', label: 'BusquedaAfiliados', color: '#ffe0b2', borderWidth: 2, borderColor: '#FF9800', group: 'components' },
+            // ============= MODELOS BD - LOOKUP =============
+            { id: 'Cobrador', label: 'Cobrador', color: '#e3f2fd', borderWidth: 2, borderColor: '#2196F3', group: 'models', layer: 'BD' },
+            { id: 'ObraSocial', label: 'ObraSocial', color: '#e3f2fd', borderWidth: 2, borderColor: '#2196F3', group: 'models', layer: 'BD' },
+            { id: 'TipoPlan', label: 'TipoPlan', color: '#e3f2fd', borderWidth: 2, borderColor: '#2196F3', group: 'models', layer: 'BD' },
+            { id: 'TipoGrupo', label: 'TipoGrupo', color: '#e3f2fd', borderWidth: 2, borderColor: '#2196F3', group: 'models', layer: 'BD' },
+
+            // ============= MODELOS BD - GEOGRAFIA =============
+            { id: 'Zona', label: 'Zona', color: '#e3f2fd', borderWidth: 2, borderColor: '#2196F3', group: 'models', layer: 'BD' },
+            { id: 'Provincia', label: 'Provincia', color: '#e3f2fd', borderWidth: 2, borderColor: '#2196F3', group: 'models', layer: 'BD' },
+            { id: 'Localidad', label: 'Localidad', color: '#e3f2fd', borderWidth: 2, borderColor: '#2196F3', group: 'models', layer: 'BD' },
+
+            // ============= MODELOS BD - AUDITORIA =============
+            { id: 'AumentoMasivo', label: 'AumentoMasivo', color: '#e3f2fd', borderWidth: 2, borderColor: '#2196F3', group: 'models', layer: 'BD' },
+            { id: 'AuditLog', label: 'AuditLog', color: '#e3f2fd', borderWidth: 2, borderColor: '#2196F3', group: 'models', layer: 'BD' },
+            { id: 'ConfiguracionApp', label: 'ConfiguracionApp', color: '#e3f2fd', borderWidth: 2, borderColor: '#2196F3', group: 'models', layer: 'BD' },
+
+            // ============= API ENDPOINTS - PLANES =============
+            { id: 'POST_planes_crear', label: 'POST /planes/crear-completo', color: '#f1f8e9', borderWidth: 2, borderColor: '#4CAF50', group: 'api', layer: 'API' },
+            { id: 'GET_planes', label: 'GET /planes', color: '#f1f8e9', borderWidth: 2, borderColor: '#4CAF50', group: 'api', layer: 'API' },
+            { id: 'GET_planes_filter', label: 'GET /planes/filter', color: '#f1f8e9', borderWidth: 2, borderColor: '#4CAF50', group: 'api', layer: 'API' },
+            { id: 'PUT_planes_actualizar', label: 'PUT /planes/actualizar-completo/:id', color: '#f1f8e9', borderWidth: 2, borderColor: '#4CAF50', group: 'api', layer: 'API' },
+            { id: 'PATCH_planes_estado', label: 'PATCH /planes/:id/estado', color: '#f1f8e9', borderWidth: 2, borderColor: '#4CAF50', group: 'api', layer: 'API' },
+            { id: 'PATCH_planes_bulk', label: 'PATCH /planes/bulk-update-cuota', color: '#f1f8e9', borderWidth: 2, borderColor: '#4CAF50', group: 'api', layer: 'API' },
+
+            // ============= API ENDPOINTS - RECIBOS =============
+            { id: 'POST_recibos_generar', label: 'POST /recibos/generar', color: '#f1f8e9', borderWidth: 2, borderColor: '#4CAF50', group: 'api', layer: 'API' },
+            { id: 'GET_recibos', label: 'GET /recibos', color: '#f1f8e9', borderWidth: 2, borderColor: '#4CAF50', group: 'api', layer: 'API' },
+            { id: 'GET_recibos_id', label: 'GET /recibos/:id', color: '#f1f8e9', borderWidth: 2, borderColor: '#4CAF50', group: 'api', layer: 'API' },
+            { id: 'GET_recibos_periodos', label: 'GET /recibos/periodos', color: '#f1f8e9', borderWidth: 2, borderColor: '#4CAF50', group: 'api', layer: 'API' },
+            { id: 'GET_recibos_numero_max', label: 'GET /recibos/numero-max', color: '#f1f8e9', borderWidth: 2, borderColor: '#4CAF50', group: 'api', layer: 'API' },
+
+            // ============= API ENDPOINTS - PERSONAS =============
+            { id: 'POST_personas', label: 'POST /personas', color: '#f1f8e9', borderWidth: 2, borderColor: '#4CAF50', group: 'api', layer: 'API' },
+            { id: 'GET_personas_search', label: 'GET /personas/search', color: '#f1f8e9', borderWidth: 2, borderColor: '#4CAF50', group: 'api', layer: 'API' },
+
+            // ============= API ENDPOINTS - LOOKUP =============
+            { id: 'GET_lookup', label: 'GET /lookup/:entity', color: '#f1f8e9', borderWidth: 2, borderColor: '#4CAF50', group: 'api', layer: 'API' },
+            { id: 'POST_lookup', label: 'POST /lookup/:entity', color: '#f1f8e9', borderWidth: 2, borderColor: '#4CAF50', group: 'api', layer: 'API' },
+            { id: 'DELETE_lookup', label: 'DELETE /lookup/:entity/:id', color: '#f1f8e9', borderWidth: 2, borderColor: '#4CAF50', group: 'api', layer: 'API' },
+
+            // ============= FRONTEND SERVICES =============
+            { id: 'planesV1Service', label: 'planesV1Service', color: '#fffde7', borderWidth: 2, borderColor: '#FBC02D', group: 'services', layer: 'Services' },
+            { id: 'recibosService', label: 'recibosService', color: '#fffde7', borderWidth: 2, borderColor: '#FBC02D', group: 'services', layer: 'Services' },
+            { id: 'personasService', label: 'personasService', color: '#fffde7', borderWidth: 2, borderColor: '#FBC02D', group: 'services', layer: 'Services' },
+            { id: 'lookupService', label: 'lookupService', color: '#fffde7', borderWidth: 2, borderColor: '#FBC02D', group: 'services', layer: 'Services' },
+            { id: 'zonaService', label: 'zonaService', color: '#fffde7', borderWidth: 2, borderColor: '#FBC02D', group: 'services', layer: 'Services' },
+            { id: 'localidadService', label: 'localidadService', color: '#fffde7', borderWidth: 2, borderColor: '#FBC02D', group: 'services', layer: 'Services' },
+            { id: 'provinciaService', label: 'provinciaService', color: '#fffde7', borderWidth: 2, borderColor: '#FBC02D', group: 'services', layer: 'Services' },
+            { id: 'planesIntegrantesService', label: 'planesIntegrantesService', color: '#fffde7', borderWidth: 2, borderColor: '#FBC02D', group: 'services', layer: 'Services' },
+            { id: 'migrationsService', label: 'migrationsService', color: '#fffde7', borderWidth: 2, borderColor: '#FBC02D', group: 'services', layer: 'Services' },
+            { id: 'usuariosService', label: 'usuariosService', color: '#fffde7', borderWidth: 2, borderColor: '#FBC02D', group: 'services', layer: 'Services' },
+
+            // ============= REACT COMPONENTS =============
+            { id: 'DashboardPage', label: 'DashboardPage', color: '#ffe0b2', borderWidth: 2, borderColor: '#FF9800', group: 'components', layer: 'Components' },
+            { id: 'GestionPlanesV1', label: 'GestionPlanesV1', color: '#ffe0b2', borderWidth: 2, borderColor: '#FF9800', group: 'components', layer: 'Components' },
+            { id: 'PlanV1Modal', label: 'PlanV1Modal', color: '#ffe0b2', borderWidth: 2, borderColor: '#FF9800', group: 'components', layer: 'Components' },
+            { id: 'GenerarRecibosModal', label: 'GenerarRecibosModal', color: '#ffe0b2', borderWidth: 2, borderColor: '#FF9800', group: 'components', layer: 'Components' },
+            { id: 'ReciboDetalleModal', label: 'ReciboDetalleModal', color: '#ffe0b2', borderWidth: 2, borderColor: '#FF9800', group: 'components', layer: 'Components' },
+            { id: 'RecibosPage', label: 'RecibosPage', color: '#ffe0b2', borderWidth: 2, borderColor: '#FF9800', group: 'components', layer: 'Components' },
+            { id: 'BusquedaAfiliados', label: 'BusquedaAfiliados', color: '#ffe0b2', borderWidth: 2, borderColor: '#FF9800', group: 'components', layer: 'Components' },
+            { id: 'LookupCRUD', label: 'LookupCRUD', color: '#ffe0b2', borderWidth: 2, borderColor: '#FF9800', group: 'components', layer: 'Components' },
+            { id: 'GestionZonas', label: 'GestionZonas', color: '#ffe0b2', borderWidth: 2, borderColor: '#FF9800', group: 'components', layer: 'Components' },
+            { id: 'GestionProvincias', label: 'GestionProvincias', color: '#ffe0b2', borderWidth: 2, borderColor: '#FF9800', group: 'components', layer: 'Components' },
+            { id: 'GestionUsuarios', label: 'GestionUsuarios', color: '#ffe0b2', borderWidth: 2, borderColor: '#FF9800', group: 'components', layer: 'Components' },
+            { id: 'BulkUpdateCuotaModal', label: 'BulkUpdateCuotaModal', color: '#ffe0b2', borderWidth: 2, borderColor: '#FF9800', group: 'components', layer: 'Components' },
+            { id: 'AfiladoSearchModal', label: 'AfiladoSearchModal', color: '#ffe0b2', borderWidth: 2, borderColor: '#FF9800', group: 'components', layer: 'Components' },
+            { id: 'HistorialAumentosModal', label: 'HistorialAumentosModal', color: '#ffe0b2', borderWidth: 2, borderColor: '#FF9800', group: 'components', layer: 'Components' },
         ]);
 
-        // Definir conexiones (edges)
+        // Definir conexiones (edges) - TODAS las relaciones del diagrama original
         const edges = new vis.DataSet([
-            // Backend: API -> Modelos
-            { from: 'POST_planes', to: 'PlanV1', color: '#bbb' },
-            { from: 'GET_planes', to: 'PlanV1', color: '#bbb' },
-            { from: 'PUT_planes', to: 'PlanV1', color: '#bbb' },
-            { from: 'POST_recibos', to: 'Recibo', color: '#bbb' },
-            { from: 'GET_recibos', to: 'Recibo', color: '#bbb' },
-            { from: 'POST_personas', to: 'Persona', color: '#bbb' },
+            // ============= BACKEND: API -> MODELOS =============
+            { from: 'POST_planes_crear', to: 'PlanV1', color: '#bbb', dashes: false },
+            { from: 'GET_planes', to: 'PlanV1', color: '#bbb', dashes: false },
+            { from: 'GET_planes_filter', to: 'PlanV1', color: '#bbb', dashes: false },
+            { from: 'PUT_planes_actualizar', to: 'PlanV1', color: '#bbb', dashes: false },
+            { from: 'PATCH_planes_estado', to: 'PlanV1', color: '#bbb', dashes: false },
+            { from: 'PATCH_planes_bulk', to: 'PlanV1', color: '#bbb', dashes: false },
+            { from: 'POST_recibos_generar', to: 'Recibo', color: '#bbb', dashes: false },
+            { from: 'GET_recibos', to: 'Recibo', color: '#bbb', dashes: false },
+            { from: 'GET_recibos_id', to: 'Recibo', color: '#bbb', dashes: false },
+            { from: 'GET_recibos_periodos', to: 'PeriodosRecibos', color: '#bbb', dashes: false },
+            { from: 'POST_personas', to: 'Persona', color: '#bbb', dashes: false },
+            { from: 'GET_personas_search', to: 'Persona', color: '#bbb', dashes: false },
 
-            // Backend: Modelos relacionados
-            { from: 'PlanV1', to: 'PlanIntegrante', color: '#bbb', dashes: true },
-            { from: 'PlanV1', to: 'Cobrador', color: '#bbb', dashes: true },
-            { from: 'PlanV1', to: 'ObraSocial', color: '#bbb', dashes: true },
-            { from: 'PlanV1', to: 'TipoPlan', color: '#bbb', dashes: true },
-            { from: 'PlanV1', to: 'TipoGrupo', color: '#bbb', dashes: true },
-            { from: 'PlanV1', to: 'Zona', color: '#bbb', dashes: true },
-            { from: 'PlanV1', to: 'Localidad', color: '#bbb', dashes: true },
-            { from: 'PlanIntegrante', to: 'Persona', color: '#bbb', dashes: true },
-            { from: 'PlanIntegrante', to: 'IntegranteServicio', color: '#bbb', dashes: true },
-            { from: 'IntegranteServicio', to: 'ServicioAdicional', color: '#bbb', dashes: true },
-            { from: 'Recibo', to: 'ReciboIntegrante', color: '#bbb', dashes: true },
-            { from: 'Recibo', to: 'PlanV1', color: '#bbb', dashes: true },
-            { from: 'HistorialCuota', to: 'PlanV1', color: '#bbb', dashes: true },
-            { from: 'AuditLog', to: 'Usuario', color: '#bbb', dashes: true },
+            // ============= BACKEND: MODELOS - RELACIONES =============
+            { from: 'PlanV1', to: 'PlanIntegrante', color: '#999', dashes: true },
+            { from: 'PlanV1', to: 'Cobrador', color: '#999', dashes: true },
+            { from: 'PlanV1', to: 'ObraSocial', color: '#999', dashes: true },
+            { from: 'PlanV1', to: 'TipoPlan', color: '#999', dashes: true },
+            { from: 'PlanV1', to: 'TipoGrupo', color: '#999', dashes: true },
+            { from: 'PlanV1', to: 'Zona', color: '#999', dashes: true },
+            { from: 'PlanV1', to: 'Localidad', color: '#999', dashes: true },
+            { from: 'PlanIntegrante', to: 'Persona', color: '#999', dashes: true },
+            { from: 'PlanIntegrante', to: 'IntegranteServicio', color: '#999', dashes: true },
+            { from: 'IntegranteServicio', to: 'ServicioAdicional', color: '#999', dashes: true },
+            { from: 'Recibo', to: 'ReciboIntegrante', color: '#999', dashes: true },
+            { from: 'Recibo', to: 'PlanV1', color: '#999', dashes: true },
+            { from: 'HistorialCuota', to: 'PlanV1', color: '#999', dashes: true },
+            { from: 'AumentoMasivo', to: 'Usuario', color: '#999', dashes: true },
+            { from: 'AuditLog', to: 'Usuario', color: '#999', dashes: true },
 
-            // Frontend: Componentes -> Servicios
-            { from: 'GestionPlanesV1', to: 'planesV1Service', color: '#667eea' },
-            { from: 'PlanV1Modal', to: 'planesV1Service', color: '#667eea' },
-            { from: 'PlanV1Modal', to: 'personasService', color: '#667eea' },
-            { from: 'GenerarRecibosModal', to: 'recibosService', color: '#667eea' },
-            { from: 'RecibosPage', to: 'recibosService', color: '#667eea' },
-            { from: 'BusquedaAfiliados', to: 'planesV1Service', color: '#667eea' },
+            // ============= FRONTEND: COMPONENTES -> SERVICIOS =============
             { from: 'DashboardPage', to: 'GestionPlanesV1', color: '#667eea' },
             { from: 'DashboardPage', to: 'RecibosPage', color: '#667eea' },
+            { from: 'DashboardPage', to: 'BusquedaAfiliados', color: '#667eea' },
+            { from: 'DashboardPage', to: 'LookupCRUD', color: '#667eea' },
+            { from: 'GestionPlanesV1', to: 'planesV1Service', color: '#667eea' },
+            { from: 'GestionPlanesV1', to: 'PlanV1Modal', color: '#667eea' },
+            { from: 'GestionPlanesV1', to: 'GenerarRecibosModal', color: '#667eea' },
+            { from: 'GestionPlanesV1', to: 'BulkUpdateCuotaModal', color: '#667eea' },
+            { from: 'GestionPlanesV1', to: 'HistorialAumentosModal', color: '#667eea' },
+            { from: 'PlanV1Modal', to: 'planesV1Service', color: '#667eea' },
+            { from: 'PlanV1Modal', to: 'personasService', color: '#667eea' },
+            { from: 'PlanV1Modal', to: 'planesIntegrantesService', color: '#667eea' },
+            { from: 'PlanV1Modal', to: 'lookupService', color: '#667eea' },
+            { from: 'PlanV1Modal', to: 'zonaService', color: '#667eea' },
+            { from: 'PlanV1Modal', to: 'localidadService', color: '#667eea' },
+            { from: 'PlanV1Modal', to: 'AfiladoSearchModal', color: '#667eea' },
+            { from: 'GenerarRecibosModal', to: 'recibosService', color: '#667eea' },
+            { from: 'RecibosPage', to: 'recibosService', color: '#667eea' },
+            { from: 'RecibosPage', to: 'ReciboDetalleModal', color: '#667eea' },
+            { from: 'BusquedaAfiliados', to: 'planesV1Service', color: '#667eea' },
+            { from: 'BusquedaAfiliados', to: 'PlanV1Modal', color: '#667eea' },
+            { from: 'LookupCRUD', to: 'lookupService', color: '#667eea' },
+            { from: 'GestionZonas', to: 'zonaService', color: '#667eea' },
+            { from: 'GestionProvincias', to: 'provinciaService', color: '#667eea' },
+            { from: 'GestionProvincias', to: 'localidadService', color: '#667eea' },
+            { from: 'GestionUsuarios', to: 'usuariosService', color: '#667eea' },
 
-            // Frontend: Servicios -> API
-            { from: 'planesV1Service', to: 'POST_planes', color: '#999' },
-            { from: 'planesV1Service', to: 'GET_planes', color: '#999' },
-            { from: 'planesV1Service', to: 'PUT_planes', color: '#999' },
-            { from: 'recibosService', to: 'POST_recibos', color: '#999' },
-            { from: 'recibosService', to: 'GET_recibos', color: '#999' },
-            { from: 'personasService', to: 'POST_personas', color: '#999' },
-            { from: 'lookupService', to: 'GET_lookup', color: '#999' },
+            // ============= FRONTEND: SERVICIOS -> API =============
+            { from: 'planesV1Service', to: 'POST_planes_crear', color: '#999', width: 1.5 },
+            { from: 'planesV1Service', to: 'GET_planes_filter', color: '#999', width: 1.5 },
+            { from: 'planesV1Service', to: 'PUT_planes_actualizar', color: '#999', width: 1.5 },
+            { from: 'planesV1Service', to: 'PATCH_planes_estado', color: '#999', width: 1.5 },
+            { from: 'planesV1Service', to: 'PATCH_planes_bulk', color: '#999', width: 1.5 },
+            { from: 'recibosService', to: 'POST_recibos_generar', color: '#999', width: 1.5 },
+            { from: 'recibosService', to: 'GET_recibos', color: '#999', width: 1.5 },
+            { from: 'recibosService', to: 'GET_recibos_id', color: '#999', width: 1.5 },
+            { from: 'recibosService', to: 'GET_recibos_periodos', color: '#999', width: 1.5 },
+            { from: 'recibosService', to: 'GET_recibos_numero_max', color: '#999', width: 1.5 },
+            { from: 'personasService', to: 'POST_personas', color: '#999', width: 1.5 },
+            { from: 'personasService', to: 'GET_personas_search', color: '#999', width: 1.5 },
+            { from: 'lookupService', to: 'GET_lookup', color: '#999', width: 1.5 },
+            { from: 'lookupService', to: 'POST_lookup', color: '#999', width: 1.5 },
+            { from: 'lookupService', to: 'DELETE_lookup', color: '#999', width: 1.5 },
+            { from: 'zonaService', to: 'GET_lookup', color: '#999', width: 1.5 },
+            { from: 'localidadService', to: 'GET_lookup', color: '#999', width: 1.5 },
+            { from: 'provinciaService', to: 'GET_lookup', color: '#999', width: 1.5 },
+            { from: 'planesIntegrantesService', to: 'GET_lookup', color: '#999', width: 1.5 },
+            { from: 'usuariosService', to: 'GET_lookup', color: '#999', width: 1.5 },
         ]);
 
         // Opciones de visualización
