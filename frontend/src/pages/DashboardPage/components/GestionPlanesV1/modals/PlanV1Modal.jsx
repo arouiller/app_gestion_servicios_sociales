@@ -35,6 +35,7 @@ function PlanV1Modal({ mode, planData, onClose, onSave }) {
   const TAB_ORDER = ['datos', 'afiliados'];
 
   const [loading, setLoading] = useState(false);
+  const [showSuccessNotification, setShowSuccessNotification] = useState(false);
   const [lookupData, setLookupData] = useState({
     tiposDeplan: [],
     cobradores: [],
@@ -241,7 +242,7 @@ function PlanV1Modal({ mode, planData, onClose, onSave }) {
     }
   };
 
-  const handleGuardar = async () => {
+  const handleGuardar = async (closeAfterSave = true) => {
     const validationErrors = validate();
     if (Object.keys(validationErrors).length > 0) {
       navigateToFirstError(validationErrors);
@@ -310,7 +311,14 @@ function PlanV1Modal({ mode, planData, onClose, onSave }) {
         await planesIntegrantesService.reorder(planData.plan_numero, integrantesWithMeta);
       }
 
-      onSave();
+      // Si closeAfterSave es true, cierra el modal llamando a onSave()
+      // Si es false, muestra notificación de éxito y mantiene modal abierto
+      if (closeAfterSave) {
+        onSave();
+      } else {
+        setShowSuccessNotification(true);
+        setTimeout(() => setShowSuccessNotification(false), 3000);
+      }
     } catch (err) {
       const serverErrors = err.response?.data?.errors;
       if (serverErrors && Object.keys(serverErrors).length > 0) {
@@ -430,6 +438,12 @@ function PlanV1Modal({ mode, planData, onClose, onSave }) {
             ✕
           </button>
         </div>
+
+        {showSuccessNotification && (
+          <div className="plan-v1-modal__notification plan-v1-modal__notification--success">
+            ✓ Plan guardado exitosamente
+          </div>
+        )}
 
         <div className="plan-v1-modal__body">
           {/* Tabs */}
@@ -857,9 +871,24 @@ function PlanV1Modal({ mode, planData, onClose, onSave }) {
         </div>
 
         <div className="plan-v1-modal__footer">
-          <button className="plan-v1-modal__btn plan-v1-modal__btn--primary" onClick={handleGuardar} disabled={loading}>
-            {loading ? 'Guardando...' : 'Guardar'}
-          </button>
+          <div className="plan-v1-modal__footer-buttons">
+            <button
+              className="plan-v1-modal__btn plan-v1-modal__btn--primary"
+              onClick={() => handleGuardar(false)}
+              disabled={loading}
+              title="Guarda los cambios y mantiene el modal abierto para continuar editando"
+            >
+              {loading ? 'Guardando...' : 'Guardar y Seguir Editando'}
+            </button>
+            <button
+              className="plan-v1-modal__btn plan-v1-modal__btn--success"
+              onClick={() => handleGuardar(true)}
+              disabled={loading}
+              title="Guarda los cambios y cierra el modal"
+            >
+              {loading ? 'Guardando...' : 'Guardar y Cerrar'}
+            </button>
+          </div>
           <button className="plan-v1-modal__btn plan-v1-modal__btn--secondary" onClick={onClose} disabled={loading}>
             Cancelar
           </button>
