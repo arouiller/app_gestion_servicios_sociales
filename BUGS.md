@@ -33,6 +33,7 @@ Un bug solo puede pasar a estado solucionado, Descartado a traves del pedido exp
 
 | ID | Severidad | Fase | Descripción | Reportado | Solucionado | Commit |
 |----|-----------|------|-------------|-----------|-------------|--------|
+| BUG-038 | 🔴 CRÍTICO | BACKLOG-060 | Falso positivo en detección de afiliados duplicados en modo crear | 2026-05-08 | 2026-05-08 | `292d692` |
 | BUG-037 | 🔴 CRÍTICO | BACKLOG-060 | Creación prematura de personas en modo "crear plan" | 2026-05-08 | 2026-05-08 | `6f888ce` |
 | BUG-036 | 🔴 CRÍTICO | BACKLOG-060 | Integrantes sin ID al crear plan nuevo (reorder fallido) | 2026-05-08 | 2026-05-08 | `05d3b11` |
 | BUG-035 | 🔴 CRÍTICO | BACKLOG-057 | TypeError: "N.tiposDeplan.map is not a function" al crear/editar planes | 2026-05-08 | 2026-05-08 | `dcd40f6` |
@@ -43,6 +44,7 @@ Un bug solo puede pasar a estado solucionado, Descartado a traves del pedido exp
 
 | ID | Severidad | Fase | Descripción | Reportado | Estado |
 |----|-----------|------|-------------|-----------|--------|
+| BUG-038 | 🔴 CRÍTICO | BACKLOG-060 | Falso positivo en detección de afiliados duplicados en modo crear | 2026-05-08 | ✅ Solucionado |
 | BUG-037 | 🔴 CRÍTICO | BACKLOG-060 | Creación prematura de personas en modo "crear plan" | 2026-05-08 | ✅ Solucionado |
 | BUG-036 | 🔴 CRÍTICO | BACKLOG-060 | Integrantes sin ID al crear plan nuevo (reorder fallido) | 2026-05-08 | ✅ Solucionado |
 | BUG-035 | 🔴 CRÍTICO | BACKLOG-057 | TypeError: "N.tiposDeplan.map is not a function" al crear/editar planes | 2026-05-08 | ✅ Solucionado |
@@ -2976,6 +2978,90 @@ Usuario crea plan nuevo
 
 **Commits:**
 - `6f888ce` — fix(BUG-037): defer persona creation until plan save in create mode
+
+**Estado:** ✅ Solucionado (2026-05-08)
+
+---
+
+### BUG-038: Falso Positivo en Detección de Afiliados Duplicados en Modo "Crear"
+
+**Descripción:**
+Cuando el usuario crea un plan nuevo y agrega múltiples afiliados nuevos (deferridos), el sistema incorrectamente detecta el segundo afiliado como duplicado del primero, mostrando "Este afiliado ya está asignado al plan", aunque sean personas diferentes con datos completamente distintos.
+
+**Severidad:** 🔴 CRÍTICO
+- Bloquea flujo de creación de planes con múltiples afiliados
+- Obliga a guardar y reabrir modal para cada afiliado
+- Degrada UX significativamente
+
+**Síntomas:**
+1. Usuario crea plan nuevo
+2. Hace clic "+ Agregar Afiliado"
+3. Crea primer afiliado: "Juan Pérez", DNI 12345678 → OK ✅
+4. Hace clic "+ Agregar Afiliado" nuevamente
+5. Crea segundo afiliado: "María García", DNI 87654321
+6. **Error:** "Este afiliado ya está asignado al plan" ❌
+7. Usuario no puede agregar más de un afiliado nuevo sin guardar
+
+**Root Cause:**
+En `frontend/src/pages/DashboardPage/components/GestionPlanesV1/modals/PlanV1Modal.jsx` línea 394, la lógica de detección de duplicados era:
+
+```javascript
+if (form.integrantes.some((i) => (i.persona_id === persona.id) || (persona.id === null && i.persona?.numero_documento === persona.numero_documento)))
+```
+
+El problema: cuando dos afiliados nuevos se agregan (ambos con `persona_id === null`):
+- Primera condición: `i.persona_id === persona.id` → `null === null` → **TRUE** ✅ (falso positivo!)
+- El OR cortocircuita y retorna true sin evaluar la segunda condición
+
+Resultado: cualquier segundo afiliado es detectado como duplicado porque ambos tienen `persona_id === null`.
+
+**Impacto:**
+- 🔴 Usuario no puede crear planes con múltiples afiliados nuevos
+- Bloqueador total para flujo de creación
+- BACKLOG-060 completamente roto en modo crear
+
+**Solución Implementada:**
+
+Cambiar la lógica para:
+1. **Si persona tiene id (existe en BD):** Verificar duplicados por `persona_id`
+2. **Si persona NO tiene id (deferred):** Verificar duplicados por `numero_documento`
+
+**Código:**
+```javascript
+const isDuplicate = form.integrantes.some((i) => {
+  if (persona.id) {
+    // Persona exists in BD: check by persona_id
+    return i.persona_id === persona.id;
+  } else {
+    // Persona is deferred (no id): check by numero_documento
+    return i.persona?.numero_documento === persona.numero_documento;
+  }
+});
+if (isDuplicate) {
+  alert('Este afiliado ya está asignado al plan');
+  return;
+}
+```
+
+**Beneficios:**
+- ✅ Múltiples afiliados nuevos se pueden agregar sin falsos positivos
+- ✅ Duplicados reales aún se detectan (mismo numero_documento)
+- ✅ Modo editar sin cambios (verifica por persona_id correctamente)
+
+**Cambios:**
+- `frontend/src/pages/DashboardPage/components/GestionPlanesV1/modals/PlanV1Modal.jsx`
+  - Línea 394-397: refactorizar lógica de duplicados con condicional
+
+**Flujo Correcto Después del Fix:**
+```
+1. Agregar Juan Pérez (DNI 12345678) → ✅ OK
+2. Agregar María García (DNI 87654321) → ✅ OK (antes: error)
+3. Agregar Juan Pérez otra vez (mismo DNI) → ❌ Error detectado correctamente
+4. Guardar y Seguir Editando → ✅ Plan + 2 personas creadas
+```
+
+**Commits:**
+- `292d692` — fix(BUG-038): falso positivo en detección de afiliados duplicados en modo crear
 
 **Estado:** ✅ Solucionado (2026-05-08)
 
