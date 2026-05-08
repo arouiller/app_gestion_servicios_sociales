@@ -803,7 +803,9 @@ function PlanV1Modal({ mode, planData, onClose, onSave }) {
                 {form.integrantes.length === 0 ? (
                   <p className="plan-v1-modal__empty">Aún no hay afiliados. Agregá al menos uno.</p>
                 ) : (
-                  <DragDropContext onDragEnd={handleDragEnd}>
+                  <>
+                    {console.log('[PlanV1Modal] Rendering table with integrantes:', form.integrantes.length, form.integrantes.map(i => ({ persona_id: i.persona_id, id: i.id, nombre: i.persona?.nombre })))}
+                    <DragDropContext onDragEnd={handleDragEnd}>
                     <table className="plan-v1-modal__afiliados-tabla table-standard">
                       <thead>
                         <tr>
@@ -875,6 +877,7 @@ function PlanV1Modal({ mode, planData, onClose, onSave }) {
                       </Droppable>
                     </table>
                   </DragDropContext>
+                  </>
                 )}
               </div>
             )}
