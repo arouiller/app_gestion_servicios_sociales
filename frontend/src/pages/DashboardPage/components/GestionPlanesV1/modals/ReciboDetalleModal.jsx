@@ -48,7 +48,7 @@ function ReciboDetalleModal({ reciboId, onClose, reciboData }) {
           <div className="recibo-detalle-modal__field-group">
             <div className="recibo-detalle-modal__field">
               <label>Número de Recibo:</label>
-              <p>{recibo?.id}</p>
+              <p>{recibo?.numero_recibo ?? recibo?.id}</p>
             </div>
             <div className="recibo-detalle-modal__field">
               <label>Período:</label>
@@ -56,7 +56,7 @@ function ReciboDetalleModal({ reciboId, onClose, reciboData }) {
             </div>
             <div className="recibo-detalle-modal__field">
               <label>Número de Afiliado:</label>
-              <p>{formatNumeroAfiliado(recibo?.numero_afiliado)}</p>
+              <p>{recibo?.zona_codigo ? `${recibo.zona_codigo}-${formatNumeroAfiliado(recibo?.numero_afiliado)}` : formatNumeroAfiliado(recibo?.numero_afiliado)}</p>
             </div>
           </div>
 
