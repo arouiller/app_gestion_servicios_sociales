@@ -479,6 +479,150 @@ const crearCompleto = async (req, res, next) => {
   }
 };
 
+// ── POST /api/v1.0/planes/actualizar-completo/:planNumero ────────────────────────
+// Actualizar plan + sincronizar integrantes + reordenar en una única transacción
+
+const actualizarCompleto = async (req, res, next) => {
+  const t = await db.sequelize.transaction();
+  try {
+    const { planNumero } = req.params;
+    const {
+      tipo_plan_numero,
+      cobrador_numero,
+      tipo_de_grupo_numero,
+      os_numero,
+      numero_afiliado,
+      telefono_1,
+      telefono_2,
+      domicilio,
+      localidad,
+      valor_cuota,
+      estado,
+      zona,
+      zona_id,
+      localidad_id,
+      integrantes = [],
+    } = req.body;
+
+    // 1. Validar que el plan existe
+    const plan = await db.PlanV1.findByPk(planNumero, { transaction: t });
+    if (!plan) {
+      await t.rollback();
+      return res.status(404).json({ success: false, message: 'Plan no encontrado' });
+    }
+
+    // 2. Validar y normalizar numero_afiliado si cambió
+    if (numero_afiliado) {
+      const padded = String(numero_afiliado).trim().padStart(5, '0');
+      if (!/^\d{5}$/.test(padded)) {
+        await t.rollback();
+        return res.status(422).json({
+          success: false,
+          message: 'El número de afiliado debe ser numérico de hasta 5 dígitos',
+          errors: { numero_afiliado: 'Solo se permiten números (máximo 5 dígitos)' },
+        });
+      }
+      if (padded !== plan.numero_afiliado) {
+        const existente = await db.PlanV1.findOne(
+          { where: { numero_afiliado: padded } },
+          { transaction: t }
+        );
+        if (existente) {
+          await t.rollback();
+          return res.status(409).json({
+            success: false,
+            message: 'Ya existe un plan con ese número de afiliado',
+            errors: { numero_afiliado: 'Ya existe un plan con ese número de afiliado' },
+          });
+        }
+      }
+    }
+
+    // 3. Actualizar el plan
+    await plan.update({
+      tipo_plan_numero: tipo_plan_numero || plan.tipo_plan_numero,
+      cobrador_numero: cobrador_numero || plan.cobrador_numero,
+      tipo_de_grupo_numero: tipo_de_grupo_numero || plan.tipo_de_grupo_numero,
+      os_numero: os_numero || plan.os_numero,
+      numero_afiliado: numero_afiliado ? String(numero_afiliado).trim().padStart(5, '0') : plan.numero_afiliado,
+      telefono_1: telefono_1 !== undefined ? telefono_1 : plan.telefono_1,
+      telefono_2: telefono_2 !== undefined ? telefono_2 : plan.telefono_2,
+      domicilio: domicilio !== undefined ? domicilio : plan.domicilio,
+      localidad: localidad !== undefined ? localidad : plan.localidad,
+      valor_cuota: valor_cuota || plan.valor_cuota,
+      estado: estado || plan.estado,
+      zona: zona !== undefined ? zona : plan.zona,
+      zona_id: zona_id !== undefined ? zona_id : plan.zona_id,
+      localidad_id: localidad_id !== undefined ? localidad_id : plan.localidad_id,
+    }, { transaction: t });
+
+    // 4. Sincronizar integrantes
+    const existingIntegrantes = await db.PlanIntegrante.findAll(
+      { where: { plan_numero: planNumero } },
+      { transaction: t }
+    );
+
+    const existingMap = new Map(existingIntegrantes.map((i) => [i.persona_id, i]));
+    const incomingMap = new Map(integrantes.map((i) => [i.persona_id, i]));
+
+    // Eliminar integrantes que no están en incoming
+    for (const existing of existingIntegrantes) {
+      if (!incomingMap.has(existing.persona_id)) {
+        await existing.destroy({ transaction: t });
+      }
+    }
+
+    // Crear integrantes nuevos
+    for (const integ of integrantes) {
+      if (!existingMap.has(integ.persona_id)) {
+        await db.PlanIntegrante.create({
+          plan_numero: planNumero,
+          persona_id: integ.persona_id,
+          rol: integ.rol || 'integrante',
+          orden: 0,
+          credencial: 'T',
+        }, { transaction: t });
+      }
+    }
+
+    // 5. Reordenar integrantes (asignar orden y rol por posición)
+    const integrantesWithMeta = integrantes.map((integ, index) => ({
+      persona_id: integ.persona_id,
+      orden: index + 1,
+      rol: index === 0 ? 'titular' : 'integrante',
+    }));
+
+    for (const meta of integrantesWithMeta) {
+      await db.PlanIntegrante.update(
+        { orden: meta.orden, rol: meta.rol },
+        { where: { plan_numero: planNumero, persona_id: meta.persona_id }, transaction: t }
+      );
+    }
+
+    await t.commit();
+
+    // 6. Retornar plan actualizado con integrantes
+    const result = await db.PlanV1.findOne({
+      where: { plan_numero: planNumero },
+      include: [{
+        model: db.PlanIntegrante,
+        include: [{ model: db.Persona }],
+        order: [['orden', 'ASC']],
+      }],
+    });
+
+    return res.json({
+      success: true,
+      message: 'Plan actualizado exitosamente',
+      data: result,
+      ...result.dataValues,
+    });
+  } catch (error) {
+    await t.rollback();
+    next(error);
+  }
+};
+
 module.exports = {
   listar,
   getByPersona,
@@ -486,6 +630,7 @@ module.exports = {
   crear,
   crearCompleto,
   actualizar,
+  actualizarCompleto,
   eliminar,
   getMaxAfiliadoNumber,
   getHistorialCuota,

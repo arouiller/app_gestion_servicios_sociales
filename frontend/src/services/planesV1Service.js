@@ -25,6 +25,12 @@ const planesV1Service = {
     return data.data;
   },
 
+  // Actualizar plan + sincronizar integrantes + reordenar en una única transacción
+  actualizarCompleto: async (planNumero, payload) => {
+    const { data } = await api.post(`/v1.0/planes/actualizar-completo/${planNumero}`, payload);
+    return data.data;
+  },
+
   // Actualizar plan
   actualizar: async (planNumero, payload) => {
     const { data } = await api.put(`/v1.0/planes/${planNumero}`, payload);

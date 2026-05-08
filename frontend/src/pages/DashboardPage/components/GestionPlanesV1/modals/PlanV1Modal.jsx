@@ -292,50 +292,34 @@ function PlanV1Modal({ mode, planData, onClose, onSave }) {
         setSavedPlanData(response);
         setActualMode('editar');
       } else {
-        // Update plan (use savedPlanData as fallback if planData is null)
+        // Update plan + sync integrantes + reorder in a single transaction
         const planNumero = (planData || savedPlanData)?.plan_numero;
         if (!planNumero) {
           throw new Error('No plan number available for update');
         }
 
-        await planesV1Service.actualizar(planNumero, payload);
+        const integrantesPayload = form.integrantes.map((integ) => ({
+          persona_id: integ.persona_id,
+          rol: integ.rol,
+        }));
 
-        // Sync integrantes (add/remove/update roles)
-        const existingIntegrantes = await planesIntegrantesService.obtenerPorPlan(planNumero);
-        const existingMap = new Map(existingIntegrantes.map((i) => [i.persona_id, i]));
-        const formMap = new Map(form.integrantes.map((i) => [i.persona_id, i]));
-
-        // Delete integrantes that were removed
-        for (const existing of existingIntegrantes) {
-          if (!formMap.has(existing.persona_id)) {
-            await planesIntegrantesService.eliminar(existing.id);
-          }
-        }
-
-        // Add new integrantes
-        for (const integrante of form.integrantes) {
-          if (!existingMap.has(integrante.persona_id)) {
-            await planesIntegrantesService.crear({
-              plan_numero: planNumero,
-              persona_id: integrante.persona_id,
-              rol: integrante.rol,
-            });
-          }
-        }
-
-        // Reload integrantes to include newly created ones with their assigned IDs
-        const updatedIntegrantes = await planesIntegrantesService.obtenerPorPlan(planNumero);
-        const updatedMap = new Map(updatedIntegrantes.map((i) => [i.persona_id, i]));
-
-        // Reorder integrantes - roles are assigned automatically based on position
-        const integrantesWithMeta = form.integrantes.map((integrante, index) => {
-          const integ = updatedMap.get(integrante.persona_id);
-          return {
-            id: integ?.id,
-            orden: index + 1,
-          };
+        const response = await planesV1Service.actualizarCompleto(planNumero, {
+          ...payload,
+          integrantes: integrantesPayload,
         });
-        await planesIntegrantesService.reorder(planNumero, integrantesWithMeta);
+
+        // Sync form with updated data from BD
+        const integrantesConId = (response.PlanIntegrantes || [])
+          .sort((a, b) => a.orden - b.orden)
+          .map(pi => ({
+            id: pi.id,
+            persona_id: pi.persona_id,
+            persona: pi.Persona,
+            rol: pi.rol,
+            servicios: pi.IntegranteServicios || [],
+          }));
+
+        handleFieldChange('integrantes', integrantesConId);
       }
 
       // Si closeAfterSave es true, cierra el modal llamando a onSave()

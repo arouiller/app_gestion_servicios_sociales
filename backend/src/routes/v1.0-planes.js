@@ -25,6 +25,7 @@ router.get('/numero-afiliado/max', verifyToken, controller.getMaxAfiliadoNumber)
 router.get('/:planNumero/historial-cuota', verifyToken, controller.getHistorialCuota);
 router.get('/:planNumero', verifyToken, controller.obtener);
 router.post('/crear-completo', verifyToken, controller.crearCompleto);
+router.post('/actualizar-completo/:planNumero', verifyToken, controller.actualizarCompleto);
 router.post('/', verifyToken, validate(crearSchema), controller.crear);
 router.put('/:planNumero', verifyToken, controller.actualizar);
 router.delete('/:planNumero', verifyToken, controller.eliminar);
