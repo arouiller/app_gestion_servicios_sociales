@@ -272,6 +272,16 @@ function PlanV1Modal({ mode, planData, onClose, onSave }) {
         // Create integrantes for new plan
         if (form.integrantes.length > 0) {
           await planesIntegrantesService.crearMultiples(response.plan_numero, form.integrantes);
+          // Reload integrantes to get their assigned IDs before reordering
+          const createdIntegrantes = await planesIntegrantesService.obtenerPorPlan(response.plan_numero);
+          const integrantesWithMeta = form.integrantes.map((integrante, index) => {
+            const created = createdIntegrantes.find((c) => c.persona_id === integrante.persona_id);
+            return {
+              id: created?.id,
+              orden: index + 1,
+            };
+          });
+          await planesIntegrantesService.reorder(response.plan_numero, integrantesWithMeta);
         }
       } else {
         // Update plan
@@ -300,11 +310,15 @@ function PlanV1Modal({ mode, planData, onClose, onSave }) {
           }
         }
 
+        // Reload integrantes to include newly created ones with their assigned IDs
+        const updatedIntegrantes = await planesIntegrantesService.obtenerPorPlan(planData.plan_numero);
+        const updatedMap = new Map(updatedIntegrantes.map((i) => [i.persona_id, i]));
+
         // Reorder integrantes - roles are assigned automatically based on position
         const integrantesWithMeta = form.integrantes.map((integrante, index) => {
-          const existing = existingMap.get(integrante.persona_id);
+          const integ = updatedMap.get(integrante.persona_id);
           return {
-            id: existing?.id,
+            id: integ?.id,
             orden: index + 1,
           };
         });
