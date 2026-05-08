@@ -27,6 +27,7 @@ Un bug solo puede pasar a estado solucionado, Descartado a traves del pedido exp
 
 | ID | Severidad | Fase | Descripción | Reportado | Estado |
 |----|-----------|------|-------------|-----------|--------|
+| BUG-035 | 🔴 CRÍTICO | BACKLOG-057 | TypeError: "N.tiposDeplan.map is not a function" al crear/editar planes | 2026-05-08 | 📋 Registrado |
 | BUG-034 | 🔴 CRÍTICO | Zonas/Lookup | Eliminación de Zona: siempre muestra "0 referencias" aunque hay planes asociados | 2026-05-07 | ✅ Solucionado |
 | BUG-033 | 🔴 CRÍTICO | LookupCRUD | Sin confirmación al eliminar en cobradores, zonas, tipos de grupo, tipos de plan | 2026-05-07 | ✅ Solucionado |
 | BUG-032 | 🟡 IMPORTANTE | Sortable Headers | Llamadas API duplicadas y redundantes al cargar GestionPlanesV1 | 2026-05-07 | ⏸️ En pausa |
@@ -35,6 +36,7 @@ Un bug solo puede pasar a estado solucionado, Descartado a traves del pedido exp
 
 | ID | Severidad | Fase | Descripción | Reportado | Estado |
 |----|-----------|------|-------------|-----------|--------|
+| BUG-035 | 🔴 CRÍTICO | BACKLOG-057 | TypeError: "N.tiposDeplan.map is not a function" al crear/editar planes | 2026-05-08 | 📋 Registrado |
 | BUG-034 | 🔴 CRÍTICO | Zonas/Lookup | Eliminación de Zona: siempre muestra "0 referencias" aunque hay planes asociados | 2026-05-07 | ✅ Solucionado |
 | BUG-033 | 🔴 CRÍTICO | LookupCRUD | Sin confirmación al eliminar en cobradores, zonas, tipos de grupo, tipos de plan | 2026-05-07 | ✅ Solucionado |
 | BUG-032 | 🟡 IMPORTANTE | Sortable Headers | Llamadas API duplicadas al cargar GestionPlanesV1 | 2026-05-07 | ⏸️ En pausa |
@@ -2544,4 +2546,118 @@ Esto:
 3. ✅ Debería aparecer confirm del navegador
 4. ✅ Si hay referencias, aparecerá modal detallado
 5. ✅ Usuario puede cancelar o confirmar eliminación
+
+---
+
+## BUG-035: TypeError al Crear/Editar Planes - "N.tiposDeplan.map is not a function"
+
+**Descripción:**
+Al acceder a crear un nuevo plan o editar uno existente en Gestión de Planes, la aplicación lanza un error:
+
+```
+Error en Gestión de Planes
+Ocurrió un error al cargar el módulo:
+
+TypeError: N.tiposDeplan.map is not a function
+```
+
+El componente PlanV1Modal falla al intentar renderizar porque `tiposDeplan` no es un array.
+
+**Síntomas:**
+1. Usuario hace clic en "Nuevo Plan" o "Editar Plan"
+2. Modal PlanV1Modal intenta abrirse
+3. Error aparece en la UI: "Error en Gestión de Planes"
+4. Modal no se renderiza, usuario no puede crear/editar planes ❌
+
+**Severidad:** 🔴 CRÍTICO
+- Bloquea funcionalidad core: creación y edición de planes
+- Afecta la operación principal del sistema
+
+**Root Cause Identificada:**
+
+Cambios recientes en BACKLOG-057 modificaron el response format del endpoint `/api/lookup/:entidad`:
+
+**Antes (sin paginación):**
+```javascript
+// lookupController.js - método list()
+res.status(200).json(registros);  // Array directo
+```
+
+**Ahora (con paginación):**
+```javascript
+// lookupController.js - método list()
+res.json({
+  success: true,
+  data: rows,      // ← Array está dentro de este campo
+  count,
+  page,
+  limit,
+  totalPages,
+  offset,
+});
+```
+
+**Problema en lookupService.js:**
+
+Métodos como `getTiposDePlan()`, `getCobradores()`, etc. esperaban un array directo:
+
+```javascript
+getTiposDePlan: async () => {
+  const { data } = await api.get('/lookup/tipos-de-plan');
+  return data || [];  // ← Ahora `data` es el objeto { success, data, count, ... }
+                      // ← No es un array, es un objeto con propiedad `data`
+}
+```
+
+Por eso la desestructuración devuelve un objeto en lugar de un array:
+- **Esperado:** `tiposDeplan = [{ tipo_plan_numero: 1, ... }, ...]` (array)
+- **Recibido:** `tiposDeplan = { success: true, data: [...], count: 5, ... }` (objeto)
+
+Cuando PlanV1Modal intenta hacer `tiposDeplan.map()`, falla porque es un objeto, no un array.
+
+**Archivos Afectados:**
+- `frontend/src/services/lookupService.js` — Métodos `getTiposDePlan()`, `getCobradores()`, `getObrasSociales()`, `getTiposDeGrupo()`, `getZonas()` (líneas 81-141)
+- `frontend/src/pages/DashboardPage/components/GestionPlanesV1/modals/PlanV1Modal.jsx` — Usa estos métodos (línea 122-129)
+- `frontend/src/pages/DashboardPage/components/BulkUpdateCuotaModal/BulkUpdateCuotaModal.jsx` — También se ve afectado (línea 50+)
+
+**Solución Recomendada:**
+
+Actualizar los métodos específicos para extraer el array del campo `data`:
+
+```javascript
+getTiposDePlan: async () => {
+  try {
+    const response = await api.get('/lookup/tipos-de-plan');
+    // Soportar ambos formatos: array directo (legacy) o { success, data, ... }
+    if (Array.isArray(response.data)) {
+      return response.data;
+    }
+    return response.data?.data || [];
+  } catch (error) {
+    console.error('Error loading tipos de plan:', error);
+    return [];
+  }
+},
+```
+
+Esto soporta:
+- ✅ Formato antiguo (array directo): `response.data = [...]`
+- ✅ Formato nuevo (paginado): `response.data = { success, data: [...], count, ... }`
+- ✅ Retrocompatibilidad
+
+**Impacto de NO arreglarlo:**
+- 🔴 Usuarios no pueden crear planes nuevos
+- 🔴 Usuarios no pueden editar planes existentes
+- 🔴 Aumento masivo bloqueado (usa BulkUpdateCuotaModal)
+- 🔴 Sistema sin funcionalidad core
+
+**Severidad:** 🔴 CRÍTICO
+- Bloquea funcionalidad core
+- Requiere fix inmediato
+
+**Reportado:** 2026-05-08
+**Fase:** BACKLOG-057 Paginación Lookups
+**Detectado durante:** Testing de paginación backend en lookup tables
+
+**Estado:** 📋 Registrado
 
