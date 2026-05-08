@@ -89,8 +89,8 @@ function GenerarRecibosModal({ isOpen, onClose, onSuccess }) {
 
   // Verificar si el período seleccionado ya tiene recibos (con debounce para cambios posteriores)
   useEffect(() => {
-    if (!periodo || step !== 1) {
-      // Solo verificar en step 1 y si hay período válido
+    if (!isOpen || !periodo || step !== 1) {
+      // Solo verificar cuando el modal está abierto, en step 1 y si hay período válido
       setPeriodoExistentePreview(null);
       return;
     }
