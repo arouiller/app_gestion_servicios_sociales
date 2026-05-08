@@ -1458,12 +1458,14 @@ graph TB
             }, 100);
         }
 
-        // =================== FUNCIONALIDAD DE RESALTADO ===================
+        // =================== FUNCIONALIDAD DE RESALTADO Y DRAG ===================
         let selectedNodeId = null;
         let draggedElement = null;
         let dragStartX = 0;
         let dragStartY = 0;
         let isDraggingNode = false;
+        let isDraggingBackground = false;
+        let dragMoveThreshold = 5; // Pixels para activar drag
 
         function initializeClickHighlighting() {
             const svg = document.querySelector('.mermaid svg');
@@ -1472,55 +1474,58 @@ graph TB
                 return;
             }
 
-            console.log('Inicializando click highlighting...');
+            console.log('Inicializando highlighting y drag...');
 
-            // Usar delegación de eventos en el SVG
-            svg.addEventListener('click', handleSVGClick);
+            // Click para resaltar
+            svg.addEventListener('click', handleSVGClick, { capture: true });
 
-            // Para drag & drop, solo si el usuario lo mantiene presionado
-            let nodeMouseDownTime = 0;
+            // Drag: detectar qué se está arrastrando
             svg.addEventListener('mousedown', (e) => {
+                if (e.button !== 0) return; // Solo click izquierdo
+
                 const node = e.target.closest('g.node');
-                if (node && e.button === 0) {
-                    nodeMouseDownTime = Date.now();
-                    isDraggingNode = false;
+
+                dragStartX = e.clientX;
+                dragStartY = e.clientY;
+                isDraggingNode = false;
+                isDraggingBackground = false;
+
+                if (node) {
                     draggedElement = node;
-                    dragStartX = e.clientX;
-                    dragStartY = e.clientY;
+                } else {
+                    // Es el fondo del SVG
+                    isDraggingBackground = true;
                 }
-            });
+            }, { capture: true });
 
-            svg.addEventListener('mousemove', (e) => {
-                if (draggedElement && !isDraggingNode) {
-                    const deltaX = Math.abs(e.clientX - dragStartX);
-                    const deltaY = Math.abs(e.clientY - dragStartY);
+            // Mousemove para hacer drag
+            document.addEventListener('mousemove', (e) => {
+                if (dragStartX === undefined || dragStartY === undefined) return;
 
-                    // Solo activar drag si se movió más de 5px
-                    if (deltaX > 5 || deltaY > 5) {
+                const deltaX = e.clientX - dragStartX;
+                const deltaY = e.clientY - dragStartY;
+                const distance = Math.sqrt(deltaX * deltaX + deltaY * deltaY);
+
+                // Activar drag solo si se movió más del threshold
+                if (distance > dragMoveThreshold) {
+                    if (draggedElement && !isDraggingBackground) {
+                        // Drag de nodo
                         isDraggingNode = true;
+                        moveNode(draggedElement, deltaX, deltaY);
+                    } else if (isDraggingBackground) {
+                        // Drag de fondo - hacer pan del diagrama
+                        panDiagram(deltaX, deltaY);
                     }
                 }
-
-                // Hacer drag solo del nodo, no del fondo
-                if (isDraggingNode && draggedElement) {
-                    const deltaX = e.clientX - dragStartX;
-                    const deltaY = e.clientY - dragStartY;
-
-                    const currentTransform = draggedElement.getAttribute('transform') || '';
-                    const match = currentTransform.match(/translate\(([-\d.]+),\s*([-\d.]+)\)/);
-
-                    const baseX = match ? parseFloat(match[1]) : 0;
-                    const baseY = match ? parseFloat(match[2]) : 0;
-
-                    draggedElement.setAttribute('transform', `translate(${baseX + deltaX}, ${baseY + deltaY})`);
-                    dragStartX = e.clientX;
-                    dragStartY = e.clientY;
-                }
             });
 
-            svg.addEventListener('mouseup', () => {
+            // Mouseup
+            document.addEventListener('mouseup', () => {
                 isDraggingNode = false;
+                isDraggingBackground = false;
                 draggedElement = null;
+                dragStartX = undefined;
+                dragStartY = undefined;
             });
 
             // Obtener todos los nodos y hacerlos clickeables
@@ -1533,16 +1538,16 @@ graph TB
                     node.style.cursor = 'grab';
 
                     // Hover visual
-                    node.addEventListener('mouseenter', () => {
-                        if (!selectedNodeId) {
-                            node.style.filter = 'brightness(1.2)';
-                            node.style.cursor = 'grab';
+                    node.addEventListener('mouseenter', function() {
+                        if (!selectedNodeId && !isDraggingNode) {
+                            this.style.filter = 'brightness(1.2)';
+                            this.style.cursor = 'grab';
                         }
                     });
 
-                    node.addEventListener('mouseleave', () => {
-                        if (!selectedNodeId) {
-                            node.style.filter = 'none';
+                    node.addEventListener('mouseleave', function() {
+                        if (!selectedNodeId && !isDraggingNode) {
+                            this.style.filter = 'none';
                         }
                     });
                 }
@@ -1551,9 +1556,40 @@ graph TB
             console.log('Inicialización completada');
         }
 
+        function moveNode(nodeElement, deltaX, deltaY) {
+            // Obtener transform actual
+            let currentTransform = nodeElement.getAttribute('transform') || 'translate(0, 0)';
+
+            // Extraer valores actuales
+            let match = currentTransform.match(/translate\(([-\d.]+)[,\s]+([-\d.]+)\)/);
+            let baseX = match ? parseFloat(match[1]) : 0;
+            let baseY = match ? parseFloat(match[2]) : 0;
+
+            // Aplicar nuevo transform
+            const newX = baseX + deltaX;
+            const newY = baseY + deltaY;
+
+            nodeElement.setAttribute('transform', `translate(${newX}, ${newY})`);
+
+            // Actualizar puntos de inicio para siguiente movimiento
+            dragStartX = dragStartX + deltaX;
+            dragStartY = dragStartY + deltaY;
+        }
+
+        function panDiagram(deltaX, deltaY) {
+            // Hacer pan del diagrama entero (usando la funcionalidad existente de pan)
+            panX += deltaX;
+            panY += deltaY;
+            applyZoom();
+
+            // Actualizar puntos de inicio para siguiente movimiento
+            dragStartX = dragStartX + deltaX;
+            dragStartY = dragStartY + deltaY;
+        }
+
         function handleSVGClick(e) {
             // No hacer nada si fue un drag
-            if (isDraggingNode) {
+            if (isDraggingNode || isDraggingBackground) {
                 return;
             }
 
@@ -1564,10 +1600,7 @@ graph TB
 
             if (clickedNode) {
                 const nodeId = clickedNode.getAttribute('id');
-                if (!isDraggingNode) {
-                    e.stopPropagation();
-                    highlightElement(nodeId, svg);
-                }
+                highlightElement(nodeId, svg);
             } else {
                 // Click en el fondo - limpiar resaltado
                 clearHighlighting(svg);
