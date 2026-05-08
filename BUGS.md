@@ -27,13 +27,13 @@ Un bug solo puede pasar a estado solucionado, Descartado a traves del pedido exp
 
 | ID | Severidad | Fase | Descripción | Reportado | Estado |
 |----|-----------|------|-------------|-----------|--------|
-| BUG-042 | 🔴 CRÍTICO | BACKLOG-061 | Cambios posteriores a crear plan no se guardan (modo editar no funciona) | 2026-05-08 | 🚀 Desarrollado |
 | BUG-032 | 🟡 IMPORTANTE | Sortable Headers | Llamadas API duplicadas y redundantes al cargar GestionPlanesV1 | 2026-05-07 | ⏸️ En pausa |
 
 ## Registros Recientemente Cerrados (Últimos 7 días)
 
 | ID | Severidad | Fase | Descripción | Reportado | Solucionado | Commit |
 |----|-----------|------|-------------|-----------|-------------|--------|
+| BUG-042 | 🔴 CRÍTICO | BACKLOG-061 | Cambios posteriores a crear plan no se guardan (modo editar no funciona) | 2026-05-08 | 2026-05-08 | Incluido en BACKLOG-061 |
 | BUG-041 | 🔴 CRÍTICO | BACKLOG-060 | Intento de guardar dos veces plan nuevo genera error de duplicado | 2026-05-08 | 2026-05-08 | `de72333` |
 | BUG-040 | 🔴 CRÍTICO | BACKLOG-060 | Tercera fila duplicada en tabla de afiliados con key null | 2026-05-08 | 2026-05-08 | `9831b49` |
 | BUG-038 | 🔴 CRÍTICO | BACKLOG-060 | Falso positivo en detección de afiliados duplicados en modo crear | 2026-05-08 | 2026-05-08 | `292d692` |
