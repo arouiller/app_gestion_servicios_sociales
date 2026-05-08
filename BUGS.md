@@ -27,6 +27,7 @@ Un bug solo puede pasar a estado solucionado, Descartado a traves del pedido exp
 
 | ID | Severidad | Fase | Descripción | Reportado | Estado |
 |----|-----------|------|-------------|-----------|--------|
+| BUG-041 | 🔴 CRÍTICO | BACKLOG-060 | Intento de guardar dos veces plan nuevo genera error "Ya existe un plan con ese número de afiliado" | 2026-05-08 | 📋 Registrado |
 | BUG-032 | 🟡 IMPORTANTE | Sortable Headers | Llamadas API duplicadas y redundantes al cargar GestionPlanesV1 | 2026-05-07 | ⏸️ En pausa |
 
 ## Registros Recientemente Cerrados (Últimos 7 días)
@@ -3131,3 +3132,101 @@ Por qué funciona:
 
 **Estado:** ✅ Solucionado (2026-05-08)
 
+---
+
+### BUG-041: Intento de Guardar Dos Veces Plan Nuevo Genera Error de Duplicado
+
+**Descripción:**
+Cuando se crea un plan nuevo (modo "crear"), se completan todos los datos y se agregan afiliados. Al hacer clic en "Guardar y Seguir Editando", el plan se crea exitosamente. **Pero si se hace clic en "Guardar y Seguir Editando" o "Guardar y Cerrar" nuevamente**, se obtiene un error: `Ya existe un plan con ese número de afiliado`.
+
+**Severidad:** 🔴 CRÍTICO
+- Bloquea al usuario después del primer guardado
+- Imposible hacer cambios adicionales sin cerrar y reabrir el modal
+- Afecta el flujo de "Guardar y Seguir Editando" que debería permitir ediciones sucesivas
+
+**Síntomas:**
+1. Usuario crea plan nuevo (modo crear)
+2. Completa: número de afiliado, tipo plan, cobrador, etc.
+3. Agrega 2-3 afiliados
+4. Hace clic "Guardar y Seguir Editando"
+5. Modal permanece abierta, plan se crea ✅
+6. Usuario intenta hacer cambios adicionales (ej: agregar otro afiliado, cambiar valor de cuota)
+7. Hace clic "Guardar y Seguir Editando" nuevamente
+8. **Error:** `Ya existe un plan con ese número de afiliado` ❌
+9. Mismo error si intenta "Guardar y Cerrar"
+
+**Root Cause:**
+En `PlanV1Modal.jsx`, el parámetro `mode` viene como prop inmutable del componente padre. La lógica en `handleGuardar()` usa esta prop para decidir entre crear (modo crear) o editar (modo editar):
+
+```javascript
+if (mode === 'crear') {
+  const response = await planesV1Service.crear(payload);  // Crea el plan
+  setSavedPlanData(response);  // Guarda referencia
+} else {
+  await planesV1Service.actualizar(planData.plan_numero, payload);  // Edita el plan
+}
+```
+
+El problema: después del primer guardado exitoso, `mode` sigue siendo `'crear'`. En el segundo `handleGuardar()`, intenta crear nuevamente con el mismo `numero_afiliado` → error 409 de duplicado en BD.
+
+**Datos Relacionados:**
+- Componente: `frontend/src/pages/DashboardPage/components/GestionPlanesV1/modals/PlanV1Modal.jsx`
+- Línea 21: `function PlanV1Modal({ mode, planData, onClose, onSave })`
+- Línea 273: `if (mode === 'crear')` — nunca cambia después del primer guardado
+- Estado salvado: `savedPlanData` (línea 41, 349) — refleja que el plan ya fue creado
+
+**Solución Propuesta:**
+Después de crear exitosamente el plan, el siguiente `handleGuardar()` debe detectar que el plan ya existe y usar el flujo de edición en lugar de creación. Hay dos opciones:
+
+**Opción A: Usar estado local de modo (recomendado)**
+```javascript
+// En el componente, inicializar actualMode basado en mode y planData
+const [actualMode, setActualMode] = useState(mode);
+
+// En handleGuardar, después de crear exitosamente:
+if (mode === 'crear') {
+  const response = await planesV1Service.crear(payload);
+  setSavedPlanData(response);
+  setActualMode('editar');  // ← Cambiar a editar para siguientes guardados
+  // resto del código...
+}
+
+// Usar actualMode en lugar de mode en la condición:
+if (actualMode === 'crear') { ... }
+```
+
+**Opción B: Lógica en handleGuardar (más simple)**
+```javascript
+const handleGuardar = async (closeAfterSave = true) => {
+  // Determinar el modo real: si el plan ya existe, es edición
+  const actualMode = (mode === 'crear' && !planData && !savedPlanData) ? 'crear' : 'editar';
+  
+  if (actualMode === 'crear') {
+    // Código de creación...
+  } else {
+    // Código de edición...
+  }
+};
+```
+
+La **Opción A** es más limpia porque actualiza el estado explícitamente. La **Opción B** es más simple porque la lógica está contenida en un lugar.
+
+**Cambios:**
+- `frontend/src/pages/DashboardPage/components/GestionPlanesV1/modals/PlanV1Modal.jsx`
+  - Línea ~38-41: Agregar estado `const [actualMode, setActualMode] = useState(mode);`
+  - Línea ~273: Cambiar `if (mode === 'crear')` a `if (actualMode === 'crear')`
+  - Línea ~349: Agregar `setActualMode('editar');` después de setSavedPlanData(response)
+  - Opcional: Línea ~390: Cambiar `else` a `else if (actualMode === 'editar')`
+
+**Verificación Después del Fix:**
+```
+1. Crear plan → completa datos + afiliados ✅
+2. "Guardar y Seguir Editando" → plan creado ✅
+3. Cambiar valor de cuota
+4. "Guardar y Seguir Editando" nuevamente → edición exitosa, sin error ✅
+5. Agregar más afiliados
+6. "Guardar y Cerrar" → cierra modal normalmente ✅
+7. Reabrir plan en modo editar → funciona como expected ✅
+```
+
+**Estado:** 📋 Registrado (2026-05-08)
