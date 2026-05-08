@@ -27,7 +27,7 @@ Un bug solo puede pasar a estado solucionado, Descartado a traves del pedido exp
 
 | ID | Severidad | Fase | Descripción | Reportado | Estado |
 |----|-----------|------|-------------|-----------|--------|
-| BUG-042 | 🔴 CRÍTICO | BACKLOG-061 | Cambios posteriores a crear plan no se guardan (modo editar no funciona) | 2026-05-08 | 📋 Registrado |
+| BUG-042 | 🔴 CRÍTICO | BACKLOG-061 | Cambios posteriores a crear plan no se guardan (modo editar no funciona) | 2026-05-08 | 🚀 Desarrollado |
 | BUG-032 | 🟡 IMPORTANTE | Sortable Headers | Llamadas API duplicadas y redundantes al cargar GestionPlanesV1 | 2026-05-07 | ⏸️ En pausa |
 
 ## Registros Recientemente Cerrados (Últimos 7 días)
@@ -3233,5 +3233,84 @@ La **Opción A** es más limpia porque actualiza el estado explícitamente. La *
 
 **Commits:**
 - `de72333` — fix(BUG-041): prevenir creación duplicada al guardar plan nuevo dos veces
+
+**Estado:** 🚀 Desarrollado (2026-05-08)
+
+---
+
+### BUG-042: Cambios Posteriores a Crear Plan No Se Guardan (Modo Editar Roto)
+
+**Descripción:**
+Después de crear un plan nuevo mediante "Guardar y Seguir Editando", el modal permanece abierta. Usuario realiza cambios adicionales (ej: modificar valor de cuota, agregar/remover afiliados) y hace click en "Guardar y Seguir Editando" nuevamente. El sistema no hace nada — no actualiza el plan en BD, no muestra error, no recarga datos.
+
+**Severidad:** 🔴 CRÍTICO
+- Cambios posteriores a la creación se pierden silenciosamente
+- Usuario cree que guardó pero los datos no se persisten
+- Afecta el flujo de edición después de crear un plan nuevo
+
+**Síntomas:**
+1. Usuario crea plan nuevo (modo crear)
+2. Datos y afiliados se guardan exitosamente
+3. Modal permanece abierta (está en modo editar ahora)
+4. Usuario modifica: ej. cambia valor_cuota de 100 a 150
+5. Hace click "Guardar y Seguir Editando"
+6. **Nada sucede** — no hay actualización, no hay error, modo silencioso ❌
+7. Cierra modal y reabre plan → cambios nunca se guardaron
+
+**Root Cause:**
+En `PlanV1Modal.jsx`, después de crear un plan nuevo con `crearCompleto()`, el código:
+1. Cambia `actualMode` de 'crear' a 'editar'
+2. Guarda respuesta en `savedPlanData`
+3. **PERO**: `planData` sigue siendo `null` (es una prop immutable del padre)
+
+Cuando usuario intenta guardar cambios posteriores, el código intenta actualizar pero usa `planData.plan_numero` que es `null`:
+
+```javascript
+if (actualMode === 'crear') { ... }
+else {
+  // Update plan
+  await planesV1Service.actualizar(planData.plan_numero, payload);  // ← planData es NULL
+  // ... resto del código usa planData.plan_numero ...
+}
+```
+
+Líneas afectadas:
+- Línea ~296: `planData.plan_numero` en actualizar()
+- Línea ~299: `planData.plan_numero` en obtenerPorPlan()
+- Línea ~314: `planData.plan_numero` en crear integrante
+- Línea ~322: `planData.plan_numero` en obtenerPorPlan()
+- Línea ~333: `planData.plan_numero` en reorder()
+- Línea ~379: `planData.plan_numero` en handleAfiladoSearch()
+
+**Solución:**
+Usar `(planData || savedPlanData)?.plan_numero` como fallback en todas las ubicaciones donde se necesita el plan_numero en modo editar. Ya existe el patrón en `reloadIntegrantes()`:
+
+```javascript
+const planNumero = (planData || savedPlanData)?.plan_numero;
+if (!planNumero) {
+  throw new Error('No plan number available for update');
+}
+// Usar planNumero en lugar de planData.plan_numero
+```
+
+**Cambios:**
+- `frontend/src/pages/DashboardPage/components/GestionPlanesV1/modals/PlanV1Modal.jsx`
+  - Línea ~294-333: En bloque `else` (modo editar), declarar `const planNumero = (planData || savedPlanData)?.plan_numero;` al inicio y usar planNumero en lugar de planData.plan_numero
+  - Línea ~374-381: En handleAfiladoSearch, hacer lo mismo
+
+**Flujo Correcto Después del Fix:**
+```
+1. Crear plan (crearCompleto) → savedPlanData = response ✅
+2. Cambiar valor_cuota
+3. "Guardar y Seguir Editando" → entra else con actualMode='editar'
+   → planData=null, pero planNumero = savedPlanData.plan_numero ✅
+   → actualizar(planNumero, ...) funciona correctamente ✅
+   → notificación "Plan guardado exitosamente" ✅
+4. BD reflejó los cambios ✅
+5. Modo editar permanece activo para más cambios ✅
+```
+
+**Commits:**
+- `64a7141` — fix(BUG-042): usar savedPlanData como fallback en modo editar
 
 **Estado:** 🚀 Desarrollado (2026-05-08)
