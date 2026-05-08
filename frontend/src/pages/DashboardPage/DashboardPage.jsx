@@ -20,6 +20,7 @@ import GestionBugs from './components/GestionBugs/GestionBugs';
 import GestionProvinciasZonas from './components/GestionProvinciasZonas/GestionProvinciasZonas';
 import GestionAuditoria from './components/GestionAuditoria/GestionAuditoria';
 import QueryExecPage from './components/QueryExec/QueryExecPage';
+import GestionAfiliados from './components/GestionAfiliados/GestionAfiliados';
 import ListadosPage from '../ListadosPage/ListadosPage';
 import './DashboardPage.scss';
 
@@ -44,6 +45,7 @@ function buildMenu(isAdmin) {
       label: 'Gestión',
       children: [
         { key: 'gestion-planes-v1', label: 'Gestión de Planes' },
+        { key: 'gestion-afiliados', label: 'Gestión de Afiliados' },
         { key: 'gestion-recibos', label: 'Gestión de Recibos' },
         { key: 'listados', label: 'Listados' },
         { key: 'cobradores', label: 'Cobradores' },
@@ -292,6 +294,7 @@ function DashboardPageContent() {
               <GestionPlanesV1 />
             </GestionPlanesV1ErrorBoundary>
           )}
+          {activeModule === 'gestion-afiliados' && <GestionAfiliados />}
           {activeModule === 'gestion-recibos' && (
             <Suspense fallback={<div className="loading">Cargando gestión de recibos...</div>}>
               <RecibosPage />
