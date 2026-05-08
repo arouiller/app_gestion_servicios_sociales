@@ -40,7 +40,7 @@ De cualquier estado → Descartado
 
 | ID | Prioridad | Estado | Descripción | Contexto / Motivo | Archivos estimados |
 |----|-----------|--------|-------------|-------------------|----|
-| BACKLOG-059 | 🔴 Alta | 📋 Registrado | Guardado automático de afiliados al agregar a plan existente | Cuando un afiliado es agregado a un plan ya registrado, debe guardarse automáticamente sin esperar a "Guardar y Seguir Editando". Posición = última, rol automático (titular/adherente). Simplifica flujo, reduce clicks, mejor UX. | PlanV1Modal.jsx, planesIntegrantesService.js, usePlanV1Form.jsx |
+| BACKLOG-059 | 🔴 Alta | 🚀 Desarrollado | Guardado automático de afiliados al agregar a plan existente | Cuando un afiliado es agregado a un plan ya registrado, se guarda automáticamente sin esperar a "Guardar y Seguir Editando". Posición = última, rol automático (titular/adherente). Simplifica flujo, reduce clicks, mejor UX. Implementado con auto-save en modo editar. Commit: 388a3a8 | PlanV1Modal.jsx |
 | BACKLOG-057 | 🟡 Media | ✅ Solucionado | Modal de confirmación obligatorio al eliminar servicios adicionales | Cuando un usuario intenta eliminar un servicio adicional desde la pantalla de gestión, siempre mostrar modal de confirmación, incluso si el servicio no tiene referencias (integrantes asociados). Cambio: LookupCRUD.jsx handleDelete() ahora abre modal siempre en lugar de intentar eliminar primero. Commit: c02ec29 | LookupCRUD.jsx |
 | BACKLOG-056 | 🟡 Media | ✅ Solucionado | Mostrar último aumento masivo al generar recibos | Al generar recibos, mostrar cuál fue el último aumento masivo realizado (fecha, porcentaje, usuario que lo realizó) debajo del mensaje de qué mes se generarán recibos. Mejora transparencia: usuarios ven instantáneamente qué aumento afectará los nuevos recibos. Commits: ecac358, 5c9ed69, 09339a1 | GenerarRecibosModal.jsx, recibosService.js, recibosController.js, routes/recibos.js |
 | BACKLOG-055 | 🟡 Media | ✅ Solucionado | Historial de aumentos de cuota - listado centralizado con pop-up | Crear tabla `aumentos_masivos` (fecha, porcentaje, usuario) para registrar cada operación de aumento masivo. Accesible desde GestionPlanesV1 a través de botón "Ver historial de aumentos" al lado del botón de aumento masivo. Listado ordenado en forma descendente (más recientes primero). Mejora trazabilidad y consulta de cambios históricos. Commits: adb523f, 13d95cf, ec8ba58, 52e4fc9, 4b6f20d | migrations/2.0.26, AumentoMasivo.js, planesController.js, HistorialAumentosModal.jsx |
@@ -5393,7 +5393,37 @@ d. **Reorden Automático**
 - Esto se complementa perfectamente con BACKLOG-058 ("Guardar y Seguir Editando")
 - Requiere sincronización correcta de IDs después de crear (ver BUG-036)
 
-**Estado:** 📋 Registrado
+**Estado:** 🚀 Desarrollado (2026-05-08)
+
+**Implementación:**
+
+1. **Detectar modo:** En `handleAfiladoSearch`, verificar si `mode === 'editar'`
+2. **Auto-save en editar:**
+   - POST `/api/v1.0/plan-integrantes` con datos del nuevo afiliado
+   - Obtener `id` real asignado por BD
+   - Actualizar `form.integrantes` con nuevo integrante (incluyendo `id`)
+   - Llamar `reorder()` para actualizar `orden` de todos los integrantes
+   - Mostrar notificación: "Afiliado agregado al plan"
+3. **En modo crear:** Comportamiento original (`addIntegrante` local, sin BD)
+4. **Loading state:** Nuevo estado `loadingAddAfiliado` deshabilita botón "+ Agregar Afiliado" mientras se guarda
+5. **Notificación dinámica:** `showSuccessNotification` cambió de boolean a string para mostrar mensajes contextuales
+
+**Archivos modificados:**
+- `frontend/src/pages/DashboardPage/components/GestionPlanesV1/modals/PlanV1Modal.jsx`
+  - Línea 38: `showSuccessNotification` → useState('')
+  - Línea 39: Nuevo estado `loadingAddAfiliado`
+  - Líneas 334-335: Mensaje dinámico en handleGuardar
+  - Líneas 350-381: handleAfiladoSearch → async con lógica condicional
+  - Líneas 712-715: Botón con disabled y texto dinámico
+  - Línea 484: Render notificación con mensaje dinámico
+
+**Commits:**
+- `388a3a8` — feat(BACKLOG-059): auto-guardar afiliado al agregar en plan existente
+
+**Compatibilidad:**
+- ✅ `handleGuardar` no necesita cambios (el diff contra BD detecta integrantes ya guardados)
+- ✅ No afecta modo "crear" (comportamiento original)
+- ✅ Completamente compatible con "Guardar y Seguir Editando"
 
 ---
 
