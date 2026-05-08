@@ -78,17 +78,67 @@
             box-shadow: 0 4px 12px rgba(118, 75, 162, 0.4);
         }
 
+        .zoom-controls {
+            display: flex;
+            gap: 10px;
+            align-items: center;
+            padding: 10px 30px;
+            background: #f8f9fa;
+            border-bottom: 1px solid #dee2e6;
+        }
+
+        .zoom-controls button {
+            padding: 8px 16px;
+            background: white;
+            border: 1px solid #dee2e6;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 0.9em;
+            transition: all 0.2s ease;
+        }
+
+        .zoom-controls button:hover {
+            background: #667eea;
+            color: white;
+            border-color: #667eea;
+        }
+
+        .zoom-level {
+            min-width: 80px;
+            text-align: center;
+            font-weight: 500;
+            color: #333;
+        }
+
         .diagram-container {
             padding: 30px;
-            overflow-x: auto;
+            overflow: auto;
             background: white;
             min-height: 600px;
+            position: relative;
+            cursor: grab;
+            user-select: none;
+        }
+
+        .diagram-container.panning {
+            cursor: grabbing;
+        }
+
+        .diagram-wrapper {
+            display: inline-flex;
+            justify-content: center;
+            align-items: flex-start;
+            transform-origin: center top;
+            transition: transform 0.2s ease;
+            min-width: 100%;
+            min-height: 100%;
         }
 
         .mermaid {
             display: flex;
             justify-content: center;
             min-height: 600px;
+            min-width: 100%;
         }
 
         .legend {
@@ -212,8 +262,17 @@
             <button onclick="showDiagram('frontend')">⚛️ Componentes Frontend</button>
         </div>
 
+        <div class="zoom-controls">
+            <button onclick="zoomOut()" title="Alejarse (Ctrl+-)">🔍− Alejarse</button>
+            <button onclick="zoomReset()" title="Restablecer zoom">⟲ Restablecer</button>
+            <button onclick="zoomIn()" title="Acercarse (Ctrl++)">🔍+ Acercarse</button>
+            <div class="zoom-level" id="zoomLevel">100%</div>
+            <span style="margin-left: 20px; color: #666; font-size: 0.9em;">💡 Usa la rueda del ratón o arrastra para mover</span>
+        </div>
+
         <div class="diagram-container" id="diagramContainer">
-            <div class="mermaid" id="completeDiagram">
+            <div class="diagram-wrapper" id="diagramWrapper">
+                <div class="mermaid" id="completeDiagram">
 graph TB
     subgraph Models["📦 MODELOS DE BASE DE DATOS"]
         subgraph LookupModels["Entidades Lookup"]
@@ -455,6 +514,7 @@ graph TB
     class planesV1Service,planesService,personasService,recibosService,lookupService,usuariosService,configService,migrationsService,localidadService,provinciaService,integranteServiciosService,planesIntegrantesService,bugsService,auditService serviceStyle
     class GestionPlanesV1,PlanV1Modal,BusquedaAfiliados,AfiladoSearchModal,GenerarRecibosModal,BulkUpdateCuotaModal,RecibosPage,ReciboDetalleModal,GestionProvinciasZonas,GestionUsuarios,MigrationsDashboard,GestionBugs,GestionAuditoria,ConfiguracionNotificaciones,IntegranteServiciosModal,HistorialAumentosModal,ProvinciaRow,ZonaFormModal componentStyle
     class LookupCRUD,Cobradores lookupStyle
+                </div>
             </div>
         </div>
 
@@ -504,6 +564,168 @@ graph TB
 
     <script>
         mermaid.initialize({ startOnLoad: true, theme: 'default', securityLevel: 'loose' });
+
+        // Inicializar zoom cuando la página carga
+        window.addEventListener('load', () => {
+            const container = document.getElementById('diagramContainer');
+            if (container) {
+                loadZoomState();
+                // Agregar event listeners al contenedor
+                container.addEventListener('wheel', handleMouseWheel, { passive: false });
+                container.addEventListener('mousedown', handleMouseDown);
+                document.addEventListener('mousemove', handleMouseMove);
+                document.addEventListener('mouseup', handleMouseUp);
+                container.addEventListener('touchstart', handleTouchStart);
+                container.addEventListener('touchmove', handleTouchMove);
+                container.addEventListener('touchend', handleTouchEnd);
+            }
+        });
+
+        // Estado del zoom
+        let zoomLevel = 100;
+        let panX = 0;
+        let panY = 0;
+        let isPanning = false;
+        let panStartX = 0;
+        let panStartY = 0;
+        const MIN_ZOOM = 25;
+        const MAX_ZOOM = 300;
+        const ZOOM_STEP = 10;
+
+        // Cargar zoom guardado
+        function loadZoomState() {
+            const saved = localStorage.getItem('diagramZoom');
+            if (saved) {
+                zoomLevel = parseInt(saved);
+                updateZoomDisplay();
+            }
+        }
+
+        // Guardar zoom
+        function saveZoomState() {
+            localStorage.setItem('diagramZoom', zoomLevel);
+        }
+
+        // Actualizar display del zoom
+        function updateZoomDisplay() {
+            document.getElementById('zoomLevel').textContent = zoomLevel + '%';
+            applyZoom();
+        }
+
+        // Aplicar zoom y pan
+        function applyZoom() {
+            const wrapper = document.getElementById('diagramWrapper');
+            if (wrapper) {
+                wrapper.style.transform = `translate(${panX}px, ${panY}px) scale(${zoomLevel / 100})`;
+            }
+        }
+
+        // Zoom in
+        function zoomIn() {
+            if (zoomLevel < MAX_ZOOM) {
+                zoomLevel = Math.min(zoomLevel + ZOOM_STEP, MAX_ZOOM);
+                updateZoomDisplay();
+                saveZoomState();
+            }
+        }
+
+        // Zoom out
+        function zoomOut() {
+            if (zoomLevel > MIN_ZOOM) {
+                zoomLevel = Math.max(zoomLevel - ZOOM_STEP, MIN_ZOOM);
+                updateZoomDisplay();
+                saveZoomState();
+            }
+        }
+
+        // Reset zoom
+        function zoomReset() {
+            zoomLevel = 100;
+            panX = 0;
+            panY = 0;
+            updateZoomDisplay();
+            saveZoomState();
+        }
+
+        // Manejo de rueda del ratón
+        function handleMouseWheel(e) {
+            if (e.ctrlKey || e.metaKey) {
+                e.preventDefault();
+                if (e.deltaY < 0) {
+                    zoomIn();
+                } else {
+                    zoomOut();
+                }
+            }
+        }
+
+        // Manejo de paneo
+        function handleMouseDown(e) {
+            if (e.button === 0 && !e.ctrlKey && !e.metaKey) {
+                isPanning = true;
+                panStartX = e.clientX - panX;
+                panStartY = e.clientY - panY;
+                document.getElementById('diagramContainer').classList.add('panning');
+                e.preventDefault();
+            }
+        }
+
+        function handleMouseMove(e) {
+            if (isPanning) {
+                panX = e.clientX - panStartX;
+                panY = e.clientY - panStartY;
+                applyZoom();
+            }
+        }
+
+        function handleMouseUp() {
+            isPanning = false;
+            document.getElementById('diagramContainer').classList.remove('panning');
+        }
+
+        // Manejo táctil (pinch zoom)
+        let touchDistance = 0;
+        let touchStartZoom = 100;
+
+        function handleTouchStart(e) {
+            if (e.touches.length === 2) {
+                const dx = e.touches[0].clientX - e.touches[1].clientX;
+                const dy = e.touches[0].clientY - e.touches[1].clientY;
+                touchDistance = Math.sqrt(dx * dx + dy * dy);
+                touchStartZoom = zoomLevel;
+            }
+        }
+
+        function handleTouchMove(e) {
+            if (e.touches.length === 2) {
+                const dx = e.touches[0].clientX - e.touches[1].clientX;
+                const dy = e.touches[0].clientY - e.touches[1].clientY;
+                const newDistance = Math.sqrt(dx * dx + dy * dy);
+                const scale = newDistance / touchDistance;
+                zoomLevel = Math.min(Math.max(touchStartZoom * scale, MIN_ZOOM), MAX_ZOOM);
+                updateZoomDisplay();
+            }
+        }
+
+        function handleTouchEnd() {
+            saveZoomState();
+        }
+
+        // Atajos de teclado
+        document.addEventListener('keydown', (e) => {
+            if (e.ctrlKey || e.metaKey) {
+                if (e.key === '+' || e.key === '=') {
+                    e.preventDefault();
+                    zoomIn();
+                } else if (e.key === '-') {
+                    e.preventDefault();
+                    zoomOut();
+                } else if (e.key === '0') {
+                    e.preventDefault();
+                    zoomReset();
+                }
+            }
+        });
 
         const diagrams = {
             complete: `graph TB
@@ -990,13 +1212,34 @@ graph TB
             buttons.forEach(btn => btn.classList.remove('active'));
             event.target.classList.add('active');
 
+            // Reset zoom cuando cambias diagrama
+            zoomLevel = 100;
+            panX = 0;
+            panY = 0;
+            updateZoomDisplay();
+            saveZoomState();
+
+            let content = '';
             if (type === 'complete') {
-                container.innerHTML = '<div class="mermaid" id="completeDiagram">' + diagrams.complete + '</div>';
+                content = '<div class="mermaid" id="completeDiagram">' + diagrams.complete + '</div>';
             } else {
-                container.innerHTML = '<div class="mermaid">' + diagrams[type] + '</div>';
+                content = '<div class="mermaid">' + diagrams[type] + '</div>';
             }
 
+            // Envolver en un div zoomeable
+            container.innerHTML = '<div class="diagram-wrapper" id="diagramWrapper">' + content + '</div>';
+
+            // Agregar event listeners
+            container.addEventListener('wheel', handleMouseWheel, { passive: false });
+            container.addEventListener('mousedown', handleMouseDown);
+            document.addEventListener('mousemove', handleMouseMove);
+            document.addEventListener('mouseup', handleMouseUp);
+            container.addEventListener('touchstart', handleTouchStart);
+            container.addEventListener('touchmove', handleTouchMove);
+            container.addEventListener('touchend', handleTouchEnd);
+
             mermaid.contentLoaded();
+            loadZoomState();
         }
     </script>
 </body>
