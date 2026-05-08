@@ -3,14 +3,16 @@ import api from './api';
 const planesService = {
   /**
    * GET /api/planes/filter/:filtro
-   * Obtiene planes filtrados
+   * Obtiene planes filtrados con paginación
    * @param {string} filtro - todos, tipo_plan, cobrador, os, estado
-   * @param {object} params - parámetros de filtro según el tipo + sortBy, order para ordenamiento
+   * @param {object} params - { page, limit, sortBy, order, tipo_plan_numero, cobrador_numero, os_numero, estado }
    */
   getByFilter: async (filtro, params = {}) => {
     try {
-      const { sortBy, order, ...otherParams } = params;
+      const { page = 1, limit = 15, sortBy, order, ...otherParams } = params;
       const queryParams = {
+        page,
+        limit,
         ...otherParams,
         ...(sortBy && { sortBy }),
         ...(order && { order }),
