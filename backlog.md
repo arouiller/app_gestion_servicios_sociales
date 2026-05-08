@@ -40,6 +40,7 @@ De cualquier estado → Descartado
 
 | ID | Prioridad | Estado | Descripción | Contexto / Motivo | Archivos estimados |
 |----|-----------|--------|-------------|-------------------|----|
+| BACKLOG-059 | 🔴 Alta | 📋 Registrado | Guardado automático de afiliados al agregar a plan existente | Cuando un afiliado es agregado a un plan ya registrado, debe guardarse automáticamente sin esperar a "Guardar y Seguir Editando". Posición = última, rol automático (titular/adherente). Simplifica flujo, reduce clicks, mejor UX. | PlanV1Modal.jsx, planesIntegrantesService.js, usePlanV1Form.jsx |
 | BACKLOG-057 | 🟡 Media | ✅ Solucionado | Modal de confirmación obligatorio al eliminar servicios adicionales | Cuando un usuario intenta eliminar un servicio adicional desde la pantalla de gestión, siempre mostrar modal de confirmación, incluso si el servicio no tiene referencias (integrantes asociados). Cambio: LookupCRUD.jsx handleDelete() ahora abre modal siempre en lugar de intentar eliminar primero. Commit: c02ec29 | LookupCRUD.jsx |
 | BACKLOG-056 | 🟡 Media | ✅ Solucionado | Mostrar último aumento masivo al generar recibos | Al generar recibos, mostrar cuál fue el último aumento masivo realizado (fecha, porcentaje, usuario que lo realizó) debajo del mensaje de qué mes se generarán recibos. Mejora transparencia: usuarios ven instantáneamente qué aumento afectará los nuevos recibos. Commits: ecac358, 5c9ed69, 09339a1 | GenerarRecibosModal.jsx, recibosService.js, recibosController.js, routes/recibos.js |
 | BACKLOG-055 | 🟡 Media | ✅ Solucionado | Historial de aumentos de cuota - listado centralizado con pop-up | Crear tabla `aumentos_masivos` (fecha, porcentaje, usuario) para registrar cada operación de aumento masivo. Accesible desde GestionPlanesV1 a través de botón "Ver historial de aumentos" al lado del botón de aumento masivo. Listado ordenado en forma descendente (más recientes primero). Mejora trazabilidad y consulta de cambios históricos. Commits: adb523f, 13d95cf, ec8ba58, 52e4fc9, 4b6f20d | migrations/2.0.26, AumentoMasivo.js, planesController.js, HistorialAumentosModal.jsx |
@@ -5299,6 +5300,100 @@ c. **Confirmación y Feedback**
 **Commits:**
 - `c309aaa` — feat(PlanV1Modal): agregar "Guardar y Seguir Editando"
 - `46c1779` — style(PlanV1Modal): agregar estilos para notificación y botones
+
+---
+
+### BACKLOG-059: Guardado Automático de Afiliados al Agregar a Plan Existente
+
+**Descripción:**
+Cuando un afiliado es agregado a un plan que ya está registrado en la BD, el mismo debe quedar **automáticamente asociado** al plan sin que el usuario tenga que hacer clic en "Guardar y Seguir Editando" o "Guardar y Cerrar". El flujo se simplifica: agregar afiliado → automáticamente guardado en BD → aparece en la tabla con su rol asignado.
+
+**Comportamiento Actual:**
+1. Usuario abre PlanV1Modal en modo editar (plan existente)
+2. Navega al tab "Afiliados"
+3. Hace clic en "+ Agregar Afiliado"
+4. Selecciona persona → se agrega a lista local (form.integrantes)
+5. **Debe hacer clic** en "Guardar y Seguir Editando" o "Guardar y Cerrar"
+6. Recién entonces se guarda en BD
+
+**Comportamiento Requerido:**
+1. Usuario abre PlanV1Modal en modo editar (plan existente)
+2. Navega al tab "Afiliados"
+3. Hace clic en "+ Agregar Afiliado"
+4. Selecciona persona → **Se guarda automáticamente en BD**
+5. Aparece en la tabla con su rol asignado
+6. Usuario puede continuar agregando más afiliados sin clics adicionales
+
+**Requerimientos:**
+
+a. **Lógica de Guardado Automático**
+   - Detectar si el modal está en modo "editar" (plan ya existe)
+   - Cuando se agrega afiliado: 
+     * Determinar rol automático (titular si es primero, adherente si no)
+     * Hacer POST/CREATE al backend inmediatamente
+     * Actualizar form.integrantes con respuesta (id asignado)
+     * No esperar a que usuario haga clic en "Guardar"
+   - Cuando se elimina afiliado:
+     * Hacer DELETE al backend inmediatamente
+     * Actualizar form.integrantes
+   
+b. **Rol Automático**
+   - Primer afiliado agregado al plan = "titular"
+   - Afiliados subsecuentes = "adherente"
+   - Posición = última en la lista (order = length actual + 1)
+
+c. **UX/Feedback**
+   - Toast/notification temporal: "Afiliado agregado exitosamente"
+   - Si hay error: mostrar error temporal y permitir reintentar
+   - Tabla se actualiza visualmente sin necesidad de refrescar
+   - Loading state en el botón "+ Agregar Afiliado" mientras se guarda
+
+d. **Reorden Automático**
+   - Después de agregar/eliminar, el orden se ajusta automáticamente
+   - El nuevo afiliado toma la posición final
+   - Si se usa drag & drop, el reorden se sincroniza con BD en tiempo real
+
+**Componentes Afectados:**
+- `frontend/src/pages/DashboardPage/components/GestionPlanesV1/modals/PlanV1Modal.jsx`
+- `frontend/src/pages/DashboardPage/components/GestionPlanesV1/hooks/usePlanV1Form.jsx`
+
+**Cambios en Flujo:**
+- `handleAfiladoSearch()` (línea ~335): en lugar de solo agregar a form.integrantes, también hacer POST al backend
+- Crear función `createIntegranteAndSync()` que:
+  * POST /api/v1.0/plan-integrantes
+  * Actualiza form.integrantes con ID retornado
+  * Muestra notificación de éxito
+- Modificar eliminación: DELETE debe ser automático también (si está en modo editar)
+
+**Testing Checklist:**
+- [ ] Abrir plan existente en editar
+- [ ] Agregar afiliado → se guarda inmediatamente
+- [ ] Toast muestra éxito
+- [ ] Afiliado aparece en tabla
+- [ ] Rol correcto (titular/adherente)
+- [ ] Posición correcta (última)
+- [ ] Agregar múltiples afiliados sin cerrar modal
+- [ ] Eliminar afiliado → se elimina de BD inmediatamente
+- [ ] En modo "crear" plan: guardado automático NO aplica (esperar a "Guardar y Cerrar")
+- [ ] Si hay error, mostrar y permitir reintentar
+
+**Estimación:** 2-2.5 horas (cambio de flujo, manejo de estado/errores)
+
+**Prioridad:** 🔴 Alta — Simplifica flujo principal, mejora UX significativamente, reduce clicks
+
+**Beneficio:**
+- ✅ UX más fluida: agregar afiliado es acción completada inmediatamente
+- ✅ Menos clicks: no necesita "Guardar y Seguir Editando"
+- ✅ Feedback inmediato: usuario ve resultado instantáneamente
+- ✅ Intuitivo: comportamiento similar al de agregar items en listas modernas
+
+**Notas Importantes:**
+- **Solo aplicar a planes existentes** (modo editar)
+- En modo "crear" plan nuevo, el guardado sigue siendo manual (al hacer "Guardar y Cerrar")
+- Esto se complementa perfectamente con BACKLOG-058 ("Guardar y Seguir Editando")
+- Requiere sincronización correcta de IDs después de crear (ver BUG-036)
+
+**Estado:** 📋 Registrado
 
 ---
 
