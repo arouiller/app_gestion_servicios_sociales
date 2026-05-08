@@ -8,7 +8,6 @@ import IconButton from '../IconButton/IconButton';
 import ConfirmDeleteWithRefsModal from '../ConfirmDeleteWithRefsModal/ConfirmDeleteWithRefsModal';
 import Pagination from '../Pagination/Pagination';
 import useDebounce from '../../hooks/useDebounce';
-import usePagination from '../../hooks/usePagination';
 import useColumnResize from '../../hooks/useColumnResize';
 import useSortable from '../../hooks/useSortable';
 import '../../styles/_table-standard.scss';
@@ -25,7 +24,10 @@ const LookupCRUD = ({ titulo, singularName, endpoint, campos, tableKey = 'lookup
   const [searchText, setSearchText] = useState('');
   const [debounceDelay] = useState(globalConfig?.debounce_delay_ms ?? 2000);
   const [forceSearchNow, setForceSearchNow] = useState(false);
-  const [configItemsPerPage] = useState(globalConfig?.items_per_page ?? null);
+  const [configItemsPerPage] = useState(globalConfig?.items_per_page ?? 15);
+  const [page, setPage] = useState(1);
+  const [totalCount, setTotalCount] = useState(0);
+  const [totalPages, setTotalPages] = useState(0);
   const [deleteModal, setDeleteModal] = useState({
     isOpen: false,
     registroId: null,
@@ -56,19 +58,41 @@ const LookupCRUD = ({ titulo, singularName, endpoint, campos, tableKey = 'lookup
   // Debouncificar el texto de búsqueda
   const debouncedSearchText = useDebounce(searchText, debounceDelay);
 
+  // Resetear página a 1 cuando cambian entidad, ordenamiento o limit
+  useEffect(() => {
+    setPage(1);
+  }, [entidad, sortBy, order, configItemsPerPage]);
+
   // Cargar lista
   useEffect(() => {
     loadRegistros();
-  }, [entidad, sortBy, order]);
+  }, [entidad, sortBy, order, page, configItemsPerPage]);
 
   const loadRegistros = async () => {
     try {
       setLoading(true);
-      const data = await lookupService.list(entidad, { sortBy, order });
-      setRegistros(data);
+      const result = await lookupService.list(entidad, {
+        page,
+        limit: configItemsPerPage,
+        sortBy,
+        order,
+      });
+      // Soporta ambos formatos: array directo o respuesta con estructura
+      if (Array.isArray(result)) {
+        setRegistros(result);
+        setTotalCount(result.length);
+        setTotalPages(1);
+      } else {
+        setRegistros(result.data || []);
+        setTotalCount(result.count || 0);
+        setTotalPages(result.totalPages || 0);
+      }
       setError(null);
     } catch (err) {
       setError(err.response?.data?.error || 'Error al cargar');
+      setRegistros([]);
+      setTotalCount(0);
+      setTotalPages(0);
     } finally {
       setLoading(false);
     }
@@ -186,16 +210,13 @@ const LookupCRUD = ({ titulo, singularName, endpoint, campos, tableKey = 'lookup
 
   const { widths, getResizeHandle } = useColumnResize(tableKey, defaultWidths);
 
-  const registrosFiltered = registros
-    .filter(registro => {
-      const searchLower = effectiveSearchText.toLowerCase();
-      return Object.values(registro).some(val =>
-        String(val).toLowerCase().includes(searchLower)
-      );
-    });
-
-  const pagination = usePagination(registrosFiltered, 15, configItemsPerPage);
-  // El hook usePagination ahora resetea automáticamente cuando items.length cambia
+  // Filtrar registros por búsqueda de texto (en cliente, sobre items de página actual)
+  const registrosFiltered = registros.filter(registro => {
+    const searchLower = effectiveSearchText.toLowerCase();
+    return Object.values(registro).some(val =>
+      String(val).toLowerCase().includes(searchLower)
+    );
+  });
 
   if (loading) return <div className="lookup-crud loading">Cargando...</div>;
 
@@ -251,7 +272,7 @@ const LookupCRUD = ({ titulo, singularName, endpoint, campos, tableKey = 'lookup
             </tr>
           </thead>
           <tbody>
-            {pagination.paginatedItems.map(registro => (
+            {registrosFiltered.map(registro => (
               <tr key={Object.values(registro)[0]}>
                 {camposVisibles.map(campo => (
                   <td key={campo.name}>{registro[campo.name]}</td>
@@ -279,14 +300,17 @@ const LookupCRUD = ({ titulo, singularName, endpoint, campos, tableKey = 'lookup
         </div>
       )}
 
-      {pagination.showPagination && (
+      {totalPages > 1 && (
         <Pagination
-          currentPage={pagination.currentPage}
-          totalPages={pagination.totalPages}
-          totalItems={pagination.totalItems}
-          itemsPerPage={pagination.itemsPerPage}
-          onPageChange={pagination.handleChangePage}
-          onItemsPerPageChange={pagination.handleChangeItemsPerPage}
+          currentPage={page}
+          totalPages={totalPages}
+          totalItems={totalCount}
+          itemsPerPage={configItemsPerPage}
+          onPageChange={setPage}
+          onItemsPerPageChange={(newLimit) => {
+            // TODO: update configItemsPerPage in backend if needed
+            setPage(1);
+          }}
         />
       )}
 
