@@ -54,12 +54,28 @@ const GestionProvinciasZonas = () => {
   };
 
   const handleDeleteProvincia = async (id) => {
-    if (window.confirm('¿Eliminar esta provincia?')) {
-      try {
-        await provinciaService.delete(id);
-        loadProvincias();
-      } catch (error) {
+    try {
+      // Paso 1: Intenta eliminar sin forzar
+      await provinciaService.delete(id);
+      loadProvincias();
+    } catch (error) {
+      // Paso 2: Si hay referencias (409), pedir confirmación
+      if (error.response?.status === 409) {
+        const { referencias, referenciaEn } = error.response.data;
+        const mensaje = `Esta provincia está siendo usada por ${referencias} ${referencias === 1 ? 'referencia' : 'referencias'} en ${referenciaEn}.\n\n¿Estás seguro de que querés eliminarla? Se actualizarán las referencias automáticamente.`;
+        if (window.confirm(mensaje)) {
+          try {
+            // Paso 3: Intenta eliminar forzando cascada
+            await provinciaService.delete(id, { force: true });
+            loadProvincias();
+          } catch (err) {
+            console.error('Error al eliminar provincia con cascada:', err);
+            alert('Error al eliminar provincia: ' + (err.response?.data?.message || err.message));
+          }
+        }
+      } else {
         console.error('Error deleting provincia:', error);
+        alert('Error al eliminar provincia: ' + (error.response?.data?.message || error.message));
       }
     }
   };
@@ -91,12 +107,28 @@ const GestionProvinciasZonas = () => {
   };
 
   const handleDeleteLocalidad = async (id) => {
-    if (window.confirm('¿Eliminar esta localidad?')) {
-      try {
-        await localidadService.delete(id);
-        loadProvincias();
-      } catch (error) {
+    try {
+      // Paso 1: Intenta eliminar sin forzar
+      await localidadService.delete(id);
+      loadProvincias();
+    } catch (error) {
+      // Paso 2: Si hay referencias (409), pedir confirmación
+      if (error.response?.status === 409) {
+        const { referencias, referenciaEn } = error.response.data;
+        const mensaje = `Esta localidad está siendo usada por ${referencias} ${referencias === 1 ? 'referencia' : 'referencias'} en ${referenciaEn}.\n\n¿Estás seguro de que querés eliminarla? Se actualizarán las referencias automáticamente.`;
+        if (window.confirm(mensaje)) {
+          try {
+            // Paso 3: Intenta eliminar forzando cascada
+            await localidadService.delete(id, { force: true });
+            loadProvincias();
+          } catch (err) {
+            console.error('Error al eliminar localidad con cascada:', err);
+            alert('Error al eliminar localidad: ' + (err.response?.data?.message || err.message));
+          }
+        }
+      } else {
         console.error('Error deleting localidad:', error);
+        alert('Error al eliminar localidad: ' + (error.response?.data?.message || error.message));
       }
     }
   };
