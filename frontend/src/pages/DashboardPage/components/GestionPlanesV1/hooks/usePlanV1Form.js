@@ -37,7 +37,8 @@ export const usePlanV1Form = (initialData = null) => {
 
   const handleFieldChange = useCallback((field, value) => {
     if (field === 'integrantes') {
-      console.log('[usePlanV1Form] handleFieldChange integrantes:', value.length, 'items');
+      console.log('[usePlanV1Form] handleFieldChange integrantes:', value.length, 'items', value.map(i => ({ persona_id: i.persona_id, id: i.id })));
+      console.trace('[usePlanV1Form] handleFieldChange called from:');
     }
     setForm((prev) => ({ ...prev, [field]: value }));
     if (errors[field]) {
