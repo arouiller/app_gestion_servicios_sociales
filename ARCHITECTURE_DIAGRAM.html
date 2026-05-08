@@ -1458,7 +1458,12 @@ graph TB
             }, 100);
         }
 
-        // =================== FUNCIONALIDAD DE RESALTADO ===================
+        // =================== FUNCIONALIDAD DE RESALTADO Y DRAG & DROP ===================
+        let selectedNodeId = null;
+        let draggedElement = null;
+        let dragStartX = 0;
+        let dragStartY = 0;
+
         function initializeClickHighlighting() {
             const svg = document.querySelector('.mermaid svg');
             if (!svg) {
@@ -1466,9 +1471,15 @@ graph TB
                 return;
             }
 
-            console.log('Inicializando click highlighting...');
+            console.log('Inicializando click highlighting y drag...');
 
-            // Obtener todos los nodos (elementos g con clase node)
+            // Usar delegación de eventos en el SVG
+            svg.addEventListener('click', handleSVGClick);
+            svg.addEventListener('mousedown', handleSVGMouseDown);
+            svg.addEventListener('mousemove', handleSVGMouseMove);
+            svg.addEventListener('mouseup', handleSVGMouseUp);
+
+            // Obtener todos los nodos y hacerlos clickeables
             const nodes = svg.querySelectorAll('g.node');
             console.log(`Nodos encontrados: ${nodes.length}`);
 
@@ -1477,41 +1488,79 @@ graph TB
                 if (nodeId) {
                     node.style.cursor = 'pointer';
 
-                    // Usar delegación de eventos en el SVG
-                    node.addEventListener('click', (e) => {
-                        e.stopPropagation();
-                        console.log(`Click en nodo: ${nodeId}`);
-                        highlightElement(nodeId, svg);
-                    });
-
-                    // Opcional: mejorar visual al pasar el mouse
+                    // Hover visual
                     node.addEventListener('mouseenter', () => {
-                        node.style.filter = 'brightness(1.15)';
+                        if (!selectedNodeId) {
+                            node.style.filter = 'brightness(1.2)';
+                        }
                     });
 
                     node.addEventListener('mouseleave', () => {
-                        if (!node.classList.contains('highlighted-node') &&
-                            !node.classList.contains('related-node') &&
-                            !node.classList.contains('dimmed-node')) {
+                        if (!selectedNodeId) {
                             node.style.filter = 'none';
                         }
                     });
                 }
             });
 
-            // Click en el fondo para limpiar resaltado
-            svg.addEventListener('click', (e) => {
-                if (e.target === svg || e.target.tagName === 'svg') {
-                    console.log('Click en fondo - limpiando resaltado');
-                    clearHighlighting(svg);
-                }
-            });
+            console.log('Inicialización completada');
+        }
 
-            console.log('Click highlighting inicializado correctamente');
+        function handleSVGClick(e) {
+            const svg = e.currentTarget;
+
+            // Encontrar si se hizo click en un nodo
+            let clickedNode = e.target.closest('g.node');
+
+            if (clickedNode) {
+                const nodeId = clickedNode.getAttribute('id');
+                e.stopPropagation();
+                highlightElement(nodeId, svg);
+            } else {
+                // Click en el fondo - limpiar resaltado
+                clearHighlighting(svg);
+            }
+        }
+
+        function handleSVGMouseDown(e) {
+            const svg = e.currentTarget;
+            let clickedNode = e.target.closest('g.node');
+
+            if (clickedNode && e.button === 0) { // Click izquierdo
+                draggedElement = clickedNode;
+                dragStartX = e.clientX;
+                dragStartY = e.clientY;
+            }
+        }
+
+        function handleSVGMouseMove(e) {
+            const svg = document.querySelector('.mermaid svg');
+            if (!draggedElement || !svg) return;
+
+            const deltaX = e.clientX - dragStartX;
+            const deltaY = e.clientY - dragStartY;
+
+            // Solo mover si se ha movido significativamente
+            if (Math.abs(deltaX) > 2 || Math.abs(deltaY) > 2) {
+                const currentTransform = draggedElement.getAttribute('transform') || '';
+                const match = currentTransform.match(/translate\(([-\d.]+),\s*([-\d.]+)\)/);
+
+                const baseX = match ? parseFloat(match[1]) : 0;
+                const baseY = match ? parseFloat(match[2]) : 0;
+
+                draggedElement.setAttribute('transform', `translate(${baseX + deltaX}, ${baseY + deltaY})`);
+                dragStartX = e.clientX;
+                dragStartY = e.clientY;
+            }
+        }
+
+        function handleSVGMouseUp(e) {
+            draggedElement = null;
         }
 
         function highlightElement(nodeId, svg) {
             clearHighlighting(svg);
+            selectedNodeId = nodeId;
 
             // Obtener el nodo clickeado
             const clickedNode = svg.getElementById(nodeId);
@@ -1524,43 +1573,59 @@ graph TB
 
             // Resaltar el nodo clickeado
             clickedNode.classList.add('highlighted-node');
+            clickedNode.style.filter = 'brightness(1.3)';
 
-            // Obtener todas las aristas (edges)
-            const edges = svg.querySelectorAll('g.edgePath');
+            // Encontrar todos los nodos conectados (tanto entrada como salida)
+            const allEdges = svg.querySelectorAll('g.edgePath');
             const connectedNodes = new Set([nodeId]);
+            const connectedEdges = new Set();
 
-            console.log(`Aristas totales encontradas: ${edges.length}`);
+            console.log(`Total de aristas en el diagrama: ${allEdges.length}`);
 
-            // Encontrar nodos conectados y resaltar aristas
-            edges.forEach(edge => {
-                const edgeId = edge.getAttribute('id');
+            // Buscar aristas conectadas
+            allEdges.forEach(edge => {
+                const edgeId = edge.getAttribute('id') || '';
 
-                if (!edgeId) return;
+                // Una arista está conectada si contiene el nodeId en cualquier posición
+                // Formatos posibles: "id1->id2", "id1-id2", etc.
+                if (edgeId.includes(nodeId)) {
+                    connectedEdges.add(edge);
 
-                // Verificar si esta arista está conectada al nodo actual
-                // El edgeId generalmente tiene formato "id1-id2" o similar
-                const isConnected = edgeId.includes(nodeId);
+                    // Extraer el otro nodo de la arista
+                    // Intentar diferentes separadores
+                    let otherNodeId = null;
 
-                if (isConnected) {
-                    // Extraer IDs conectados del edgeId
-                    // Intentar múltiples patrones de separador
-                    const parts = edgeId.split(/[->]/).filter(p => p.length > 0);
-
-                    parts.forEach(part => {
-                        if (part && part !== nodeId) {
-                            connectedNodes.add(part);
+                    if (edgeId.includes('->')) {
+                        const parts = edgeId.split('->');
+                        otherNodeId = parts[0].trim() === nodeId ? parts[1].trim() : parts[0].trim();
+                    } else if (edgeId.includes('-')) {
+                        const parts = edgeId.split('-');
+                        // Tomar la parte que no es el nodeId
+                        for (let part of parts) {
+                            part = part.trim();
+                            if (part && part !== nodeId) {
+                                otherNodeId = part;
+                                break;
+                            }
                         }
-                    });
+                    }
+
+                    if (otherNodeId) {
+                        connectedNodes.add(otherNodeId);
+                        console.log(`Conexión encontrada: ${nodeId} <-> ${otherNodeId}`);
+                    }
 
                     // Resaltar la arista
                     edge.classList.add('highlighted-edge');
-                    console.log(`Arista conectada: ${edgeId}`);
+                    edge.style.filter = 'drop-shadow(0 0 3px rgba(102, 126, 234, 0.8))';
                 } else {
+                    // Oscurecer aristas no conectadas
                     edge.classList.add('dimmed-edge');
+                    edge.style.opacity = '0.1';
                 }
             });
 
-            console.log(`Nodos conectados encontrados: ${connectedNodes.size}`);
+            console.log(`Nodos conectados totales: ${connectedNodes.size}`);
 
             // Resaltar nodos conectados
             connectedNodes.forEach(id => {
@@ -1568,53 +1633,46 @@ graph TB
                     const node = svg.getElementById(id);
                     if (node) {
                         node.classList.add('related-node');
+                        node.style.filter = 'brightness(1.2)';
                         console.log(`Nodo relacionado resaltado: ${id}`);
                     }
                 }
             });
 
-            // Oscurecer otros nodos
+            // Oscurecer nodos no conectados
             const allNodes = svg.querySelectorAll('g.node');
             allNodes.forEach(node => {
                 const id = node.getAttribute('id');
                 if (!connectedNodes.has(id) && id !== nodeId) {
                     node.classList.add('dimmed-node');
+                    node.style.opacity = '0.2';
                 }
             });
 
-            // Mostrar información
             const nodeLabel = clickedNode.querySelector('text')?.textContent || nodeId;
-            console.log(`✓ Resaltado completado: ${nodeLabel}`);
+            console.log(`✓ ${nodeLabel} - ${connectedNodes.size - 1} conexiones encontradas`);
         }
 
         function clearHighlighting(svg) {
-            // Remover todas las clases de resaltado
-            svg.querySelectorAll('[class*="highlighted"], [class*="related"], [class*="dimmed"]').forEach(el => {
+            selectedNodeId = null;
+
+            // Remover todas las clases y estilos de resaltado
+            svg.querySelectorAll('g.node, g.edgePath').forEach(el => {
                 el.classList.remove('highlighted-node', 'related-node', 'dimmed-node', 'highlighted-edge', 'dimmed-edge');
-                // Limpiar filtros inline
-                if (el.style.filter) {
-                    el.style.filter = 'none';
-                }
+                el.style.filter = 'none';
+                el.style.opacity = '';
             });
+
             console.log('Resaltado limpiado');
         }
 
-        // Limpiar resaltado al cambiar diagrama
+        // Limpiar resaltado cuando se hace click fuera del SVG
         document.addEventListener('click', (e) => {
-            if (e.target.tagName !== 'svg' && !e.target.closest('svg') && !e.target.closest('.mermaid')) {
+            if (!e.target.closest('svg')) {
                 const svg = document.querySelector('.mermaid svg');
                 if (svg) clearHighlighting(svg);
             }
         });
-
-        // Mejorar la inicialización de click highlighting
-        const originalContentLoaded = mermaid.contentLoaded;
-        mermaid.contentLoaded = function() {
-            if (originalContentLoaded) originalContentLoaded.apply(this, arguments);
-            setTimeout(() => {
-                initializeClickHighlighting();
-            }, 100);
-        };
     </script>
 </body>
 </html>
