@@ -318,6 +318,55 @@
             max-width: 100%;
             height: auto;
         }
+
+        /* Estilos para resaltado de elementos */
+        .mermaid .node {
+            cursor: pointer;
+            transition: all 0.2s ease;
+        }
+
+        .mermaid .node:hover {
+            filter: brightness(1.1);
+        }
+
+        .mermaid .highlighted-node {
+            filter: brightness(1.3) !important;
+            stroke-width: 3 !important;
+        }
+
+        .mermaid .related-node {
+            filter: brightness(1.15) !important;
+            opacity: 1 !important;
+        }
+
+        .mermaid .dimmed-node {
+            opacity: 0.2 !important;
+        }
+
+        .mermaid .highlighted-edge {
+            stroke-width: 2.5 !important;
+            opacity: 1 !important;
+            filter: drop-shadow(0 0 3px rgba(102, 126, 234, 0.8));
+        }
+
+        .mermaid .dimmed-edge {
+            opacity: 0.1 !important;
+        }
+
+        .hint-text {
+            display: inline-block;
+            background: #fff3cd;
+            border: 1px solid #ffc107;
+            padding: 8px 12px;
+            border-radius: 4px;
+            margin-bottom: 10px;
+            font-size: 0.9em;
+            color: #856404;
+        }
+
+        .hint-text.hidden {
+            display: none;
+        }
     </style>
 </head>
 <body>
@@ -367,7 +416,7 @@
             <button onclick="zoomReset()" title="Restablecer zoom">⟲ Restablecer</button>
             <button onclick="zoomIn()" title="Acercarse (Ctrl++)">🔍+ Acercarse</button>
             <div class="zoom-level" id="zoomLevel">100%</div>
-            <span style="margin-left: 20px; color: #666; font-size: 0.9em;">💡 Usa la rueda del ratón o arrastra para mover</span>
+            <span style="margin-left: 20px; color: #666; font-size: 0.9em;">💡 Usa la rueda del ratón o arrastra para mover | Haz click en un elemento para resaltar relacionados</span>
         </div>
 
         <div class="diagram-container" id="diagramContainer">
@@ -1386,7 +1435,115 @@ graph TB
 
             mermaid.contentLoaded();
             loadZoomState();
+
+            // Agregar funcionalidad de resaltado después de que Mermaid renderice
+            setTimeout(() => {
+                initializeClickHighlighting();
+            }, 500);
         }
+
+        // =================== FUNCIONALIDAD DE RESALTADO ===================
+        function initializeClickHighlighting() {
+            const svg = document.querySelector('.mermaid svg');
+            if (!svg) return;
+
+            // Obtener todos los nodos (elementos g con clase node)
+            const nodes = svg.querySelectorAll('g.node, g.cluster');
+
+            nodes.forEach(node => {
+                const nodeId = node.getAttribute('id');
+                if (nodeId) {
+                    node.style.cursor = 'pointer';
+                    node.addEventListener('click', (e) => {
+                        e.stopPropagation();
+                        highlightElement(nodeId, svg);
+                    });
+                }
+            });
+
+            // Click en el fondo para limpiar resaltado
+            svg.addEventListener('click', () => {
+                clearHighlighting(svg);
+            });
+        }
+
+        function highlightElement(nodeId, svg) {
+            clearHighlighting(svg);
+
+            // Obtener el nodo clickeado
+            const clickedNode = svg.getElementById(nodeId);
+            if (!clickedNode) return;
+
+            // Resaltar el nodo clickeado
+            clickedNode.classList.add('highlighted-node');
+
+            // Obtener todas las aristas (edges)
+            const edges = svg.querySelectorAll('g.edgePath');
+            const connectedNodes = new Set([nodeId]);
+
+            // Encontrar nodos conectados y resaltar aristas
+            edges.forEach(edge => {
+                const pathElement = edge.querySelector('path.path');
+                if (!pathElement) return;
+
+                const edgeId = edge.getAttribute('id');
+                const isConnected = edgeId && (edgeId.includes(nodeId + '->') || edgeId.includes('->' + nodeId));
+
+                if (isConnected) {
+                    // Extraer IDs conectados del edgeId
+                    const parts = edgeId.split('->');
+                    if (parts[0]) connectedNodes.add(parts[0]);
+                    if (parts[1]) connectedNodes.add(parts[1]);
+
+                    // Resaltar la arista
+                    edge.classList.add('highlighted-edge');
+                } else {
+                    edge.classList.add('dimmed-edge');
+                }
+            });
+
+            // Resaltar nodos conectados
+            connectedNodes.forEach(id => {
+                if (id !== nodeId) {
+                    const node = svg.getElementById(id);
+                    if (node) {
+                        node.classList.add('related-node');
+                    }
+                }
+            });
+
+            // Oscurecer otros nodos
+            const allNodes = svg.querySelectorAll('g.node, g.cluster');
+            allNodes.forEach(node => {
+                const id = node.getAttribute('id');
+                if (!connectedNodes.has(id) && id !== nodeId) {
+                    node.classList.add('dimmed-node');
+                }
+            });
+
+            // Mostrar información
+            const nodeLabel = clickedNode.querySelector('text')?.textContent || nodeId;
+            console.log(`Resaltado: ${nodeLabel} y elementos relacionados`);
+        }
+
+        function clearHighlighting(svg) {
+            // Remover todas las clases de resaltado
+            svg.querySelectorAll('.highlighted-node, .related-node, .dimmed-node').forEach(el => {
+                el.classList.remove('highlighted-node', 'related-node', 'dimmed-node');
+            });
+
+            svg.querySelectorAll('.highlighted-edge, .dimmed-edge').forEach(el => {
+                el.classList.remove('highlighted-edge', 'dimmed-edge');
+            });
+        }
+
+        // Limpiar resaltado al cambiar diagrama
+        document.addEventListener('click', (e) => {
+            if (e.target.tagName !== 'svg' && !e.target.closest('svg') && !e.target.closest('.mermaid')) {
+                const svg = document.querySelector('.mermaid svg');
+                if (svg) clearHighlighting(svg);
+            }
+        });
     </script>
 </body>
 </html>
