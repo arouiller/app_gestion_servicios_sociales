@@ -60,7 +60,7 @@ const provinciaController = {
   async getReferencias(req, res) {
     try {
       const { id } = req.params;
-      const { sequelize } = require('../config/database');
+      const sequelize = require('../config/database');
 
       const provincia = await Provincia.findByPk(id);
       if (!provincia) {

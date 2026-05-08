@@ -109,7 +109,7 @@ const localidadController = {
   async getReferencias(req, res) {
     try {
       const { id } = req.params;
-      const { sequelize } = require('../config/database');
+      const sequelize = require('../config/database');
 
       const localidad = await Localidad.findByPk(id);
       if (!localidad) {
