@@ -40,6 +40,7 @@ De cualquier estado → Descartado
 
 | ID | Prioridad | Estado | Descripción | Contexto / Motivo | Archivos estimados |
 |----|-----------|--------|-------------|-------------------|----|
+| BACKLOG-060 | 🔴 Alta | 📋 Registrado | Habilitar servicios para afiliados después de guardar plan nuevo | En modo crear, los afiliados se guardan todo junto con el plan (no auto-save). Después de "Guardar y Seguir Editando", habilitar selección de servicios. Botón ⚙️ deshabilitado hasta que plan+afiliados existan en BD. | PlanV1Modal.jsx, IntegranteServiciosModal.jsx |
 | BACKLOG-059 | 🔴 Alta | ✅ Solucionado | Guardado automático de afiliados al agregar a plan existente | Cuando un afiliado es agregado a un plan ya registrado, se guarda automáticamente sin esperar a "Guardar y Seguir Editando". Posición = última, rol automático (titular/adherente). Simplifica flujo, reduce clicks, mejor UX. Implementado con auto-save en modo editar. Commits: 388a3a8, 051dcfc | PlanV1Modal.jsx |
 | BACKLOG-057 | 🟡 Media | ✅ Solucionado | Modal de confirmación obligatorio al eliminar servicios adicionales | Cuando un usuario intenta eliminar un servicio adicional desde la pantalla de gestión, siempre mostrar modal de confirmación, incluso si el servicio no tiene referencias (integrantes asociados). Cambio: LookupCRUD.jsx handleDelete() ahora abre modal siempre en lugar de intentar eliminar primero. Commit: c02ec29 | LookupCRUD.jsx |
 | BACKLOG-056 | 🟡 Media | ✅ Solucionado | Mostrar último aumento masivo al generar recibos | Al generar recibos, mostrar cuál fue el último aumento masivo realizado (fecha, porcentaje, usuario que lo realizó) debajo del mensaje de qué mes se generarán recibos. Mejora transparencia: usuarios ven instantáneamente qué aumento afectará los nuevos recibos. Commits: ecac358, 5c9ed69, 09339a1 | GenerarRecibosModal.jsx, recibosService.js, recibosController.js, routes/recibos.js |
@@ -3957,6 +3958,100 @@ c. **Detalles técnicos:**
 ---
 
 ## Detalles de Items
+
+### BACKLOG-060: Habilitar Servicios para Afiliados Después de Guardar Plan Nuevo
+
+**Descripción:**
+En el flujo de creación de un plan nuevo, los afiliados se guardan en conjunto con el plan (no hay auto-save individual como en BACKLOG-059 para planes existentes). Después de que el usuario selecciona "Guardar y Seguir Editando", debe habilitarse la funcionalidad de asignar servicios adicionales a los afiliados. Mientras no se haya guardado el plan nuevo, el botón de servicios (⚙️) debe estar deshabilitado.
+
+**Comportamiento Requerido:**
+
+a. **Flujo de creación de plan nuevo (modo 'crear'):**
+   1. Usuario abre modal de crear plan
+   2. Ingresa datos del plan
+   3. Agrega afiliados (se agregan solo al estado local, NO se guardan en BD)
+   4. Hace clic en "Guardar y Seguir Editando" o "Guardar y Cerrar"
+   5. `handleGuardar` crea el plan, crea todos los afiliados, y los ordena (todo en una transacción lógica)
+   6. Si selecciona "Guardar y Seguir Editando": modal permanece abierta
+
+b. **Estado del botón de servicios:**
+   - **Antes de guardar plan nuevo:** Botón ⚙️ deshabilitado (gris, tooltip: "Guarde el plan para agregar servicios")
+   - **Después de guardar plan nuevo:** Botón ⚙️ habilitado (se puede hacer clic para abrir IntegranteServiciosModal)
+   - En modo editar: botón ⚙️ siempre habilitado (porque el plan ya existe en BD)
+
+c. **Implementación:**
+   - Agregar estado `planSaved` (boolean) en PlanV1Modal
+   - Inicializar en false
+   - En `handleGuardar`, después de guardado exitoso:
+     * Si `mode === 'crear'`: `setPlanSaved(true)` + actualizar `planData` con los datos retornados
+     * Si `mode === 'editar'`: dejar como está
+   - En el botón ⚙️ de la tabla de afiliados:
+     * `disabled={mode === 'crear' && !planSaved}`
+     * Tooltip dinámico según estado
+
+d. **Contexto:**
+   - Los servicios están ligados a un integrante (tabla IntegranteServicio con FK a plan_integrante)
+   - No es posible asignar servicios a un afiliado que no existe en BD
+   - En plan existente (editar), los afiliados ya existen → servicios siempre disponibles
+   - En plan nuevo (crear), los afiliados se crean recién al guardar → servicios disponibles solo después
+
+**Requerimientos funcionales:**
+
+1. **Control de estado:**
+   - Nuevo estado `planSaved` en PlanV1Modal (false al abrir/crear, true después de guardar exitoso)
+   - Afecta solo modo "crear"
+
+2. **Botón de servicios (⚙️):**
+   - Ubicación: tabla de afiliados, columna "Acciones"
+   - Estado: `disabled={mode === 'crear' && !planSaved}`
+   - Tooltip: Si deshabilitado, mostrar "Guarde el plan para agregar servicios"
+   - Si habilitado, comportamiento actual (onClick abre IntegranteServiciosModal)
+
+3. **IntegranteServiciosModal:**
+   - No requiere cambios (la condición de deshabilitado está en el botón, no en el modal)
+
+4. **handleGuardar:**
+   - No requiere cambios en la lógica de guardado
+   - Solo agregar `setPlanSaved(true)` después de guardado exitoso en modo crear
+
+**Componentes Afectados:**
+- `frontend/src/pages/DashboardPage/components/GestionPlanesV1/modals/PlanV1Modal.jsx`
+  - Línea ~38: nuevo estado `planSaved`
+  - Línea ~113-119: inicializar `planSaved = false` al cargar en modo crear
+  - Línea ~333: agregar `if (mode === 'crear') setPlanSaved(true)` después de guardado exitoso
+  - Tabla de afiliados: botón ⚙️ con `disabled={mode === 'crear' && !planSaved}`
+  - Botón ⚙️: tooltip dinámico
+
+**Testing Checklist:**
+- [ ] Crear plan nuevo
+- [ ] Agregar afiliados (botón ⚙️ debe estar deshabilitado/gris)
+- [ ] Hacer hover en botón ⚙️ → debe mostrar tooltip "Guarde el plan para agregar servicios"
+- [ ] Hacer clic en botón ⚙️ → no debe abrir modal (botón deshabilitado)
+- [ ] Hacer clic "Guardar y Seguir Editando"
+- [ ] Esperar a que se guarde y modal reabre
+- [ ] Botón ⚙️ ahora debe estar habilitado (sin tooltip)
+- [ ] Hacer clic en botón ⚙️ → debe abrir IntegranteServiciosModal
+- [ ] En modo editar: botón ⚙️ siempre habilitado (sin cambios)
+- [ ] En modo editar, agregar nuevo afiliado → botón ⚙️ habilitado para el nuevo
+
+**Estimación:** 1-1.5 horas
+
+**Prioridad:** 🔴 Alta — Define flujo correcto de creación, mejora UX, previene confusion
+
+**Beneficio:**
+- ✅ UX clara: usuario sabe que debe guardar plan antes de asignar servicios
+- ✅ Previene errores: no intenta abrir modal de servicios con plan no guardado
+- ✅ Comportamiento consistente: servicios siempre dependen de existencia en BD
+- ✅ Diferencia clara entre flujo crear vs editar
+
+**Relación con otros requerimientos:**
+- BACKLOG-059: Auto-save en editar. BACKLOG-060: Manual save en crear
+- BACKLOG-058: "Guardar y Seguir Editando" habilita servicios después de guardar
+- Complementan el flujo completo de gestión de planes y afiliados
+
+**Estado:** 📋 Registrado
+
+---
 
 ### BACKLOG-035: Optimizar Espacio de Trabajo - Sidebar Colapsable y Ocultable
 
