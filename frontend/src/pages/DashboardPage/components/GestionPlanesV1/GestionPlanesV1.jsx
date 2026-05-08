@@ -243,15 +243,30 @@ function GestionPlanesV1() {
                 >
                   Identificador{getSortIcon('numero_afiliado')}{getResizeHandle('identificador')}
                 </th>
-                <th style={{ width: widths.titular }}>Titular{getResizeHandle('titular')}</th>
-                <th style={{ width: widths.tipoPlan }}>Tipo de Plan{getResizeHandle('tipoPlan')}</th>
+                <th
+                  style={{ width: widths.titular, cursor: 'pointer' }}
+                  onClick={() => handleSort('PlanIntegrante.Persona.apellido')}
+                >
+                  Titular{getSortIcon('PlanIntegrante.Persona.apellido')}{getResizeHandle('titular')}
+                </th>
+                <th
+                  style={{ width: widths.tipoPlan, cursor: 'pointer' }}
+                  onClick={() => handleSort('TipoDePlan.tipo_plan_nombre')}
+                >
+                  Tipo de Plan{getSortIcon('TipoDePlan.tipo_plan_nombre')}{getResizeHandle('tipoPlan')}
+                </th>
                 <th
                   style={{ width: widths.cobrador, cursor: 'pointer' }}
                   onClick={() => handleSort('cobrador_numero')}
                 >
                   Cobrador{getSortIcon('cobrador_numero')}{getResizeHandle('cobrador')}
                 </th>
-                <th style={{ width: widths.obraSocial }}>Obra Social{getResizeHandle('obraSocial')}</th>
+                <th
+                  style={{ width: widths.obraSocial, cursor: 'pointer' }}
+                  onClick={() => handleSort('ObraSocial.os_nombre')}
+                >
+                  Obra Social{getSortIcon('ObraSocial.os_nombre')}{getResizeHandle('obraSocial')}
+                </th>
                 <th
                   style={{ width: widths.estado, cursor: 'pointer' }}
                   onClick={() => handleSort('estado')}

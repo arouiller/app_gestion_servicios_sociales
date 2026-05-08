@@ -26,10 +26,24 @@ exports.filter = async (req, res, next) => {
     }
 
     // Build ORDER BY clause
-    const allowedColumns = ['plan_numero', 'numero_afiliado', 'estado', 'zona_codigo', 'valor_cuota', 'fecha_creacion', 'cobrador_numero', 'tipo_plan_numero', 'os_numero'];
+    const columnMap = {
+      'plan_numero': 'plan_numero',
+      'numero_afiliado': 'numero_afiliado',
+      'estado': 'estado',
+      'zona_codigo': 'zona_codigo',
+      'valor_cuota': 'valor_cuota',
+      'fecha_creacion': 'fecha_creacion',
+      'cobrador_numero': 'cobrador_numero',
+      'tipo_plan_numero': 'tipo_plan_numero',
+      'os_numero': 'os_numero',
+      'Cobrador.cobrador_apellido': { model: db.Cobrador, field: 'cobrador_apellido' },
+      'TipoDePlan.tipo_plan_nombre': { model: db.TipoDePlan, field: 'tipo_plan_nombre' },
+      'ObraSocial.os_nombre': { model: db.ObraSocial, field: 'os_nombre' },
+      'PlanIntegrante.Persona.apellido': { model: db.Persona, field: 'apellido' }
+    };
     let orderBy = [['plan_numero', 'ASC']]; // default
     if (sortBy) {
-      orderBy = buildOrderByClause(sortBy, order, allowedColumns);
+      orderBy = buildOrderByClause(sortBy, order, columnMap);
     }
 
     const planes = await db.PlanV1.findAll({
