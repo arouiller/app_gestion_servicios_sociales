@@ -1,4 +1,4 @@
-import React, { createContext, useState, useEffect } from 'react';
+import React, { createContext, useState, useEffect, useRef } from 'react';
 import configService from '../services/configService';
 
 export const ConfigContext = createContext();
@@ -12,8 +12,15 @@ export function ConfigProvider({ children }) {
   const [config, setConfig] = useState(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
+  const loadingRef = useRef(false); // Evitar cargas duplicadas
 
   useEffect(() => {
+    // Guarda contra cargas duplicadas (ej: en caso de double-mount)
+    if (loadingRef.current) {
+      return;
+    }
+    loadingRef.current = true;
+
     const loadConfig = async () => {
       try {
         setLoading(true);
