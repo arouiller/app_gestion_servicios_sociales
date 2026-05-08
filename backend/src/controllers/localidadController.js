@@ -109,15 +109,23 @@ const localidadController = {
   async getReferencias(req, res) {
     try {
       const { id } = req.params;
+      const { sequelize } = require('../config/database');
 
       const localidad = await Localidad.findByPk(id);
       if (!localidad) {
         return res.status(404).json({ success: false, message: 'Localidad no encontrada' });
       }
 
-      const referencias = await PlanV1.count({
-        where: { localidad_id: id }
-      });
+      // Query raw: contar planes asociados a esta localidad
+      const result = await sequelize.query(
+        `SELECT COUNT(*) as count FROM planes_v1 WHERE localidad_id = ?`,
+        {
+          replacements: [id],
+          type: require('sequelize').QueryTypes.SELECT
+        }
+      );
+
+      const referencias = result[0]?.count || 0;
 
       res.json({
         success: true,

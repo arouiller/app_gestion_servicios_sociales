@@ -60,28 +60,26 @@ const provinciaController = {
   async getReferencias(req, res) {
     try {
       const { id } = req.params;
+      const { sequelize } = require('../config/database');
 
       const provincia = await Provincia.findByPk(id);
       if (!provincia) {
         return res.status(404).json({ success: false, message: 'Provincia no encontrada' });
       }
 
-      // Obtener IDs de localidades de esta provincia
-      const localidadesIds = await Localidad.findAll({
-        where: { provincia_id: id },
-        attributes: ['id'],
-        raw: true
-      });
+      // Query raw: contar planes asociados a localidades de esta provincia
+      const result = await sequelize.query(
+        `SELECT COUNT(*) as count
+         FROM planes_v1 pv1
+         INNER JOIN localidades l ON pv1.localidad_id = l.id
+         WHERE l.provincia_id = ?`,
+        {
+          replacements: [id],
+          type: require('sequelize').QueryTypes.SELECT
+        }
+      );
 
-      const ids = localidadesIds.map(l => l.id);
-
-      // Contar planes asociados a esas localidades
-      let referencias = 0;
-      if (ids.length > 0) {
-        referencias = await PlanV1.count({
-          where: { localidad_id: ids }
-        });
-      }
+      const referencias = result[0]?.count || 0;
 
       res.json({
         success: true,
