@@ -366,11 +366,125 @@ const getHistorialCuota = async (req, res, next) => {
   }
 };
 
+// ── POST /api/v1.0/planes/crear-completo (sin admin requerido) ──────────────────
+// Crear plan + personas deferred + integrantes en una única transacción atómica
+
+const crearCompleto = async (req, res, next) => {
+  const t = await db.sequelize.transaction();
+  try {
+    const {
+      tipo_plan_numero,
+      cobrador_numero,
+      tipo_de_grupo_numero,
+      os_numero,
+      numero_afiliado,
+      telefono_1,
+      telefono_2,
+      domicilio,
+      localidad,
+      valor_cuota,
+      estado,
+      zona,
+      zona_id,
+      localidad_id,
+      integrantes = [],
+    } = req.body;
+
+    // 1. Validar y normalizar numero_afiliado
+    const numeroAfiliadoPadded = String(numero_afiliado).trim().padStart(5, '0');
+    if (!/^\d{5}$/.test(numeroAfiliadoPadded)) {
+      await t.rollback();
+      return res.status(422).json({
+        success: false,
+        message: 'El número de afiliado debe ser numérico de hasta 5 dígitos',
+        errors: { numero_afiliado: 'Solo se permiten números (máximo 5 dígitos)' },
+      });
+    }
+
+    const existente = await db.PlanV1.findOne(
+      { where: { numero_afiliado: numeroAfiliadoPadded } },
+      { transaction: t }
+    );
+    if (existente) {
+      await t.rollback();
+      return res.status(409).json({
+        success: false,
+        message: 'Ya existe un plan con ese número de afiliado',
+        errors: { numero_afiliado: 'Ya existe un plan con ese número de afiliado' },
+      });
+    }
+
+    // 2. Crear el plan
+    const plan = await db.PlanV1.create({
+      tipo_plan_numero,
+      cobrador_numero,
+      tipo_de_grupo_numero,
+      os_numero,
+      numero_afiliado: numeroAfiliadoPadded,
+      telefono_1,
+      telefono_2,
+      domicilio,
+      localidad,
+      valor_cuota,
+      estado: estado || 'ACTIVO',
+      zona: zona ?? 0,
+      zona_id: zona_id || null,
+      localidad_id: localidad_id || null,
+    }, { transaction: t });
+
+    // 3. Crear personas deferred y plan_integrantes
+    if (integrantes.length > 0) {
+      const integrantesConPersonaId = await Promise.all(
+        integrantes.map(async (integ, index) => {
+          let persona_id = integ.persona_id;
+          // Si no tiene persona_id y tiene datos de persona, crear la persona
+          if (!persona_id && integ.persona) {
+            const persona = await db.Persona.create(integ.persona, { transaction: t });
+            persona_id = persona.id;
+          }
+          return {
+            plan_numero: plan.plan_numero,
+            persona_id,
+            rol: index === 0 ? 'titular' : 'integrante',
+            orden: index + 1,
+            credencial: 'T',
+          };
+        })
+      );
+
+      await db.PlanIntegrante.bulkCreate(integrantesConPersonaId, { transaction: t });
+    }
+
+    await t.commit();
+
+    // 4. Retornar plan con integrantes y personas anidadas (para sincronizar el form frontend)
+    const result = await db.PlanV1.findOne({
+      where: { plan_numero: plan.plan_numero },
+      include: [{
+        model: db.PlanIntegrante,
+        include: [{ model: db.Persona }],
+        order: [['orden', 'ASC']],
+      }],
+    });
+
+    return res.status(201).json({
+      success: true,
+      message: 'Plan creado exitosamente con integrantes',
+      data: result,
+      ...result.dataValues,
+    });
+  } catch (error) {
+    await t.rollback();
+    next(error);
+  }
+};
+
 module.exports = {
   listar,
   getByPersona,
   obtener,
   crear,
+  crearCompleto,
   actualizar,
   eliminar,
   getMaxAfiliadoNumber,

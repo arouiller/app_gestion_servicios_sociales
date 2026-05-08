@@ -19,6 +19,12 @@ const planesV1Service = {
     return data.data;
   },
 
+  // Crear plan + personas + integrantes en una única transacción
+  crearCompleto: async (payload) => {
+    const { data } = await api.post('/v1.0/planes/crear-completo', payload);
+    return data.data;
+  },
+
   // Actualizar plan
   actualizar: async (planNumero, payload) => {
     const { data } = await api.put(`/v1.0/planes/${planNumero}`, payload);

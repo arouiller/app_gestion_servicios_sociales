@@ -266,70 +266,30 @@ function PlanV1Modal({ mode, planData, onClose, onSave }) {
       };
 
       if (actualMode === 'crear') {
-        // Create plan
-        const response = await planesV1Service.crear(payload);
+        // Create plan + personas + integrantes in a single transaction via backend
+        const integrantesPayload = form.integrantes.map((integ) => ({
+          persona_id: integ.persona_id || null,
+          persona: integ.persona_id ? null : integ.persona,
+        }));
 
-        // Create integrantes for new plan
-        if (form.integrantes.length > 0) {
-          // First, create any personas that were deferred (persona_id === null) in modo crear
-          let integrantesToCreate = form.integrantes;
-          const personasToCreate = form.integrantes.filter((i) => i.persona_id === null);
+        const response = await planesV1Service.crearCompleto({
+          ...payload,
+          integrantes: integrantesPayload,
+        });
 
-          if (personasToCreate.length > 0) {
-            try {
-              const createdPersonas = await Promise.all(
-                personasToCreate.map((integ) => personasService.crear(integ.persona))
-              );
+        // Sync form with real IDs from BD
+        const integrantesConId = (response.PlanIntegrantes || [])
+          .sort((a, b) => a.orden - b.orden)
+          .map(pi => ({
+            id: pi.id,
+            persona_id: pi.persona_id,
+            persona: pi.Persona,
+            rol: pi.rol,
+            servicios: [],
+          }));
 
-              // Update integrantes with real persona_id
-              const personaMap = new Map(createdPersonas.map((p) => [p.numero_documento, p]));
-              integrantesToCreate = form.integrantes.map((integ) => {
-                if (integ.persona_id === null) {
-                  const createdPersona = personaMap.get(integ.persona.numero_documento);
-                  return { ...integ, persona_id: createdPersona?.id, persona: createdPersona };
-                }
-                return integ;
-              });
-            } catch (err) {
-              console.error('Error creating deferred personas:', err);
-              throw new Error('Error al crear afiliados: ' + err.message);
-            }
-          }
-
-          await planesIntegrantesService.crearMultiples(response.plan_numero, integrantesToCreate);
-          // Reload integrantes to get their assigned IDs before reordering
-          const createdIntegrantes = await planesIntegrantesService.obtenerPorPlan(response.plan_numero);
-
-          // Build meta for reorder using actual order from form
-          const integrantesWithMeta = integrantesToCreate.map((integrante, index) => {
-            const created = createdIntegrantes.find((c) => c.persona_id === integrante.persona_id);
-            return {
-              id: created?.id,
-              orden: index + 1,
-            };
-          });
-
-          await planesIntegrantesService.reorder(response.plan_numero, integrantesWithMeta);
-
-          // Reload integrantes again after reorder to get final state from BD
-          const finalIntegrantes = await planesIntegrantesService.obtenerPorPlan(response.plan_numero);
-
-          // Map final integrantes back to form structure
-          const integrantesConId = integrantesToCreate.map((integ, index) => {
-            const created = finalIntegrantes.find((c) => c.persona_id === integ.persona_id);
-            return {
-              ...integ,
-              id: created?.id,
-              persona: created?.Persona || integ.persona,
-            };
-          });
-
-          handleFieldChange('integrantes', integrantesConId);
-        }
-
-        // Save plan reference for reloadIntegrantes and services
+        handleFieldChange('integrantes', integrantesConId);
         setSavedPlanData(response);
-        // Switch mode to edit for subsequent saves
         setActualMode('editar');
       } else {
         // Update plan
