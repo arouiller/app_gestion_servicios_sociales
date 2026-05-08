@@ -17,6 +17,7 @@ function GenerarRecibosModal({ isOpen, onClose, onSuccess }) {
   const [periodoExistentePreview, setPeriodoExistentePreview] = useState(null);
   const [verificandoPeriodo, setVerificandoPeriodo] = useState(false);
   const [ultimoAumento, setUltimoAumento] = useState(null);
+  const [numeroInicial, setNumeroInicial] = useState('');
 
   // Derivar período en formato YYYY-MM-01
   const periodo = useMemo(() => {
@@ -51,6 +52,7 @@ function GenerarRecibosModal({ isOpen, onClose, onSuccess }) {
     if (isOpen) {
       resetForm();
       loadUltimoAumento();
+      loadMaxNumeroRecibo();
     }
   }, [isOpen]);
 
@@ -62,6 +64,16 @@ function GenerarRecibosModal({ isOpen, onClose, onSuccess }) {
       }
     } catch (err) {
       console.error('Error cargando último aumento:', err);
+    }
+  };
+
+  const loadMaxNumeroRecibo = async () => {
+    try {
+      const sugerido = await recibosService.getMaxNumero();
+      setNumeroInicial(sugerido);
+    } catch (err) {
+      console.error('Error cargando número máximo de recibo:', err);
+      setNumeroInicial('');
     }
   };
 
@@ -125,6 +137,7 @@ function GenerarRecibosModal({ isOpen, onClose, onSuccess }) {
     setPeriodoExistentePreview(null);
     setVerificandoPeriodo(false);
     setLoading(false);
+    setNumeroInicial('');
   };
 
   const getPeriodoDisplay = () => {
@@ -148,6 +161,7 @@ function GenerarRecibosModal({ isOpen, onClose, onSuccess }) {
       const result = await recibosService.generar({
         periodo,
         planes: [],
+        numeroInicialRecibo: numeroInicial ? Number(numeroInicial) : undefined,
       });
 
       // Si existe período y no tiene force, el backend retorna 409 con existe: true
@@ -183,6 +197,7 @@ function GenerarRecibosModal({ isOpen, onClose, onSuccess }) {
         periodo,
         planes: [],
         force: true,
+        numeroInicialRecibo: numeroInicial ? Number(numeroInicial) : undefined,
       });
 
       if (!result.recibos) {
@@ -285,6 +300,20 @@ function GenerarRecibosModal({ isOpen, onClose, onSuccess }) {
                   </>
                 )}
               </div>
+
+              <div className="form-group">
+                <label>Número inicial de recibo:</label>
+                <input
+                  type="number"
+                  min="1"
+                  value={numeroInicial}
+                  onChange={(e) => setNumeroInicial(e.target.value)}
+                  placeholder="ej. 1"
+                />
+                <p className="form-hint">
+                  {numeroInicial ? `Se asignará desde ${numeroInicial}` : 'Se asignará automáticamente'}
+                </p>
+              </div>
             </>
           )}
 
@@ -330,15 +359,15 @@ function GenerarRecibosModal({ isOpen, onClose, onSuccess }) {
                 {recibosGenerados.length > 0 ? (
                   <div className="recibos-table">
                     <div className="recibos-table__header">
-                      <div>ID</div>
+                      <div>N° Recibo</div>
                       <div>Afiliado</div>
                       <div>Titular</div>
                       <div>Monto</div>
                     </div>
                     {recibosGenerados.slice(0, 10).map((recibo) => (
                       <div key={recibo.id} className="recibos-table__row">
-                        <div>{recibo.id}</div>
-                        <div>{formatNumeroAfiliado(recibo.numero_afiliado)}</div>
+                        <div>{recibo.numero_recibo ?? recibo.id}</div>
+                        <div>{recibo.zona_codigo ? `${recibo.zona_codigo}-${formatNumeroAfiliado(recibo.numero_afiliado)}` : formatNumeroAfiliado(recibo.numero_afiliado)}</div>
                         <div>{recibo.titular_apellido}, {recibo.titular_nombre}</div>
                         <div>${Number(recibo.valor_cuota).toFixed(2)}</div>
                       </div>
