@@ -56,7 +56,7 @@ De cualquier estado → Descartado
 | BACKLOG-049 | 🟡 Media | ✅ Solucionado | Números de documento duplicados permitidos — remover constraint UNIQUE | Permitir que múltiples personas tengan el mismo número de documento. La migración 2.0.8 ya removió el constraint UNIQUE a nivel de BD. Se actualizó Persona.js para alinear el modelo. Se removió validación de duplicados en personasController.js. Commits: 4eec97e, 469fece, 54ec323 | Persona.js model |
 | BACKLOG-048 | 🔴 Alta | ✅ Solucionado | Integrantes ordenables con drag & drop — rol por posición | Permitir reordenar integrantes de un plan mediante drag & drop en PlanV1Modal. El rol (titular vs integrante) se determina automáticamente por posición: primeros en lista = titulares, resto = integrantes. Campo `orden` en tabla plan_integrantes refleja el reorden. Migración para actualizar rol en registros existentes donde no está definido. Mejora UX y simplifica gestión de roles. | migrations/2.0.24, PlanIntegrante.js, PlanV1Modal.jsx, usePlanV1Form.js, planesIntegrantesService.js |
 | BACKLOG-047 | 🔴 Alta | ✅ Solucionado | Número de afiliado: formato de 5 dígitos con padding y auto-incremento | Estandarizar formato de número de afiliado a exactamente 5 dígitos (00001, 00002, etc.). Implementar auto-padding a izquierda con ceros. Validar unicidad. Sugerir automáticamente MAX+1 al crear plan. Mejora consistencia, evita duplicados, simplifica auditoría. | planesController.js, PlanV1Model.js, PlanV1Modal.jsx, usePlanV1Form.js, validateors/planesValidators.js, planesV1Service.js |
-| BACKLOG-046 | 🟡 Media | 📋 Registrado | Eliminar tablas legacy: afiliados, grupos_familiares, historial_grupo_familiar, planes_v2_backup | Limpieza de tablas no utilizadas y legacy que generan ruido en el schema. afiliados, grupos_familiares, historial_grupo_familiar no tienen modelos Sequelize ni endpoints. planes_v2_backup es tabla de respaldo sin funcionalidad activa. Requiere auditoría de dependencias, migración SQL de eliminación, y verificación de que no haya referencias en el código. | migrations/2.0.23, models/Plan.js (eliminar), modelos relacionados |
+| BACKLOG-046 | 🟡 Media | ✅ Solucionado | Eliminar tablas legacy: afiliados, grupos_familiares, historial_grupo_familiar, planes_v2_backup | Auditoría completada: 0 referencias en código. Migración 2.0.23 con DROP TABLE + downgrade idempotente. Modelo Plan.js (planes_v2_backup) eliminado. historialController.js (orphaned, requería modelos inexistentes) eliminado. Commits: e69c0cf (migración), 0f6cd44 (cleanup). | migrations/2.0.23 |
 | BACKLOG-045 | 🔴 Alta | ✅ Solucionado | Agregar zona y localidad a planes con dropdowns en UI | Cada plan debe tener asociado una zona (FK zona_id) y una localidad (FK localidad_id) en BD. UI debe permitir seleccionar zona y localidad mediante dropdowns en PlanV1Modal. Migración 2.0.22 para agregar campos. Mejora geolocalización y gestión territorial de planes. | migrations/2.0.22, PlanV1.js, planesController.js, PlanV1Modal.jsx, usePlanV1Form.js |
 | BACKLOG-044 | 🔴 Alta | ✅ Solucionado | Migración 2.0.19 - Eliminar zona de planes y agregar nuevos estados | Eliminar campo zona de planes y zona_id de plan_integrantes (campos legados sin FK formal). Agregar nuevos estados al ENUM: ELIMINADO y PROMOCION. Crear endpoint getAll para listados sin restricción de zona. Corregir asociaciones de modelos. | migrations/2.0.19, PlanV1.js, PlanIntegrante.js, models/index.js, listadosController.js, listadosService.js |
 | BACKLOG-043 | 🔴 Alta | ✅ Solucionado | Nueva entidad Zona independiente con CRUD | Nueva tabla Zona (código: 2 dígitos, nombre: string). Zona es una entidad **independiente** de Provincia y Localidad (no jerárquica). CRUD completo en interfaz de gestiones. Requiere migración, modelos, controladores, servicios, componente UI. | migrations/2.0.20, Zona.js model, lookupController.js, GestionZonas.jsx |
@@ -528,10 +528,31 @@ Limpieza de esquema: eliminación de 4 tablas legacy no utilizadas que generan r
 - Bajo: Auditoría confirma que no hay dependencias
 - Reversible: Migration downgrade disponible si es necesario
 
+**Implementación Completada:**
+
+**Auditoría Final:**
+- ✅ Verificación completa: historialController.js era el único archivo referenciando tablas legacy
+- ✅ historialController.js no tenía rutas asociadas (orphaned)
+- ✅ Plan.js no estaba importado en models/index.js (orphaned)
+- ✅ 0 referencias activas en código funcional
+
+**Cambios Realizados:**
+1. Migración 2.0.23 creada:
+   - upgrade.sql: DROP TABLE IF EXISTS con order dependencias (historial_grupo_familiar → grupos_familiares → afiliados → planes_v2_backup)
+   - downgrade.sql: Recreación de tablas básicas para rollback de emergencia
+2. Plan.js (modelo para planes_v2_backup) eliminado
+3. historialController.js (orfandado, requería Afiliado/GrupoFamiliar/HistorialGrupoFamiliar inexistentes) eliminado
+
+**Commits:**
+- `e69c0cf` — feat(migrations): migración 2.0.23 - eliminar tablas legacy no utilizadas
+- `0f6cd44` — refactor: eliminar modelo Plan.js y controlador historialController orphaned
+
+**Estado:** ✅ Solucionado (2026-05-08)
+
 **Notas:**
-- Ejecutar primero la auditoría completa (grep -r) para confirmar cero referencias
-- Considerar backup de BD antes de eliminar
-- Documentar en caso que futuro desarrollo necesite recuperar información de respaldo
+- Migración es reversible mediante downgrade.sql
+- No hay impacto en funcionalidad: tables legacy no se usaban
+- Schema BD ahora más limpio sin artefactos de versiones anteriores
 
 ---
 
