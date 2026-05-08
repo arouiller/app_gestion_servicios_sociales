@@ -120,9 +120,11 @@ export const usePlanV1Form = (initialData = null) => {
       newErrors.integrantes = 'Debe haber al menos un afiliado como Titular';
     }
 
-    // Check for duplicates
-    const personaIds = form.integrantes.map((i) => i.persona_id);
-    if (new Set(personaIds).size !== personaIds.length) {
+    // Check for duplicates: use numero_documento for deferred personas (persona_id === null), persona_id for others
+    const identifiers = form.integrantes.map((i) =>
+      i.persona_id !== null ? `id:${i.persona_id}` : `doc:${i.persona?.numero_documento}`
+    );
+    if (new Set(identifiers).size !== identifiers.length) {
       newErrors.integrantes = 'No puedes agregar el mismo afiliado dos veces';
     }
 
