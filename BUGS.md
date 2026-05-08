@@ -25,12 +25,15 @@ Un bug solo puede pasar a estado solucionado, Descartado a traves del pedido exp
 
 ## Registros Activos
 
-No hay bugs activos en este momento. Todos han sido solucionados.
+| ID | Severidad | Fase | Descripción | Reportado | Estado |
+|----|-----------|------|-------------|-----------|--------|
+| BUG-032 | 🟡 IMPORTANTE | Sortable Headers | Llamadas API duplicadas y redundantes al cargar GestionPlanesV1 | 2026-05-07 | 📋 Registrado |
 
 ### Historial reciente (últimos 7 días)
 
 | ID | Severidad | Fase | Descripción | Reportado | Estado |
 |----|-----------|------|-------------|-----------|--------|
+| BUG-032 | 🟡 IMPORTANTE | Sortable Headers | Llamadas API duplicadas al cargar GestionPlanesV1 | 2026-05-07 | 📋 Registrado |
 | BUG-031 | 🟡 IMPORTANTE | BACKLOG-054 | Aumentos porcentuales mostrados como "fijos" en historial de cuota | 2026-05-07 | ✅ Solucionado |
 
 ---
@@ -2035,3 +2038,233 @@ Línea 849-852 en `PlanV1Modal.jsx` — Eliminar condicional `esFijo`:
 - ✅ Aumento masivo: 5% en plan con cuota $100
 - ✅ Historial de Cuota muestra: "+5.00% ($5.00)" ✓
 - ✅ No hay etiqueta "Fijo" ✓
+
+---
+
+## BUG-032: Llamadas API Duplicadas y Redundantes al Cargar GestionPlanesV1
+
+**Descripción:**
+Al cargar la página de Gestión de Planes (GestionPlanesV1), se realizan múltiples llamadas duplicadas al backend, aumentando latencia y consumo de recursos.
+
+**Síntomas Observados:**
+1. `/api/planes/filter/todos?...&sortBy=plan_numero&order=ASC` — **LLAMADA DUPLICADA**
+2. `/api/planes/filter/todos?...&sortBy=plan_numero&order=ASC` — **Idem anterior**
+3. `/api/planes/filter/todos?...&sortBy=cobrador_numero&order=DESC` — llamada posterior (ordenamiento diferente)
+4. `/api/admin/configuracion` — **LLAMADA DUPLICADA**
+5. `/api/recibos/periodos` — única
+
+**Impacto:**
+- ❌ Latencia aumentada en carga inicial
+- ❌ Tráfico de red innecesario
+- ❌ Render múltiple del componente (performance)
+- 🟡 En conexiones lentas: tiempo de carga notablemente afectado
+
+**CAUSA RAÍZ IDENTIFICADA:**
+
+### 1. **Planes duplicadas en mount + sort change:**
+
+En `GestionPlanesV1.jsx`:
+
+```javascript
+// Línea 81-83: useEffect al montar
+useEffect(() => {
+  cargar();
+}, []);
+
+// Línea 100-102: useEffect cuando cambia sortBy/order
+useEffect(() => {
+  cargar();
+}, [sortBy, order, cargar]);
+```
+
+**Problema:**
+- En montaje, se ejecutan AMBOS useEffects casi simultáneamente (tiiming race condition)
+- El primer useEffect llama a cargar() con valores por defecto
+- El segundo useEffect se ejecuta poco después llamando a cargar() nuevamente
+- Cuando el usuario hace click en un header, se ejecuta nuevamente el segundo
+
+**Diagrama temporal:**
+```
+Mount
+├─ useEffect 1 (línea 81) → cargar() → /api/planes/filter/todos?sortBy=plan_numero&order=ASC ❌
+├─ Luego: useSortable inicializa sortBy y order
+├─ React detecta cambio en dependencies
+└─ useEffect 2 (línea 100) → cargar() → /api/planes/filter/todos?sortBy=plan_numero&order=ASC ❌
+```
+
+### 2. **Configuración duplicada:**
+
+En `GestionPlanesV1.jsx` línea 62-78:
+```javascript
+useEffect(() => {
+  const loadConfig = async () => {
+    const config = await configService.getConfiguracion(); // LLAMADA 1
+    ...
+  };
+  loadConfig();
+}, []);
+```
+
+Y probablemente también en `LookupCRUD.jsx` línea 44-60 y otros componentes.
+
+**Problema:**
+- Múltiples componentes cargan la configuración de forma independiente
+- No existe un contexto o caché centralizado
+- Mismo dato se obtiene N veces
+
+### 3. **Periodos cargados en GenerarRecibosModal:**
+
+En `GenerarRecibosModal.jsx` línea 69-88:
+```javascript
+useEffect(() => {
+  if (!isOpen || step !== 1) return;
+  
+  const checkInitialPeriodo = async () => {
+    const periodos = await recibosService.listPeriodos(); // LLAMADA
+    ...
+  };
+  
+  checkInitialPeriodo();
+}, [isOpen, step]);
+```
+
+**Problema:**
+- Se ejecuta en cada cambio de step o isOpen
+- Podría ser cacheado después de primera carga
+
+---
+
+## **SOLUCIONES PROPUESTAS**
+
+### **Solución 1: Consolidar useEffects de planes (CRÍTICA)**
+
+**Cambio en `GestionPlanesV1.jsx`:**
+
+**ANTES (duplicado):**
+```javascript
+// Mount
+useEffect(() => {
+  cargar();
+}, []);
+
+// Sort change (ejecuta en mount también)
+useEffect(() => {
+  cargar();
+}, [sortBy, order, cargar]);
+```
+
+**DESPUÉS (consolidado):**
+```javascript
+// Único useEffect que cubre ambos casos
+useEffect(() => {
+  cargar();
+}, [sortBy, order, cargar]);
+
+// Remover: useEffect(() => { cargar(); }, []);
+```
+
+**Por qué funciona:**
+- `cargar()` tiene dependencias [filtros, sortBy, order]
+- useCallback es estable entre renders cuando deps no cambian
+- En mount: sortBy/order ya están inicializados por useSortable
+- Luego: cualquier cambio en sort triggers cargar()
+
+**Impacto:** ✅ Reduce de 2 a 1 llamada en mount
+
+---
+
+### **Solución 2: Centralizar configuración en Context (IMPORTANTE)**
+
+**Crear `ConfigContext.jsx`:**
+```javascript
+const ConfigContext = createContext();
+
+export function ConfigProvider({ children }) {
+  const [config, setConfig] = useState(null);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    const load = async () => {
+      try {
+        const data = await configService.getConfiguracion();
+        setConfig(data);
+      } catch (err) {
+        console.error('Error loading config:', err);
+      } finally {
+        setLoading(false);
+      }
+    };
+    load();
+  }, []);
+
+  return (
+    <ConfigContext.Provider value={{ config, loading }}>
+      {children}
+    </ConfigContext.Provider>
+  );
+}
+```
+
+**Uso en componentes:**
+```javascript
+// En lugar de:
+// useEffect(() => { configService.getConfiguracion(); }, []);
+
+// Usar:
+const { config } = useContext(ConfigContext);
+const debounceDelay = config?.debounce_delay_ms ?? 2000;
+```
+
+**Impacto:** ✅ Reduce de N a 1 llamada en toda la app
+
+---
+
+### **Solución 3: Cachear Periodos en GenerarRecibosModal (MENOR)**
+
+**En `GenerarRecibosModal.jsx`:**
+
+```javascript
+const [periodosCached, setPeriodosCached] = useState(null);
+
+// Cargar periodos UNA SOLA VEZ al abrir
+useEffect(() => {
+  if (!isOpen || periodosCached) return;
+  
+  const load = async () => {
+    try {
+      const result = await recibosService.listPeriodos();
+      setPeriodosCached(result);
+    } catch (err) {
+      console.error('Error:', err);
+    }
+  };
+  load();
+}, [isOpen]); // Depende solo de isOpen, no de step
+```
+
+**Impacto:** ✅ Evita carga redundante en cambios de step
+
+---
+
+## **Plan de Acción Recomendado**
+
+| Solución | Impacto | Complejidad | Prioridad |
+|----------|---------|-------------|-----------|
+| 1. Consolidar useEffects | Alto (reduce 1 llamada) | Baja (1 línea) | 🔴 AHORA |
+| 2. ConfigContext | Alto (reduce N llamadas) | Media (nuevo context) | 🟡 Próxima sprint |
+| 3. Cachear periodos | Bajo (reduce <1 llamada) | Baja (2 líneas) | 🟢 Backlog |
+
+**Estimado total de mejora:**
+- Antes: 5-6 llamadas en mount
+- Después: 1-2 llamadas en mount
+- **Reducción: 60-80% de tráfico inicial**
+
+**Severidad:** 🟡 IMPORTANTE
+- No bloquea funcionalidad
+- Afecta performance y experiencia del usuario
+- Visible en redes lentas
+
+**Reportado:** 2026-05-07
+**Fase:** Sortable Headers / Performance
+
+**Estado:** 📋 Registrado

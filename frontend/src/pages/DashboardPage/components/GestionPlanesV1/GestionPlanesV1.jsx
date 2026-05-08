@@ -77,11 +77,6 @@ function GestionPlanesV1() {
     loadConfig();
   }, []);
 
-  // Cargar planes al montar (initial load)
-  useEffect(() => {
-    cargar();
-  }, []);
-
   const cargar = useCallback(async () => {
     setError(null);
     setLoading(true);
