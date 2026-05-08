@@ -39,6 +39,7 @@ function PlanV1Modal({ mode, planData, onClose, onSave }) {
   const [showSuccessNotification, setShowSuccessNotification] = useState('');
   const [loadingAddAfiliado, setLoadingAddAfiliado] = useState(false);
   const [savedPlanData, setSavedPlanData] = useState(null);
+  const [actualMode, setActualMode] = useState(mode);
   const [lookupData, setLookupData] = useState({
     tiposDeplan: [],
     cobradores: [],
@@ -147,11 +148,9 @@ function PlanV1Modal({ mode, planData, onClose, onSave }) {
   const loadMaxAfiliadoNumber = async () => {
     try {
       const data = await planesV1Service.getMaxAfiliadoNumber();
-      console.log('[PlanV1Modal] Max affiliate number data:', data);
       if (data && data.suggestedNumber) {
         setMaxAfiliadoNumber(data.suggestedNumber);
         handleFieldChange('numero_afiliado', String(data.suggestedNumber).padStart(5, '0'));
-        console.log('[PlanV1Modal] Set suggested number:', data.suggestedNumber);
       }
     } catch (err) {
       console.error('Error loading max affiliate number:', err);
@@ -161,7 +160,6 @@ function PlanV1Modal({ mode, planData, onClose, onSave }) {
   const loadFullPlanData = async () => {
     try {
       const fullPlan = await planesV1Service.obtener(planData.plan_numero);
-      console.log('[PlanV1Modal] Loaded full plan data:', fullPlan);
 
       // Actualizar el form con los datos completos incluyendo integrantes, zona y localidad
       if (fullPlan) {
@@ -210,7 +208,6 @@ function PlanV1Modal({ mode, planData, onClose, onSave }) {
             orden: pi.orden,
             servicios: pi.IntegranteServicios || [],
           }));
-        console.log('[PlanV1Modal] Integrantes reloaded after servicios change:', integrantes);
         handleFieldChange('integrantes', integrantes);
       }
     } catch (err) {
@@ -222,7 +219,6 @@ function PlanV1Modal({ mode, planData, onClose, onSave }) {
     try {
       setHistorialLoading(true);
       const data = await planesV1Service.obtenerHistorialCuota(planData.plan_numero);
-      console.log('[PlanV1Modal] Historial de cuota:', data);
       setHistorialCuota(Array.isArray(data) ? data : []);
     } catch (err) {
       console.error('Error loading historial cuota:', err);
@@ -236,7 +232,6 @@ function PlanV1Modal({ mode, planData, onClose, onSave }) {
     try {
       setRecibosLoading(true);
       const data = await recibosService.listByPlanNumero(planData.plan_numero);
-      console.log('[PlanV1Modal] Recibos:', data);
       setRecibos(Array.isArray(data) ? data : []);
       setRecibosPage(1);
     } catch (err) {
@@ -270,20 +265,17 @@ function PlanV1Modal({ mode, planData, onClose, onSave }) {
         localidad_id: form.localidad_id || null,
       };
 
-      if (mode === 'crear') {
+      if (actualMode === 'crear') {
         // Create plan
         const response = await planesV1Service.crear(payload);
 
         // Create integrantes for new plan
         if (form.integrantes.length > 0) {
           // First, create any personas that were deferred (persona_id === null) in modo crear
-          console.log('[PlanV1Modal] form.integrantes before processing:', form.integrantes);
           let integrantesToCreate = form.integrantes;
           const personasToCreate = form.integrantes.filter((i) => i.persona_id === null);
-          console.log('[PlanV1Modal] personasToCreate count:', personasToCreate.length, 'personas:', personasToCreate.map((i) => i.persona?.numero_documento));
 
           if (personasToCreate.length > 0) {
-            console.log('[PlanV1Modal] Creating deferred personas:', personasToCreate.length);
             try {
               const createdPersonas = await Promise.all(
                 personasToCreate.map((integ) => personasService.crear(integ.persona))
@@ -298,7 +290,6 @@ function PlanV1Modal({ mode, planData, onClose, onSave }) {
                 }
                 return integ;
               });
-              console.log('[PlanV1Modal] Updated integrantes with real persona_id:', integrantesToCreate);
             } catch (err) {
               console.error('Error creating deferred personas:', err);
               throw new Error('Error al crear afiliados: ' + err.message);
@@ -312,9 +303,6 @@ function PlanV1Modal({ mode, planData, onClose, onSave }) {
           // Build meta for reorder using actual order from form
           const integrantesWithMeta = integrantesToCreate.map((integrante, index) => {
             const created = createdIntegrantes.find((c) => c.persona_id === integrante.persona_id);
-            if (!created) {
-              console.error('[PlanV1Modal] Integrante not found in createdIntegrantes:', integrante.persona_id);
-            }
             return {
               id: created?.id,
               orden: index + 1,
@@ -322,18 +310,13 @@ function PlanV1Modal({ mode, planData, onClose, onSave }) {
           });
 
           await planesIntegrantesService.reorder(response.plan_numero, integrantesWithMeta);
-          console.log('[PlanV1Modal] Reorder completed with meta:', integrantesWithMeta);
 
           // Reload integrantes again after reorder to get final state from BD
           const finalIntegrantes = await planesIntegrantesService.obtenerPorPlan(response.plan_numero);
-          console.log('[PlanV1Modal] finalIntegrantes from obtenerPorPlan:', finalIntegrantes);
 
           // Map final integrantes back to form structure
           const integrantesConId = integrantesToCreate.map((integ, index) => {
             const created = finalIntegrantes.find((c) => c.persona_id === integ.persona_id);
-            if (!created) {
-              console.error('[PlanV1Modal] Integrante still not found after reorder:', integ.persona_id);
-            }
             return {
               ...integ,
               id: created?.id,
@@ -341,12 +324,13 @@ function PlanV1Modal({ mode, planData, onClose, onSave }) {
             };
           });
 
-          console.log('[PlanV1Modal] Final integrantes to update form:', integrantesConId);
           handleFieldChange('integrantes', integrantesConId);
         }
 
         // Save plan reference for reloadIntegrantes and services
         setSavedPlanData(response);
+        // Switch mode to edit for subsequent saves
+        setActualMode('editar');
       } else {
         // Update plan
         await planesV1Service.actualizar(planData.plan_numero, payload);
