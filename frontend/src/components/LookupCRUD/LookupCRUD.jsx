@@ -14,7 +14,7 @@ import useSortable from '../../hooks/useSortable';
 import '../../styles/_table-standard.scss';
 import './LookupCRUD.scss';
 
-const LookupCRUD = ({ titulo, singularName, endpoint, campos, tableKey = 'lookup' }) => {
+const LookupCRUD = ({ titulo, singularName, endpoint, campos, tableKey = 'lookup', requireConfirmationOnDelete = false }) => {
   const { config: globalConfig } = useConfig();
   const [registros, setRegistros] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -276,9 +276,13 @@ const LookupCRUD = ({ titulo, singularName, endpoint, campos, tableKey = 'lookup
                       title="Eliminar"
                       onClick={() => {
                         const id = Object.values(registro)[0];
-                        const nombreCampo = campos.find(c => c.name.includes('nombre'))?.name || campos[0]?.name;
-                        const infoEntidad = nombreCampo ? registro[nombreCampo] : String(id);
-                        if (window.confirm(`¿Estás seguro de que querés eliminar "${infoEntidad}"?`)) {
+                        if (requireConfirmationOnDelete) {
+                          const nombreCampo = campos.find(c => c.name.includes('nombre'))?.name || campos[0]?.name;
+                          const infoEntidad = nombreCampo ? registro[nombreCampo] : String(id);
+                          if (window.confirm(`¿Estás seguro de que querés eliminar "${infoEntidad}"?`)) {
+                            handleDelete(id);
+                          }
+                        } else {
                           handleDelete(id);
                         }
                       }}

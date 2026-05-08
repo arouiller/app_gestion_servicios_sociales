@@ -8,6 +8,7 @@ const TiposDePlan = () => {
       singularName="Tipo de Plan"
       endpoint="/lookup/tipos-de-plan"
       tableKey="tiposDePlan"
+      requireConfirmationOnDelete={true}
       campos={[
         { name: 'tipo_plan_numero', label: 'Número', tipo: 'numero_pk' },
         { name: 'tipo_plan_nombre', label: 'Nombre' },
