@@ -4,7 +4,9 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Diagrama de Dependencias - App Gestión Servicios Sociales</title>
-    <script src="https://cdn.jsdelivr.net/npm/mermaid/dist/mermaid.min.js"></script>
+    <!-- Vis.js Library -->
+    <script type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/vis/4.21.0/vis.min.js"></script>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/vis/4.21.0/vis.min.css" rel="stylesheet" type="text/css" />
     <style>
         * {
             margin: 0;
@@ -26,44 +28,49 @@
             border-radius: 12px;
             box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
             overflow: hidden;
+            display: flex;
+            flex-direction: column;
+            height: 90vh;
         }
 
         header {
             background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
             color: white;
-            padding: 40px 20px;
+            padding: 30px 20px;
             text-align: center;
+            flex-shrink: 0;
         }
 
         header h1 {
-            font-size: 2.5em;
-            margin-bottom: 10px;
+            font-size: 2.2em;
+            margin-bottom: 8px;
             text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.2);
         }
 
         header p {
-            font-size: 1.1em;
+            font-size: 1em;
             opacity: 0.95;
         }
 
         .controls {
-            padding: 20px;
+            padding: 15px 20px;
             background: #f8f9fa;
             border-bottom: 1px solid #dee2e6;
             display: flex;
-            gap: 15px;
+            gap: 10px;
             flex-wrap: wrap;
             align-items: center;
+            flex-shrink: 0;
         }
 
         .controls button {
-            padding: 10px 20px;
+            padding: 8px 16px;
             background: #667eea;
             color: white;
             border: none;
             border-radius: 6px;
             cursor: pointer;
-            font-size: 0.95em;
+            font-size: 0.9em;
             transition: all 0.3s ease;
         }
 
@@ -78,1691 +85,361 @@
             box-shadow: 0 4px 12px rgba(118, 75, 162, 0.4);
         }
 
-        .filter-separator {
-            width: 1px;
-            height: 30px;
-            background: #dee2e6;
-        }
-
-        .filters-group {
-            display: flex;
-            gap: 15px;
-            align-items: center;
-            flex-wrap: wrap;
-        }
-
-        .filter-label {
-            font-size: 0.85em;
-            font-weight: 600;
-            color: #666;
-            text-transform: uppercase;
-            letter-spacing: 0.5px;
-        }
-
-        .filter-checkboxes {
-            display: flex;
-            gap: 12px;
-            flex-wrap: wrap;
-        }
-
-        .filter-checkbox {
-            display: flex;
-            align-items: center;
-            gap: 6px;
-            cursor: pointer;
-            padding: 4px 8px;
-            border-radius: 4px;
-            transition: all 0.2s ease;
-        }
-
-        .filter-checkbox:hover {
-            background: white;
-            box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
-        }
-
-        .filter-checkbox input[type="checkbox"] {
-            cursor: pointer;
-            width: 16px;
-            height: 16px;
-            accent-color: #667eea;
-        }
-
-        .filter-checkbox label {
-            cursor: pointer;
-            font-size: 0.9em;
-            margin: 0;
-            user-select: none;
-        }
-
-        .filter-checkbox.models input:checked {
-            accent-color: #17a2b8;
-        }
-
-        .filter-checkbox.endpoints input:checked {
-            accent-color: #28a745;
-        }
-
-        .filter-checkbox.services input:checked {
-            accent-color: #ffc107;
-        }
-
-        .filter-checkbox.components input:checked {
-            accent-color: #dc3545;
-        }
-
-        .zoom-controls {
-            display: flex;
-            gap: 10px;
-            align-items: center;
-            padding: 10px 30px;
-            background: #f8f9fa;
-            border-bottom: 1px solid #dee2e6;
-        }
-
-        .zoom-controls button {
-            padding: 8px 16px;
-            background: white;
-            border: 1px solid #dee2e6;
-            border-radius: 4px;
-            cursor: pointer;
-            font-size: 0.9em;
-            transition: all 0.2s ease;
-        }
-
-        .zoom-controls button:hover {
-            background: #667eea;
-            color: white;
-            border-color: #667eea;
-        }
-
-        .zoom-level {
-            min-width: 80px;
-            text-align: center;
-            font-weight: 500;
-            color: #333;
-        }
-
-        .diagram-container {
-            padding: 30px;
-            overflow: auto;
-            background: white;
-            min-height: 600px;
-            position: relative;
-            cursor: grab;
-            user-select: none;
-        }
-
-        .diagram-container.panning {
-            cursor: grabbing;
-        }
-
-        .diagram-wrapper {
-            display: inline-flex;
-            justify-content: center;
-            align-items: flex-start;
-            transform-origin: center top;
-            transition: transform 0.2s ease;
-            min-width: 100%;
-            min-height: 100%;
-        }
-
-        .mermaid {
-            display: flex;
-            justify-content: center;
-            min-height: 600px;
-            min-width: 100%;
-        }
-
         .legend {
-            display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
-            gap: 15px;
-            padding: 20px;
-            background: #f8f9fa;
-            border-top: 1px solid #dee2e6;
+            display: flex;
+            gap: 20px;
+            flex-wrap: wrap;
+            font-size: 0.85em;
         }
 
         .legend-item {
             display: flex;
             align-items: center;
-            gap: 10px;
-            padding: 10px;
-            background: white;
-            border-radius: 6px;
-            border-left: 4px solid;
-        }
-
-        .legend-item.models {
-            border-color: #17a2b8;
-        }
-
-        .legend-item.endpoints {
-            border-color: #28a745;
-        }
-
-        .legend-item.services {
-            border-color: #ffc107;
-        }
-
-        .legend-item.components {
-            border-color: #dc3545;
-        }
-
-        .legend-item.lookup {
-            border-color: #6f42c1;
+            gap: 8px;
         }
 
         .legend-color {
             width: 20px;
             height: 20px;
-            border-radius: 4px;
+            border-radius: 3px;
+            border: 2px solid;
         }
 
-        .section-title {
-            font-size: 1.2em;
-            font-weight: bold;
-            color: #333;
-            margin-bottom: 5px;
+        #canvas {
+            flex: 1;
+            background: white;
+            overflow: hidden;
         }
 
-        .legend-item.models .legend-color {
-            background: #e3f2fd;
-            border: 2px solid #17a2b8;
-        }
-
-        .legend-item.endpoints .legend-color {
-            background: #e8f5e9;
-            border: 2px solid #28a745;
-        }
-
-        .legend-item.services .legend-color {
-            background: #fff3e0;
-            border: 2px solid #ffc107;
-        }
-
-        .legend-item.components .legend-color {
-            background: #ffebee;
-            border: 2px solid #dc3545;
-        }
-
-        .legend-item.lookup .legend-color {
-            background: #f3e5f5;
-            border: 2px solid #6f42c1;
+        .hint {
+            padding: 10px 20px;
+            background: #fff3cd;
+            border-top: 1px solid #ffc107;
+            font-size: 0.9em;
+            color: #856404;
+            flex-shrink: 0;
         }
 
         footer {
-            padding: 20px;
+            padding: 15px 20px;
             background: #f8f9fa;
             border-top: 1px solid #dee2e6;
             text-align: center;
             color: #666;
-            font-size: 0.9em;
+            font-size: 0.85em;
+            flex-shrink: 0;
         }
 
         @media (max-width: 768px) {
             header h1 {
-                font-size: 1.8em;
+                font-size: 1.6em;
             }
 
             .controls {
                 justify-content: center;
             }
-
-            .legend {
-                grid-template-columns: 1fr;
-            }
-        }
-
-        /* Estilos Mermaid personalizados */
-        .mermaid svg {
-            max-width: 100%;
-            height: auto;
-        }
-
-        /* Estilos para resaltado de elementos */
-        .mermaid .node {
-            cursor: pointer;
-            transition: all 0.2s ease;
-        }
-
-        .mermaid .node:hover {
-            filter: brightness(1.1);
-        }
-
-        .mermaid .highlighted-node {
-            filter: brightness(1.3) !important;
-            stroke-width: 3 !important;
-        }
-
-        .mermaid .related-node {
-            filter: brightness(1.15) !important;
-            opacity: 1 !important;
-        }
-
-        .mermaid .dimmed-node {
-            opacity: 0.2 !important;
-        }
-
-        .mermaid .highlighted-edge {
-            stroke-width: 2.5 !important;
-            opacity: 1 !important;
-            filter: drop-shadow(0 0 3px rgba(102, 126, 234, 0.8));
-        }
-
-        .mermaid .dimmed-edge {
-            opacity: 0.1 !important;
-        }
-
-        .hint-text {
-            display: inline-block;
-            background: #fff3cd;
-            border: 1px solid #ffc107;
-            padding: 8px 12px;
-            border-radius: 4px;
-            margin-bottom: 10px;
-            font-size: 0.9em;
-            color: #856404;
-        }
-
-        .hint-text.hidden {
-            display: none;
         }
     </style>
 </head>
 <body>
     <div class="container">
         <header>
-            <h1>🏗️ Diagrama de Dependencias del Sistema</h1>
-            <p>App Gestión de Servicios Sociales - Arquitectura Completa</p>
+            <h1>🏗️ Diagrama Interactivo de Dependencias del Sistema</h1>
+            <p>App Gestión de Servicios Sociales - Visualización de Arquitectura Completa</p>
         </header>
 
         <div class="controls">
-            <div style="display: flex; gap: 15px; align-items: center; flex-wrap: wrap;">
-                <div style="display: flex; gap: 10px;">
-                    <button class="active" onclick="showDiagram('complete')">📊 Diagrama Completo</button>
-                    <button onclick="showDiagram('models')">🗄️ Modelos de BD</button>
-                    <button onclick="showDiagram('api')">🔌 Endpoints API</button>
-                    <button onclick="showDiagram('frontend')">⚛️ Componentes Frontend</button>
+            <div class="legend">
+                <div class="legend-item">
+                    <div class="legend-color" style="background: #e3f2fd; border-color: #2196F3;"></div>
+                    <span>Modelos BD</span>
                 </div>
-
-                <div class="filter-separator"></div>
-
-                <div class="filters-group">
-                    <span class="filter-label">🎯 Mostrar en Diagrama Completo:</span>
-                    <div class="filter-checkboxes">
-                        <div class="filter-checkbox models">
-                            <input type="checkbox" id="filterModels" checked onchange="updateDiagramFilters()">
-                            <label for="filterModels">Modelos BD</label>
-                        </div>
-                        <div class="filter-checkbox endpoints">
-                            <input type="checkbox" id="filterEndpoints" checked onchange="updateDiagramFilters()">
-                            <label for="filterEndpoints">Endpoints</label>
-                        </div>
-                        <div class="filter-checkbox services">
-                            <input type="checkbox" id="filterServices" checked onchange="updateDiagramFilters()">
-                            <label for="filterServices">Servicios</label>
-                        </div>
-                        <div class="filter-checkbox components">
-                            <input type="checkbox" id="filterComponents" checked onchange="updateDiagramFilters()">
-                            <label for="filterComponents">Componentes</label>
-                        </div>
-                    </div>
+                <div class="legend-item">
+                    <div class="legend-color" style="background: #f1f8e9; border-color: #4CAF50;"></div>
+                    <span>Endpoints API</span>
+                </div>
+                <div class="legend-item">
+                    <div class="legend-color" style="background: #fffde7; border-color: #FBC02D;"></div>
+                    <span>Servicios</span>
+                </div>
+                <div class="legend-item">
+                    <div class="legend-color" style="background: #ffe0b2; border-color: #FF9800;"></div>
+                    <span>Componentes</span>
                 </div>
             </div>
         </div>
 
-        <div class="zoom-controls">
-            <button onclick="zoomOut()" title="Alejarse (Ctrl+-)">🔍− Alejarse</button>
-            <button onclick="zoomReset()" title="Restablecer zoom">⟲ Restablecer</button>
-            <button onclick="zoomIn()" title="Acercarse (Ctrl++)">🔍+ Acercarse</button>
-            <div class="zoom-level" id="zoomLevel">100%</div>
-            <span style="margin-left: 20px; color: #666; font-size: 0.9em;">💡 Usa la rueda del ratón o arrastra para mover | Haz click en un elemento para resaltar relacionados</span>
-        </div>
+        <div id="canvas"></div>
 
-        <div class="diagram-container" id="diagramContainer">
-            <div class="diagram-wrapper" id="diagramWrapper">
-                <div class="mermaid" id="completeDiagram">
-graph TB
-    subgraph Models["📦 MODELOS DE BASE DE DATOS"]
-        subgraph LookupModels["Entidades Lookup"]
-            Cobrador["Cobrador"]
-            TipoPlan["TipoDePlan"]
-            ObraSocial["ObraSocial"]
-            ServicioAdicional["ServicioAdicional"]
-            TipoGrupo["TipoDeGrupo"]
-            Zona["Zona"]
-        end
-
-        subgraph GeographyModels["Geografía"]
-            Provincia["Provincia"]
-            Localidad["Localidad"]
-        end
-
-        subgraph CoreModels["Entidades Principales"]
-            Usuario["Usuario"]
-            Persona["Persona"]
-            PlanV1["PlanV1 (Plan)"]
-            PlanIntegrante["PlanIntegrante"]
-            IntegranteServicio["IntegranteServicio"]
-        end
-
-        subgraph HistoryModels["Historial & Auditoría"]
-            HistorialCuota["HistorialCuota"]
-            AuditLog["AuditLog"]
-            AumentoMasivo["AumentoMasivo"]
-            Bug["Bug"]
-        end
-
-        subgraph ReceiptModels["Recibos"]
-            Recibo["Recibo"]
-            ReciboIntegrante["ReciboIntegrante"]
-            PeriodosRecibos["PeriodosRecibos"]
-        end
-
-        ConfiguracionApp["ConfiguracionApp"]
-    end
-
-    subgraph API["🔌 ENDPOINTS API (Backend)"]
-        subgraph AuthAPI["Autenticación"]
-            AuthEndpoint["/api/auth/*"]
-        end
-
-        subgraph PlanesAPI["Planes"]
-            PlanesEndpoint["/api/planes"]
-            PlanesFilter["/api/planes/filter/:filtro"]
-            PlanesCrearCompleto["/api/planes/crear-completo"]
-            PlanesActualizarCompleto["/api/planes/actualizar-completo/:id"]
-            PlanesBulkCuota["/api/planes/bulk-update-cuota"]
-        end
-
-        subgraph PersonasAPI["Personas"]
-            PersonasEndpoint["/api/personas"]
-            PersonasSearch["/api/personas/search"]
-        end
-
-        subgraph RecibosAPI["Recibos"]
-            RecibosEndpoint["/api/recibos"]
-            RecibosGenerar["/api/recibos/generar"]
-            RecibosPeriodos["/api/recibos/periodos"]
-            RecibosNumeroMax["/api/recibos/numero-max"]
-        end
-
-        subgraph LookupAPI["Lookup"]
-            LookupEndpoint["/api/lookup"]
-            LookupZonas["/api/lookup/zonas"]
-        end
-
-        subgraph AdminAPI["Administración"]
-            UsuariosEndpoint["/api/usuarios"]
-            MigrationsEndpoint["/api/migrations"]
-            ConfigEndpoint["/api/admin/configuracion"]
-            AuditEndpoint["/api/audit-log"]
-            BugsEndpoint["/api/bugs"]
-        end
-
-        subgraph GeographyAPI["Geografía"]
-            ProvinciasEndpoint["/api/provincias"]
-            LocalidadesEndpoint["/api/localidades"]
-        end
-    end
-
-    subgraph Services["🔧 SERVICIOS FRONTEND"]
-        planesV1Service["planesV1Service"]
-        planesService["planesService"]
-        personasService["personasService"]
-        recibosService["recibosService"]
-        lookupService["lookupService"]
-        usuariosService["usuariosService"]
-        configService["configService"]
-        migrationsService["migrationsService"]
-        localidadService["localidadService"]
-        provinciaService["provinciaService"]
-        integranteServiciosService["integranteServiciosService"]
-        planesIntegrantesService["planesIntegrantesService"]
-        bugsService["bugsService"]
-        auditService["auditService"]
-    end
-
-    subgraph Components["⚛️ COMPONENTES FRONTEND"]
-        subgraph GestionPlanesComponents["Gestión de Planes"]
-            GestionPlanesV1["GestionPlanesV1"]
-            PlanV1Modal["PlanV1Modal"]
-            BusquedaAfiliados["BusquedaAfiliados"]
-            AfiladoSearchModal["AfiladoSearchModal"]
-            GenerarRecibosModal["GenerarRecibosModal"]
-            BulkUpdateCuotaModal["BulkUpdateCuotaModal"]
-            IntegranteServiciosModal["IntegranteServiciosModal"]
-        end
-
-        subgraph RecibosComponents["Recibos"]
-            RecibosPage["RecibosPage"]
-            ReciboDetalleModal["ReciboDetalleModal"]
-            HistorialAumentosModal["HistorialAumentosModal"]
-        end
-
-        subgraph GeographyComponents["Geografía"]
-            GestionProvinciasZonas["GestionProvinciasZonas"]
-            ProvinciaRow["ProvinciaRow"]
-            ZonaFormModal["ZonaFormModal"]
-        end
-
-        subgraph AdminComponents["Administración"]
-            GestionUsuarios["GestionUsuarios"]
-            MigrationsDashboard["MigrationsDashboard"]
-            GestionBugs["GestionBugs"]
-            GestionAuditoria["GestionAuditoria"]
-            ConfiguracionNotificaciones["ConfiguracionNotificaciones"]
-        end
-
-        subgraph LookupComponents["Lookup"]
-            LookupCRUD["LookupCRUD (Genérico)"]
-            Cobradores["Cobradores"]
-        end
-    end
-
-    %% Relaciones Modelos -> API
-    PlanV1 -->|GET/POST/PUT| PlanesEndpoint
-    PlanV1 -->|GET| PlanesFilter
-    Persona -->|GET/POST/PUT| PersonasEndpoint
-    Persona -->|SEARCH| PersonasSearch
-    Recibo -->|GET/POST| RecibosEndpoint
-    Recibo -->|POST| RecibosGenerar
-    PeriodosRecibos -->|GET| RecibosPeriodos
-    Recibo -->|GET| RecibosNumeroMax
-    LookupModels -->|GET/POST/PUT/DELETE| LookupEndpoint
-    Zona -->|GET| LookupZonas
-    Usuario -->|GET/POST/PUT| UsuariosEndpoint
-    Usuario -->|GET| MigrationsEndpoint
-    ConfiguracionApp -->|GET| ConfigEndpoint
-    AuditLog -->|GET| AuditEndpoint
-    Bug -->|GET/POST| BugsEndpoint
-    Provincia -->|GET/POST| ProvinciasEndpoint
-    Localidad -->|GET/POST| LocalidadesEndpoint
-
-    %% Relaciones Modelos (Associations)
-    PlanV1 -->|belongsTo| TipoPlan
-    PlanV1 -->|belongsTo| Cobrador
-    PlanV1 -->|belongsTo| TipoGrupo
-    PlanV1 -->|belongsTo| ObraSocial
-    PlanV1 -->|belongsTo| Zona
-    PlanV1 -->|belongsTo| Localidad
-    PlanV1 -->|hasMany| PlanIntegrante
-    PlanIntegrante -->|belongsTo| Persona
-    PlanIntegrante -->|hasMany| IntegranteServicio
-    IntegranteServicio -->|belongsTo| ServicioAdicional
-    Recibo -->|belongsTo| PlanV1
-    Recibo -->|belongsTo| Usuario
-    Recibo -->|hasMany| ReciboIntegrante
-    HistorialCuota -->|belongsTo| Usuario
-    AuditLog -->|belongsTo| Usuario
-    AumentoMasivo -->|belongsTo| Usuario
-    Bug -->|belongsTo| Usuario
-    Provincia -->|hasMany| Localidad
-
-    %% Relaciones API -> Services
-    PlanesCrearCompleto -->|consume| planesV1Service
-    PlanesActualizarCompleto -->|consume| planesV1Service
-    PlanesBulkCuota -->|consume| planesService
-    PlanesFilter -->|consume| planesService
-    PersonasSearch -->|consume| personasService
-    RecibosGenerar -->|consume| recibosService
-    RecibosPeriodos -->|consume| recibosService
-    RecibosNumeroMax -->|consume| recibosService
-    LookupZonas -->|consume| lookupService
-    UsuariosEndpoint -->|consume| usuariosService
-    ConfigEndpoint -->|consume| configService
-    MigrationsEndpoint -->|consume| migrationsService
-    ProvinciasEndpoint -->|consume| provinciaService
-    LocalidadesEndpoint -->|consume| localidadService
-    LookupEndpoint -->|consume| lookupService
-    BugsEndpoint -->|consume| bugsService
-    AuditEndpoint -->|consume| auditService
-
-    %% Relaciones Services -> Components
-    planesV1Service -->|data| PlanV1Modal
-    planesService -->|data| GestionPlanesV1
-    planesIntegrantesService -->|data| PlanV1Modal
-    personasService -->|data| BusquedaAfiliados
-    personasService -->|data| AfiladoSearchModal
-    recibosService -->|data| GenerarRecibosModal
-    recibosService -->|data| RecibosPage
-    recibosService -->|data| ReciboDetalleModal
-    planesService -->|data| BulkUpdateCuotaModal
-    lookupService -->|data| LookupCRUD
-    lookupService -->|data| Cobradores
-    localidadService -->|data| GestionProvinciasZonas
-    provinciaService -->|data| GestionProvinciasZonas
-    usuariosService -->|data| GestionUsuarios
-    migrationsService -->|data| MigrationsDashboard
-    bugsService -->|data| GestionBugs
-    auditService -->|data| GestionAuditoria
-    configService -->|data| ConfiguracionNotificaciones
-    planesService -->|data| HistorialAumentosModal
-    integranteServiciosService -->|data| IntegranteServiciosModal
-
-    %% Relaciones entre Componentes
-    GestionPlanesV1 -->|abre| PlanV1Modal
-    PlanV1Modal -->|abre| AfiladoSearchModal
-    PlanV1Modal -->|abre| IntegranteServiciosModal
-    GestionPlanesV1 -->|abre| GenerarRecibosModal
-    GestionPlanesV1 -->|abre| BulkUpdateCuotaModal
-    GestionPlanesV1 -->|abre| HistorialAumentosModal
-    BusquedaAfiliados -->|abre| PlanV1Modal
-    GenerarRecibosModal -->|muestra| ReciboDetalleModal
-    RecibosPage -->|abre| ReciboDetalleModal
-
-    %% Estilos
-    classDef modelStyle fill:#e3f2fd,stroke:#17a2b8,stroke-width:2px,color:#000
-    classDef apiStyle fill:#e8f5e9,stroke:#28a745,stroke-width:2px,color:#000
-    classDef serviceStyle fill:#fff3e0,stroke:#ffc107,stroke-width:2px,color:#000
-    classDef componentStyle fill:#ffebee,stroke:#dc3545,stroke-width:2px,color:#000
-    classDef lookupStyle fill:#f3e5f5,stroke:#6f42c1,stroke-width:2px,color:#000
-
-    class Cobrador,TipoPlan,ObraSocial,ServicioAdicional,TipoGrupo,Zona,Provincia,Localidad,Usuario,Persona,PlanV1,PlanIntegrante,IntegranteServicio,HistorialCuota,AuditLog,AumentoMasivo,Bug,Recibo,ReciboIntegrante,PeriodosRecibos,ConfiguracionApp modelStyle
-    class PlanesEndpoint,PlanesFilter,PlanesCrearCompleto,PlanesActualizarCompleto,PlanesBulkCuota,PersonasEndpoint,PersonasSearch,RecibosEndpoint,RecibosGenerar,RecibosPeriodos,RecibosNumeroMax,LookupEndpoint,LookupZonas,UsuariosEndpoint,MigrationsEndpoint,ConfigEndpoint,AuditEndpoint,BugsEndpoint,ProvinciasEndpoint,LocalidadesEndpoint,AuthEndpoint apiStyle
-    class planesV1Service,planesService,personasService,recibosService,lookupService,usuariosService,configService,migrationsService,localidadService,provinciaService,integranteServiciosService,planesIntegrantesService,bugsService,auditService serviceStyle
-    class GestionPlanesV1,PlanV1Modal,BusquedaAfiliados,AfiladoSearchModal,GenerarRecibosModal,BulkUpdateCuotaModal,RecibosPage,ReciboDetalleModal,GestionProvinciasZonas,GestionUsuarios,MigrationsDashboard,GestionBugs,GestionAuditoria,ConfiguracionNotificaciones,IntegranteServiciosModal,HistorialAumentosModal,ProvinciaRow,ZonaFormModal componentStyle
-    class LookupCRUD,Cobradores lookupStyle
-                </div>
-            </div>
-        </div>
-
-        <div class="legend">
-            <div class="legend-item models">
-                <div class="legend-color"></div>
-                <div>
-                    <div class="section-title">🗄️ Modelos de BD</div>
-                    <small>Entidades Sequelize</small>
-                </div>
-            </div>
-            <div class="legend-item endpoints">
-                <div class="legend-color"></div>
-                <div>
-                    <div class="section-title">🔌 Endpoints API</div>
-                    <small>Rutas Express</small>
-                </div>
-            </div>
-            <div class="legend-item services">
-                <div class="legend-color"></div>
-                <div>
-                    <div class="section-title">🔧 Servicios Frontend</div>
-                    <small>Clientes HTTP</small>
-                </div>
-            </div>
-            <div class="legend-item components">
-                <div class="legend-color"></div>
-                <div>
-                    <div class="section-title">⚛️ Componentes</div>
-                    <small>Componentes React</small>
-                </div>
-            </div>
-            <div class="legend-item lookup">
-                <div class="legend-color"></div>
-                <div>
-                    <div class="section-title">🎛️ Genéricos</div>
-                    <small>Componentes Reutilizables</small>
-                </div>
-            </div>
+        <div class="hint">
+            💡 <strong>Controles:</strong> Arrastra nodos para mover | Arrastra fondo para pan | Rueda mouse para zoom | Click en nodo para resaltar conexiones
         </div>
 
         <footer>
-            <p>Diagrama de Dependencias - App Gestión de Servicios Sociales | Generado: 2026-05-08</p>
-            <p>Muestra las relaciones entre modelos de base de datos, endpoints API, servicios frontend y componentes React</p>
+            <p>Diagrama interactivo generado con Vis.js | Última actualización: 2026-05-08</p>
         </footer>
     </div>
 
     <script>
-        mermaid.initialize({ startOnLoad: true, theme: 'default', securityLevel: 'loose' });
+        // Definir nodos
+        const nodes = new vis.DataSet([
+            // Modelos BD
+            { id: 'Usuario', label: 'Usuario', color: '#e3f2fd', borderWidth: 2, borderColor: '#2196F3', group: 'models' },
+            { id: 'Persona', label: 'Persona', color: '#e3f2fd', borderWidth: 2, borderColor: '#2196F3', group: 'models' },
+            { id: 'PlanV1', label: 'PlanV1', color: '#e3f2fd', borderWidth: 2, borderColor: '#2196F3', group: 'models' },
+            { id: 'PlanIntegrante', label: 'PlanIntegrante', color: '#e3f2fd', borderWidth: 2, borderColor: '#2196F3', group: 'models' },
+            { id: 'IntegranteServicio', label: 'IntegranteServicio', color: '#e3f2fd', borderWidth: 2, borderColor: '#2196F3', group: 'models' },
+            { id: 'HistorialCuota', label: 'HistorialCuota', color: '#e3f2fd', borderWidth: 2, borderColor: '#2196F3', group: 'models' },
+            { id: 'Recibo', label: 'Recibo', color: '#e3f2fd', borderWidth: 2, borderColor: '#2196F3', group: 'models' },
+            { id: 'ReciboIntegrante', label: 'ReciboIntegrante', color: '#e3f2fd', borderWidth: 2, borderColor: '#2196F3', group: 'models' },
+            { id: 'Cobrador', label: 'Cobrador', color: '#e3f2fd', borderWidth: 2, borderColor: '#2196F3', group: 'models' },
+            { id: 'ObraSocial', label: 'ObraSocial', color: '#e3f2fd', borderWidth: 2, borderColor: '#2196F3', group: 'models' },
+            { id: 'TipoPlan', label: 'TipoPlan', color: '#e3f2fd', borderWidth: 2, borderColor: '#2196F3', group: 'models' },
+            { id: 'TipoGrupo', label: 'TipoGrupo', color: '#e3f2fd', borderWidth: 2, borderColor: '#2196F3', group: 'models' },
+            { id: 'Zona', label: 'Zona', color: '#e3f2fd', borderWidth: 2, borderColor: '#2196F3', group: 'models' },
+            { id: 'Provincia', label: 'Provincia', color: '#e3f2fd', borderWidth: 2, borderColor: '#2196F3', group: 'models' },
+            { id: 'Localidad', label: 'Localidad', color: '#e3f2fd', borderWidth: 2, borderColor: '#2196F3', group: 'models' },
+            { id: 'ServicioAdicional', label: 'ServicioAdicional', color: '#e3f2fd', borderWidth: 2, borderColor: '#2196F3', group: 'models' },
+            { id: 'AumentoMasivo', label: 'AumentoMasivo', color: '#e3f2fd', borderWidth: 2, borderColor: '#2196F3', group: 'models' },
+            { id: 'AuditLog', label: 'AuditLog', color: '#e3f2fd', borderWidth: 2, borderColor: '#2196F3', group: 'models' },
+            { id: 'PeriodosRecibos', label: 'PeriodosRecibos', color: '#e3f2fd', borderWidth: 2, borderColor: '#2196F3', group: 'models' },
 
-        // Inicializar zoom cuando la página carga
-        window.addEventListener('load', () => {
-            const container = document.getElementById('diagramContainer');
-            if (container) {
-                loadZoomState();
-                // Agregar event listeners al contenedor
-                container.addEventListener('wheel', handleMouseWheel, { passive: false });
-                container.addEventListener('mousedown', handleMouseDown);
-                document.addEventListener('mousemove', handleMouseMove);
-                document.addEventListener('mouseup', handleMouseUp);
-                container.addEventListener('touchstart', handleTouchStart);
-                container.addEventListener('touchmove', handleTouchMove);
-                container.addEventListener('touchend', handleTouchEnd);
+            // API Endpoints
+            { id: 'POST_planes', label: 'POST /planes', color: '#f1f8e9', borderWidth: 2, borderColor: '#4CAF50', group: 'api' },
+            { id: 'GET_planes', label: 'GET /planes', color: '#f1f8e9', borderWidth: 2, borderColor: '#4CAF50', group: 'api' },
+            { id: 'PUT_planes', label: 'PUT /planes/:id', color: '#f1f8e9', borderWidth: 2, borderColor: '#4CAF50', group: 'api' },
+            { id: 'POST_recibos', label: 'POST /recibos/generar', color: '#f1f8e9', borderWidth: 2, borderColor: '#4CAF50', group: 'api' },
+            { id: 'GET_recibos', label: 'GET /recibos', color: '#f1f8e9', borderWidth: 2, borderColor: '#4CAF50', group: 'api' },
+            { id: 'POST_personas', label: 'POST /personas', color: '#f1f8e9', borderWidth: 2, borderColor: '#4CAF50', group: 'api' },
+            { id: 'GET_lookup', label: 'GET /lookup/:entity', color: '#f1f8e9', borderWidth: 2, borderColor: '#4CAF50', group: 'api' },
+            { id: 'PATCH_bulk', label: 'PATCH /planes/bulk-update', color: '#f1f8e9', borderWidth: 2, borderColor: '#4CAF50', group: 'api' },
+
+            // Frontend Services
+            { id: 'planesV1Service', label: 'planesV1Service', color: '#fffde7', borderWidth: 2, borderColor: '#FBC02D', group: 'services' },
+            { id: 'recibosService', label: 'recibosService', color: '#fffde7', borderWidth: 2, borderColor: '#FBC02D', group: 'services' },
+            { id: 'personasService', label: 'personasService', color: '#fffde7', borderWidth: 2, borderColor: '#FBC02D', group: 'services' },
+            { id: 'lookupService', label: 'lookupService', color: '#fffde7', borderWidth: 2, borderColor: '#FBC02D', group: 'services' },
+            { id: 'zonaService', label: 'zonaService', color: '#fffde7', borderWidth: 2, borderColor: '#FBC02D', group: 'services' },
+
+            // React Components
+            { id: 'GestionPlanesV1', label: 'GestionPlanesV1', color: '#ffe0b2', borderWidth: 2, borderColor: '#FF9800', group: 'components' },
+            { id: 'PlanV1Modal', label: 'PlanV1Modal', color: '#ffe0b2', borderWidth: 2, borderColor: '#FF9800', group: 'components' },
+            { id: 'GenerarRecibosModal', label: 'GenerarRecibosModal', color: '#ffe0b2', borderWidth: 2, borderColor: '#FF9800', group: 'components' },
+            { id: 'RecibosPage', label: 'RecibosPage', color: '#ffe0b2', borderWidth: 2, borderColor: '#FF9800', group: 'components' },
+            { id: 'DashboardPage', label: 'DashboardPage', color: '#ffe0b2', borderWidth: 2, borderColor: '#FF9800', group: 'components' },
+            { id: 'BusquedaAfiliados', label: 'BusquedaAfiliados', color: '#ffe0b2', borderWidth: 2, borderColor: '#FF9800', group: 'components' },
+        ]);
+
+        // Definir conexiones (edges)
+        const edges = new vis.DataSet([
+            // Backend: API -> Modelos
+            { from: 'POST_planes', to: 'PlanV1', color: '#bbb' },
+            { from: 'GET_planes', to: 'PlanV1', color: '#bbb' },
+            { from: 'PUT_planes', to: 'PlanV1', color: '#bbb' },
+            { from: 'POST_recibos', to: 'Recibo', color: '#bbb' },
+            { from: 'GET_recibos', to: 'Recibo', color: '#bbb' },
+            { from: 'POST_personas', to: 'Persona', color: '#bbb' },
+
+            // Backend: Modelos relacionados
+            { from: 'PlanV1', to: 'PlanIntegrante', color: '#bbb', dashes: true },
+            { from: 'PlanV1', to: 'Cobrador', color: '#bbb', dashes: true },
+            { from: 'PlanV1', to: 'ObraSocial', color: '#bbb', dashes: true },
+            { from: 'PlanV1', to: 'TipoPlan', color: '#bbb', dashes: true },
+            { from: 'PlanV1', to: 'TipoGrupo', color: '#bbb', dashes: true },
+            { from: 'PlanV1', to: 'Zona', color: '#bbb', dashes: true },
+            { from: 'PlanV1', to: 'Localidad', color: '#bbb', dashes: true },
+            { from: 'PlanIntegrante', to: 'Persona', color: '#bbb', dashes: true },
+            { from: 'PlanIntegrante', to: 'IntegranteServicio', color: '#bbb', dashes: true },
+            { from: 'IntegranteServicio', to: 'ServicioAdicional', color: '#bbb', dashes: true },
+            { from: 'Recibo', to: 'ReciboIntegrante', color: '#bbb', dashes: true },
+            { from: 'Recibo', to: 'PlanV1', color: '#bbb', dashes: true },
+            { from: 'HistorialCuota', to: 'PlanV1', color: '#bbb', dashes: true },
+            { from: 'AuditLog', to: 'Usuario', color: '#bbb', dashes: true },
+
+            // Frontend: Componentes -> Servicios
+            { from: 'GestionPlanesV1', to: 'planesV1Service', color: '#667eea' },
+            { from: 'PlanV1Modal', to: 'planesV1Service', color: '#667eea' },
+            { from: 'PlanV1Modal', to: 'personasService', color: '#667eea' },
+            { from: 'GenerarRecibosModal', to: 'recibosService', color: '#667eea' },
+            { from: 'RecibosPage', to: 'recibosService', color: '#667eea' },
+            { from: 'BusquedaAfiliados', to: 'planesV1Service', color: '#667eea' },
+            { from: 'DashboardPage', to: 'GestionPlanesV1', color: '#667eea' },
+            { from: 'DashboardPage', to: 'RecibosPage', color: '#667eea' },
+
+            // Frontend: Servicios -> API
+            { from: 'planesV1Service', to: 'POST_planes', color: '#999' },
+            { from: 'planesV1Service', to: 'GET_planes', color: '#999' },
+            { from: 'planesV1Service', to: 'PUT_planes', color: '#999' },
+            { from: 'recibosService', to: 'POST_recibos', color: '#999' },
+            { from: 'recibosService', to: 'GET_recibos', color: '#999' },
+            { from: 'personasService', to: 'POST_personas', color: '#999' },
+            { from: 'lookupService', to: 'GET_lookup', color: '#999' },
+        ]);
+
+        // Opciones de visualización
+        const options = {
+            physics: {
+                enabled: true,
+                stabilization: {
+                    iterations: 200
+                },
+                barnesHut: {
+                    gravitationalConstant: -30000,
+                    centralGravity: 0.3,
+                    springLength: 200,
+                    springConstant: 0.04
+                }
+            },
+            interaction: {
+                navigationButtons: true,
+                keyboard: true,
+                zoomView: true,
+                dragView: true
+            },
+            nodes: {
+                font: {
+                    size: 14,
+                    color: '#333'
+                },
+                shape: 'box',
+                margin: 10,
+                widthConstraint: {
+                    maximum: 200
+                }
+            },
+            edges: {
+                smooth: {
+                    type: 'continuous'
+                },
+                color: {
+                    inherit: 'from'
+                },
+                arrows: {
+                    to: {
+                        enabled: true,
+                        scaleFactor: 0.5
+                    }
+                },
+                font: {
+                    size: 12
+                }
+            }
+        };
+
+        // Crear red
+        const container = document.getElementById('canvas');
+        const data = { nodes: nodes, edges: edges };
+        const network = new vis.Network(container, data, options);
+
+        // Event: Click en nodo para resaltar
+        network.on('click', function(params) {
+            if (params.nodes.length > 0) {
+                const nodeId = params.nodes[0];
+                highlightNode(nodeId);
+            } else {
+                clearHighlight();
             }
         });
 
-        // Estado del zoom
-        let zoomLevel = 100;
-        let panX = 0;
-        let panY = 0;
-        let isPanning = false;
-        let panStartX = 0;
-        let panStartY = 0;
-        const MIN_ZOOM = 25;
-        const MAX_ZOOM = 300;
-        const ZOOM_STEP = 10;
+        // Highlighting
+        let previousSelected = { nodes: [], edges: [] };
 
-        // Estado de filtros
-        let filters = {
-            models: true,
-            endpoints: true,
-            services: true,
-            components: true
-        };
+        function highlightNode(nodeId) {
+            const connectedNodes = new Set([nodeId]);
+            const connectedEdges = new Set();
 
-        let currentDiagramType = 'complete';
-
-        // Cargar zoom guardado
-        function loadZoomState() {
-            const saved = localStorage.getItem('diagramZoom');
-            if (saved) {
-                zoomLevel = parseInt(saved);
-                updateZoomDisplay();
-            }
-        }
-
-        // Guardar zoom
-        function saveZoomState() {
-            localStorage.setItem('diagramZoom', zoomLevel);
-        }
-
-        // Cargar filtros guardados
-        function loadFilterState() {
-            const saved = localStorage.getItem('diagramFilters');
-            if (saved) {
-                filters = JSON.parse(saved);
-                updateFilterCheckboxes();
-            }
-        }
-
-        // Guardar filtros
-        function saveFilterState() {
-            localStorage.setItem('diagramFilters', JSON.stringify(filters));
-        }
-
-        // Actualizar checkboxes según estado
-        function updateFilterCheckboxes() {
-            document.getElementById('filterModels').checked = filters.models;
-            document.getElementById('filterEndpoints').checked = filters.endpoints;
-            document.getElementById('filterServices').checked = filters.services;
-            document.getElementById('filterComponents').checked = filters.components;
-        }
-
-        // Actualizar filtros y redibujar diagrama
-        function updateDiagramFilters() {
-            filters.models = document.getElementById('filterModels').checked;
-            filters.endpoints = document.getElementById('filterEndpoints').checked;
-            filters.services = document.getElementById('filterServices').checked;
-            filters.components = document.getElementById('filterComponents').checked;
-            saveFilterState();
-
-            // Solo redibujar si estamos en diagrama completo
-            if (currentDiagramType === 'complete') {
-                showDiagram('complete');
-            }
-        }
-
-        // Actualizar display del zoom
-        function updateZoomDisplay() {
-            document.getElementById('zoomLevel').textContent = zoomLevel + '%';
-            applyZoom();
-        }
-
-        // Aplicar zoom y pan
-        function applyZoom() {
-            const wrapper = document.getElementById('diagramWrapper');
-            if (wrapper) {
-                wrapper.style.transform = `translate(${panX}px, ${panY}px) scale(${zoomLevel / 100})`;
-            }
-        }
-
-        // Zoom in
-        function zoomIn() {
-            if (zoomLevel < MAX_ZOOM) {
-                zoomLevel = Math.min(zoomLevel + ZOOM_STEP, MAX_ZOOM);
-                updateZoomDisplay();
-                saveZoomState();
-            }
-        }
-
-        // Zoom out
-        function zoomOut() {
-            if (zoomLevel > MIN_ZOOM) {
-                zoomLevel = Math.max(zoomLevel - ZOOM_STEP, MIN_ZOOM);
-                updateZoomDisplay();
-                saveZoomState();
-            }
-        }
-
-        // Reset zoom
-        function zoomReset() {
-            zoomLevel = 100;
-            panX = 0;
-            panY = 0;
-            updateZoomDisplay();
-            saveZoomState();
-        }
-
-        // Manejo de rueda del ratón
-        function handleMouseWheel(e) {
-            if (e.ctrlKey || e.metaKey) {
-                e.preventDefault();
-                if (e.deltaY < 0) {
-                    zoomIn();
-                } else {
-                    zoomOut();
+            // Encontrar todos los nodos conectados
+            edges.forEach(edge => {
+                if (edge.from === nodeId || edge.to === nodeId) {
+                    connectedEdges.add(edge.id);
+                    if (edge.from === nodeId) connectedNodes.add(edge.to);
+                    if (edge.to === nodeId) connectedNodes.add(edge.from);
                 }
-            }
+            });
+
+            // Preparar nodos para resaltar
+            const nodeColors = {};
+            nodes.forEach(node => {
+                if (node.id === nodeId) {
+                    nodeColors[node.id] = {
+                        background: '#667eea',
+                        border: '#333333',
+                        borderWidth: 3,
+                        color: { color: '#ffffff' }
+                    };
+                } else if (connectedNodes.has(node.id)) {
+                    nodeColors[node.id] = {
+                        border: '#667eea',
+                        borderWidth: 2,
+                        color: { color: '#333333' }
+                    };
+                } else {
+                    nodeColors[node.id] = {
+                        color: { color: '#ccc' }
+                    };
+                }
+            });
+
+            // Preparar edges para resaltar
+            const edgeColors = {};
+            edges.forEach(edge => {
+                if (connectedEdges.has(edge.id)) {
+                    edgeColors[edge.id] = { color: '#667eea', width: 2 };
+                } else {
+                    edgeColors[edge.id] = { color: '#eee', width: 1 };
+                }
+            });
+
+            // Aplicar cambios
+            nodes.update(Object.entries(nodeColors).map(([id, color]) => ({ id, ...color })));
+            edges.update(Object.entries(edgeColors).map(([id, color]) => ({ id, ...color })));
+
+            previousSelected = { nodes: Array.from(connectedNodes), edges: Array.from(connectedEdges) };
         }
 
-        // Manejo de paneo
-        function handleMouseDown(e) {
-            if (e.button === 0 && !e.ctrlKey && !e.metaKey) {
-                isPanning = true;
-                panStartX = e.clientX - panX;
-                panStartY = e.clientY - panY;
-                document.getElementById('diagramContainer').classList.add('panning');
-                e.preventDefault();
-            }
+        function clearHighlight() {
+            // Restaurar estilos originales
+            const originalNodes = previousSelected.nodes.map(id => {
+                const node = nodes.get(id);
+                return {
+                    id,
+                    color: node.color,
+                    borderColor: node.borderColor,
+                    borderWidth: node.borderWidth,
+                    font: undefined
+                };
+            });
+
+            const originalEdges = previousSelected.edges.map(id => ({
+                id,
+                color: '#bbb',
+                width: 1
+            }));
+
+            nodes.update(originalNodes);
+            edges.update(originalEdges);
+            previousSelected = { nodes: [], edges: [] };
         }
 
-        function handleMouseMove(e) {
-            if (isPanning) {
-                panX = e.clientX - panStartX;
-                panY = e.clientY - panStartY;
-                applyZoom();
-            }
-        }
-
-        function handleMouseUp() {
-            isPanning = false;
-            document.getElementById('diagramContainer').classList.remove('panning');
-        }
-
-        // Manejo táctil (pinch zoom)
-        let touchDistance = 0;
-        let touchStartZoom = 100;
-
-        function handleTouchStart(e) {
-            if (e.touches.length === 2) {
-                const dx = e.touches[0].clientX - e.touches[1].clientX;
-                const dy = e.touches[0].clientY - e.touches[1].clientY;
-                touchDistance = Math.sqrt(dx * dx + dy * dy);
-                touchStartZoom = zoomLevel;
-            }
-        }
-
-        function handleTouchMove(e) {
-            if (e.touches.length === 2) {
-                const dx = e.touches[0].clientX - e.touches[1].clientX;
-                const dy = e.touches[0].clientY - e.touches[1].clientY;
-                const newDistance = Math.sqrt(dx * dx + dy * dy);
-                const scale = newDistance / touchDistance;
-                zoomLevel = Math.min(Math.max(touchStartZoom * scale, MIN_ZOOM), MAX_ZOOM);
-                updateZoomDisplay();
-            }
-        }
-
-        function handleTouchEnd() {
-            saveZoomState();
-        }
-
-        // Atajos de teclado
+        // Permitir zoom y pan con teclado
         document.addEventListener('keydown', (e) => {
             if (e.ctrlKey || e.metaKey) {
                 if (e.key === '+' || e.key === '=') {
                     e.preventDefault();
-                    zoomIn();
+                    network.getScale();
                 } else if (e.key === '-') {
                     e.preventDefault();
-                    zoomOut();
                 } else if (e.key === '0') {
                     e.preventDefault();
-                    zoomReset();
+                    network.fit();
                 }
             }
         });
 
-        const diagrams = {
-            complete: `graph TB
-    subgraph Models["📦 MODELOS DE BASE DE DATOS"]
-        subgraph LookupModels["Entidades Lookup"]
-            Cobrador["Cobrador"]
-            TipoPlan["TipoDePlan"]
-            ObraSocial["ObraSocial"]
-            ServicioAdicional["ServicioAdicional"]
-            TipoGrupo["TipoDeGrupo"]
-            Zona["Zona"]
-        end
-
-        subgraph GeographyModels["Geografía"]
-            Provincia["Provincia"]
-            Localidad["Localidad"]
-        end
-
-        subgraph CoreModels["Entidades Principales"]
-            Usuario["Usuario"]
-            Persona["Persona"]
-            PlanV1["PlanV1 (Plan)"]
-            PlanIntegrante["PlanIntegrante"]
-            IntegranteServicio["IntegranteServicio"]
-        end
-
-        subgraph HistoryModels["Historial & Auditoría"]
-            HistorialCuota["HistorialCuota"]
-            AuditLog["AuditLog"]
-            AumentoMasivo["AumentoMasivo"]
-            Bug["Bug"]
-        end
-
-        subgraph ReceiptModels["Recibos"]
-            Recibo["Recibo"]
-            ReciboIntegrante["ReciboIntegrante"]
-            PeriodosRecibos["PeriodosRecibos"]
-        end
-
-        ConfiguracionApp["ConfiguracionApp"]
-    end
-
-    subgraph API["🔌 ENDPOINTS API (Backend)"]
-        subgraph AuthAPI["Autenticación"]
-            AuthEndpoint["/api/auth/*"]
-        end
-
-        subgraph PlanesAPI["Planes"]
-            PlanesEndpoint["/api/planes"]
-            PlanesFilter["/api/planes/filter/:filtro"]
-            PlanesCrearCompleto["/api/planes/crear-completo"]
-            PlanesActualizarCompleto["/api/planes/actualizar-completo/:id"]
-            PlanesBulkCuota["/api/planes/bulk-update-cuota"]
-        end
-
-        subgraph PersonasAPI["Personas"]
-            PersonasEndpoint["/api/personas"]
-            PersonasSearch["/api/personas/search"]
-        end
-
-        subgraph RecibosAPI["Recibos"]
-            RecibosEndpoint["/api/recibos"]
-            RecibosGenerar["/api/recibos/generar"]
-            RecibosPeriodos["/api/recibos/periodos"]
-            RecibosNumeroMax["/api/recibos/numero-max"]
-        end
-
-        subgraph LookupAPI["Lookup"]
-            LookupEndpoint["/api/lookup"]
-            LookupZonas["/api/lookup/zonas"]
-        end
-
-        subgraph AdminAPI["Administración"]
-            UsuariosEndpoint["/api/usuarios"]
-            MigrationsEndpoint["/api/migrations"]
-            ConfigEndpoint["/api/admin/configuracion"]
-            AuditEndpoint["/api/audit-log"]
-            BugsEndpoint["/api/bugs"]
-        end
-
-        subgraph GeographyAPI["Geografía"]
-            ProvinciasEndpoint["/api/provincias"]
-            LocalidadesEndpoint["/api/localidades"]
-        end
-    end
-
-    subgraph Services["🔧 SERVICIOS FRONTEND"]
-        planesV1Service["planesV1Service"]
-        planesService["planesService"]
-        personasService["personasService"]
-        recibosService["recibosService"]
-        lookupService["lookupService"]
-        usuariosService["usuariosService"]
-        configService["configService"]
-        migrationsService["migrationsService"]
-        localidadService["localidadService"]
-        provinciaService["provinciaService"]
-        integranteServiciosService["integranteServiciosService"]
-        planesIntegrantesService["planesIntegrantesService"]
-        bugsService["bugsService"]
-        auditService["auditService"]
-    end
-
-    subgraph Components["⚛️ COMPONENTES FRONTEND"]
-        subgraph GestionPlanesComponents["Gestión de Planes"]
-            GestionPlanesV1["GestionPlanesV1"]
-            PlanV1Modal["PlanV1Modal"]
-            BusquedaAfiliados["BusquedaAfiliados"]
-            AfiladoSearchModal["AfiladoSearchModal"]
-            GenerarRecibosModal["GenerarRecibosModal"]
-            BulkUpdateCuotaModal["BulkUpdateCuotaModal"]
-            IntegranteServiciosModal["IntegranteServiciosModal"]
-        end
-
-        subgraph RecibosComponents["Recibos"]
-            RecibosPage["RecibosPage"]
-            ReciboDetalleModal["ReciboDetalleModal"]
-            HistorialAumentosModal["HistorialAumentosModal"]
-        end
-
-        subgraph GeographyComponents["Geografía"]
-            GestionProvinciasZonas["GestionProvinciasZonas"]
-            ProvinciaRow["ProvinciaRow"]
-            ZonaFormModal["ZonaFormModal"]
-        end
-
-        subgraph AdminComponents["Administración"]
-            GestionUsuarios["GestionUsuarios"]
-            MigrationsDashboard["MigrationsDashboard"]
-            GestionBugs["GestionBugs"]
-            GestionAuditoria["GestionAuditoria"]
-            ConfiguracionNotificaciones["ConfiguracionNotificaciones"]
-        end
-
-        subgraph LookupComponents["Lookup"]
-            LookupCRUD["LookupCRUD (Genérico)"]
-            Cobradores["Cobradores"]
-        end
-    end
-
-    %% Relaciones Modelos -> API
-    PlanV1 -->|GET/POST/PUT| PlanesEndpoint
-    PlanV1 -->|GET| PlanesFilter
-    Persona -->|GET/POST/PUT| PersonasEndpoint
-    Persona -->|SEARCH| PersonasSearch
-    Recibo -->|GET/POST| RecibosEndpoint
-    Recibo -->|POST| RecibosGenerar
-    PeriodosRecibos -->|GET| RecibosPeriodos
-    Recibo -->|GET| RecibosNumeroMax
-    LookupModels -->|GET/POST/PUT/DELETE| LookupEndpoint
-    Zona -->|GET| LookupZonas
-    Usuario -->|GET/POST/PUT| UsuariosEndpoint
-    Usuario -->|GET| MigrationsEndpoint
-    ConfiguracionApp -->|GET| ConfigEndpoint
-    AuditLog -->|GET| AuditEndpoint
-    Bug -->|GET/POST| BugsEndpoint
-    Provincia -->|GET/POST| ProvinciasEndpoint
-    Localidad -->|GET/POST| LocalidadesEndpoint
-
-    %% Relaciones Modelos (Associations)
-    PlanV1 -->|belongsTo| TipoPlan
-    PlanV1 -->|belongsTo| Cobrador
-    PlanV1 -->|belongsTo| TipoGrupo
-    PlanV1 -->|belongsTo| ObraSocial
-    PlanV1 -->|belongsTo| Zona
-    PlanV1 -->|belongsTo| Localidad
-    PlanV1 -->|hasMany| PlanIntegrante
-    PlanIntegrante -->|belongsTo| Persona
-    PlanIntegrante -->|hasMany| IntegranteServicio
-    IntegranteServicio -->|belongsTo| ServicioAdicional
-    Recibo -->|belongsTo| PlanV1
-    Recibo -->|belongsTo| Usuario
-    Recibo -->|hasMany| ReciboIntegrante
-    HistorialCuota -->|belongsTo| Usuario
-    AuditLog -->|belongsTo| Usuario
-    AumentoMasivo -->|belongsTo| Usuario
-    Bug -->|belongsTo| Usuario
-    Provincia -->|hasMany| Localidad
-
-    %% Relaciones API -> Services
-    PlanesCrearCompleto -->|consume| planesV1Service
-    PlanesActualizarCompleto -->|consume| planesV1Service
-    PlanesBulkCuota -->|consume| planesService
-    PlanesFilter -->|consume| planesService
-    PersonasSearch -->|consume| personasService
-    RecibosGenerar -->|consume| recibosService
-    RecibosPeriodos -->|consume| recibosService
-    RecibosNumeroMax -->|consume| recibosService
-    LookupZonas -->|consume| lookupService
-    UsuariosEndpoint -->|consume| usuariosService
-    ConfigEndpoint -->|consume| configService
-    MigrationsEndpoint -->|consume| migrationsService
-    ProvinciasEndpoint -->|consume| provinciaService
-    LocalidadesEndpoint -->|consume| localidadService
-    LookupEndpoint -->|consume| lookupService
-    BugsEndpoint -->|consume| bugsService
-    AuditEndpoint -->|consume| auditService
-
-    %% Relaciones Services -> Components
-    planesV1Service -->|data| PlanV1Modal
-    planesService -->|data| GestionPlanesV1
-    planesIntegrantesService -->|data| PlanV1Modal
-    personasService -->|data| BusquedaAfiliados
-    personasService -->|data| AfiladoSearchModal
-    recibosService -->|data| GenerarRecibosModal
-    recibosService -->|data| RecibosPage
-    recibosService -->|data| ReciboDetalleModal
-    planesService -->|data| BulkUpdateCuotaModal
-    lookupService -->|data| LookupCRUD
-    lookupService -->|data| Cobradores
-    localidadService -->|data| GestionProvinciasZonas
-    provinciaService -->|data| GestionProvinciasZonas
-    usuariosService -->|data| GestionUsuarios
-    migrationsService -->|data| MigrationsDashboard
-    bugsService -->|data| GestionBugs
-    auditService -->|data| GestionAuditoria
-    configService -->|data| ConfiguracionNotificaciones
-    planesService -->|data| HistorialAumentosModal
-    integranteServiciosService -->|data| IntegranteServiciosModal
-
-    %% Relaciones entre Componentes
-    GestionPlanesV1 -->|abre| PlanV1Modal
-    PlanV1Modal -->|abre| AfiladoSearchModal
-    PlanV1Modal -->|abre| IntegranteServiciosModal
-    GestionPlanesV1 -->|abre| GenerarRecibosModal
-    GestionPlanesV1 -->|abre| BulkUpdateCuotaModal
-    GestionPlanesV1 -->|abre| HistorialAumentosModal
-    BusquedaAfiliados -->|abre| PlanV1Modal
-    GenerarRecibosModal -->|muestra| ReciboDetalleModal
-    RecibosPage -->|abre| ReciboDetalleModal
-
-    %% Estilos
-    classDef modelStyle fill:#e3f2fd,stroke:#17a2b8,stroke-width:2px,color:#000
-    classDef apiStyle fill:#e8f5e9,stroke:#28a745,stroke-width:2px,color:#000
-    classDef serviceStyle fill:#fff3e0,stroke:#ffc107,stroke-width:2px,color:#000
-    classDef componentStyle fill:#ffebee,stroke:#dc3545,stroke-width:2px,color:#000
-    classDef lookupStyle fill:#f3e5f5,stroke:#6f42c1,stroke-width:2px,color:#000
-
-    class Cobrador,TipoPlan,ObraSocial,ServicioAdicional,TipoGrupo,Zona,Provincia,Localidad,Usuario,Persona,PlanV1,PlanIntegrante,IntegranteServicio,HistorialCuota,AuditLog,AumentoMasivo,Bug,Recibo,ReciboIntegrante,PeriodosRecibos,ConfiguracionApp modelStyle
-    class PlanesEndpoint,PlanesFilter,PlanesCrearCompleto,PlanesActualizarCompleto,PlanesBulkCuota,PersonasEndpoint,PersonasSearch,RecibosEndpoint,RecibosGenerar,RecibosPeriodos,RecibosNumeroMax,LookupEndpoint,LookupZonas,UsuariosEndpoint,MigrationsEndpoint,ConfigEndpoint,AuditEndpoint,BugsEndpoint,ProvinciasEndpoint,LocalidadesEndpoint,AuthEndpoint apiStyle
-    class planesV1Service,planesService,personasService,recibosService,lookupService,usuariosService,configService,migrationsService,localidadService,provinciaService,integranteServiciosService,planesIntegrantesService,bugsService,auditService serviceStyle
-    class GestionPlanesV1,PlanV1Modal,BusquedaAfiliados,AfiladoSearchModal,GenerarRecibosModal,BulkUpdateCuotaModal,RecibosPage,ReciboDetalleModal,GestionProvinciasZonas,GestionUsuarios,MigrationsDashboard,GestionBugs,GestionAuditoria,ConfiguracionNotificaciones,IntegranteServiciosModal,HistorialAumentosModal,ProvinciaRow,ZonaFormModal componentStyle
-    class LookupCRUD,Cobradores lookupStyle`,
-
-            models: `graph TB
-    subgraph CoreModels["🔴 ENTIDADES PRINCIPALES"]
-        Usuario["👤 Usuario<br/>- id<br/>- email<br/>- nombre<br/>- rol"]
-        Persona["👥 Persona<br/>- id<br/>- numero_documento<br/>- nombre<br/>- apellido"]
-        PlanV1["📋 PlanV1 (Plan)<br/>- plan_numero<br/>- numero_afiliado<br/>- estado<br/>- valor_cuota"]
-        PlanIntegrante["👫 PlanIntegrante<br/>- id<br/>- persona_id<br/>- rol<br/>- orden"]
-    end
-
-    subgraph LookupModels["🟣 ENTIDADES LOOKUP"]
-        TipoPlan["📊 TipoDePlan<br/>- tipo_plan_numero<br/>- tipo_plan_nombre"]
-        Cobrador["🚗 Cobrador<br/>- cobrador_numero<br/>- nombre<br/>- apellido"]
-        ObraSocial["🏥 ObraSocial<br/>- os_numero<br/>- os_nombre"]
-        ServicioAdicional["⚙️ ServicioAdicional<br/>- numero<br/>- nombre<br/>- precio"]
-        TipoGrupo["👨‍👩‍👧 TipoDeGrupo<br/>- numero<br/>- nombre"]
-        Zona["🗺️ Zona<br/>- id<br/>- codigo<br/>- nombre"]
-    end
-
-    subgraph ReceiptModels["💰 MODELOS DE RECIBOS"]
-        Recibo["🧾 Recibo<br/>- id<br/>- numero_recibo<br/>- plan_numero<br/>- periodo<br/>- fecha_emision"]
-        ReciboIntegrante["📄 ReciboIntegrante<br/>- id<br/>- recibo_id<br/>- persona_id"]
-        PeriodosRecibos["📅 PeriodosRecibos<br/>- periodo<br/>- estado<br/>- año<br/>- mes"]
-    end
-
-    subgraph HistoryModels["📊 HISTORIAL & AUDITORÍA"]
-        HistorialCuota["📈 HistorialCuota<br/>- id<br/>- plan_numero<br/>- cambio<br/>- fecha"]
-        AuditLog["🔍 AuditLog<br/>- id<br/>- usuario_id<br/>- endpoint<br/>- timestamp"]
-        AumentoMasivo["💹 AumentoMasivo<br/>- id<br/>- porcentaje<br/>- usuario_id<br/>- fecha"]
-        Bug["🐛 Bug<br/>- id<br/>- titulo<br/>- estado<br/>- usuario_id"]
-    end
-
-    subgraph GeographyModels["🌍 GEOGRAFÍA"]
-        Provincia["🏛️ Provincia<br/>- id<br/>- nombre"]
-        Localidad["🏘️ Localidad<br/>- id<br/>- nombre<br/>- provincia_id"]
-    end
-
-    subgraph ServiceModels["⚙️ SERVICIOS"]
-        IntegranteServicio["🔧 IntegranteServicio<br/>- id<br/>- plan_integrante_id<br/>- servicio_id"]
-        ConfiguracionApp["🎛️ ConfiguracionApp<br/>- clave<br/>- valor<br/>- tipo"]
-    end
-
-    %% Relaciones
-    PlanV1 -->|FK tipo_plan_numero| TipoPlan
-    PlanV1 -->|FK cobrador_numero| Cobrador
-    PlanV1 -->|FK tipo_de_grupo_numero| TipoGrupo
-    PlanV1 -->|FK os_numero| ObraSocial
-    PlanV1 -->|FK zona_id| Zona
-    PlanV1 -->|FK localidad_id| Localidad
-    PlanV1 -->|hasMany| PlanIntegrante
-    PlanV1 -->|hasMany| Recibo
-    PlanIntegrante -->|FK persona_id| Persona
-    PlanIntegrante -->|hasMany| IntegranteServicio
-    IntegranteServicio -->|FK servicio_id| ServicioAdicional
-    Recibo -->|FK usuario_id| Usuario
-    Recibo -->|hasMany| ReciboIntegrante
-    HistorialCuota -->|FK usuario_id| Usuario
-    AuditLog -->|FK usuario_id| Usuario
-    AumentoMasivo -->|FK usuario_id| Usuario
-    Bug -->|FK usuario_id| Usuario
-    Provincia -->|hasMany| Localidad
-
-    classDef primary fill:#ffcccc,stroke:#cc0000,stroke-width:2px,color:#000
-    classDef lookup fill:#ccf0ff,stroke:#0066cc,stroke-width:2px,color:#000
-    classDef receipt fill:#ffffcc,stroke:#ffaa00,stroke-width:2px,color:#000
-    classDef history fill:#ccffcc,stroke:#009900,stroke-width:2px,color:#000
-    classDef geo fill:#ffccff,stroke:#9900cc,stroke-width:2px,color:#000
-    classDef services fill:#ffffcc,stroke:#cc6600,stroke-width:2px,color:#000
-
-    class Usuario,Persona,PlanV1,PlanIntegrante primary
-    class TipoPlan,Cobrador,ObraSocial,ServicioAdicional,TipoGrupo,Zona lookup
-    class Recibo,ReciboIntegrante,PeriodosRecibos receipt
-    class HistorialCuota,AuditLog,AumentoMasivo,Bug history
-    class Provincia,Localidad geo
-    class IntegranteServicio,ConfiguracionApp services`,
-
-            api: `graph LR
-    subgraph Auth["🔐 AUTENTICACIÓN"]
-        Login["/api/auth/login<br/>POST"]
-        Google["/api/auth/google<br/>POST"]
-        ChangePassword["/api/auth/cambiar-password<br/>POST"]
-    end
-
-    subgraph Planes["📋 PLANES"]
-        PlanesList["/api/planes<br/>GET"]
-        PlanesFilter["/api/planes/filter/:filtro<br/>GET"]
-        PlanesCreate["/api/planes<br/>POST"]
-        PlanesUpdate["/api/planes/:id<br/>PUT"]
-        PlanesCreateCompleto["/api/planes/crear-completo<br/>POST<br/>(Optimizado)"]
-        PlanesUpdateCompleto["/api/planes/actualizar-completo/:id<br/>POST<br/>(Optimizado)"]
-        PlanesBulk["/api/planes/bulk-update-cuota<br/>PATCH"]
-    end
-
-    subgraph Personas["👥 PERSONAS"]
-        PersonasCreate["/api/personas<br/>POST"]
-        PersonasSearch["/api/personas/search<br/>POST"]
-        PersonasUpdate["/api/personas/:id<br/>PUT"]
-    end
-
-    subgraph Recibos["💰 RECIBOS"]
-        RecibosList["/api/recibos<br/>GET"]
-        RecibosGenerate["/api/recibos/generar<br/>POST"]
-        RecibosPeriodos["/api/recibos/periodos<br/>GET"]
-        RecibosNumeroMax["/api/recibos/numero-max<br/>GET"]
-        RecibosById["/api/recibos/:id<br/>GET"]
-    end
-
-    subgraph Lookup["🎛️ LOOKUP"]
-        LookupList["/api/lookup<br/>GET"]
-        LookupCreate["/api/lookup/:entidad<br/>POST"]
-        LookupUpdate["/api/lookup/:entidad/:id<br/>PUT"]
-        LookupDelete["/api/lookup/:entidad/:id<br/>DELETE"]
-        LookupZonas["/api/lookup/zonas<br/>GET"]
-    end
-
-    subgraph Admin["⚙️ ADMINISTRACIÓN"]
-        UsuariosList["/api/usuarios<br/>GET"]
-        UsuariosCreate["/api/usuarios<br/>POST"]
-        UsuariosRole["/api/usuarios/:id/rol<br/>PUT"]
-        MigrationsList["/api/migrations<br/>GET"]
-        MigrationsExecute["/api/migrations/execute<br/>POST"]
-        ConfigGet["/api/admin/configuracion<br/>GET"]
-        AuditLog["/api/audit-log<br/>GET"]
-        BugsList["/api/bugs<br/>GET"]
-        BugsCreate["/api/bugs<br/>POST"]
-    end
-
-    subgraph Geography["🌍 GEOGRAFÍA"]
-        ProvinciasList["/api/provincias<br/>GET"]
-        ProvinciasCreate["/api/provincias<br/>POST"]
-        LocalidadesList["/api/localidades<br/>GET"]
-        LocalidadesCreate["/api/localidades<br/>POST"]
-    end
-
-    classDef authStyle fill:#ffcccc,stroke:#cc0000,stroke-width:2px
-    classDef planesStyle fill:#e8f4f8,stroke:#0088cc,stroke-width:2px
-    classDef personasStyle fill:#f0e8f8,stroke:#8800cc,stroke-width:2px
-    classDef recibosStyle fill:#fffce8,stroke:#ccaa00,stroke-width:2px
-    classDef lookupStyle fill:#f8f0cc,stroke:#cc8800,stroke-width:2px
-    classDef adminStyle fill:#ccffe8,stroke:#00aa44,stroke-width:2px
-    classDef geoStyle fill:#ffe8f8,stroke:#cc0088,stroke-width:2px
-
-    class Login,Google,ChangePassword authStyle
-    class PlanesList,PlanesFilter,PlanesCreate,PlanesUpdate,PlanesCreateCompleto,PlanesUpdateCompleto,PlanesBulk planesStyle
-    class PersonasCreate,PersonasSearch,PersonasUpdate personasStyle
-    class RecibosList,RecibosGenerate,RecibosPeriodos,RecibosNumeroMax,RecibosById recibosStyle
-    class LookupList,LookupCreate,LookupUpdate,LookupDelete,LookupZonas lookupStyle
-    class UsuariosList,UsuariosCreate,UsuariosRole,MigrationsList,MigrationsExecute,ConfigGet,AuditLog,BugsList,BugsCreate adminStyle
-    class ProvinciasCreate,ProvinciasList,LocalidadesList,LocalidadesCreate geoStyle`,
-
-            frontend: `graph TB
-    subgraph MainPages["📄 PÁGINAS PRINCIPALES"]
-        Dashboard["DashboardPage<br/>Main Shell"]
-        RecibosPage["RecibosPage<br/>Gestión de Recibos"]
-        ChangePassword["ChangePasswordRequired<br/>Cambio de Contraseña"]
-    end
-
-    subgraph GestionPlanes["📋 GESTIÓN DE PLANES"]
-        GestionPlanesV1["GestionPlanesV1<br/>Listado Principal"]
-        PlanV1Modal["PlanV1Modal<br/>Crear/Editar Plan"]
-        BusquedaAfiliados["BusquedaAfiliados<br/>Búsqueda Avanzada"]
-        GenerarRecibosModal["GenerarRecibosModal<br/>Generación de Recibos"]
-        BulkUpdateCuotaModal["BulkUpdateCuotaModal<br/>Aumento Masivo"]
-    end
-
-    subgraph PlanDetails["📝 DETALLES DEL PLAN"]
-        AfiladoSearchModal["AfiladoSearchModal<br/>Búsqueda de Afiliados"]
-        IntegranteServiciosModal["IntegranteServiciosModal<br/>Servicios Adicionales"]
-        HistorialAumentosModal["HistorialAumentosModal<br/>Historial de Aumentos"]
-        ReciboDetalleModal["ReciboDetalleModal<br/>Detalle de Recibo"]
-    end
-
-    subgraph Geography["🌍 GEOGRAFÍA"]
-        GestionProvinciasZonas["GestionProvinciasZonas<br/>Gestión Territorial"]
-        ProvinciaRow["ProvinciaRow<br/>Fila de Provincia"]
-        ZonaFormModal["ZonaFormModal<br/>Formulario de Zona"]
-    end
-
-    subgraph Admin["⚙️ ADMINISTRACIÓN"]
-        GestionUsuarios["GestionUsuarios<br/>Gestión de Usuarios"]
-        MigrationsDashboard["MigrationsDashboard<br/>Migraciones BD"]
-        GestionBugs["GestionBugs<br/>Sistema de Bugs"]
-        GestionAuditoria["GestionAuditoria<br/>Auditoría"]
-        ConfiguracionNotificaciones["ConfiguracionNotificaciones<br/>Configuración"]
-    end
-
-    subgraph Lookup["🎛️ LOOKUP (GENÉRICOS)"]
-        LookupCRUD["LookupCRUD<br/>Componente Genérico"]
-        Cobradores["Cobradores<br/>Especializado"]
-    end
-
-    %% Relaciones
-    Dashboard -->|contiene| GestionPlanesV1
-    Dashboard -->|contiene| GestionProvinciasZonas
-    Dashboard -->|contiene| GestionUsuarios
-    Dashboard -->|contiene| MigrationsDashboard
-    Dashboard -->|contiene| GestionBugs
-    Dashboard -->|contiene| GestionAuditoria
-    Dashboard -->|contiene| ConfiguracionNotificaciones
-    Dashboard -->|contiene| RecibosPage
-
-    GestionPlanesV1 -->|abre| PlanV1Modal
-    GestionPlanesV1 -->|abre| GenerarRecibosModal
-    GestionPlanesV1 -->|abre| BulkUpdateCuotaModal
-    GestionPlanesV1 -->|abre| BusquedaAfiliados
-    GestionPlanesV1 -->|abre| HistorialAumentosModal
-
-    PlanV1Modal -->|abre| AfiladoSearchModal
-    PlanV1Modal -->|abre| IntegranteServiciosModal
-
-    BusquedaAfiliados -->|abre| PlanV1Modal
-
-    GenerarRecibosModal -->|muestra| ReciboDetalleModal
-
-    RecibosPage -->|abre| ReciboDetalleModal
-
-    GestionProvinciasZonas -->|contiene| ProvinciaRow
-    GestionProvinciasZonas -->|abre| ZonaFormModal
-
-    GestionUsuarios -->|gestiona| LookupCRUD
-    Cobradores -->|especializa| LookupCRUD
-
-    classDef pageStyle fill:#ffcccc,stroke:#cc0000,stroke-width:2px,color:#000
-    classDef gestorStyle fill:#ccf0ff,stroke:#0066cc,stroke-width:2px,color:#000
-    classDef detalleStyle fill:#ffffcc,stroke:#ffaa00,stroke-width:2px,color:#000
-    classDef geoStyle fill:#ccffcc,stroke:#009900,stroke-width:2px,color:#000
-    classDef adminStyle fill:#ffccff,stroke:#9900cc,stroke-width:2px,color:#000
-    classDef genericoStyle fill:#ccffff,stroke:#009999,stroke-width:2px,color:#000
-
-    class Dashboard,RecibosPage,ChangePassword pageStyle
-    class GestionPlanesV1,PlanV1Modal,BusquedaAfiliados,GenerarRecibosModal,BulkUpdateCuotaModal gestorStyle
-    class AfiladoSearchModal,IntegranteServiciosModal,HistorialAumentosModal,ReciboDetalleModal detalleStyle
-    class GestionProvinciasZonas,ProvinciaRow,ZonaFormModal geoStyle
-    class GestionUsuarios,MigrationsDashboard,GestionBugs,GestionAuditoria,ConfiguracionNotificaciones adminStyle
-    class LookupCRUD,Cobradores genericoStyle`
-        };
-
-        function showDiagram(type) {
-            const container = document.getElementById('diagramContainer');
-            const buttons = document.querySelectorAll('.controls button');
-
-            buttons.forEach(btn => btn.classList.remove('active'));
-            event.target.classList.add('active');
-
-            // Reset zoom cuando cambias diagrama
-            zoomLevel = 100;
-            panX = 0;
-            panY = 0;
-            updateZoomDisplay();
-            saveZoomState();
-
-            let content = '';
-            if (type === 'complete') {
-                content = '<div class="mermaid" id="completeDiagram">' + diagrams.complete + '</div>';
-            } else {
-                content = '<div class="mermaid">' + diagrams[type] + '</div>';
-            }
-
-            // Envolver en un div zoomeable
-            container.innerHTML = '<div class="diagram-wrapper" id="diagramWrapper">' + content + '</div>';
-
-            // Agregar event listeners
-            container.addEventListener('wheel', handleMouseWheel, { passive: false });
-            container.addEventListener('mousedown', handleMouseDown);
-            document.addEventListener('mousemove', handleMouseMove);
-            document.addEventListener('mouseup', handleMouseUp);
-            container.addEventListener('touchstart', handleTouchStart);
-            container.addEventListener('touchmove', handleTouchMove);
-            container.addEventListener('touchend', handleTouchEnd);
-
-            mermaid.contentLoaded();
-            loadZoomState();
-
-            // Agregar funcionalidad de resaltado después de que Mermaid renderice
-            // Usar un intervalo para esperar a que el SVG esté completamente renderizado
-            let attempts = 0;
-            const maxAttempts = 20; // 20 intentos x 100ms = 2 segundos máximo
-
-            const checkSvgReady = setInterval(() => {
-                attempts++;
-                const svg = document.querySelector('.mermaid svg');
-
-                if (svg) {
-                    console.log(`SVG encontrado en intento ${attempts}`);
-                    clearInterval(checkSvgReady);
-                    setTimeout(() => {
-                        initializeClickHighlighting();
-                    }, 100);
-                } else if (attempts >= maxAttempts) {
-                    console.log('SVG no se encontró después de múltiples intentos');
-                    clearInterval(checkSvgReady);
-                }
-            }, 100);
-        }
-
-        // =================== FUNCIONALIDAD DE RESALTADO Y DRAG ===================
-        let selectedNodeId = null;
-        let draggedElement = null;
-        let dragStartX = 0;
-        let dragStartY = 0;
-        let isDraggingNode = false;
-        let isDraggingBackground = false;
-        let dragMoveThreshold = 5; // Pixels para activar drag
-
-        function initializeClickHighlighting() {
-            const svg = document.querySelector('.mermaid svg');
-            if (!svg) {
-                console.log('SVG no encontrado');
-                return;
-            }
-
-            console.log('Inicializando highlighting y drag...');
-
-            // Click para resaltar
-            svg.addEventListener('click', handleSVGClick, { capture: true });
-
-            // Drag: detectar qué se está arrastrando
-            svg.addEventListener('mousedown', (e) => {
-                if (e.button !== 0) return; // Solo click izquierdo
-
-                const node = e.target.closest('g.node');
-
-                dragStartX = e.clientX;
-                dragStartY = e.clientY;
-                isDraggingNode = false;
-                isDraggingBackground = false;
-
-                if (node) {
-                    draggedElement = node;
-                } else {
-                    // Es el fondo del SVG
-                    isDraggingBackground = true;
-                }
-            }, { capture: true });
-
-            // Mousemove para hacer drag
-            document.addEventListener('mousemove', (e) => {
-                if (dragStartX === undefined || dragStartY === undefined) return;
-
-                const deltaX = e.clientX - dragStartX;
-                const deltaY = e.clientY - dragStartY;
-                const distance = Math.sqrt(deltaX * deltaX + deltaY * deltaY);
-
-                // Activar drag solo si se movió más del threshold
-                if (distance > dragMoveThreshold) {
-                    if (draggedElement && !isDraggingBackground) {
-                        // Drag de nodo
-                        isDraggingNode = true;
-                        moveNode(draggedElement, deltaX, deltaY);
-                    } else if (isDraggingBackground) {
-                        // Drag de fondo - hacer pan del diagrama
-                        panDiagram(deltaX, deltaY);
-                    }
-                }
-            });
-
-            // Mouseup
-            document.addEventListener('mouseup', () => {
-                isDraggingNode = false;
-                isDraggingBackground = false;
-                draggedElement = null;
-                dragStartX = undefined;
-                dragStartY = undefined;
-            });
-
-            // Obtener todos los nodos y hacerlos clickeables
-            const nodes = svg.querySelectorAll('g.node');
-            console.log(`Nodos encontrados: ${nodes.length}`);
-
-            nodes.forEach(node => {
-                const nodeId = node.getAttribute('id');
-                if (nodeId) {
-                    node.style.cursor = 'grab';
-
-                    // Hover visual
-                    node.addEventListener('mouseenter', function() {
-                        if (!selectedNodeId && !isDraggingNode) {
-                            this.style.filter = 'brightness(1.2)';
-                            this.style.cursor = 'grab';
-                        }
-                    });
-
-                    node.addEventListener('mouseleave', function() {
-                        if (!selectedNodeId && !isDraggingNode) {
-                            this.style.filter = 'none';
-                        }
-                    });
-                }
-            });
-
-            console.log('Inicialización completada');
-        }
-
-        function moveNode(nodeElement, deltaX, deltaY) {
-            // Obtener transform actual
-            let currentTransform = nodeElement.getAttribute('transform') || 'translate(0, 0)';
-
-            // Extraer valores actuales
-            let match = currentTransform.match(/translate\(([-\d.]+)[,\s]+([-\d.]+)\)/);
-            let baseX = match ? parseFloat(match[1]) : 0;
-            let baseY = match ? parseFloat(match[2]) : 0;
-
-            // Aplicar nuevo transform
-            const newX = baseX + deltaX;
-            const newY = baseY + deltaY;
-
-            nodeElement.setAttribute('transform', `translate(${newX}, ${newY})`);
-
-            // Actualizar puntos de inicio para siguiente movimiento
-            dragStartX = dragStartX + deltaX;
-            dragStartY = dragStartY + deltaY;
-        }
-
-        function panDiagram(deltaX, deltaY) {
-            // Hacer pan del diagrama entero (usando la funcionalidad existente de pan)
-            panX += deltaX;
-            panY += deltaY;
-            applyZoom();
-
-            // Actualizar puntos de inicio para siguiente movimiento
-            dragStartX = dragStartX + deltaX;
-            dragStartY = dragStartY + deltaY;
-        }
-
-        function handleSVGClick(e) {
-            // No hacer nada si fue un drag
-            if (isDraggingNode || isDraggingBackground) {
-                return;
-            }
-
-            const svg = e.currentTarget;
-
-            // Encontrar si se hizo click en un nodo
-            let clickedNode = e.target.closest('g.node');
-
-            if (clickedNode) {
-                const nodeId = clickedNode.getAttribute('id');
-                highlightElement(nodeId, svg);
-            } else {
-                // Click en el fondo - limpiar resaltado
-                clearHighlighting(svg);
-            }
-        }
-
-        function highlightElement(nodeId, svg) {
-            clearHighlighting(svg);
-            selectedNodeId = nodeId;
-
-            // Obtener el nodo clickeado
-            const clickedNode = svg.getElementById(nodeId);
-            if (!clickedNode) {
-                console.log(`Nodo no encontrado con ID: ${nodeId}`);
-                return;
-            }
-
-            console.log(`Resaltando nodo: ${nodeId}`);
-
-            // Resaltar el nodo clickeado
-            clickedNode.classList.add('highlighted-node');
-            clickedNode.style.filter = 'brightness(1.4)';
-
-            // Obtener todas las aristas
-            const allEdges = svg.querySelectorAll('g.edgePath');
-            const connectedNodes = new Set([nodeId]);
-            const connectedEdgesList = [];
-
-            console.log(`Total de aristas en el diagrama: ${allEdges.length}`);
-
-            // Buscar aristas conectadas de forma más robusta
-            allEdges.forEach((edge, index) => {
-                const edgeId = edge.getAttribute('id') || edge.getAttribute('data-id') || '';
-
-                // Buscar también en las etiquetas SVG generadas por Mermaid
-                let isConnected = false;
-                let otherNodeId = null;
-
-                // Método 1: Buscar por ID directo
-                if (edgeId && edgeId.includes(nodeId)) {
-                    isConnected = true;
-                }
-
-                // Método 2: Buscar por los elementos path/title dentro de la arista
-                if (!isConnected) {
-                    const titles = edge.querySelectorAll('title');
-                    titles.forEach(title => {
-                        const text = title.textContent;
-                        if (text && text.includes(nodeId)) {
-                            isConnected = true;
-                        }
-                    });
-                }
-
-                // Método 3: Usar el atributo marker-end para rastrear conexiones
-                const paths = edge.querySelectorAll('path');
-                paths.forEach(path => {
-                    const pathData = path.getAttribute('d') || '';
-                    if (pathData.length > 0) {
-                        // Las aristas conectadas tendrán información sobre su origen/destino
-                        // Por lo que si encontramos la arista por el ID, está conectada
-                    }
-                });
-
-                if (isConnected) {
-                    // Intentar extraer el otro nodo ID del atributo id o data
-                    if (edgeId) {
-                        // Mermaid típicamente genera IDs como "node1->node2" o "node1--node2"
-                        const parts = edgeId.split(/(?:->|--)/);
-                        if (parts.length >= 2) {
-                            otherNodeId = parts[0].trim() === nodeId ? parts[1].trim() : parts[0].trim();
-                        }
-                    }
-
-                    connectedEdgesList.push(edge);
-                    console.log(`Arista conectada encontrada: ${edgeId}`);
-
-                    // Resaltar la arista
-                    edge.classList.add('highlighted-edge');
-
-                    // Cambiar el estilo de todos los path dentro de la arista
-                    edge.querySelectorAll('path, polygon').forEach(element => {
-                        element.style.stroke = '#667eea';
-                        element.style.strokeWidth = '2.5';
-                        element.style.filter = 'drop-shadow(0 0 4px rgba(102, 126, 234, 0.9))';
-                    });
-                } else {
-                    // Oscurecer aristas no conectadas
-                    edge.classList.add('dimmed-edge');
-                    edge.querySelectorAll('path, polygon').forEach(element => {
-                        element.style.opacity = '0.1';
-                    });
-                }
-
-                if (otherNodeId && isConnected) {
-                    connectedNodes.add(otherNodeId);
-                    console.log(`Conexión encontrada: ${nodeId} <-> ${otherNodeId}`);
-                }
-            });
-
-            console.log(`Nodos conectados encontrados: ${connectedNodes.size - 1}`);
-
-            // Resaltar nodos conectados
-            connectedNodes.forEach(id => {
-                if (id !== nodeId && id) {
-                    const node = svg.getElementById(id);
-                    if (node) {
-                        node.classList.add('related-node');
-                        node.style.filter = 'brightness(1.25)';
-                        node.style.stroke = '#667eea';
-                        node.style.strokeWidth = '2';
-                        console.log(`Nodo relacionado resaltado: ${id}`);
-                    }
-                }
-            });
-
-            // Oscurecer nodos no conectados
-            const allNodes = svg.querySelectorAll('g.node');
-            let nodesDimmed = 0;
-            allNodes.forEach(node => {
-                const id = node.getAttribute('id');
-                if (!connectedNodes.has(id) && id !== nodeId) {
-                    node.classList.add('dimmed-node');
-                    node.style.opacity = '0.15';
-                    nodesDimmed++;
-                }
-            });
-
-            const nodeLabel = clickedNode.querySelector('text')?.textContent || nodeId;
-            console.log(`✓ RESALTADO: ${nodeLabel} | Conexiones: ${connectedNodes.size - 1} | Nodos oscurecidos: ${nodesDimmed}`);
-        }
-
-        function clearHighlighting(svg) {
-            selectedNodeId = null;
-
-            // Remover todas las clases y estilos de resaltado
-            svg.querySelectorAll('g.node, g.edgePath').forEach(el => {
-                el.classList.remove('highlighted-node', 'related-node', 'dimmed-node', 'highlighted-edge', 'dimmed-edge');
-                el.style.filter = '';
-                el.style.opacity = '';
-                el.style.stroke = '';
-                el.style.strokeWidth = '';
-
-                // Limpiar también los paths dentro
-                el.querySelectorAll('path, polygon').forEach(sub => {
-                    sub.style.stroke = '';
-                    sub.style.strokeWidth = '';
-                    sub.style.filter = '';
-                    sub.style.opacity = '';
-                });
-            });
-
-            console.log('✓ Resaltado limpiado');
-        }
-
-        // Limpiar resaltado cuando se hace click fuera del SVG
-        document.addEventListener('click', (e) => {
-            if (!e.target.closest('svg') && !isDraggingNode) {
-                const svg = document.querySelector('.mermaid svg');
-                if (svg) clearHighlighting(svg);
-            }
-        });
+        // Fit al cargar
+        setTimeout(() => {
+            network.fit();
+        }, 500);
     </script>
 </body>
 </html>
