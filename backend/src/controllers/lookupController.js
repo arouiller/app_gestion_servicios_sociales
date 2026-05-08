@@ -45,13 +45,14 @@ const ENTIDADES = {
 
 /**
  * GET /api/lookup/:entidad
- * Devuelve todos los registros de la entidad
- * Query params: sortBy, order (ASC|DESC)
+ * Devuelve registros de la entidad con paginación
+ * Query params: page, limit, sortBy, order (ASC|DESC)
+ * Retorna: { success, data, count, page, limit, totalPages, offset }
  */
 exports.list = async (req, res, next) => {
   try {
     const { entidad } = req.params;
-    const { sortBy, order } = req.query;
+    const { sortBy, order, page = 1, limit = 15 } = req.query;
     const config = ENTIDADES[entidad];
 
     if (!config) {
@@ -68,11 +69,28 @@ exports.list = async (req, res, next) => {
       orderBy = buildOrderByClause(sortBy, order, allowedColumns);
     }
 
-    const registros = await config.model.findAll({
+    // Pagination
+    const pageNum = Math.max(1, parseInt(page) || 1);
+    const limitNum = Math.max(1, parseInt(limit) || 15);
+    const offset = (pageNum - 1) * limitNum;
+
+    const { count, rows } = await config.model.findAndCountAll({
       order: orderBy,
+      limit: limitNum,
+      offset: offset,
     });
 
-    res.status(200).json(registros);
+    const totalPages = Math.ceil(count / limitNum);
+
+    res.status(200).json({
+      success: true,
+      data: rows,
+      count,
+      page: pageNum,
+      limit: limitNum,
+      totalPages,
+      offset,
+    });
   } catch (error) {
     next(error);
   }
