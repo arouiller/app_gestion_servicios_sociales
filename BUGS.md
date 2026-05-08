@@ -2706,3 +2706,121 @@ Retrocompatibilidad:
 - ✅ Aumento masivo: modal abre correctamente
 - ✅ Dropdowns muestran valores correctamente
 
+---
+
+## BUG-036: Reorder Endpoint Recibe IDs Indefinidos al Crear Nuevos Integrantes
+
+**Descripción:**
+Al agregar una nueva persona a un plan (crear o editar) y hacer clic en "Guardar y Seguir Editando" (botón nuevo de BACKLOG-058), el backend retorna error:
+
+```
+{
+  "success": false,
+  "message": "WHERE parameter \"id\" has invalid \"undefined\" value"
+}
+```
+
+El error proviene del endpoint `POST /api/v1.0/plan-integrantes/reorder` que recibe valores `id: undefined` para los integrantes recién creados.
+
+**Síntomas:**
+1. Usuario abre PlanV1Modal (crear o editar plan)
+2. Agrega un nuevo integrante (persona que no estaba en el plan)
+3. Hace clic en "Guardar y Seguir Editando" (nuevo botón)
+4. Modal se cierra temporalmente para reabrir
+5. En la consola del navegador: Error de backend
+6. En el backend: SQL error "WHERE parameter \"id\" has invalid \"undefined\" value"
+
+**Severidad:** 🔴 CRÍTICO
+- Bloquea funcionalidad BACKLOG-058 ("Guardar y Seguir Editando")
+- Impide flujo de trabajo iterativo (agregar múltiples personas continuamente)
+
+**Causa Raíz:**
+
+En `PlanV1Modal.jsx` línea ~560, la función `handleGuardar` ejecuta este flujo:
+
+1. **Crear nuevo plan O actualizar plan existente** ✅
+2. **Crear nuevos integrantes via `crearMultiples()`** ✅ (retorna respuesta pero ID no se captura)
+3. **Sincronizar integrantes (add/remove)** ✅
+4. **Reordenar integrantes** ❌ (falla aquí)
+
+Código problemático (línea ~620-635):
+
+```javascript
+// Después de crear nuevos integrantes, mapear a metadata para reorder
+const integrantesWithMeta = form.integrantes.map((integrante, index) => {
+  const existing = existingMap.get(integrante.persona_id);  // ← Busca en map de existentes
+  return {
+    id: existing?.id,  // ← undefined para integrantes recién creados
+    orden: index + 1,
+  };
+});
+await planesIntegrantesService.reorder(planData.plan_numero, integrantesWithMeta);
+```
+
+**El problema:**
+
+- `existingMap` contiene solo integrantes que existían ANTES de la operación
+- Los integrantes nuevos se crean via `crearMultiples()` pero sus IDs no se guardan
+- Cuando se intenta reordenar, los nuevos integrantes no están en `existingMap`
+- Su `id` resulta `undefined`
+- Backend rechaza el reorder con SQL error
+
+**Flujo de datos:**
+
+```
+form.integrantes = [
+  { persona_id: 1, ... },   // Existente: en existingMap ✅
+  { persona_id: 2, ... },   // Nuevo: NO en existingMap ❌
+]
+
+existingMap = {
+  1: { id: 10, persona_id: 1, ... }  // Solo integrantes anteriores
+}
+
+integrantesWithMeta = [
+  { id: 10, orden: 1 },     // ✅
+  { id: undefined, orden: 2 },  // ❌ Nuevo integrante sin ID
+]
+
+POST /api/v1.0/plan-integrantes/reorder → SQL error
+```
+
+**Archivos Afectados:**
+- `frontend/src/pages/DashboardPage/components/GestionPlanesV1/modals/PlanV1Modal.jsx` — líneas ~560-640 (handleGuardar)
+- `frontend/src/services/planesIntegrantesService.js` — método reorder() (no necesita cambios)
+
+**Reportado:** 2026-05-08
+**Fase:** BACKLOG-058 (Guardar y Seguir Editando)
+
+**Estado:** 📋 Registrado
+
+**Soluciones Propuestas (Por Evaluar):**
+
+1. **Opción A: Capturar IDs retornados de crearMultiples()**
+   - Guardar los IDs de integrantes recién creados
+   - Agregar al map antes de reordenar
+   - Ventaja: Mantiene lógica actual sin cambios mayores
+   - Desventaja: Requiere verificar qué retorna `crearMultiples()` actualmente
+
+2. **Opción B: Recargar integrantes antes de reordenar**
+   - Después de crear nuevos integrantes, hacer GET `/api/v1.0/plan-integrantes/:planNumero`
+   - Reconstruir `existingMap` con todos (viejos + nuevos)
+   - Ventaja: Simple, garantiza sincronización
+   - Desventaja: Request adicional (pero es validar datos)
+
+3. **Opción C: Filtrar nuevos integrantes de reorder en modo "crear"**
+   - En modo "crear" plan, todos los integrantes son nuevos
+   - No llamar a reorder() si es modo "crear"
+   - En modo "editar", solo reordenar integrantes que ya existían
+   - Ventaja: Evita reorder innecesario si es primer guardado
+   - Desventaja: No aplica orden en creación inicial
+
+4. **Opción D: Modificar reorder() para ignorar undefined IDs**
+   - Backend filtra registros donde `id` NO es undefined
+   - Solo reordena integrantes que realmente existen
+   - Ventaja: Robust, tolera casos edge
+   - Desventaja: Oculta el problema, no es solución real
+
+**Siguiente Paso:**
+Determinar cuál opción es mejor (probablemente Opción B: recargar integrantes) e implementar fix.
+
