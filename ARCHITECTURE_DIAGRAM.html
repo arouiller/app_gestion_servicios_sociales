@@ -109,6 +109,49 @@
             flex: 1;
             background: white;
             overflow: hidden;
+            position: relative;
+        }
+
+        /* Contenedores de capas */
+        .layer-container {
+            position: absolute;
+            border: 2px solid;
+            border-radius: 8px;
+            padding: 20px;
+            background-color: rgba(255, 255, 255, 0.1);
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: flex-start;
+            pointer-events: none;
+        }
+
+        .layer-container.bd {
+            border-color: #2196F3;
+            background-color: rgba(33, 150, 243, 0.05);
+        }
+
+        .layer-container.api {
+            border-color: #4CAF50;
+            background-color: rgba(76, 175, 80, 0.05);
+        }
+
+        .layer-container.services {
+            border-color: #FBC02D;
+            background-color: rgba(251, 192, 45, 0.05);
+        }
+
+        .layer-container.components {
+            border-color: #FF9800;
+            background-color: rgba(255, 152, 0, 0.05);
+        }
+
+        .layer-title {
+            font-size: 12px;
+            font-weight: bold;
+            color: #666;
+            margin-bottom: 10px;
+            pointer-events: none;
         }
 
         .hint {
@@ -352,19 +395,37 @@
             { from: 'usuariosService', to: 'GET_lookup', color: '#999', width: 1.5 },
         ]);
 
-        // Opciones de visualización
+        // Posicionar nodos en capas sin física dinámica
+        const layerPositions = {
+            'BD': { x: 100, y: 100, width: 280, height: 800, cols: 2 },
+            'API': { x: 450, y: 100, width: 280, height: 800, cols: 2 },
+            'Services': { x: 800, y: 100, width: 280, height: 600, cols: 2 },
+            'Components': { x: 1150, y: 100, width: 280, height: 700, cols: 2 }
+        };
+
+        let nodeIndex = {};
+        nodes.forEach(node => {
+            const layer = node.layer;
+            if (!nodeIndex[layer]) nodeIndex[layer] = 0;
+
+            const pos = layerPositions[layer];
+            if (pos) {
+                const col = nodeIndex[layer] % pos.cols;
+                const row = Math.floor(nodeIndex[layer] / pos.cols);
+                const itemHeight = 80;
+
+                node.x = pos.x + (col * (pos.width / pos.cols));
+                node.y = pos.y + (row * itemHeight);
+                node.fixed = false; // Permitir que se arrastren
+            }
+
+            nodeIndex[layer]++;
+        });
+
+        // Opciones de visualización - SIN física dinámica
         const options = {
             physics: {
-                enabled: true,
-                stabilization: {
-                    iterations: 200
-                },
-                barnesHut: {
-                    gravitationalConstant: -30000,
-                    centralGravity: 0.3,
-                    springLength: 200,
-                    springConstant: 0.04
-                }
+                enabled: false  // Desactivar completamente la física
             },
             interaction: {
                 navigationButtons: true,
@@ -374,18 +435,20 @@
             },
             nodes: {
                 font: {
-                    size: 14,
-                    color: '#333'
+                    size: 13,
+                    color: '#333',
+                    face: 'Segoe UI'
                 },
                 shape: 'box',
                 margin: 10,
                 widthConstraint: {
-                    maximum: 200
+                    maximum: 180
                 }
             },
             edges: {
                 smooth: {
-                    type: 'continuous'
+                    type: 'continuous',
+                    forceDirection: 'none'
                 },
                 color: {
                     inherit: 'from'
@@ -397,7 +460,7 @@
                     }
                 },
                 font: {
-                    size: 12
+                    size: 11
                 }
             }
         };
@@ -512,10 +575,32 @@
             }
         });
 
-        // Fit al cargar
+        // Crear contenedores visuales de capas
+        function createLayerContainers() {
+            const container = document.getElementById('canvas');
+
+            Object.entries(layerPositions).forEach(([layer, pos]) => {
+                const layerDiv = document.createElement('div');
+                layerDiv.className = `layer-container ${layer.toLowerCase()}`;
+                layerDiv.style.left = pos.x + 'px';
+                layerDiv.style.top = pos.y + 'px';
+                layerDiv.style.width = pos.width + 'px';
+                layerDiv.style.height = pos.height + 'px';
+
+                const title = document.createElement('div');
+                title.className = 'layer-title';
+                title.textContent = layer;
+                layerDiv.appendChild(title);
+
+                container.appendChild(layerDiv);
+            });
+        }
+
+        // Crear contenedores después de que la red esté lista
         setTimeout(() => {
+            createLayerContainers();
             network.fit();
-        }, 500);
+        }, 300);
     </script>
 </body>
 </html>
