@@ -322,9 +322,11 @@ function PlanV1Modal({ mode, planData, onClose, onSave }) {
           });
 
           await planesIntegrantesService.reorder(response.plan_numero, integrantesWithMeta);
+          console.log('[PlanV1Modal] Reorder completed with meta:', integrantesWithMeta);
 
           // Reload integrantes again after reorder to get final state from BD
           const finalIntegrantes = await planesIntegrantesService.obtenerPorPlan(response.plan_numero);
+          console.log('[PlanV1Modal] finalIntegrantes from obtenerPorPlan:', finalIntegrantes);
 
           // Map final integrantes back to form structure
           const integrantesConId = integrantesToCreate.map((integ, index) => {
