@@ -5,13 +5,13 @@ const { buildOrderByClause } = require('../utils/sortUtil');
 /**
  * GET /api/planes/filter/:filtro
  * Obtiene planes filtrados por: todos, tipo_plan, cobrador, os, estado
- * Query params: sortBy, order (ASC|DESC)
- * Retorna: { success, data: [planes], count }
+ * Query params: sortBy, order (ASC|DESC), page, limit
+ * Retorna: { success, data: [planes], count, page, limit, totalPages, offset }
  */
 exports.filter = async (req, res, next) => {
   try {
     const { filtro } = req.params;
-    const { tipo_plan_numero, cobrador_numero, os_numero, estado, sortBy, order } = req.query;
+    const { tipo_plan_numero, cobrador_numero, os_numero, estado, sortBy, order, page = 1, limit = 15 } = req.query;
 
     let where = {};
 
@@ -46,7 +46,12 @@ exports.filter = async (req, res, next) => {
       orderBy = buildOrderByClause(sortBy, order, columnMap);
     }
 
-    const planes = await db.PlanV1.findAll({
+    // Pagination
+    const pageNum = Math.max(1, parseInt(page) || 1);
+    const limitNum = Math.max(1, parseInt(limit) || 15);
+    const offset = (pageNum - 1) * limitNum;
+
+    const { count, rows } = await db.PlanV1.findAndCountAll({
       where,
       include: [
         { model: db.TipoDePlan, attributes: ['tipo_plan_numero', 'tipo_plan_nombre'] },
@@ -63,12 +68,20 @@ exports.filter = async (req, res, next) => {
         },
       ],
       order: orderBy,
+      limit: limitNum,
+      offset: offset,
     });
+
+    const totalPages = Math.ceil(count / limitNum);
 
     res.json({
       success: true,
-      data: planes,
-      count: planes.length,
+      data: rows,
+      count,
+      page: pageNum,
+      limit: limitNum,
+      totalPages,
+      offset,
     });
   } catch (err) {
     next(err);
