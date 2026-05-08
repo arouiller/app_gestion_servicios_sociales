@@ -1,9 +1,32 @@
-# 🔍 Guía de Uso - Diagrama de Dependencias Interactivo
+# 🔍 Guía de Uso - Diagrama de Dependencias Interactivo (v1.2)
 
 ## Cómo Abrir el Diagrama
 
 1. Abre el archivo `ARCHITECTURE_DIAGRAM.html` en tu navegador
 2. O accede directamente desde la raíz del proyecto
+
+## ✨ Nuevas Características (v1.2)
+
+### 🎯 Filtros Dinámicos
+En el **Diagrama Completo**, puedes ahora filtrar qué elementos deseas ver:
+
+| Filtro | Efecto |
+|--------|--------|
+| **Modelos BD** | Muestra/oculta todas las entidades de base de datos |
+| **Endpoints** | Muestra/oculta todos los endpoints API |
+| **Servicios** | Muestra/oculta los servicios frontend |
+| **Componentes** | Muestra/oculta los componentes React |
+
+**Uso:**
+- Marca/desmarca los checkboxes según qué quieras ver
+- El diagrama se actualiza automáticamente
+- Tu selección se guarda en el navegador
+
+**Ejemplo de usos:**
+- Solo **Modelos + Endpoints**: Ver arquitectura de BD → API
+- Solo **Endpoints + Servicios**: Ver flujo API → Frontend
+- Solo **Componentes**: Ver estructura de UI
+- Todo activo: Ver arquitectura completa
 
 ## 🎮 Controles de Zoom
 
@@ -182,15 +205,83 @@ El diagrama es responsivo:
 - `ARQUITECTURA.md` - Análisis de implementación
 - `CLAUDE.md` - Instrucciones del proyecto
 
+## 🎬 Combinaciones Útiles de Filtros
+
+### Para Arquitectos
+**Mostrar:** Modelos + Endpoints  
+**Para ver:** Cómo fluyen los datos desde la BD hacia la API
+
+### Para Desarrolladores Frontend
+**Mostrar:** Servicios + Componentes  
+**Para ver:** Cómo los componentes consumen servicios
+
+### Para Arquitectura de API
+**Mostrar:** Endpoints + Servicios  
+**Para ver:** Cómo los servicios consumen los endpoints
+
+### Análisis de Capas
+**Iteración 1:** Solo Modelos (ver esquema BD)  
+**Iteración 2:** Agregar Endpoints (ver API)  
+**Iteración 3:** Agregar Servicios (ver abstracción HTTP)  
+**Iteración 4:** Agregar Componentes (ver todo)  
+
+## 💾 Persistencia de Filtros
+
+Los filtros se guardan automáticamente:
+- Se almacenan en `localStorage` del navegador
+- Persisten entre sesiones
+- Se reinician cuando cambias de vista a otra diferente a "Diagrama Completo"
+
+Para limpiar los filtros guardados:
+```javascript
+localStorage.removeItem('diagramFilters');
+location.reload();
+```
+
+## 🎨 Interpretación de Colores con Filtros
+
+Cuando aplicas filtros, solo ves los colores correspondientes:
+
+| Selección | Colores Visibles |
+|-----------|-----------------|
+| Solo Modelos | Azul |
+| Solo Endpoints | Verde |
+| Solo Servicios | Amarillo |
+| Solo Componentes | Rojo |
+| Modelos + Endpoints | Azul + Verde |
+| Endpoints + Servicios + Componentes | Verde + Amarillo + Rojo |
+
+## 🧠 Casos de Uso por Rol
+
+### Desarrollador Backend
+**Filtros óptimos:** Modelos BD + Endpoints API  
+**Objetivo:** Entender cómo están organizados datos y endpoints
+
+### Desarrollador Frontend
+**Filtros óptimos:** Servicios + Componentes React  
+**Objetivo:** Ver qué servicios usa cada componente
+
+### Arquitecto/Lead
+**Filtros óptimos:** Todos activos (completeto)  
+**Objetivo:** Entender flujos de datos completos
+
+### Nuevo en el Proyecto
+**Filtros sugeridos:**
+1. Solo Componentes (entender UI)
+2. Agregar Servicios (ver qué consume)
+3. Agregar Endpoints (ver APIs)
+4. Agregar Modelos (entender BD)
+
 ## 🚀 Próximas Mejoras
 
-- [ ] Exportar diagrama como PNG/SVG
+- [ ] Exportar diagrama como PNG/SVG con filtros aplicados
 - [ ] Búsqueda dentro del diagrama
-- [ ] Filtros de componentes por tipo
+- [ ] Presets de filtros (Backend, Frontend, Arquitectura completa)
 - [ ] Navegación con teclado (flechas)
 - [ ] Modo oscuro
+- [ ] Diagrama simplificado para onboarding
 
 ---
 
 **Última actualización**: 2026-05-08  
-**Versión del diagrama**: 1.1 (con zoom)
+**Versión del diagrama**: 1.2 (con zoom + filtros dinámicos)
