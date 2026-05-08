@@ -39,7 +39,7 @@ exports.filter = async (req, res, next) => {
       'Cobrador.cobrador_apellido': { model: db.Cobrador, field: 'cobrador_apellido' },
       'TipoDePlan.tipo_plan_nombre': { model: db.TipoDePlan, field: 'tipo_plan_nombre' },
       'ObraSocial.os_nombre': { model: db.ObraSocial, field: 'os_nombre' },
-      'PlanIntegrante.Persona.apellido': { model: db.Persona, field: 'apellido' }
+      'PlanIntegrante.Persona.apellido': { models: [db.PlanIntegrante, db.Persona], field: 'apellido' }
     };
     let orderBy = [['plan_numero', 'ASC']]; // default
     if (sortBy) {

@@ -1,10 +1,12 @@
 /**
  * Validates and constructs Sequelize ORDER BY clause
- * Supports both simple columns and related model fields
- * @param {string} sortBy - Column or relation.field (e.g., 'plan_numero', 'Cobrador.cobrador_apellido')
+ * Supports simple columns, single-level relations, and nested relations
+ * @param {string} sortBy - Column key from columnMap
  * @param {string} order - 'ASC' or 'DESC' (default: 'ASC')
  * @param {Object} columnMap - Map of allowed sort keys to Sequelize order syntax
- *   e.g., { 'plan_numero': 'plan_numero', 'Cobrador.cobrador_apellido': { model: db.Cobrador, field: 'cobrador_apellido' } }
+ *   Simple: 'plan_numero'
+ *   Relation: { model: db.Cobrador, field: 'cobrador_apellido' }
+ *   Nested: { models: [db.PlanIntegrante, db.Persona], field: 'apellido' }
  * @returns {Array} Sequelize ORDER BY format
  * @throws Error if sortBy not allowed or invalid order direction
  */
@@ -32,7 +34,12 @@ function buildOrderByClause(sortBy, order = 'ASC', columnMap = {}) {
     return [[config, normalizedOrder]];
   }
 
-  // If config is an object with model, it's a relation sort
+  // If config has nested models (array), build nested order clause
+  if (config.models && Array.isArray(config.models) && config.field) {
+    return [[...config.models, config.field, normalizedOrder]];
+  }
+
+  // If config is an object with single model
   if (config.model && config.field) {
     return [[config.model, config.field, normalizedOrder]];
   }
