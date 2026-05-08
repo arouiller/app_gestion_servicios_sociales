@@ -27,7 +27,6 @@ Un bug solo puede pasar a estado solucionado, Descartado a traves del pedido exp
 
 | ID | Severidad | Fase | Descripción | Reportado | Estado |
 |----|-----------|------|-------------|-----------|--------|
-| BUG-035 | 🔴 CRÍTICO | BACKLOG-057 | TypeError: "N.tiposDeplan.map is not a function" al crear/editar planes | 2026-05-08 | 📋 Registrado |
 | BUG-034 | 🔴 CRÍTICO | Zonas/Lookup | Eliminación de Zona: siempre muestra "0 referencias" aunque hay planes asociados | 2026-05-07 | ✅ Solucionado |
 | BUG-033 | 🔴 CRÍTICO | LookupCRUD | Sin confirmación al eliminar en cobradores, zonas, tipos de grupo, tipos de plan | 2026-05-07 | ✅ Solucionado |
 | BUG-032 | 🟡 IMPORTANTE | Sortable Headers | Llamadas API duplicadas y redundantes al cargar GestionPlanesV1 | 2026-05-07 | ⏸️ En pausa |
@@ -36,7 +35,7 @@ Un bug solo puede pasar a estado solucionado, Descartado a traves del pedido exp
 
 | ID | Severidad | Fase | Descripción | Reportado | Estado |
 |----|-----------|------|-------------|-----------|--------|
-| BUG-035 | 🔴 CRÍTICO | BACKLOG-057 | TypeError: "N.tiposDeplan.map is not a function" al crear/editar planes | 2026-05-08 | 📋 Registrado |
+| BUG-035 | 🔴 CRÍTICO | BACKLOG-057 | TypeError: "N.tiposDeplan.map is not a function" al crear/editar planes | 2026-05-08 | ✅ Solucionado |
 | BUG-034 | 🔴 CRÍTICO | Zonas/Lookup | Eliminación de Zona: siempre muestra "0 referencias" aunque hay planes asociados | 2026-05-07 | ✅ Solucionado |
 | BUG-033 | 🔴 CRÍTICO | LookupCRUD | Sin confirmación al eliminar en cobradores, zonas, tipos de grupo, tipos de plan | 2026-05-07 | ✅ Solucionado |
 | BUG-032 | 🟡 IMPORTANTE | Sortable Headers | Llamadas API duplicadas al cargar GestionPlanesV1 | 2026-05-07 | ⏸️ En pausa |
@@ -2659,5 +2658,51 @@ Esto soporta:
 **Fase:** BACKLOG-057 Paginación Lookups
 **Detectado durante:** Testing de paginación backend en lookup tables
 
-**Estado:** 📋 Registrado
+**Estado:** ✅ Solucionado (2026-05-08)
+
+**Solución Implementada:**
+
+Actualizar métodos específicos en `lookupService.js` para soportar ambos formatos de respuesta:
+
+```javascript
+getTiposDePlan: async () => {
+  try {
+    const response = await api.get('/lookup/tipos-de-plan');
+    // Si es array directo (legacy), retornarlo
+    if (Array.isArray(response.data)) {
+      return response.data;
+    }
+    // Si es estructura paginada, extraer array del campo data
+    return response.data?.data || [];
+  } catch (error) {
+    console.error('Error loading tipos de plan:', error);
+    return [];
+  }
+},
+```
+
+Aplicada a todos los 5 métodos:
+- ✅ getTiposDePlan()
+- ✅ getCobradores()
+- ✅ getObrasSociales()
+- ✅ getTiposDeGrupo()
+- ✅ getZonas()
+
+Beneficiados:
+- ✅ PlanV1Modal: crear/editar planes funciona correctamente
+- ✅ BulkUpdateCuotaModal: aumento masivo de cuotas funciona
+
+Retrocompatibilidad:
+- ✅ Soporta formato legacy (array directo)
+- ✅ Soporta formato nuevo (respuesta paginada)
+
+**Commits:**
+- `c825cad` — fix(BUG-035): soportar nuevo formato paginado
+- `f4de7fc` — docs(BUG-035): registrar error
+
+**Verificación:**
+- ✅ Crear nuevo plan: modal abre correctamente
+- ✅ Editar plan: modal abre correctamente
+- ✅ Aumento masivo: modal abre correctamente
+- ✅ Dropdowns muestran valores correctamente
 
