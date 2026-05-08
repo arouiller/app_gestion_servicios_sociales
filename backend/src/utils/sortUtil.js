@@ -1,16 +1,16 @@
 /**
  * Validates and constructs Sequelize ORDER BY clause
- * Supports simple columns, single-level relations, and nested relations
- * @param {string} sortBy - Column key from columnMap
+ * Supports:
+ * - Array format (backwards compatibility): ['plan_numero', 'numero_afiliado', ...]
+ * - Object map format: { 'plan_numero': 'plan_numero', 'Cobrador.apellido': { model: db.Cobrador, field: 'apellido' } }
+ *
+ * @param {string} sortBy - Column name or key
  * @param {string} order - 'ASC' or 'DESC' (default: 'ASC')
- * @param {Object} columnMap - Map of allowed sort keys to Sequelize order syntax
- *   Simple: 'plan_numero'
- *   Relation: { model: db.Cobrador, field: 'cobrador_apellido' }
- *   Nested: { models: [db.PlanIntegrante, db.Persona], field: 'apellido' }
+ * @param {Array|Object} allowedColumnsOrMap - Array of allowed columns OR object map
  * @returns {Array} Sequelize ORDER BY format
  * @throws Error if sortBy not allowed or invalid order direction
  */
-function buildOrderByClause(sortBy, order = 'ASC', columnMap = {}) {
+function buildOrderByClause(sortBy, order = 'ASC', allowedColumnsOrMap = {}) {
   // Validate order direction
   const normalizedOrder = (order || 'ASC').toUpperCase();
   if (!['ASC', 'DESC'].includes(normalizedOrder)) {
@@ -22,7 +22,17 @@ function buildOrderByClause(sortBy, order = 'ASC', columnMap = {}) {
     return [];
   }
 
-  // Validate column is allowed
+  // Check if input is array (backwards compatibility)
+  if (Array.isArray(allowedColumnsOrMap)) {
+    // Old format: simple column list
+    if (!allowedColumnsOrMap.includes(sortBy)) {
+      throw new Error(`Invalid sort column: ${sortBy}. Allowed: ${allowedColumnsOrMap.join(', ')}`);
+    }
+    return [[sortBy, normalizedOrder]];
+  }
+
+  // Object map format
+  const columnMap = allowedColumnsOrMap;
   if (!columnMap[sortBy]) {
     throw new Error(`Invalid sort column: ${sortBy}. Allowed: ${Object.keys(columnMap).join(', ')}`);
   }
