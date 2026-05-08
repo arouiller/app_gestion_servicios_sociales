@@ -1,0 +1,1003 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Diagrama de Dependencias - App Gestión Servicios Sociales</title>
+    <script src="https://cdn.jsdelivr.net/npm/mermaid/dist/mermaid.min.js"></script>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            padding: 20px;
+        }
+
+        .container {
+            max-width: 1400px;
+            margin: 0 auto;
+            background: white;
+            border-radius: 12px;
+            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+            overflow: hidden;
+        }
+
+        header {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 40px 20px;
+            text-align: center;
+        }
+
+        header h1 {
+            font-size: 2.5em;
+            margin-bottom: 10px;
+            text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.2);
+        }
+
+        header p {
+            font-size: 1.1em;
+            opacity: 0.95;
+        }
+
+        .controls {
+            padding: 20px;
+            background: #f8f9fa;
+            border-bottom: 1px solid #dee2e6;
+            display: flex;
+            gap: 10px;
+            flex-wrap: wrap;
+            align-items: center;
+        }
+
+        .controls button {
+            padding: 10px 20px;
+            background: #667eea;
+            color: white;
+            border: none;
+            border-radius: 6px;
+            cursor: pointer;
+            font-size: 0.95em;
+            transition: all 0.3s ease;
+        }
+
+        .controls button:hover {
+            background: #764ba2;
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(102, 126, 234, 0.4);
+        }
+
+        .controls button.active {
+            background: #764ba2;
+            box-shadow: 0 4px 12px rgba(118, 75, 162, 0.4);
+        }
+
+        .diagram-container {
+            padding: 30px;
+            overflow-x: auto;
+            background: white;
+            min-height: 600px;
+        }
+
+        .mermaid {
+            display: flex;
+            justify-content: center;
+            min-height: 600px;
+        }
+
+        .legend {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 15px;
+            padding: 20px;
+            background: #f8f9fa;
+            border-top: 1px solid #dee2e6;
+        }
+
+        .legend-item {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            padding: 10px;
+            background: white;
+            border-radius: 6px;
+            border-left: 4px solid;
+        }
+
+        .legend-item.models {
+            border-color: #17a2b8;
+        }
+
+        .legend-item.endpoints {
+            border-color: #28a745;
+        }
+
+        .legend-item.services {
+            border-color: #ffc107;
+        }
+
+        .legend-item.components {
+            border-color: #dc3545;
+        }
+
+        .legend-item.lookup {
+            border-color: #6f42c1;
+        }
+
+        .legend-color {
+            width: 20px;
+            height: 20px;
+            border-radius: 4px;
+        }
+
+        .section-title {
+            font-size: 1.2em;
+            font-weight: bold;
+            color: #333;
+            margin-bottom: 5px;
+        }
+
+        .legend-item.models .legend-color {
+            background: #e3f2fd;
+            border: 2px solid #17a2b8;
+        }
+
+        .legend-item.endpoints .legend-color {
+            background: #e8f5e9;
+            border: 2px solid #28a745;
+        }
+
+        .legend-item.services .legend-color {
+            background: #fff3e0;
+            border: 2px solid #ffc107;
+        }
+
+        .legend-item.components .legend-color {
+            background: #ffebee;
+            border: 2px solid #dc3545;
+        }
+
+        .legend-item.lookup .legend-color {
+            background: #f3e5f5;
+            border: 2px solid #6f42c1;
+        }
+
+        footer {
+            padding: 20px;
+            background: #f8f9fa;
+            border-top: 1px solid #dee2e6;
+            text-align: center;
+            color: #666;
+            font-size: 0.9em;
+        }
+
+        @media (max-width: 768px) {
+            header h1 {
+                font-size: 1.8em;
+            }
+
+            .controls {
+                justify-content: center;
+            }
+
+            .legend {
+                grid-template-columns: 1fr;
+            }
+        }
+
+        /* Estilos Mermaid personalizados */
+        .mermaid svg {
+            max-width: 100%;
+            height: auto;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <header>
+            <h1>🏗️ Diagrama de Dependencias del Sistema</h1>
+            <p>App Gestión de Servicios Sociales - Arquitectura Completa</p>
+        </header>
+
+        <div class="controls">
+            <button class="active" onclick="showDiagram('complete')">📊 Diagrama Completo</button>
+            <button onclick="showDiagram('models')">🗄️ Modelos de BD</button>
+            <button onclick="showDiagram('api')">🔌 Endpoints API</button>
+            <button onclick="showDiagram('frontend')">⚛️ Componentes Frontend</button>
+        </div>
+
+        <div class="diagram-container" id="diagramContainer">
+            <div class="mermaid" id="completeDiagram">
+graph TB
+    subgraph Models["📦 MODELOS DE BASE DE DATOS"]
+        subgraph LookupModels["Entidades Lookup"]
+            Cobrador["Cobrador"]
+            TipoPlan["TipoDePlan"]
+            ObraSocial["ObraSocial"]
+            ServicioAdicional["ServicioAdicional"]
+            TipoGrupo["TipoDeGrupo"]
+            Zona["Zona"]
+        end
+
+        subgraph GeographyModels["Geografía"]
+            Provincia["Provincia"]
+            Localidad["Localidad"]
+        end
+
+        subgraph CoreModels["Entidades Principales"]
+            Usuario["Usuario"]
+            Persona["Persona"]
+            PlanV1["PlanV1 (Plan)"]
+            PlanIntegrante["PlanIntegrante"]
+            IntegranteServicio["IntegranteServicio"]
+        end
+
+        subgraph HistoryModels["Historial & Auditoría"]
+            HistorialCuota["HistorialCuota"]
+            AuditLog["AuditLog"]
+            AumentoMasivo["AumentoMasivo"]
+            Bug["Bug"]
+        end
+
+        subgraph ReceiptModels["Recibos"]
+            Recibo["Recibo"]
+            ReciboIntegrante["ReciboIntegrante"]
+            PeriodosRecibos["PeriodosRecibos"]
+        end
+
+        ConfiguracionApp["ConfiguracionApp"]
+    end
+
+    subgraph API["🔌 ENDPOINTS API (Backend)"]
+        subgraph AuthAPI["Autenticación"]
+            AuthEndpoint["/api/auth/*"]
+        end
+
+        subgraph PlanesAPI["Planes"]
+            PlanesEndpoint["/api/planes"]
+            PlanesFilter["/api/planes/filter/:filtro"]
+            PlanesCrearCompleto["/api/planes/crear-completo"]
+            PlanesActualizarCompleto["/api/planes/actualizar-completo/:id"]
+            PlanesBulkCuota["/api/planes/bulk-update-cuota"]
+        end
+
+        subgraph PersonasAPI["Personas"]
+            PersonasEndpoint["/api/personas"]
+            PersonasSearch["/api/personas/search"]
+        end
+
+        subgraph RecibosAPI["Recibos"]
+            RecibosEndpoint["/api/recibos"]
+            RecibosGenerar["/api/recibos/generar"]
+            RecibosPeriodos["/api/recibos/periodos"]
+            RecibosNumeroMax["/api/recibos/numero-max"]
+        end
+
+        subgraph LookupAPI["Lookup"]
+            LookupEndpoint["/api/lookup"]
+            LookupZonas["/api/lookup/zonas"]
+        end
+
+        subgraph AdminAPI["Administración"]
+            UsuariosEndpoint["/api/usuarios"]
+            MigrationsEndpoint["/api/migrations"]
+            ConfigEndpoint["/api/admin/configuracion"]
+            AuditEndpoint["/api/audit-log"]
+            BugsEndpoint["/api/bugs"]
+        end
+
+        subgraph GeographyAPI["Geografía"]
+            ProvinciasEndpoint["/api/provincias"]
+            LocalidadesEndpoint["/api/localidades"]
+        end
+    end
+
+    subgraph Services["🔧 SERVICIOS FRONTEND"]
+        planesV1Service["planesV1Service"]
+        planesService["planesService"]
+        personasService["personasService"]
+        recibosService["recibosService"]
+        lookupService["lookupService"]
+        usuariosService["usuariosService"]
+        configService["configService"]
+        migrationsService["migrationsService"]
+        localidadService["localidadService"]
+        provinciaService["provinciaService"]
+        integranteServiciosService["integranteServiciosService"]
+        planesIntegrantesService["planesIntegrantesService"]
+        bugsService["bugsService"]
+        auditService["auditService"]
+    end
+
+    subgraph Components["⚛️ COMPONENTES FRONTEND"]
+        subgraph GestionPlanesComponents["Gestión de Planes"]
+            GestionPlanesV1["GestionPlanesV1"]
+            PlanV1Modal["PlanV1Modal"]
+            BusquedaAfiliados["BusquedaAfiliados"]
+            AfiladoSearchModal["AfiladoSearchModal"]
+            GenerarRecibosModal["GenerarRecibosModal"]
+            BulkUpdateCuotaModal["BulkUpdateCuotaModal"]
+            IntegranteServiciosModal["IntegranteServiciosModal"]
+        end
+
+        subgraph RecibosComponents["Recibos"]
+            RecibosPage["RecibosPage"]
+            ReciboDetalleModal["ReciboDetalleModal"]
+            HistorialAumentosModal["HistorialAumentosModal"]
+        end
+
+        subgraph GeographyComponents["Geografía"]
+            GestionProvinciasZonas["GestionProvinciasZonas"]
+            ProvinciaRow["ProvinciaRow"]
+            ZonaFormModal["ZonaFormModal"]
+        end
+
+        subgraph AdminComponents["Administración"]
+            GestionUsuarios["GestionUsuarios"]
+            MigrationsDashboard["MigrationsDashboard"]
+            GestionBugs["GestionBugs"]
+            GestionAuditoria["GestionAuditoria"]
+            ConfiguracionNotificaciones["ConfiguracionNotificaciones"]
+        end
+
+        subgraph LookupComponents["Lookup"]
+            LookupCRUD["LookupCRUD (Genérico)"]
+            Cobradores["Cobradores"]
+        end
+    end
+
+    %% Relaciones Modelos -> API
+    PlanV1 -->|GET/POST/PUT| PlanesEndpoint
+    PlanV1 -->|GET| PlanesFilter
+    Persona -->|GET/POST/PUT| PersonasEndpoint
+    Persona -->|SEARCH| PersonasSearch
+    Recibo -->|GET/POST| RecibosEndpoint
+    Recibo -->|POST| RecibosGenerar
+    PeriodosRecibos -->|GET| RecibosPeriodos
+    Recibo -->|GET| RecibosNumeroMax
+    LookupModels -->|GET/POST/PUT/DELETE| LookupEndpoint
+    Zona -->|GET| LookupZonas
+    Usuario -->|GET/POST/PUT| UsuariosEndpoint
+    Usuario -->|GET| MigrationsEndpoint
+    ConfiguracionApp -->|GET| ConfigEndpoint
+    AuditLog -->|GET| AuditEndpoint
+    Bug -->|GET/POST| BugsEndpoint
+    Provincia -->|GET/POST| ProvinciasEndpoint
+    Localidad -->|GET/POST| LocalidadesEndpoint
+
+    %% Relaciones Modelos (Associations)
+    PlanV1 -->|belongsTo| TipoPlan
+    PlanV1 -->|belongsTo| Cobrador
+    PlanV1 -->|belongsTo| TipoGrupo
+    PlanV1 -->|belongsTo| ObraSocial
+    PlanV1 -->|belongsTo| Zona
+    PlanV1 -->|belongsTo| Localidad
+    PlanV1 -->|hasMany| PlanIntegrante
+    PlanIntegrante -->|belongsTo| Persona
+    PlanIntegrante -->|hasMany| IntegranteServicio
+    IntegranteServicio -->|belongsTo| ServicioAdicional
+    Recibo -->|belongsTo| PlanV1
+    Recibo -->|belongsTo| Usuario
+    Recibo -->|hasMany| ReciboIntegrante
+    HistorialCuota -->|belongsTo| Usuario
+    AuditLog -->|belongsTo| Usuario
+    AumentoMasivo -->|belongsTo| Usuario
+    Bug -->|belongsTo| Usuario
+    Provincia -->|hasMany| Localidad
+
+    %% Relaciones API -> Services
+    PlanesCrearCompleto -->|consume| planesV1Service
+    PlanesActualizarCompleto -->|consume| planesV1Service
+    PlanesBulkCuota -->|consume| planesService
+    PlanesFilter -->|consume| planesService
+    PersonasSearch -->|consume| personasService
+    RecibosGenerar -->|consume| recibosService
+    RecibosPeriodos -->|consume| recibosService
+    RecibosNumeroMax -->|consume| recibosService
+    LookupZonas -->|consume| lookupService
+    UsuariosEndpoint -->|consume| usuariosService
+    ConfigEndpoint -->|consume| configService
+    MigrationsEndpoint -->|consume| migrationsService
+    ProvinciasEndpoint -->|consume| provinciaService
+    LocalidadesEndpoint -->|consume| localidadService
+    LookupEndpoint -->|consume| lookupService
+    BugsEndpoint -->|consume| bugsService
+    AuditEndpoint -->|consume| auditService
+
+    %% Relaciones Services -> Components
+    planesV1Service -->|data| PlanV1Modal
+    planesService -->|data| GestionPlanesV1
+    planesIntegrantesService -->|data| PlanV1Modal
+    personasService -->|data| BusquedaAfiliados
+    personasService -->|data| AfiladoSearchModal
+    recibosService -->|data| GenerarRecibosModal
+    recibosService -->|data| RecibosPage
+    recibosService -->|data| ReciboDetalleModal
+    planesService -->|data| BulkUpdateCuotaModal
+    lookupService -->|data| LookupCRUD
+    lookupService -->|data| Cobradores
+    localidadService -->|data| GestionProvinciasZonas
+    provinciaService -->|data| GestionProvinciasZonas
+    usuariosService -->|data| GestionUsuarios
+    migrationsService -->|data| MigrationsDashboard
+    bugsService -->|data| GestionBugs
+    auditService -->|data| GestionAuditoria
+    configService -->|data| ConfiguracionNotificaciones
+    planesService -->|data| HistorialAumentosModal
+    integranteServiciosService -->|data| IntegranteServiciosModal
+
+    %% Relaciones entre Componentes
+    GestionPlanesV1 -->|abre| PlanV1Modal
+    PlanV1Modal -->|abre| AfiladoSearchModal
+    PlanV1Modal -->|abre| IntegranteServiciosModal
+    GestionPlanesV1 -->|abre| GenerarRecibosModal
+    GestionPlanesV1 -->|abre| BulkUpdateCuotaModal
+    GestionPlanesV1 -->|abre| HistorialAumentosModal
+    BusquedaAfiliados -->|abre| PlanV1Modal
+    GenerarRecibosModal -->|muestra| ReciboDetalleModal
+    RecibosPage -->|abre| ReciboDetalleModal
+
+    %% Estilos
+    classDef modelStyle fill:#e3f2fd,stroke:#17a2b8,stroke-width:2px,color:#000
+    classDef apiStyle fill:#e8f5e9,stroke:#28a745,stroke-width:2px,color:#000
+    classDef serviceStyle fill:#fff3e0,stroke:#ffc107,stroke-width:2px,color:#000
+    classDef componentStyle fill:#ffebee,stroke:#dc3545,stroke-width:2px,color:#000
+    classDef lookupStyle fill:#f3e5f5,stroke:#6f42c1,stroke-width:2px,color:#000
+
+    class Cobrador,TipoPlan,ObraSocial,ServicioAdicional,TipoGrupo,Zona,Provincia,Localidad,Usuario,Persona,PlanV1,PlanIntegrante,IntegranteServicio,HistorialCuota,AuditLog,AumentoMasivo,Bug,Recibo,ReciboIntegrante,PeriodosRecibos,ConfiguracionApp modelStyle
+    class PlanesEndpoint,PlanesFilter,PlanesCrearCompleto,PlanesActualizarCompleto,PlanesBulkCuota,PersonasEndpoint,PersonasSearch,RecibosEndpoint,RecibosGenerar,RecibosPeriodos,RecibosNumeroMax,LookupEndpoint,LookupZonas,UsuariosEndpoint,MigrationsEndpoint,ConfigEndpoint,AuditEndpoint,BugsEndpoint,ProvinciasEndpoint,LocalidadesEndpoint,AuthEndpoint apiStyle
+    class planesV1Service,planesService,personasService,recibosService,lookupService,usuariosService,configService,migrationsService,localidadService,provinciaService,integranteServiciosService,planesIntegrantesService,bugsService,auditService serviceStyle
+    class GestionPlanesV1,PlanV1Modal,BusquedaAfiliados,AfiladoSearchModal,GenerarRecibosModal,BulkUpdateCuotaModal,RecibosPage,ReciboDetalleModal,GestionProvinciasZonas,GestionUsuarios,MigrationsDashboard,GestionBugs,GestionAuditoria,ConfiguracionNotificaciones,IntegranteServiciosModal,HistorialAumentosModal,ProvinciaRow,ZonaFormModal componentStyle
+    class LookupCRUD,Cobradores lookupStyle
+            </div>
+        </div>
+
+        <div class="legend">
+            <div class="legend-item models">
+                <div class="legend-color"></div>
+                <div>
+                    <div class="section-title">🗄️ Modelos de BD</div>
+                    <small>Entidades Sequelize</small>
+                </div>
+            </div>
+            <div class="legend-item endpoints">
+                <div class="legend-color"></div>
+                <div>
+                    <div class="section-title">🔌 Endpoints API</div>
+                    <small>Rutas Express</small>
+                </div>
+            </div>
+            <div class="legend-item services">
+                <div class="legend-color"></div>
+                <div>
+                    <div class="section-title">🔧 Servicios Frontend</div>
+                    <small>Clientes HTTP</small>
+                </div>
+            </div>
+            <div class="legend-item components">
+                <div class="legend-color"></div>
+                <div>
+                    <div class="section-title">⚛️ Componentes</div>
+                    <small>Componentes React</small>
+                </div>
+            </div>
+            <div class="legend-item lookup">
+                <div class="legend-color"></div>
+                <div>
+                    <div class="section-title">🎛️ Genéricos</div>
+                    <small>Componentes Reutilizables</small>
+                </div>
+            </div>
+        </div>
+
+        <footer>
+            <p>Diagrama de Dependencias - App Gestión de Servicios Sociales | Generado: 2026-05-08</p>
+            <p>Muestra las relaciones entre modelos de base de datos, endpoints API, servicios frontend y componentes React</p>
+        </footer>
+    </div>
+
+    <script>
+        mermaid.initialize({ startOnLoad: true, theme: 'default', securityLevel: 'loose' });
+
+        const diagrams = {
+            complete: `graph TB
+    subgraph Models["📦 MODELOS DE BASE DE DATOS"]
+        subgraph LookupModels["Entidades Lookup"]
+            Cobrador["Cobrador"]
+            TipoPlan["TipoDePlan"]
+            ObraSocial["ObraSocial"]
+            ServicioAdicional["ServicioAdicional"]
+            TipoGrupo["TipoDeGrupo"]
+            Zona["Zona"]
+        end
+
+        subgraph GeographyModels["Geografía"]
+            Provincia["Provincia"]
+            Localidad["Localidad"]
+        end
+
+        subgraph CoreModels["Entidades Principales"]
+            Usuario["Usuario"]
+            Persona["Persona"]
+            PlanV1["PlanV1 (Plan)"]
+            PlanIntegrante["PlanIntegrante"]
+            IntegranteServicio["IntegranteServicio"]
+        end
+
+        subgraph HistoryModels["Historial & Auditoría"]
+            HistorialCuota["HistorialCuota"]
+            AuditLog["AuditLog"]
+            AumentoMasivo["AumentoMasivo"]
+            Bug["Bug"]
+        end
+
+        subgraph ReceiptModels["Recibos"]
+            Recibo["Recibo"]
+            ReciboIntegrante["ReciboIntegrante"]
+            PeriodosRecibos["PeriodosRecibos"]
+        end
+
+        ConfiguracionApp["ConfiguracionApp"]
+    end
+
+    subgraph API["🔌 ENDPOINTS API (Backend)"]
+        subgraph AuthAPI["Autenticación"]
+            AuthEndpoint["/api/auth/*"]
+        end
+
+        subgraph PlanesAPI["Planes"]
+            PlanesEndpoint["/api/planes"]
+            PlanesFilter["/api/planes/filter/:filtro"]
+            PlanesCrearCompleto["/api/planes/crear-completo"]
+            PlanesActualizarCompleto["/api/planes/actualizar-completo/:id"]
+            PlanesBulkCuota["/api/planes/bulk-update-cuota"]
+        end
+
+        subgraph PersonasAPI["Personas"]
+            PersonasEndpoint["/api/personas"]
+            PersonasSearch["/api/personas/search"]
+        end
+
+        subgraph RecibosAPI["Recibos"]
+            RecibosEndpoint["/api/recibos"]
+            RecibosGenerar["/api/recibos/generar"]
+            RecibosPeriodos["/api/recibos/periodos"]
+            RecibosNumeroMax["/api/recibos/numero-max"]
+        end
+
+        subgraph LookupAPI["Lookup"]
+            LookupEndpoint["/api/lookup"]
+            LookupZonas["/api/lookup/zonas"]
+        end
+
+        subgraph AdminAPI["Administración"]
+            UsuariosEndpoint["/api/usuarios"]
+            MigrationsEndpoint["/api/migrations"]
+            ConfigEndpoint["/api/admin/configuracion"]
+            AuditEndpoint["/api/audit-log"]
+            BugsEndpoint["/api/bugs"]
+        end
+
+        subgraph GeographyAPI["Geografía"]
+            ProvinciasEndpoint["/api/provincias"]
+            LocalidadesEndpoint["/api/localidades"]
+        end
+    end
+
+    subgraph Services["🔧 SERVICIOS FRONTEND"]
+        planesV1Service["planesV1Service"]
+        planesService["planesService"]
+        personasService["personasService"]
+        recibosService["recibosService"]
+        lookupService["lookupService"]
+        usuariosService["usuariosService"]
+        configService["configService"]
+        migrationsService["migrationsService"]
+        localidadService["localidadService"]
+        provinciaService["provinciaService"]
+        integranteServiciosService["integranteServiciosService"]
+        planesIntegrantesService["planesIntegrantesService"]
+        bugsService["bugsService"]
+        auditService["auditService"]
+    end
+
+    subgraph Components["⚛️ COMPONENTES FRONTEND"]
+        subgraph GestionPlanesComponents["Gestión de Planes"]
+            GestionPlanesV1["GestionPlanesV1"]
+            PlanV1Modal["PlanV1Modal"]
+            BusquedaAfiliados["BusquedaAfiliados"]
+            AfiladoSearchModal["AfiladoSearchModal"]
+            GenerarRecibosModal["GenerarRecibosModal"]
+            BulkUpdateCuotaModal["BulkUpdateCuotaModal"]
+            IntegranteServiciosModal["IntegranteServiciosModal"]
+        end
+
+        subgraph RecibosComponents["Recibos"]
+            RecibosPage["RecibosPage"]
+            ReciboDetalleModal["ReciboDetalleModal"]
+            HistorialAumentosModal["HistorialAumentosModal"]
+        end
+
+        subgraph GeographyComponents["Geografía"]
+            GestionProvinciasZonas["GestionProvinciasZonas"]
+            ProvinciaRow["ProvinciaRow"]
+            ZonaFormModal["ZonaFormModal"]
+        end
+
+        subgraph AdminComponents["Administración"]
+            GestionUsuarios["GestionUsuarios"]
+            MigrationsDashboard["MigrationsDashboard"]
+            GestionBugs["GestionBugs"]
+            GestionAuditoria["GestionAuditoria"]
+            ConfiguracionNotificaciones["ConfiguracionNotificaciones"]
+        end
+
+        subgraph LookupComponents["Lookup"]
+            LookupCRUD["LookupCRUD (Genérico)"]
+            Cobradores["Cobradores"]
+        end
+    end
+
+    %% Relaciones Modelos -> API
+    PlanV1 -->|GET/POST/PUT| PlanesEndpoint
+    PlanV1 -->|GET| PlanesFilter
+    Persona -->|GET/POST/PUT| PersonasEndpoint
+    Persona -->|SEARCH| PersonasSearch
+    Recibo -->|GET/POST| RecibosEndpoint
+    Recibo -->|POST| RecibosGenerar
+    PeriodosRecibos -->|GET| RecibosPeriodos
+    Recibo -->|GET| RecibosNumeroMax
+    LookupModels -->|GET/POST/PUT/DELETE| LookupEndpoint
+    Zona -->|GET| LookupZonas
+    Usuario -->|GET/POST/PUT| UsuariosEndpoint
+    Usuario -->|GET| MigrationsEndpoint
+    ConfiguracionApp -->|GET| ConfigEndpoint
+    AuditLog -->|GET| AuditEndpoint
+    Bug -->|GET/POST| BugsEndpoint
+    Provincia -->|GET/POST| ProvinciasEndpoint
+    Localidad -->|GET/POST| LocalidadesEndpoint
+
+    %% Relaciones Modelos (Associations)
+    PlanV1 -->|belongsTo| TipoPlan
+    PlanV1 -->|belongsTo| Cobrador
+    PlanV1 -->|belongsTo| TipoGrupo
+    PlanV1 -->|belongsTo| ObraSocial
+    PlanV1 -->|belongsTo| Zona
+    PlanV1 -->|belongsTo| Localidad
+    PlanV1 -->|hasMany| PlanIntegrante
+    PlanIntegrante -->|belongsTo| Persona
+    PlanIntegrante -->|hasMany| IntegranteServicio
+    IntegranteServicio -->|belongsTo| ServicioAdicional
+    Recibo -->|belongsTo| PlanV1
+    Recibo -->|belongsTo| Usuario
+    Recibo -->|hasMany| ReciboIntegrante
+    HistorialCuota -->|belongsTo| Usuario
+    AuditLog -->|belongsTo| Usuario
+    AumentoMasivo -->|belongsTo| Usuario
+    Bug -->|belongsTo| Usuario
+    Provincia -->|hasMany| Localidad
+
+    %% Relaciones API -> Services
+    PlanesCrearCompleto -->|consume| planesV1Service
+    PlanesActualizarCompleto -->|consume| planesV1Service
+    PlanesBulkCuota -->|consume| planesService
+    PlanesFilter -->|consume| planesService
+    PersonasSearch -->|consume| personasService
+    RecibosGenerar -->|consume| recibosService
+    RecibosPeriodos -->|consume| recibosService
+    RecibosNumeroMax -->|consume| recibosService
+    LookupZonas -->|consume| lookupService
+    UsuariosEndpoint -->|consume| usuariosService
+    ConfigEndpoint -->|consume| configService
+    MigrationsEndpoint -->|consume| migrationsService
+    ProvinciasEndpoint -->|consume| provinciaService
+    LocalidadesEndpoint -->|consume| localidadService
+    LookupEndpoint -->|consume| lookupService
+    BugsEndpoint -->|consume| bugsService
+    AuditEndpoint -->|consume| auditService
+
+    %% Relaciones Services -> Components
+    planesV1Service -->|data| PlanV1Modal
+    planesService -->|data| GestionPlanesV1
+    planesIntegrantesService -->|data| PlanV1Modal
+    personasService -->|data| BusquedaAfiliados
+    personasService -->|data| AfiladoSearchModal
+    recibosService -->|data| GenerarRecibosModal
+    recibosService -->|data| RecibosPage
+    recibosService -->|data| ReciboDetalleModal
+    planesService -->|data| BulkUpdateCuotaModal
+    lookupService -->|data| LookupCRUD
+    lookupService -->|data| Cobradores
+    localidadService -->|data| GestionProvinciasZonas
+    provinciaService -->|data| GestionProvinciasZonas
+    usuariosService -->|data| GestionUsuarios
+    migrationsService -->|data| MigrationsDashboard
+    bugsService -->|data| GestionBugs
+    auditService -->|data| GestionAuditoria
+    configService -->|data| ConfiguracionNotificaciones
+    planesService -->|data| HistorialAumentosModal
+    integranteServiciosService -->|data| IntegranteServiciosModal
+
+    %% Relaciones entre Componentes
+    GestionPlanesV1 -->|abre| PlanV1Modal
+    PlanV1Modal -->|abre| AfiladoSearchModal
+    PlanV1Modal -->|abre| IntegranteServiciosModal
+    GestionPlanesV1 -->|abre| GenerarRecibosModal
+    GestionPlanesV1 -->|abre| BulkUpdateCuotaModal
+    GestionPlanesV1 -->|abre| HistorialAumentosModal
+    BusquedaAfiliados -->|abre| PlanV1Modal
+    GenerarRecibosModal -->|muestra| ReciboDetalleModal
+    RecibosPage -->|abre| ReciboDetalleModal
+
+    %% Estilos
+    classDef modelStyle fill:#e3f2fd,stroke:#17a2b8,stroke-width:2px,color:#000
+    classDef apiStyle fill:#e8f5e9,stroke:#28a745,stroke-width:2px,color:#000
+    classDef serviceStyle fill:#fff3e0,stroke:#ffc107,stroke-width:2px,color:#000
+    classDef componentStyle fill:#ffebee,stroke:#dc3545,stroke-width:2px,color:#000
+    classDef lookupStyle fill:#f3e5f5,stroke:#6f42c1,stroke-width:2px,color:#000
+
+    class Cobrador,TipoPlan,ObraSocial,ServicioAdicional,TipoGrupo,Zona,Provincia,Localidad,Usuario,Persona,PlanV1,PlanIntegrante,IntegranteServicio,HistorialCuota,AuditLog,AumentoMasivo,Bug,Recibo,ReciboIntegrante,PeriodosRecibos,ConfiguracionApp modelStyle
+    class PlanesEndpoint,PlanesFilter,PlanesCrearCompleto,PlanesActualizarCompleto,PlanesBulkCuota,PersonasEndpoint,PersonasSearch,RecibosEndpoint,RecibosGenerar,RecibosPeriodos,RecibosNumeroMax,LookupEndpoint,LookupZonas,UsuariosEndpoint,MigrationsEndpoint,ConfigEndpoint,AuditEndpoint,BugsEndpoint,ProvinciasEndpoint,LocalidadesEndpoint,AuthEndpoint apiStyle
+    class planesV1Service,planesService,personasService,recibosService,lookupService,usuariosService,configService,migrationsService,localidadService,provinciaService,integranteServiciosService,planesIntegrantesService,bugsService,auditService serviceStyle
+    class GestionPlanesV1,PlanV1Modal,BusquedaAfiliados,AfiladoSearchModal,GenerarRecibosModal,BulkUpdateCuotaModal,RecibosPage,ReciboDetalleModal,GestionProvinciasZonas,GestionUsuarios,MigrationsDashboard,GestionBugs,GestionAuditoria,ConfiguracionNotificaciones,IntegranteServiciosModal,HistorialAumentosModal,ProvinciaRow,ZonaFormModal componentStyle
+    class LookupCRUD,Cobradores lookupStyle`,
+
+            models: `graph TB
+    subgraph CoreModels["🔴 ENTIDADES PRINCIPALES"]
+        Usuario["👤 Usuario<br/>- id<br/>- email<br/>- nombre<br/>- rol"]
+        Persona["👥 Persona<br/>- id<br/>- numero_documento<br/>- nombre<br/>- apellido"]
+        PlanV1["📋 PlanV1 (Plan)<br/>- plan_numero<br/>- numero_afiliado<br/>- estado<br/>- valor_cuota"]
+        PlanIntegrante["👫 PlanIntegrante<br/>- id<br/>- persona_id<br/>- rol<br/>- orden"]
+    end
+
+    subgraph LookupModels["🟣 ENTIDADES LOOKUP"]
+        TipoPlan["📊 TipoDePlan<br/>- tipo_plan_numero<br/>- tipo_plan_nombre"]
+        Cobrador["🚗 Cobrador<br/>- cobrador_numero<br/>- nombre<br/>- apellido"]
+        ObraSocial["🏥 ObraSocial<br/>- os_numero<br/>- os_nombre"]
+        ServicioAdicional["⚙️ ServicioAdicional<br/>- numero<br/>- nombre<br/>- precio"]
+        TipoGrupo["👨‍👩‍👧 TipoDeGrupo<br/>- numero<br/>- nombre"]
+        Zona["🗺️ Zona<br/>- id<br/>- codigo<br/>- nombre"]
+    end
+
+    subgraph ReceiptModels["💰 MODELOS DE RECIBOS"]
+        Recibo["🧾 Recibo<br/>- id<br/>- numero_recibo<br/>- plan_numero<br/>- periodo<br/>- fecha_emision"]
+        ReciboIntegrante["📄 ReciboIntegrante<br/>- id<br/>- recibo_id<br/>- persona_id"]
+        PeriodosRecibos["📅 PeriodosRecibos<br/>- periodo<br/>- estado<br/>- año<br/>- mes"]
+    end
+
+    subgraph HistoryModels["📊 HISTORIAL & AUDITORÍA"]
+        HistorialCuota["📈 HistorialCuota<br/>- id<br/>- plan_numero<br/>- cambio<br/>- fecha"]
+        AuditLog["🔍 AuditLog<br/>- id<br/>- usuario_id<br/>- endpoint<br/>- timestamp"]
+        AumentoMasivo["💹 AumentoMasivo<br/>- id<br/>- porcentaje<br/>- usuario_id<br/>- fecha"]
+        Bug["🐛 Bug<br/>- id<br/>- titulo<br/>- estado<br/>- usuario_id"]
+    end
+
+    subgraph GeographyModels["🌍 GEOGRAFÍA"]
+        Provincia["🏛️ Provincia<br/>- id<br/>- nombre"]
+        Localidad["🏘️ Localidad<br/>- id<br/>- nombre<br/>- provincia_id"]
+    end
+
+    subgraph ServiceModels["⚙️ SERVICIOS"]
+        IntegranteServicio["🔧 IntegranteServicio<br/>- id<br/>- plan_integrante_id<br/>- servicio_id"]
+        ConfiguracionApp["🎛️ ConfiguracionApp<br/>- clave<br/>- valor<br/>- tipo"]
+    end
+
+    %% Relaciones
+    PlanV1 -->|FK tipo_plan_numero| TipoPlan
+    PlanV1 -->|FK cobrador_numero| Cobrador
+    PlanV1 -->|FK tipo_de_grupo_numero| TipoGrupo
+    PlanV1 -->|FK os_numero| ObraSocial
+    PlanV1 -->|FK zona_id| Zona
+    PlanV1 -->|FK localidad_id| Localidad
+    PlanV1 -->|hasMany| PlanIntegrante
+    PlanV1 -->|hasMany| Recibo
+    PlanIntegrante -->|FK persona_id| Persona
+    PlanIntegrante -->|hasMany| IntegranteServicio
+    IntegranteServicio -->|FK servicio_id| ServicioAdicional
+    Recibo -->|FK usuario_id| Usuario
+    Recibo -->|hasMany| ReciboIntegrante
+    HistorialCuota -->|FK usuario_id| Usuario
+    AuditLog -->|FK usuario_id| Usuario
+    AumentoMasivo -->|FK usuario_id| Usuario
+    Bug -->|FK usuario_id| Usuario
+    Provincia -->|hasMany| Localidad
+
+    classDef primary fill:#ffcccc,stroke:#cc0000,stroke-width:2px,color:#000
+    classDef lookup fill:#ccf0ff,stroke:#0066cc,stroke-width:2px,color:#000
+    classDef receipt fill:#ffffcc,stroke:#ffaa00,stroke-width:2px,color:#000
+    classDef history fill:#ccffcc,stroke:#009900,stroke-width:2px,color:#000
+    classDef geo fill:#ffccff,stroke:#9900cc,stroke-width:2px,color:#000
+    classDef services fill:#ffffcc,stroke:#cc6600,stroke-width:2px,color:#000
+
+    class Usuario,Persona,PlanV1,PlanIntegrante primary
+    class TipoPlan,Cobrador,ObraSocial,ServicioAdicional,TipoGrupo,Zona lookup
+    class Recibo,ReciboIntegrante,PeriodosRecibos receipt
+    class HistorialCuota,AuditLog,AumentoMasivo,Bug history
+    class Provincia,Localidad geo
+    class IntegranteServicio,ConfiguracionApp services`,
+
+            api: `graph LR
+    subgraph Auth["🔐 AUTENTICACIÓN"]
+        Login["/api/auth/login<br/>POST"]
+        Google["/api/auth/google<br/>POST"]
+        ChangePassword["/api/auth/cambiar-password<br/>POST"]
+    end
+
+    subgraph Planes["📋 PLANES"]
+        PlanesList["/api/planes<br/>GET"]
+        PlanesFilter["/api/planes/filter/:filtro<br/>GET"]
+        PlanesCreate["/api/planes<br/>POST"]
+        PlanesUpdate["/api/planes/:id<br/>PUT"]
+        PlanesCreateCompleto["/api/planes/crear-completo<br/>POST<br/>(Optimizado)"]
+        PlanesUpdateCompleto["/api/planes/actualizar-completo/:id<br/>POST<br/>(Optimizado)"]
+        PlanesBulk["/api/planes/bulk-update-cuota<br/>PATCH"]
+    end
+
+    subgraph Personas["👥 PERSONAS"]
+        PersonasCreate["/api/personas<br/>POST"]
+        PersonasSearch["/api/personas/search<br/>POST"]
+        PersonasUpdate["/api/personas/:id<br/>PUT"]
+    end
+
+    subgraph Recibos["💰 RECIBOS"]
+        RecibosList["/api/recibos<br/>GET"]
+        RecibosGenerate["/api/recibos/generar<br/>POST"]
+        RecibosPeriodos["/api/recibos/periodos<br/>GET"]
+        RecibosNumeroMax["/api/recibos/numero-max<br/>GET"]
+        RecibosById["/api/recibos/:id<br/>GET"]
+    end
+
+    subgraph Lookup["🎛️ LOOKUP"]
+        LookupList["/api/lookup<br/>GET"]
+        LookupCreate["/api/lookup/:entidad<br/>POST"]
+        LookupUpdate["/api/lookup/:entidad/:id<br/>PUT"]
+        LookupDelete["/api/lookup/:entidad/:id<br/>DELETE"]
+        LookupZonas["/api/lookup/zonas<br/>GET"]
+    end
+
+    subgraph Admin["⚙️ ADMINISTRACIÓN"]
+        UsuariosList["/api/usuarios<br/>GET"]
+        UsuariosCreate["/api/usuarios<br/>POST"]
+        UsuariosRole["/api/usuarios/:id/rol<br/>PUT"]
+        MigrationsList["/api/migrations<br/>GET"]
+        MigrationsExecute["/api/migrations/execute<br/>POST"]
+        ConfigGet["/api/admin/configuracion<br/>GET"]
+        AuditLog["/api/audit-log<br/>GET"]
+        BugsList["/api/bugs<br/>GET"]
+        BugsCreate["/api/bugs<br/>POST"]
+    end
+
+    subgraph Geography["🌍 GEOGRAFÍA"]
+        ProvinciasList["/api/provincias<br/>GET"]
+        ProvinciasCreate["/api/provincias<br/>POST"]
+        LocalidadesList["/api/localidades<br/>GET"]
+        LocalidadesCreate["/api/localidades<br/>POST"]
+    end
+
+    classDef authStyle fill:#ffcccc,stroke:#cc0000,stroke-width:2px
+    classDef planesStyle fill:#e8f4f8,stroke:#0088cc,stroke-width:2px
+    classDef personasStyle fill:#f0e8f8,stroke:#8800cc,stroke-width:2px
+    classDef recibosStyle fill:#fffce8,stroke:#ccaa00,stroke-width:2px
+    classDef lookupStyle fill:#f8f0cc,stroke:#cc8800,stroke-width:2px
+    classDef adminStyle fill:#ccffe8,stroke:#00aa44,stroke-width:2px
+    classDef geoStyle fill:#ffe8f8,stroke:#cc0088,stroke-width:2px
+
+    class Login,Google,ChangePassword authStyle
+    class PlanesList,PlanesFilter,PlanesCreate,PlanesUpdate,PlanesCreateCompleto,PlanesUpdateCompleto,PlanesBulk planesStyle
+    class PersonasCreate,PersonasSearch,PersonasUpdate personasStyle
+    class RecibosList,RecibosGenerate,RecibosPeriodos,RecibosNumeroMax,RecibosById recibosStyle
+    class LookupList,LookupCreate,LookupUpdate,LookupDelete,LookupZonas lookupStyle
+    class UsuariosList,UsuariosCreate,UsuariosRole,MigrationsList,MigrationsExecute,ConfigGet,AuditLog,BugsList,BugsCreate adminStyle
+    class ProvinciasCreate,ProvinciasList,LocalidadesList,LocalidadesCreate geoStyle`,
+
+            frontend: `graph TB
+    subgraph MainPages["📄 PÁGINAS PRINCIPALES"]
+        Dashboard["DashboardPage<br/>Main Shell"]
+        RecibosPage["RecibosPage<br/>Gestión de Recibos"]
+        ChangePassword["ChangePasswordRequired<br/>Cambio de Contraseña"]
+    end
+
+    subgraph GestionPlanes["📋 GESTIÓN DE PLANES"]
+        GestionPlanesV1["GestionPlanesV1<br/>Listado Principal"]
+        PlanV1Modal["PlanV1Modal<br/>Crear/Editar Plan"]
+        BusquedaAfiliados["BusquedaAfiliados<br/>Búsqueda Avanzada"]
+        GenerarRecibosModal["GenerarRecibosModal<br/>Generación de Recibos"]
+        BulkUpdateCuotaModal["BulkUpdateCuotaModal<br/>Aumento Masivo"]
+    end
+
+    subgraph PlanDetails["📝 DETALLES DEL PLAN"]
+        AfiladoSearchModal["AfiladoSearchModal<br/>Búsqueda de Afiliados"]
+        IntegranteServiciosModal["IntegranteServiciosModal<br/>Servicios Adicionales"]
+        HistorialAumentosModal["HistorialAumentosModal<br/>Historial de Aumentos"]
+        ReciboDetalleModal["ReciboDetalleModal<br/>Detalle de Recibo"]
+    end
+
+    subgraph Geography["🌍 GEOGRAFÍA"]
+        GestionProvinciasZonas["GestionProvinciasZonas<br/>Gestión Territorial"]
+        ProvinciaRow["ProvinciaRow<br/>Fila de Provincia"]
+        ZonaFormModal["ZonaFormModal<br/>Formulario de Zona"]
+    end
+
+    subgraph Admin["⚙️ ADMINISTRACIÓN"]
+        GestionUsuarios["GestionUsuarios<br/>Gestión de Usuarios"]
+        MigrationsDashboard["MigrationsDashboard<br/>Migraciones BD"]
+        GestionBugs["GestionBugs<br/>Sistema de Bugs"]
+        GestionAuditoria["GestionAuditoria<br/>Auditoría"]
+        ConfiguracionNotificaciones["ConfiguracionNotificaciones<br/>Configuración"]
+    end
+
+    subgraph Lookup["🎛️ LOOKUP (GENÉRICOS)"]
+        LookupCRUD["LookupCRUD<br/>Componente Genérico"]
+        Cobradores["Cobradores<br/>Especializado"]
+    end
+
+    %% Relaciones
+    Dashboard -->|contiene| GestionPlanesV1
+    Dashboard -->|contiene| GestionProvinciasZonas
+    Dashboard -->|contiene| GestionUsuarios
+    Dashboard -->|contiene| MigrationsDashboard
+    Dashboard -->|contiene| GestionBugs
+    Dashboard -->|contiene| GestionAuditoria
+    Dashboard -->|contiene| ConfiguracionNotificaciones
+    Dashboard -->|contiene| RecibosPage
+
+    GestionPlanesV1 -->|abre| PlanV1Modal
+    GestionPlanesV1 -->|abre| GenerarRecibosModal
+    GestionPlanesV1 -->|abre| BulkUpdateCuotaModal
+    GestionPlanesV1 -->|abre| BusquedaAfiliados
+    GestionPlanesV1 -->|abre| HistorialAumentosModal
+
+    PlanV1Modal -->|abre| AfiladoSearchModal
+    PlanV1Modal -->|abre| IntegranteServiciosModal
+
+    BusquedaAfiliados -->|abre| PlanV1Modal
+
+    GenerarRecibosModal -->|muestra| ReciboDetalleModal
+
+    RecibosPage -->|abre| ReciboDetalleModal
+
+    GestionProvinciasZonas -->|contiene| ProvinciaRow
+    GestionProvinciasZonas -->|abre| ZonaFormModal
+
+    GestionUsuarios -->|gestiona| LookupCRUD
+    Cobradores -->|especializa| LookupCRUD
+
+    classDef pageStyle fill:#ffcccc,stroke:#cc0000,stroke-width:2px,color:#000
+    classDef gestorStyle fill:#ccf0ff,stroke:#0066cc,stroke-width:2px,color:#000
+    classDef detalleStyle fill:#ffffcc,stroke:#ffaa00,stroke-width:2px,color:#000
+    classDef geoStyle fill:#ccffcc,stroke:#009900,stroke-width:2px,color:#000
+    classDef adminStyle fill:#ffccff,stroke:#9900cc,stroke-width:2px,color:#000
+    classDef genericoStyle fill:#ccffff,stroke:#009999,stroke-width:2px,color:#000
+
+    class Dashboard,RecibosPage,ChangePassword pageStyle
+    class GestionPlanesV1,PlanV1Modal,BusquedaAfiliados,GenerarRecibosModal,BulkUpdateCuotaModal gestorStyle
+    class AfiladoSearchModal,IntegranteServiciosModal,HistorialAumentosModal,ReciboDetalleModal detalleStyle
+    class GestionProvinciasZonas,ProvinciaRow,ZonaFormModal geoStyle
+    class GestionUsuarios,MigrationsDashboard,GestionBugs,GestionAuditoria,ConfiguracionNotificaciones adminStyle
+    class LookupCRUD,Cobradores genericoStyle`
+        };
+
+        function showDiagram(type) {
+            const container = document.getElementById('diagramContainer');
+            const buttons = document.querySelectorAll('.controls button');
+
+            buttons.forEach(btn => btn.classList.remove('active'));
+            event.target.classList.add('active');
+
+            if (type === 'complete') {
+                container.innerHTML = '<div class="mermaid" id="completeDiagram">' + diagrams.complete + '</div>';
+            } else {
+                container.innerHTML = '<div class="mermaid">' + diagrams[type] + '</div>';
+            }
+
+            mermaid.contentLoaded();
+        }
+    </script>
+</body>
+</html>
