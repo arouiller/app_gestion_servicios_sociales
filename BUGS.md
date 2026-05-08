@@ -27,6 +27,7 @@ Un bug solo puede pasar a estado solucionado, Descartado a traves del pedido exp
 
 | ID | Severidad | Fase | Descripción | Reportado | Estado |
 |----|-----------|------|-------------|-----------|--------|
+| BUG-034 | 🔴 CRÍTICO | Zonas/Lookup | Eliminación de Zona: siempre muestra "0 referencias" aunque hay planes asociados | 2026-05-07 | 📋 Registrado |
 | BUG-033 | 🔴 CRÍTICO | LookupCRUD | Sin confirmación al eliminar en cobradores, zonas, tipos de grupo, tipos de plan | 2026-05-07 | 🚀 Desarrollado |
 | BUG-032 | 🟡 IMPORTANTE | Sortable Headers | Llamadas API duplicadas y redundantes al cargar GestionPlanesV1 | 2026-05-07 | ⏸️ En pausa |
 
@@ -37,6 +38,142 @@ Un bug solo puede pasar a estado solucionado, Descartado a traves del pedido exp
 | BUG-033 | 🔴 CRÍTICO | LookupCRUD | Sin confirmación al eliminar en cobradores, zonas, tipos de grupo, tipos de plan | 2026-05-07 | 🚀 Desarrollado |
 | BUG-032 | 🟡 IMPORTANTE | Sortable Headers | Llamadas API duplicadas al cargar GestionPlanesV1 | 2026-05-07 | ⏸️ En pausa |
 | BUG-031 | 🟡 IMPORTANTE | BACKLOG-054 | Aumentos porcentuales mostrados como "fijos" en historial de cuota | 2026-05-07 | ✅ Solucionado |
+
+---
+
+### BUG-034: Eliminación de Zona — Siempre Muestra "0 referencias" Aunque Hay Planes Asociados
+
+**Descripción:**
+Cuando un usuario intenta eliminar una zona desde la pantalla de Gestión de Zonas, el modal de confirmación siempre muestra "0 referencias en " aunque hay planes que la referencian mediante la FK `zona_id` en la tabla `planes`. El sistema no detecta las asociaciones existentes.
+
+**Severidad:** 🔴 CRÍTICO
+- Permite eliminar zonas que están en uso, causando integridad referencial
+- Los planes quedarían con `zona_id = NULL` sin advertencia al usuario
+
+**Síntomas:**
+1. Usuario abre Gestión de Zonas
+2. Selecciona una zona con planes asociados
+3. Hace click en eliminar
+4. Modal muestra: "Esta entidad está siendo usada por 0 referencias en ."
+5. Usuario confirma eliminación
+6. Zona se elimina aunque tenía planes asociados ❌
+
+**Root Cause:**
+En `backend/src/controllers/lookupController.js`, la configuración de la entidad `zonas` tiene `refsCheck: []` vacío:
+
+```javascript
+'zonas': {
+  model: db.Zona,
+  pkField: 'id',
+  campos: ['codigo', 'nombre'],
+  refsCheck: [],  // ← PROBLEMA: Sin validación de referencias
+}
+```
+
+El array `refsCheck` debe contener las referencias a verificar. Para zonas, la FK está en:
+- Tabla: `planes` (modelo: `db.PlanV1`)
+- Campo FK: `zona_id`
+
+**Impacto:**
+- 🔴 Integridad referencial comprometida
+- Eliminación accidental de zonas en uso
+- Usuarios no reciben advertencia de dependencias
+
+**Datos Relacionados:**
+- Modelo de Zona: `backend/src/models/Zona.js`
+- Modelo de PlanV1: `backend/src/models/PlanV1.js` (contiene `zona_id: { type: INTEGER, allowNull: true, references: { model: db.Zona, key: 'id' } }`)
+- Controller: `backend/src/controllers/lookupController.js` (líneas 38-43)
+
+**Estado:** 📋 Registrado
+
+---
+
+### BUG-034: Análisis Técnico & Diseño de Solución
+
+**Análisis del Problema:**
+
+1. **Dónde se verifica:** `lookupController.js` delete() líneas 265-279
+   - Itera sobre `config.refsCheck` para cada modelo en el array
+   - Cuenta registros que referencian el ID a eliminar
+   - Si encuentra referencias, retorna 409 (sin `force=true`)
+   - **Para zonas:** `refsCheck: []` → no itera nada → siempre retorna 0 referencias
+
+2. **Cómo se relacionan zonas y planes:**
+   ```javascript
+   // En PlanV1.js:
+   zona_id: {
+     type: DataTypes.INTEGER,
+     allowNull: true,
+     references: { model: 'Zona', key: 'id' },
+     onDelete: 'SET NULL'  // Cascada: zone delete → plan.zona_id = NULL
+   }
+   ```
+
+3. **Por qué ocurre el problema:**
+   - `refsCheck` vacío = no hay modelos a buscar
+   - Frontend recibe `referencias: 0` en respuesta
+   - Usuario no ve advertencia de planes asociados
+
+**Solución Propuesta:**
+
+**Cambio 1: Backend (lookupController.js)**
+
+Actualizar configuración de zonas (líneas 38-43):
+
+```javascript
+'zonas': {
+  model: db.Zona,
+  pkField: 'id',
+  campos: ['codigo', 'nombre'],
+  refsCheck: [
+    { model: db.PlanV1, fk: 'zona_id' }  // ← AGREGAR ESTA LÍNEA
+  ],
+}
+```
+
+**Cambio 2 (Opcional pero Recomendado): Mejorar deleteCascade**
+
+En la función `deleteCascade()` (líneas 340-390), agregar caso para zonas:
+
+```javascript
+case 'zonas':
+  // Establecer zona_id = NULL en planes que la referencian
+  await db.PlanV1.update(
+    { zona_id: null },
+    { where: { zona_id: id }, transaction }
+  );
+  break;
+```
+
+Esto hace explícita la cascada en lugar de depender de `onDelete: 'SET NULL'` de la BD.
+
+**Validación de la Solución:**
+
+1. Antes del fix:
+   - Eliminar zona sin `force` → 200 OK directamente
+   - No aparece advertencia
+
+2. Después del fix:
+   - Eliminar zona sin `force` → 409 Conflict (si hay planes)
+   - Modal muestra: "Esta entidad está siendo usada por N referencias en planes"
+   - Usuario debe confirmar con `force=true` para proceder
+
+**Archivos a Modificar:**
+- `backend/src/controllers/lookupController.js` (líneas 38-43, después línea 383)
+
+**Testing de la Solución:**
+1. Crear una zona con nombre "Test"
+2. Crear un plan y asignarle esa zona
+3. Intentar eliminar la zona
+4. Verificar que modal muestra cantidad correcta de referencias
+5. Confirmar eliminación con `force=true`
+6. Verificar que `plan.zona_id = NULL` (plan no se eliminó)
+
+**Impacto:**
+- ✅ Detecta referencias antes de permitir eliminación
+- ✅ Avisa al usuario de planes afectados
+- ✅ Previene eliminar zonas en uso sin confirmación
+- ✅ Mantiene integridad referencial
 
 ---
 
