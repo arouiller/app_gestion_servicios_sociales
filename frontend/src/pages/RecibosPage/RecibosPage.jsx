@@ -147,6 +147,16 @@ function RecibosPage() {
     }
   };
 
+  const handleImprimirPeriodo = async (periodo) => {
+    try {
+      const periodoYYYYMM = periodo.periodo.length === 10 ? periodo.periodo.substring(0, 7) : periodo.periodo;
+      await recibosService.generarPDF(periodoYYYYMM);
+    } catch (err) {
+      alert('Error al generar PDF: ' + (err.response?.data?.error || err.message));
+      console.error('Error generating PDF:', err);
+    }
+  };
+
   const handleCancelDeletePeriodo = () => {
     setDeleteModal(prev => ({
       ...prev,
@@ -224,6 +234,11 @@ function RecibosPage() {
                           >
                             Ver recibos
                           </button>
+                          <IconButton
+                            icon="print"
+                            title="Imprimir recibos del período"
+                            onClick={() => handleImprimirPeriodo(periodo)}
+                          />
                           <IconButton
                             icon="delete"
                             title="Eliminar recibos del período"

@@ -22,5 +22,5 @@ VALUES (
   true,
   1,
   'Template por defecto para generación de recibos en PDF',
-  'Recibo nro: {{numero_recibo}}\nAfiliado: {{zona_codigo}} - {{numero_afiliado}}\nTitular: {{titular_apellido}}, {{titular_nombre}}\nObra social: {{obra_social_nombre}}\nTipo de grupo: {{tipo_de_grupo_nombre}}\nTipo de plan: {{tipo_plan_nombre}}\nLocalidad: {{localidad_nombre}}\nDomicilio: {{domicilio}}\nMonto total: {{valor_cuota}}'
+  '---\npageSize: A7\norientation: portrait\nmargins: 10\n---\nRecibo nro: {{numero_recibo}}\nAfiliado: {{zona_codigo}} - {{numero_afiliado}}\nTitular: {{titular_apellido}}, {{titular_nombre}}\nObra social: {{obra_social_nombre}}\nTipo de grupo: {{tipo_de_grupo_nombre}}\nTipo de plan: {{tipo_plan_nombre}}\nLocalidad: {{localidad_nombre}}\nDomicilio: {{domicilio}}\nMonto total: {{valor_cuota}}'
 );

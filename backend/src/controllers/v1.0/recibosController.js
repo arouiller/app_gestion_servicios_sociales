@@ -525,25 +525,22 @@ exports.generarPDF = async (req, res, next) => {
       });
     }
 
-    // Generar PDF con pdfkit - Formato A7 (74mm x 105mm ≈ 210pt x 298pt)
-    const PDFDocument = require('pdfkit');
-    const doc = new PDFDocument({
-      size: [210, 298],  // A7 en puntos
-      margin: 10
-    });
-
     // Header
     res.setHeader('Content-Type', 'application/pdf');
     res.setHeader('Content-Disposition', `attachment; filename="recibos_${periodo}.pdf"`);
-
-    doc.pipe(res);
 
     // Obtener template activo de la BD
     let templateDB = await db.ReciboTemplate.findOne({
       where: { activo: true },
     });
 
-    const templateHTML = templateDB?.html || getDefaultTemplateString();
+    const fullTemplate = templateDB?.html || getDefaultTemplateString();
+    const { config, content } = parseTemplate(fullTemplate);
+
+    // Recalcular documento con configuración del template
+    doc.end();
+    doc = createConfiguredPDFDoc(config);
+    doc.pipe(res);
 
     // Generar una página por recibo usando el template
     recibos.forEach((recibo, index) => {
@@ -559,7 +556,7 @@ exports.generarPDF = async (req, res, next) => {
       const valor = Number(recibo.valor_cuota).toFixed(2);
 
       // Reemplazar placeholders en el template
-      let content = templateHTML
+      let contentRendered = content
         .replace(/{{numero_recibo}}/g, numeroRecibo)
         .replace(/{{zona_codigo}}/g, zonaCodigo)
         .replace(/{{numero_afiliado}}/g, numeroAfiliado)
@@ -573,14 +570,14 @@ exports.generarPDF = async (req, res, next) => {
         .replace(/{{valor_cuota}}/g, `$${valor}`);
 
       // Renderizar el contenido en el PDF
-      let y = 10;
+      let y = config.margins;
       const lineHeight = 11;
       doc.fontSize(9).font('Helvetica').fillColor('#000');
 
       // Dividir por líneas y renderizar cada una
-      const lines = content.split('\n');
+      const lines = contentRendered.split('\n');
       lines.forEach((line) => {
-        doc.text(line, 15, y);
+        doc.text(line, config.margins + 5, y);
         y += lineHeight;
       });
     });
@@ -625,7 +622,12 @@ function getDefaultPDFTemplate() {
 
 // Helper: Template por defecto como string de texto simple
 function getDefaultTemplateString() {
-  return `Recibo nro: {{numero_recibo}}
+  return `---
+pageSize: A7
+orientation: portrait
+margins: 10
+---
+Recibo nro: {{numero_recibo}}
 Afiliado: {{zona_codigo}} - {{numero_afiliado}}
 Titular: {{titular_apellido}}, {{titular_nombre}}
 Obra social: {{obra_social_nombre}}
@@ -634,4 +636,60 @@ Tipo de plan: {{tipo_plan_nombre}}
 Localidad: {{localidad_nombre}}
 Domicilio: {{domicilio}}
 Monto total: {{valor_cuota}}`;
+}
+
+// Helper: Parsear template para extraer configuración y contenido
+function parseTemplate(template) {
+  const configMatch = template.match(/^---\n([\s\S]*?)\n---\n([\s\S]*)$/);
+
+  if (!configMatch) {
+    return {
+      config: { pageSize: 'A7', orientation: 'portrait', margins: 10 },
+      content: template,
+    };
+  }
+
+  const configStr = configMatch[1];
+  const content = configMatch[2];
+
+  const config = {
+    pageSize: 'A7',
+    orientation: 'portrait',
+    margins: 10,
+  };
+
+  // Parsear líneas de configuración
+  configStr.split('\n').forEach((line) => {
+    const [key, value] = line.split(':').map(s => s.trim());
+    if (key === 'pageSize') config.pageSize = value;
+    if (key === 'orientation') config.orientation = value;
+    if (key === 'margins') config.margins = parseInt(value, 10);
+  });
+
+  return { config, content };
+}
+
+// Helper: Crear PDFDocument con configuración personalizada
+function createConfiguredPDFDoc(config) {
+  const PDFDocument = require('pdfkit');
+  const pageSize = parsePageSize(config.pageSize);
+  const [width, height] = config.orientation === 'landscape' ? [pageSize[1], pageSize[0]] : pageSize;
+
+  return new PDFDocument({
+    size: [width, height],
+    margin: config.margins,
+  });
+}
+
+// Helper: Parsear tamaño de página (estándar o personalizado)
+function parsePageSize(size) {
+  if (typeof size === 'string' && size.includes('x')) {
+    // Formato personalizado: "100x150" (mm) → convertir a puntos
+    const [w, h] = size.split('x').map(v =>
+      Math.round(parseInt(v, 10) * 72 / 25.4)
+    );
+    return [w, h];
+  }
+  // Nombres estándares: A7, A6, A5, A4, etc.
+  return size;
 }

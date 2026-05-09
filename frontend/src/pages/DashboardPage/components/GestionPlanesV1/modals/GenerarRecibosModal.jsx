@@ -440,24 +440,12 @@ function GenerarRecibosModal({ isOpen, onClose, onSuccess }) {
           )}
 
           {step === 4 && (
-            <>
-              <button
-                className="btn btn-secondary"
-                onClick={() => {
-                  resetForm();
-                  setStep(1);
-                }}
-              >
-                Generar más
-              </button>
-              <button
-                className="btn btn-primary"
-                onClick={handleGenerarPDF}
-                disabled={loading}
-              >
-                {loading ? 'Generando PDF...' : 'Imprimir'}
-              </button>
-            </>
+            <button
+              className="btn btn-primary"
+              onClick={handleClose}
+            >
+              Cerrar
+            </button>
           )}
         </div>
         </div>
