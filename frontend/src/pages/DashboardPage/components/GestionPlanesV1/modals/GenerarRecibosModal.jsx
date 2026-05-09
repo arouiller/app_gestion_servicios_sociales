@@ -231,9 +231,8 @@ function GenerarRecibosModal({ isOpen, onClose, onSuccess }) {
   const handleGenerarPDF = async () => {
     setLoading(true);
     try {
-      const recibosIds = recibosGenerados.map(r => r.id);
       const periodoYYYYMM = periodo.substring(0, 7); // Convertir YYYY-MM-DD a YYYY-MM
-      await recibosService.generarPDF(periodoYYYYMM, recibosIds);
+      await recibosService.generarPDF(periodoYYYYMM);
     } catch (err) {
       setError('Error al generar PDF: ' + (err.response?.data?.error || err.message));
       console.error('Error generando PDF:', err);

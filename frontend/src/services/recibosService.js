@@ -127,20 +127,13 @@ const recibosService = {
   },
 
   /**
-   * POST /api/recibos/generar-pdf
+   * GET /api/recibos/generar-pdf
    * Genera un PDF con todos los recibos de un período y lo descarga
    * @param {string} periodo - período en formato YYYY-MM
-   * @param {array} recibos_ids - (opcional) IDs específicos de recibos
    */
-  generarPDF: async (periodo, recibos_ids) => {
+  generarPDF: async (periodo) => {
     try {
-      const params = new URLSearchParams();
-      params.append('periodo', periodo);
-      if (recibos_ids && recibos_ids.length > 0) {
-        params.append('recibos_ids', recibos_ids.join(','));
-      }
-
-      const response = await api.get(`/recibos/generar-pdf?${params}`, {
+      const response = await api.get(`/recibos/generar-pdf?periodo=${periodo}`, {
         responseType: 'blob',
       });
 
