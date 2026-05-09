@@ -504,13 +504,25 @@ exports.generarPDF = async (req, res, next) => {
       });
     }
 
-    // Obtener todos los recibos del período
+    // Obtener todos los recibos del período con joins para localidad
     const recibos = await db.Recibo.findAll({
       where: {
         periodo: {
           [Op.startsWith]: periodo,
         },
       },
+      include: [
+        {
+          model: db.PlanV1,
+          attributes: ['localidad_id'],
+          include: [
+            {
+              model: db.Localidad,
+              attributes: ['localidad_nombre'],
+            },
+          ],
+        },
+      ],
     });
 
     if (recibos.length === 0) {
@@ -540,34 +552,47 @@ exports.generarPDF = async (req, res, next) => {
       }
 
       const numeroRecibo = recibo.numero_recibo ?? recibo.id;
-      const numeroAfiliado = recibo.zona_codigo
-        ? `${recibo.zona_codigo}-${String(recibo.numero_afiliado).padStart(5, '0')}`
-        : String(recibo.numero_afiliado).padStart(5, '0');
+      const numeroAfiliado = String(recibo.numero_afiliado).padStart(5, '0');
+      const zonaCodigo = recibo.zona_codigo || '-';
       const titular = `${recibo.titular_apellido}, ${recibo.titular_nombre}`;
       const obraSocial = recibo.obra_social_nombre || '-';
-      const valor = `$${Number(recibo.valor_cuota).toFixed(2)}`;
+      const tipoGrupo = recibo.tipo_de_grupo_nombre || '-';
+      const tipoPlan = recibo.tipo_plan_nombre || '-';
+      const localidad = recibo.PlanV1?.Localidad?.localidad_nombre || '-';
+      const domicilio = recibo.domicilio || '-';
+      const monto = `$${Number(recibo.valor_cuota).toFixed(2)}`;
 
-      let y = 15;
-      const lineHeight = 12;
+      let y = 10;
+      const lineHeight = 11;
 
-      // Recibo # (número del recibo)
-      doc.fontSize(12).font('Helvetica-Bold').fillColor('#000');
-      doc.text(`RECIBO #${numeroRecibo}`, { align: 'center' });
-      y += lineHeight + 5;
-
-      // Datos del recibo (sin etiquetas visibles, solo valores)
-      doc.fontSize(9).font('Helvetica').fillColor('#333');
-      doc.text(`${numeroAfiliado}`, { align: 'center' });
+      // Formato: Recibo nro: ...
+      doc.fontSize(9).font('Helvetica').fillColor('#000');
+      doc.text(`Recibo nro: ${numeroRecibo}`, 15, y);
       y += lineHeight;
 
-      doc.text(`${titular}`, { align: 'center' });
+      doc.text(`Afiliado: ${zonaCodigo} - ${numeroAfiliado}`, 15, y);
       y += lineHeight;
 
-      doc.text(`${obraSocial}`, { align: 'center' });
+      doc.text(`Titular: ${titular}`, 15, y);
       y += lineHeight;
 
-      doc.fontSize(11).font('Helvetica-Bold').fillColor('#000');
-      doc.text(`${valor}`, { align: 'center' });
+      doc.text(`Obra social: ${obraSocial}`, 15, y);
+      y += lineHeight;
+
+      doc.text(`Tipo de grupo: ${tipoGrupo}`, 15, y);
+      y += lineHeight;
+
+      doc.text(`Tipo de plan: ${tipoPlan}`, 15, y);
+      y += lineHeight;
+
+      doc.text(`Localidad: ${localidad}`, 15, y);
+      y += lineHeight;
+
+      doc.text(`Domicilio: ${domicilio}`, 15, y);
+      y += lineHeight;
+
+      doc.fontSize(10).font('Helvetica-Bold').fillColor('#000');
+      doc.text(`Monto total: ${monto}`, 15, y);
     });
 
     // Finalizar documento
