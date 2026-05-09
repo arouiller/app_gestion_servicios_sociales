@@ -673,24 +673,25 @@ function parseTemplate(template) {
 // Helper: Crear PDFDocument con configuración personalizada
 function createConfiguredPDFDoc(config) {
   const PDFDocument = require('pdfkit');
-  const pageSize = parsePageSize(config.pageSize);
-  const [width, height] = config.orientation === 'landscape' ? [pageSize[1], pageSize[0]] : pageSize;
 
-  return new PDFDocument({
-    size: [width, height],
+  let docConfig = {
     margin: config.margins,
-  });
-}
+  };
 
-// Helper: Parsear tamaño de página (estándar o personalizado)
-function parsePageSize(size) {
-  if (typeof size === 'string' && size.includes('x')) {
-    // Formato personalizado: "100x150" (mm) → convertir a puntos
-    const [w, h] = size.split('x').map(v =>
+  if (config.pageSize.includes('x')) {
+    // Tamaño personalizado: "100x150" (mm)
+    const [w, h] = config.pageSize.split('x').map(v =>
       Math.round(parseInt(v, 10) * 72 / 25.4)
     );
-    return [w, h];
+    const [width, height] = config.orientation === 'landscape' ? [h, w] : [w, h];
+    docConfig.size = [width, height];
+  } else {
+    // Tamaño estándar: A7, A6, A5, A4, etc.
+    docConfig.size = config.pageSize;
+    if (config.orientation === 'landscape') {
+      docConfig.landscape = true;
+    }
   }
-  // Nombres estándares: A7, A6, A5, A4, etc.
-  return size;
+
+  return new PDFDocument(docConfig);
 }
