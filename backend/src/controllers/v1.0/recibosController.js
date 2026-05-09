@@ -674,6 +674,20 @@ function parseTemplate(template) {
 function createConfiguredPDFDoc(config) {
   const PDFDocument = require('pdfkit');
 
+  // Mapa de tamaños estándares en puntos (ancho x alto)
+  const standardSizes = {
+    'A0': [2384, 3370],
+    'A1': [1684, 2384],
+    'A2': [1191, 1684],
+    'A3': [842, 1191],
+    'A4': [595, 842],
+    'A5': [420, 595],
+    'A6': [298, 420],
+    'A7': [210, 298],
+    'letter': [612, 792],
+    'legal': [612, 1008],
+  };
+
   let docConfig = {
     margin: config.margins,
   };
@@ -687,10 +701,11 @@ function createConfiguredPDFDoc(config) {
     docConfig.size = [width, height];
   } else {
     // Tamaño estándar: A7, A6, A5, A4, etc.
-    docConfig.size = config.pageSize;
+    let [w, h] = standardSizes[config.pageSize] || [595, 842]; // Defecto A4
     if (config.orientation === 'landscape') {
-      docConfig.landscape = true;
+      [w, h] = [h, w]; // Invertir dimensiones
     }
+    docConfig.size = [w, h];
   }
 
   return new PDFDocument(docConfig);
