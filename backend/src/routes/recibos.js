@@ -31,4 +31,8 @@ router.get('/:id', verifyToken, recibosController.getById);
 // Eliminar todos los recibos de un período
 router.delete('/periodo/:periodo', verifyToken, recibosController.deletePeriodo);
 
+// POST /api/recibos/generar-pdf
+// Generar PDF con todos los recibos de un período
+router.post('/generar-pdf', verifyToken, recibosController.generarPDF);
+
 module.exports = router;

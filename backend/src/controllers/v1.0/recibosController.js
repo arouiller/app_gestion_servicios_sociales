@@ -487,3 +487,162 @@ exports.deletePeriodo = async (req, res, next) => {
     });
   }
 };
+
+/**
+ * POST /api/recibos/generar-pdf
+ * Genera un PDF con todos los recibos de un período
+ * Query params: periodo (YYYY-MM), recibos_ids (opcional, comma-separated)
+ */
+exports.generarPDF = async (req, res, next) => {
+  try {
+    const { periodo, recibos_ids } = req.query;
+
+    // Validar formato YYYY-MM
+    if (!periodo || !/^\d{4}-\d{2}$/.test(periodo)) {
+      return res.status(400).json({
+        error: 'El período debe estar en formato YYYY-MM',
+      });
+    }
+
+    // Obtener recibos del período
+    let where = {
+      periodo: {
+        [Op.startsWith]: periodo,
+      },
+    };
+
+    if (recibos_ids) {
+      const ids = recibos_ids.split(',').map(id => parseInt(id, 10));
+      where.id = { [Op.in]: ids };
+    }
+
+    const recibos = await db.Recibo.findAll({ where });
+
+    if (recibos.length === 0) {
+      return res.status(404).json({
+        error: 'No hay recibos para este período',
+      });
+    }
+
+    // Obtener template activo
+    let template = await db.ReciboTemplate.findOne({
+      where: { activo: true },
+    });
+
+    // Usar template hardcodeado por defecto si no existe
+    if (!template) {
+      template = {
+        html: getDefaultPDFTemplate(),
+      };
+    }
+
+    // Generar PDF con pdfkit
+    const PDFDocument = require('pdfkit');
+    const doc = new PDFDocument({ size: 'A4', margin: 20 });
+
+    // Header
+    res.setHeader('Content-Type', 'application/pdf');
+    res.setHeader('Content-Disposition', `attachment; filename="recibos_${periodo}.pdf"`);
+
+    doc.pipe(res);
+
+    // Título
+    doc.fontSize(16).font('Helvetica-Bold').text(`Recibos — ${periodo}`, { align: 'center' });
+    doc.moveDown();
+
+    // Tabla de recibos
+    const columnPositions = { num: 50, afiliado: 100, titular: 180, obra: 350, valor: 450 };
+    const lineHeight = 20;
+    let y = doc.y;
+
+    // Header de tabla
+    doc.fontSize(10).font('Helvetica-Bold').fillColor('#34495e');
+    doc.text('N° Recibo', columnPositions.num, y);
+    doc.text('Afiliado', columnPositions.afiliado, y);
+    doc.text('Titular', columnPositions.titular, y);
+    doc.text('Obra Social', columnPositions.obra, y);
+    doc.text('Valor Cuota', columnPositions.valor, y);
+    y += lineHeight;
+
+    // Línea separadora
+    doc.strokeColor('#2c3e50').lineWidth(1);
+    doc.moveTo(columnPositions.num, y).lineTo(530, y).stroke();
+    y += 5;
+
+    // Filas de recibos
+    doc.fontSize(9).font('Helvetica').fillColor('#333');
+    recibos.forEach((recibo) => {
+      const numeroRecibo = recibo.numero_recibo ?? recibo.id;
+      const numeroAfiliado = recibo.zona_codigo
+        ? `${recibo.zona_codigo}-${String(recibo.numero_afiliado).padStart(5, '0')}`
+        : String(recibo.numero_afiliado).padStart(5, '0');
+      const titular = `${recibo.titular_apellido}, ${recibo.titular_nombre}`;
+      const obraSocial = recibo.obra_social_nombre || '-';
+      const valor = `$${Number(recibo.valor_cuota).toFixed(2)}`;
+
+      doc.text(String(numeroRecibo), columnPositions.num, y);
+      doc.text(numeroAfiliado, columnPositions.afiliado, y);
+      doc.text(titular, columnPositions.titular, y);
+      doc.text(obraSocial, columnPositions.obra, y);
+      doc.text(valor, columnPositions.valor, y);
+
+      y += lineHeight;
+
+      // Si llegamos al final de la página, agregar nueva página
+      if (y > 750) {
+        doc.addPage();
+        y = 50;
+
+        // Repetir header en nueva página
+        doc.fontSize(10).font('Helvetica-Bold').fillColor('#34495e');
+        doc.text('N° Recibo', columnPositions.num, y);
+        doc.text('Afiliado', columnPositions.afiliado, y);
+        doc.text('Titular', columnPositions.titular, y);
+        doc.text('Obra Social', columnPositions.obra, y);
+        doc.text('Valor Cuota', columnPositions.valor, y);
+        y += lineHeight;
+
+        doc.strokeColor('#2c3e50').lineWidth(1);
+        doc.moveTo(columnPositions.num, y).lineTo(530, y).stroke();
+        y += 5;
+        doc.fontSize(9).font('Helvetica').fillColor('#333');
+      }
+    });
+
+    // Finalizar documento
+    doc.end();
+  } catch (error) {
+    console.error('Error generating PDF:', error);
+    res.status(500).json({
+      error: error.message || 'Error al generar PDF',
+    });
+  }
+};
+
+// Helper: Template por defecto hardcodeado
+function getDefaultPDFTemplate() {
+  return `<!DOCTYPE html>
+<html lang="es-AR">
+<head>
+  <style>
+    body { font-family: Arial; margin: 20px; }
+    table { width: 100%; border-collapse: collapse; }
+    th { background: #34495e; color: white; padding: 10px; }
+    td { padding: 8px; border-bottom: 1px solid #ddd; }
+  </style>
+</head>
+<body>
+  <h2>Recibos — {{periodo}}</h2>
+  <table>
+    <tr><th>N° Recibo</th><th>Afiliado</th><th>Titular</th><th>Obra Social</th><th>Valor</th></tr>
+    <tr>
+      <td>{{numero_recibo}}</td>
+      <td>{{numero_afiliado}}</td>
+      <td>{{titular_apellido}}, {{titular_nombre}}</td>
+      <td>{{obra_social_nombre}}</td>
+      <td>\${{valor_cuota}}</td>
+    </tr>
+  </table>
+</body>
+</html>`;
+}
