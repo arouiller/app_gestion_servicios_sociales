@@ -508,7 +508,7 @@ exports.generarPDF = async (req, res, next) => {
     const recibos = await sequelize.query(`
       SELECT
         r.*,
-        l.localidad_nombre
+        l.nombre as localidad_nombre
       FROM recibos r
       LEFT JOIN planes p ON r.plan_numero = p.plan_numero
       LEFT JOIN localidades l ON p.localidad_id = l.id
