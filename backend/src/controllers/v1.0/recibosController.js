@@ -489,13 +489,13 @@ exports.deletePeriodo = async (req, res, next) => {
 };
 
 /**
- * POST /api/recibos/generar-pdf
+ * GET /api/recibos/generar-pdf
  * Genera un PDF con todos los recibos de un período
- * Query params: periodo (YYYY-MM), recibos_ids (opcional, comma-separated)
+ * Query params: periodo (YYYY-MM)
  */
 exports.generarPDF = async (req, res, next) => {
   try {
-    const { periodo, recibos_ids } = req.query;
+    const { periodo } = req.query;
 
     // Validar formato YYYY-MM
     if (!periodo || !/^\d{4}-\d{2}$/.test(periodo)) {
@@ -504,19 +504,14 @@ exports.generarPDF = async (req, res, next) => {
       });
     }
 
-    // Obtener recibos del período
-    let where = {
-      periodo: {
-        [Op.startsWith]: periodo,
+    // Obtener todos los recibos del período
+    const recibos = await db.Recibo.findAll({
+      where: {
+        periodo: {
+          [Op.startsWith]: periodo,
+        },
       },
-    };
-
-    if (recibos_ids) {
-      const ids = recibos_ids.split(',').map(id => parseInt(id, 10));
-      where.id = { [Op.in]: ids };
-    }
-
-    const recibos = await db.Recibo.findAll({ where });
+    });
 
     if (recibos.length === 0) {
       return res.status(404).json({
