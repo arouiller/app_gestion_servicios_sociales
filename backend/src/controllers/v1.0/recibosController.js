@@ -504,28 +504,19 @@ exports.generarPDF = async (req, res, next) => {
       });
     }
 
-    // Obtener todos los recibos del período con localidad
-    const recibos = await db.Recibo.findAll({
-      where: {
-        periodo: {
-          [Op.startsWith]: periodo,
-        },
-      },
-      include: [
-        {
-          model: db.PlanV1,
-          attributes: ['plan_numero', 'localidad_id'],
-          include: [
-            {
-              model: db.Localidad,
-              attributes: ['localidad_nombre'],
-              required: false,
-            },
-          ],
-          required: false,
-        },
-      ],
-      raw: false,
+    // Obtener todos los recibos del período con localidad via raw query
+    const recibos = await sequelize.query(`
+      SELECT
+        r.*,
+        l.localidad_nombre
+      FROM recibos r
+      LEFT JOIN planes p ON r.plan_numero = p.plan_numero
+      LEFT JOIN localidades l ON p.localidad_id = l.id
+      WHERE r.periodo LIKE ?
+      ORDER BY r.id
+    `, {
+      replacements: [`${periodo}%`],
+      type: sequelize.QueryTypes.SELECT,
     });
 
     if (recibos.length === 0) {
@@ -564,7 +555,7 @@ exports.generarPDF = async (req, res, next) => {
       const numeroRecibo = recibo.numero_recibo ?? recibo.id;
       const numeroAfiliado = String(recibo.numero_afiliado).padStart(5, '0');
       const zonaCodigo = recibo.zona_codigo || '-';
-      const localidad = recibo.PlanV1?.Localidad?.localidad_nombre || '-';
+      const localidad = recibo.localidad_nombre || '-';
       const valor = Number(recibo.valor_cuota).toFixed(2);
 
       // Reemplazar placeholders en el template
