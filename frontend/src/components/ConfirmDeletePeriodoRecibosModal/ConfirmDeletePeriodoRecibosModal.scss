@@ -1,0 +1,181 @@
+// Modal de confirmación para eliminar recibos por período
+
+.confirm-delete-backdrop {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background-color: rgba(0, 0, 0, 0.5);
+  z-index: 999;
+}
+
+.confirm-delete-modal {
+  position: fixed;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%) scale(0.95);
+  background-color: var(--color-surface);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-lg);
+  box-shadow: 0 10px 40px rgba(0, 0, 0, 0.2);
+  z-index: 1000;
+  opacity: 0;
+  pointer-events: none;
+  transition: all var(--transition-normal);
+  max-width: 500px;
+  width: 90vw;
+
+  &--open {
+    opacity: 1;
+    pointer-events: auto;
+    transform: translate(-50%, -50%) scale(1);
+  }
+}
+
+.confirm-delete-modal__header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 1.5rem;
+  border-bottom: 1px solid var(--color-border);
+  gap: 1rem;
+}
+
+.confirm-delete-modal__title {
+  margin: 0;
+  font-size: 1.25rem;
+  font-weight: 600;
+  color: var(--color-text);
+}
+
+.confirm-delete-modal__close {
+  background: none;
+  border: none;
+  font-size: 1.5rem;
+  color: var(--color-text-muted);
+  cursor: pointer;
+  padding: 0;
+  width: 2rem;
+  height: 2rem;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: var(--radius-xs);
+  transition: all var(--transition-fast);
+
+  &:hover:not(:disabled) {
+    background-color: var(--color-bg-soft);
+    color: var(--color-text);
+  }
+
+  &:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+  }
+}
+
+.confirm-delete-modal__body {
+  padding: 1.5rem;
+}
+
+.confirm-delete-modal__info-block {
+  background-color: var(--color-bg-soft);
+  border-left: 4px solid var(--color-primary);
+  padding: 1rem;
+  border-radius: var(--radius-xs);
+  margin-bottom: 1rem;
+}
+
+.confirm-delete-modal__info-item {
+  margin: 0.5rem 0;
+  font-size: 0.95rem;
+  color: var(--color-text);
+
+  &:last-child {
+    margin-bottom: 0;
+  }
+
+  strong {
+    color: var(--color-text);
+    margin-right: 0.5rem;
+  }
+}
+
+.confirm-delete-modal__alert {
+  background-color: rgba(var(--color-danger-rgb), 0.1);
+  border: 1px solid var(--color-danger);
+  border-radius: var(--radius-xs);
+  padding: 1rem;
+  margin-bottom: 1rem;
+}
+
+.confirm-delete-modal__warning {
+  margin: 0;
+  color: var(--color-danger);
+  font-weight: 500;
+}
+
+.confirm-delete-modal__error {
+  background-color: rgba(var(--color-danger-rgb), 0.1);
+  border: 1px solid var(--color-danger);
+  border-radius: var(--radius-xs);
+  padding: 1rem;
+  margin-bottom: 1rem;
+
+  p {
+    margin: 0;
+    color: var(--color-danger);
+    font-size: 0.9rem;
+  }
+}
+
+.confirm-delete-modal__footer {
+  display: flex;
+  justify-content: flex-end;
+  gap: 0.75rem;
+  padding: 1.5rem;
+  border-top: 1px solid var(--color-border);
+}
+
+.confirm-delete-modal__btn {
+  padding: 0.5rem 1.25rem;
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-xs);
+  font-size: 0.95rem;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all var(--transition-fast);
+  min-width: 100px;
+
+  &--cancel {
+    background-color: var(--color-surface);
+    color: var(--color-text);
+
+    &:hover:not(:disabled) {
+      background-color: var(--color-bg-soft);
+      border-color: var(--color-text-muted);
+    }
+
+    &:disabled {
+      opacity: 0.5;
+      cursor: not-allowed;
+    }
+  }
+
+  &--confirm {
+    background-color: var(--color-danger);
+    color: #fff;
+    border-color: var(--color-danger);
+
+    &:hover:not(:disabled) {
+      background-color: var(--color-danger-hover);
+      border-color: var(--color-danger-hover);
+    }
+
+    &:disabled {
+      opacity: 0.5;
+      cursor: not-allowed;
+    }
+  }
+}

@@ -3,6 +3,8 @@ import recibosService from '../../services/recibosService';
 import { formatNumeroAfiliado } from '../../utils/formatters';
 import GenerarRecibosModal from '../DashboardPage/components/GestionPlanesV1/modals/GenerarRecibosModal';
 import ReciboDetalleModal from '../DashboardPage/components/GestionPlanesV1/modals/ReciboDetalleModal';
+import ConfirmDeletePeriodoRecibosModal from '../../components/ConfirmDeletePeriodoRecibosModal/ConfirmDeletePeriodoRecibosModal';
+import IconButton from '../../components/IconButton/IconButton';
 import useColumnResize from '../../hooks/useColumnResize';
 import './RecibosPage.scss';
 
@@ -42,6 +44,15 @@ function RecibosPage() {
   // Modal states
   const [generarModalOpen, setGenerarModalOpen] = useState(false);
   const [reciboDetalleId, setReciboDetalleId] = useState(null);
+
+  // Delete modal state
+  const [deleteModal, setDeleteModal] = useState({
+    isOpen: false,
+    periodo: null,
+    cantidad: 0,
+    isLoading: false,
+    error: null,
+  });
 
   // Redimensionamiento de columnas
   const { widths: widthsPeriodos, getResizeHandle: getResizeHandlePeriodos } = useColumnResize(
@@ -107,6 +118,46 @@ function RecibosPage() {
     setGenerarModalOpen(false);
   };
 
+  const handleDeletePeriodo = (periodo) => {
+    setDeleteModal({
+      isOpen: true,
+      periodo: periodo.periodo,
+      cantidad: periodo.cantidad_recibos,
+      isLoading: false,
+      error: null,
+    });
+  };
+
+  const handleConfirmDeletePeriodo = async () => {
+    const { periodo } = deleteModal;
+
+    setDeleteModal(prev => ({ ...prev, isLoading: true, error: null }));
+
+    try {
+      await recibosService.deletePeriodo(periodo);
+      // Recargar lista de períodos
+      await loadPeriodos();
+      setDeleteModal(prev => ({ ...prev, isOpen: false }));
+    } catch (err) {
+      setDeleteModal(prev => ({
+        ...prev,
+        error: err.response?.data?.error || err.response?.data?.message || 'Error al eliminar',
+        isLoading: false,
+      }));
+    }
+  };
+
+  const handleCancelDeletePeriodo = () => {
+    setDeleteModal(prev => ({
+      ...prev,
+      isOpen: false,
+      periodo: null,
+      cantidad: 0,
+      error: null,
+      isLoading: false,
+    }));
+  };
+
   // Paginación para recibos
   const totalRecibosPages = useMemo(() => {
     return Math.ceil(recibos.length / ITEMS_PER_PAGE);
@@ -166,12 +217,20 @@ function RecibosPage() {
                       <td>{periodo.cantidad_recibos}</td>
                       <td>{formatFecha(periodo.fecha_generacion)}</td>
                       <td>
-                        <button
-                          className="recibos-page__btn-action"
-                          onClick={() => handleVerRecibos(periodo)}
-                        >
-                          Ver recibos
-                        </button>
+                        <div style={{ display: 'flex', gap: '0.5rem', alignItems: 'center' }}>
+                          <button
+                            className="recibos-page__btn-action"
+                            onClick={() => handleVerRecibos(periodo)}
+                          >
+                            Ver recibos
+                          </button>
+                          <IconButton
+                            icon="delete"
+                            title="Eliminar recibos del período"
+                            onClick={() => handleDeletePeriodo(periodo)}
+                            className="icon-button--danger"
+                          />
+                        </div>
                       </td>
                     </tr>
                   ))}
@@ -186,6 +245,17 @@ function RecibosPage() {
           isOpen={generarModalOpen}
           onClose={() => setGenerarModalOpen(false)}
           onSuccess={handleGenerarSuccess}
+        />
+
+        {/* ConfirmDeletePeriodoRecibosModal */}
+        <ConfirmDeletePeriodoRecibosModal
+          isOpen={deleteModal.isOpen}
+          periodo={deleteModal.periodo}
+          cantidad={deleteModal.cantidad}
+          onConfirm={handleConfirmDeletePeriodo}
+          onCancel={handleCancelDeletePeriodo}
+          isLoading={deleteModal.isLoading}
+          error={deleteModal.error}
         />
       </div>
     );

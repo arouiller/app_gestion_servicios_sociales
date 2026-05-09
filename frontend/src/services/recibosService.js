@@ -111,6 +111,20 @@ const recibosService = {
       return 1;
     }
   },
+
+  /**
+   * DELETE /api/recibos/periodo/:periodo
+   * Elimina todos los recibos de un período
+   * @param {string} periodo - período en formato YYYY-MM
+   */
+  deletePeriodo: async (periodo) => {
+    try {
+      const response = await api.delete(`/recibos/periodo/${periodo}`);
+      return response.data;
+    } catch (error) {
+      throw error;
+    }
+  },
 };
 
 export default recibosService;
