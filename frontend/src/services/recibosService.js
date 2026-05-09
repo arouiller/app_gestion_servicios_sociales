@@ -125,6 +125,40 @@ const recibosService = {
       throw error;
     }
   },
+
+  /**
+   * POST /api/recibos/generar-pdf
+   * Genera un PDF con todos los recibos de un período y lo descarga
+   * @param {string} periodo - período en formato YYYY-MM
+   * @param {array} recibos_ids - (opcional) IDs específicos de recibos
+   */
+  generarPDF: async (periodo, recibos_ids) => {
+    try {
+      const params = new URLSearchParams();
+      params.append('periodo', periodo);
+      if (recibos_ids && recibos_ids.length > 0) {
+        params.append('recibos_ids', recibos_ids.join(','));
+      }
+
+      const response = await api.get(`/recibos/generar-pdf?${params}`, {
+        responseType: 'blob',
+      });
+
+      // Crear descarga automática
+      const url = window.URL.createObjectURL(response.data);
+      const link = document.createElement('a');
+      link.href = url;
+      link.setAttribute('download', `recibos_${periodo}.pdf`);
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+      window.URL.revokeObjectURL(url);
+
+      return { success: true };
+    } catch (error) {
+      throw error;
+    }
+  },
 };
 
 export default recibosService;

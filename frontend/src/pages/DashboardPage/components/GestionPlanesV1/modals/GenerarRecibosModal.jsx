@@ -228,6 +228,19 @@ function GenerarRecibosModal({ isOpen, onClose, onSuccess }) {
     }
   };
 
+  const handleGenerarPDF = async () => {
+    setLoading(true);
+    try {
+      const recibosIds = recibosGenerados.map(r => r.id);
+      await recibosService.generarPDF(periodo, recibosIds);
+    } catch (err) {
+      setError('Error al generar PDF: ' + (err.response?.data?.error || err.message));
+      console.error('Error generando PDF:', err);
+    } finally {
+      setLoading(false);
+    }
+  };
+
   if (!isOpen) return null;
 
   return (
@@ -439,9 +452,10 @@ function GenerarRecibosModal({ isOpen, onClose, onSuccess }) {
               </button>
               <button
                 className="btn btn-primary"
-                onClick={handleClose}
+                onClick={handleGenerarPDF}
+                disabled={loading}
               >
-                Imprimir
+                {loading ? 'Generando PDF...' : 'Imprimir'}
               </button>
             </>
           )}
