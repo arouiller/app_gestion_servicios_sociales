@@ -570,17 +570,21 @@ exports.generarPDF = async (req, res, next) => {
         .replace(/{{domicilio}}/g, recibo.domicilio || '-')
         .replace(/{{valor_cuota}}/g, `$${valor}`);
 
-      // Renderizar el contenido en el PDF
+      // Renderizar el contenido en el PDF (soporta HTML y texto plano)
       let y = config.margins;
-      const lineHeight = 11;
-      doc.fontSize(9).font('Helvetica').fillColor('#000');
-
-      // Dividir por líneas y renderizar cada una
-      const lines = contentRendered.split('\n');
-      lines.forEach((line) => {
-        doc.text(line, config.margins + 5, y);
-        y += lineHeight;
-      });
+      if (contentRendered.includes('<')) {
+        // Contenido HTML
+        y = renderHTMLtoPDF(doc, contentRendered, config, y);
+      } else {
+        // Contenido texto plano
+        const lineHeight = 11;
+        doc.fontSize(9).font('Helvetica').fillColor('#000');
+        const lines = contentRendered.split('\n');
+        lines.forEach((line) => {
+          doc.text(line, config.margins + 5, y);
+          y += lineHeight;
+        });
+      }
     });
 
     // Finalizar documento
@@ -621,22 +625,51 @@ function getDefaultPDFTemplate() {
 </html>`;
 }
 
-// Helper: Template por defecto como string de texto simple
+// Helper: Template por defecto con HTML
 function getDefaultTemplateString() {
   return `---
 pageSize: A7
 orientation: portrait
 margins: 10
 ---
-Recibo nro: {{numero_recibo}}
-Afiliado: {{zona_codigo}} - {{numero_afiliado}}
-Titular: {{titular_apellido}}, {{titular_nombre}}
-Obra social: {{obra_social_nombre}}
-Tipo de grupo: {{tipo_de_grupo_nombre}}
-Tipo de plan: {{tipo_plan_nombre}}
-Localidad: {{localidad_nombre}}
-Domicilio: {{domicilio}}
-Monto total: {{valor_cuota}}`;
+<table>
+  <tr>
+    <td width="35%"><b>Recibo nro:</b></td>
+    <td width="65%">{{numero_recibo}}</td>
+  </tr>
+  <tr>
+    <td width="35%"><b>Afiliado:</b></td>
+    <td width="65%">{{zona_codigo}} - {{numero_afiliado}}</td>
+  </tr>
+  <tr>
+    <td width="35%"><b>Titular:</b></td>
+    <td width="65%">{{titular_apellido}}, {{titular_nombre}}</td>
+  </tr>
+  <tr>
+    <td width="35%"><b>Obra social:</b></td>
+    <td width="65%">{{obra_social_nombre}}</td>
+  </tr>
+  <tr>
+    <td width="35%"><b>Tipo de grupo:</b></td>
+    <td width="65%">{{tipo_de_grupo_nombre}}</td>
+  </tr>
+  <tr>
+    <td width="35%"><b>Tipo de plan:</b></td>
+    <td width="65%">{{tipo_plan_nombre}}</td>
+  </tr>
+  <tr>
+    <td width="35%"><b>Localidad:</b></td>
+    <td width="65%">{{localidad_nombre}}</td>
+  </tr>
+  <tr>
+    <td width="35%"><b>Domicilio:</b></td>
+    <td width="65%">{{domicilio}}</td>
+  </tr>
+  <tr>
+    <td width="35%"><b>Monto total:</b></td>
+    <td width="65%">{{valor_cuota}}</td>
+  </tr>
+</table>`;
 }
 
 // Helper: Parsear template para extraer configuración y contenido
@@ -709,4 +742,185 @@ function createConfiguredPDFDoc(config) {
   }
 
   return new PDFDocument(docConfig);
+}
+
+// Helper: Renderizar HTML a PDF
+function renderHTMLtoPDF(doc, html, config, startY) {
+  let y = startY;
+  const pageMargin = config.margins + 5;
+  const pageWidth = doc.page.width - (config.margins * 2) - 10;
+
+  // Parsear HTML simple
+  const elements = parseHTMLSimple(html);
+
+  elements.forEach((element) => {
+    if (element.type === 'table') {
+      y = renderTable(doc, element, config, y, pageWidth);
+    } else if (element.type === 'paragraph') {
+      y = renderParagraph(doc, element, config, y, pageMargin, pageWidth);
+    } else if (element.type === 'text') {
+      doc.fontSize(9).font('Helvetica').fillColor('#000');
+      doc.text(element.content, pageMargin, y);
+      y += 15;
+    }
+  });
+
+  return y;
+}
+
+// Helper: Parsear HTML simple
+function parseHTMLSimple(html) {
+  const elements = [];
+
+  // Detectar tablas
+  const tableRegex = /<table[^>]*>([\s\S]*?)<\/table>/gi;
+  let lastIndex = 0;
+  let tableMatch;
+
+  while ((tableMatch = tableRegex.exec(html)) !== null) {
+    // Agregar texto antes de la tabla
+    const textBefore = html.substring(lastIndex, tableMatch.index).trim();
+    if (textBefore) {
+      elements.push({ type: 'text', content: textBefore });
+    }
+
+    // Parsear tabla
+    const tableContent = tableMatch[1];
+    const rows = [];
+    const rowRegex = /<tr[^>]*>([\s\S]*?)<\/tr>/gi;
+    let rowMatch;
+
+    while ((rowMatch = rowRegex.exec(tableContent)) !== null) {
+      const cells = [];
+      const cellRegex = /<td[^>]*>([\s\S]*?)<\/td>/gi;
+      let cellMatch;
+
+      while ((cellMatch = cellRegex.exec(rowMatch[1])) !== null) {
+        const cellContent = cellMatch[1].trim();
+        const widthMatch = cellMatch[0].match(/width="([^"]+)"/i);
+        cells.push({
+          content: stripHTML(cellContent),
+          width: widthMatch ? widthMatch[1] : 'auto',
+          isBold: cellContent.includes('<b>') || cellContent.includes('<strong>'),
+        });
+      }
+
+      if (cells.length > 0) {
+        rows.push(cells);
+      }
+    }
+
+    if (rows.length > 0) {
+      elements.push({ type: 'table', rows });
+    }
+
+    lastIndex = tableRegex.lastIndex;
+  }
+
+  // Agregar texto restante
+  const textAfter = html.substring(lastIndex).trim();
+  if (textAfter) {
+    elements.push({ type: 'text', content: textAfter });
+  }
+
+  return elements;
+}
+
+// Helper: Renderizar tabla
+function renderTable(doc, tableElement, config, startY, pageWidth) {
+  let y = startY;
+  const margin = config.margins + 5;
+  const cellPadding = 5;
+
+  // Calcular ancho de columnas
+  const numCols = tableElement.rows[0]?.length || 1;
+  const colWidths = calculateColumnWidths(tableElement.rows, pageWidth, numCols);
+
+  // Renderizar filas
+  tableElement.rows.forEach((row) => {
+    let rowHeight = 20;
+    const cellTexts = [];
+
+    // Preparar contenido de celdas
+    row.forEach((cell, colIdx) => {
+      const cellWidth = colWidths[colIdx];
+      doc.fontSize(cell.isBold ? 10 : 9);
+      doc.font(cell.isBold ? 'Helvetica-Bold' : 'Helvetica');
+
+      // Estimar altura de celda basado en ancho y contenido
+      const lines = doc.heightOfString(cell.content, { width: cellWidth - cellPadding * 2 });
+      rowHeight = Math.max(rowHeight, lines + cellPadding * 2);
+      cellTexts.push({ text: cell.content, bold: cell.isBold });
+    });
+
+    // Renderizar celdas
+    let x = margin;
+    row.forEach((cell, colIdx) => {
+      const cellWidth = colWidths[colIdx];
+
+      // Borde de celda
+      doc.strokeColor('#000').lineWidth(0.5);
+      doc.rect(x, y, cellWidth, rowHeight).stroke();
+
+      // Texto de celda
+      doc.fontSize(cell.isBold ? 10 : 9);
+      doc.font(cell.isBold ? 'Helvetica-Bold' : 'Helvetica');
+      doc.fillColor('#000');
+      doc.text(cell.content, x + cellPadding, y + cellPadding, {
+        width: cellWidth - cellPadding * 2,
+        height: rowHeight - cellPadding * 2,
+        valign: 'top',
+      });
+
+      x += cellWidth;
+    });
+
+    y += rowHeight;
+  });
+
+  return y + 10;
+}
+
+// Helper: Calcular ancho de columnas
+function calculateColumnWidths(rows, availableWidth, numCols) {
+  const widths = new Array(numCols).fill(0);
+
+  // Analizar widths especificados
+  if (rows.length > 0) {
+    rows[0].forEach((cell, idx) => {
+      if (cell.width && cell.width !== 'auto') {
+        if (cell.width.includes('%')) {
+          widths[idx] = (parseInt(cell.width) / 100) * availableWidth;
+        } else {
+          widths[idx] = parseInt(cell.width);
+        }
+      }
+    });
+  }
+
+  // Distribuir ancho restante
+  const totalSpecified = widths.reduce((a, b) => a + b, 0);
+  const autoColumns = widths.filter(w => w === 0).length;
+
+  if (autoColumns > 0) {
+    const remainingWidth = availableWidth - totalSpecified;
+    const autoWidth = remainingWidth / autoColumns;
+    widths.forEach((_, idx) => {
+      if (widths[idx] === 0) widths[idx] = autoWidth;
+    });
+  }
+
+  return widths;
+}
+
+// Helper: Renderizar párrafo
+function renderParagraph(doc, element, config, y, margin, pageWidth) {
+  doc.fontSize(9).font('Helvetica').fillColor('#000');
+  doc.text(element.content, margin, y, { width: pageWidth });
+  return y + 20;
+}
+
+// Helper: Remover tags HTML
+function stripHTML(html) {
+  return html.replace(/<[^>]*>/g, '').trim();
 }

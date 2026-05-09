@@ -13,7 +13,7 @@ CREATE TABLE IF NOT EXISTS recibo_templates (
   INDEX idx_usuario_id (usuario_id)
 );
 
--- Insert default template
+-- Insert default template with HTML table layout
 DELETE FROM recibo_templates WHERE nombre = 'Recibo Estándar 2026';
 INSERT INTO recibo_templates (nombre, version, activo, usuario_id, descripcion, html)
 VALUES (
@@ -22,5 +22,5 @@ VALUES (
   true,
   1,
   'Template por defecto para generación de recibos en PDF',
-  '---\npageSize: A7\norientation: portrait\nmargins: 10\n---\nRecibo nro: {{numero_recibo}}\nAfiliado: {{zona_codigo}} - {{numero_afiliado}}\nTitular: {{titular_apellido}}, {{titular_nombre}}\nObra social: {{obra_social_nombre}}\nTipo de grupo: {{tipo_de_grupo_nombre}}\nTipo de plan: {{tipo_plan_nombre}}\nLocalidad: {{localidad_nombre}}\nDomicilio: {{domicilio}}\nMonto total: {{valor_cuota}}'
+  '---\npageSize: A7\norientation: portrait\nmargins: 10\n---\n<table>\n  <tr>\n    <td width="35%"><b>Recibo nro:</b></td>\n    <td width="65%">{{numero_recibo}}</td>\n  </tr>\n  <tr>\n    <td width="35%"><b>Afiliado:</b></td>\n    <td width="65%">{{zona_codigo}} - {{numero_afiliado}}</td>\n  </tr>\n  <tr>\n    <td width="35%"><b>Titular:</b></td>\n    <td width="65%">{{titular_apellido}}, {{titular_nombre}}</td>\n  </tr>\n  <tr>\n    <td width="35%"><b>Obra social:</b></td>\n    <td width="65%">{{obra_social_nombre}}</td>\n  </tr>\n  <tr>\n    <td width="35%"><b>Tipo de grupo:</b></td>\n    <td width="65%">{{tipo_de_grupo_nombre}}</td>\n  </tr>\n  <tr>\n    <td width="35%"><b>Tipo de plan:</b></td>\n    <td width="65%">{{tipo_plan_nombre}}</td>\n  </tr>\n  <tr>\n    <td width="35%"><b>Localidad:</b></td>\n    <td width="65%">{{localidad_nombre}}</td>\n  </tr>\n  <tr>\n    <td width="35%"><b>Domicilio:</b></td>\n    <td width="65%">{{domicilio}}</td>\n  </tr>\n  <tr>\n    <td width="35%"><b>Monto total:</b></td>\n    <td width="65%">{{valor_cuota}}</td>\n  </tr>\n</table>'
 );
