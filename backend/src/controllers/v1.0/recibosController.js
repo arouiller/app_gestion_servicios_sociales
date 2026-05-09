@@ -504,7 +504,7 @@ exports.generarPDF = async (req, res, next) => {
       });
     }
 
-    // Obtener todos los recibos del período con joins para localidad
+    // Obtener todos los recibos del período con localidad
     const recibos = await db.Recibo.findAll({
       where: {
         periodo: {
@@ -514,15 +514,18 @@ exports.generarPDF = async (req, res, next) => {
       include: [
         {
           model: db.PlanV1,
-          attributes: ['localidad_id'],
+          attributes: ['plan_numero', 'localidad_id'],
           include: [
             {
               model: db.Localidad,
               attributes: ['localidad_nombre'],
+              required: false,
             },
           ],
+          required: false,
         },
       ],
+      raw: false,
     });
 
     if (recibos.length === 0) {
