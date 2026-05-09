@@ -1,5 +1,5 @@
 -- Create recibo_templates table for storing HTML templates
-CREATE TABLE recibo_templates (
+CREATE TABLE IF NOT EXISTS recibo_templates (
   id INT PRIMARY KEY AUTO_INCREMENT,
   nombre VARCHAR(255) NOT NULL,
   html LONGTEXT NOT NULL,
@@ -15,6 +15,7 @@ CREATE TABLE recibo_templates (
 
 -- Insert default template (empty - will be created from backend on first use)
 -- The template is managed by the backend to avoid SQL escaping issues with HTML content
+DELETE FROM recibo_templates WHERE nombre = 'Recibo Estándar 2026';
 INSERT INTO recibo_templates (nombre, version, activo, usuario_id, descripcion, html)
 VALUES (
   'Recibo Estándar 2026',
