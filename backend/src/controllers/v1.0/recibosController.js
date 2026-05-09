@@ -519,21 +519,12 @@ exports.generarPDF = async (req, res, next) => {
       });
     }
 
-    // Obtener template activo
-    let template = await db.ReciboTemplate.findOne({
-      where: { activo: true },
-    });
-
-    // Usar template hardcodeado por defecto si no existe
-    if (!template) {
-      template = {
-        html: getDefaultPDFTemplate(),
-      };
-    }
-
-    // Generar PDF con pdfkit
+    // Generar PDF con pdfkit - Formato A7 (74mm x 105mm ≈ 210pt x 298pt)
     const PDFDocument = require('pdfkit');
-    const doc = new PDFDocument({ size: 'A4', margin: 20 });
+    const doc = new PDFDocument({
+      size: [210, 298],  // A7 en puntos
+      margin: 10
+    });
 
     // Header
     res.setHeader('Content-Type', 'application/pdf');
@@ -541,32 +532,13 @@ exports.generarPDF = async (req, res, next) => {
 
     doc.pipe(res);
 
-    // Título
-    doc.fontSize(16).font('Helvetica-Bold').text(`Recibos — ${periodo}`, { align: 'center' });
-    doc.moveDown();
+    // Generar una página por recibo
+    recibos.forEach((recibo, index) => {
+      // Agregar nueva página para cada recibo (excepto el primero)
+      if (index > 0) {
+        doc.addPage();
+      }
 
-    // Tabla de recibos
-    const columnPositions = { num: 50, afiliado: 100, titular: 180, obra: 350, valor: 450 };
-    const lineHeight = 20;
-    let y = doc.y;
-
-    // Header de tabla
-    doc.fontSize(10).font('Helvetica-Bold').fillColor('#34495e');
-    doc.text('N° Recibo', columnPositions.num, y);
-    doc.text('Afiliado', columnPositions.afiliado, y);
-    doc.text('Titular', columnPositions.titular, y);
-    doc.text('Obra Social', columnPositions.obra, y);
-    doc.text('Valor Cuota', columnPositions.valor, y);
-    y += lineHeight;
-
-    // Línea separadora
-    doc.strokeColor('#2c3e50').lineWidth(1);
-    doc.moveTo(columnPositions.num, y).lineTo(530, y).stroke();
-    y += 5;
-
-    // Filas de recibos
-    doc.fontSize(9).font('Helvetica').fillColor('#333');
-    recibos.forEach((recibo) => {
       const numeroRecibo = recibo.numero_recibo ?? recibo.id;
       const numeroAfiliado = recibo.zona_codigo
         ? `${recibo.zona_codigo}-${String(recibo.numero_afiliado).padStart(5, '0')}`
@@ -575,33 +547,27 @@ exports.generarPDF = async (req, res, next) => {
       const obraSocial = recibo.obra_social_nombre || '-';
       const valor = `$${Number(recibo.valor_cuota).toFixed(2)}`;
 
-      doc.text(String(numeroRecibo), columnPositions.num, y);
-      doc.text(numeroAfiliado, columnPositions.afiliado, y);
-      doc.text(titular, columnPositions.titular, y);
-      doc.text(obraSocial, columnPositions.obra, y);
-      doc.text(valor, columnPositions.valor, y);
+      let y = 15;
+      const lineHeight = 12;
 
+      // Recibo # (número del recibo)
+      doc.fontSize(12).font('Helvetica-Bold').fillColor('#000');
+      doc.text(`RECIBO #${numeroRecibo}`, { align: 'center' });
+      y += lineHeight + 5;
+
+      // Datos del recibo (sin etiquetas visibles, solo valores)
+      doc.fontSize(9).font('Helvetica').fillColor('#333');
+      doc.text(`${numeroAfiliado}`, { align: 'center' });
       y += lineHeight;
 
-      // Si llegamos al final de la página, agregar nueva página
-      if (y > 750) {
-        doc.addPage();
-        y = 50;
+      doc.text(`${titular}`, { align: 'center' });
+      y += lineHeight;
 
-        // Repetir header en nueva página
-        doc.fontSize(10).font('Helvetica-Bold').fillColor('#34495e');
-        doc.text('N° Recibo', columnPositions.num, y);
-        doc.text('Afiliado', columnPositions.afiliado, y);
-        doc.text('Titular', columnPositions.titular, y);
-        doc.text('Obra Social', columnPositions.obra, y);
-        doc.text('Valor Cuota', columnPositions.valor, y);
-        y += lineHeight;
+      doc.text(`${obraSocial}`, { align: 'center' });
+      y += lineHeight;
 
-        doc.strokeColor('#2c3e50').lineWidth(1);
-        doc.moveTo(columnPositions.num, y).lineTo(530, y).stroke();
-        y += 5;
-        doc.fontSize(9).font('Helvetica').fillColor('#333');
-      }
+      doc.fontSize(11).font('Helvetica-Bold').fillColor('#000');
+      doc.text(`${valor}`, { align: 'center' });
     });
 
     // Finalizar documento
