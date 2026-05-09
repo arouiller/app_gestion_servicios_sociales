@@ -11,6 +11,7 @@ import './IconButton.scss';
  * - view: 👁 (ver detalle)
  * - config: ⚙ (configurar)
  * - add: ➕ (agregar)
+ * - print: 🖨 (imprimir)
  *
  * @param {string} icon - Tipo de icono (edit, delete, view, config, add) o emoji personalizado
  * @param {string} title - Texto del tooltip
@@ -34,6 +35,7 @@ function IconButton({
     view: '👁',
     config: '⚙',
     add: '➕',
+    print: '🖨',
   };
 
   // Usar icono del mapa o el pasado directamente

@@ -525,10 +525,6 @@ exports.generarPDF = async (req, res, next) => {
       });
     }
 
-    // Header
-    res.setHeader('Content-Type', 'application/pdf');
-    res.setHeader('Content-Disposition', `attachment; filename="recibos_${periodo}.pdf"`);
-
     // Obtener template activo de la BD
     let templateDB = await db.ReciboTemplate.findOne({
       where: { activo: true },
@@ -537,9 +533,14 @@ exports.generarPDF = async (req, res, next) => {
     const fullTemplate = templateDB?.html || getDefaultTemplateString();
     const { config, content } = parseTemplate(fullTemplate);
 
-    // Recalcular documento con configuración del template
-    doc.end();
-    doc = createConfiguredPDFDoc(config);
+    // Crear documento con configuración del template
+    let doc = createConfiguredPDFDoc(config);
+
+    // Header
+    res.setHeader('Content-Type', 'application/pdf');
+    res.setHeader('Content-Disposition', `attachment; filename="recibos_${periodo}.pdf"`);
+
+    // Pipe al response
     doc.pipe(res);
 
     // Generar una página por recibo usando el template
