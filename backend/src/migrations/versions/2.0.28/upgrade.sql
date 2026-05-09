@@ -13,8 +13,7 @@ CREATE TABLE IF NOT EXISTS recibo_templates (
   INDEX idx_usuario_id (usuario_id)
 );
 
--- Insert default template (empty - will be created from backend on first use)
--- The template is managed by the backend to avoid SQL escaping issues with HTML content
+-- Insert default template
 DELETE FROM recibo_templates WHERE nombre = 'Recibo Estándar 2026';
 INSERT INTO recibo_templates (nombre, version, activo, usuario_id, descripcion, html)
 VALUES (
@@ -23,5 +22,5 @@ VALUES (
   true,
   1,
   'Template por defecto para generación de recibos en PDF',
-  '<h2>{{periodo}}</h2><p>Template creado desde backend</p>'
+  'Recibo nro: {{numero_recibo}}\nAfiliado: {{zona_codigo}} - {{numero_afiliado}}\nTitular: {{titular_apellido}}, {{titular_nombre}}\nObra social: {{obra_social_nombre}}\nTipo de grupo: {{tipo_de_grupo_nombre}}\nTipo de plan: {{tipo_plan_nombre}}\nLocalidad: {{localidad_nombre}}\nDomicilio: {{domicilio}}\nMonto total: {{valor_cuota}}'
 );

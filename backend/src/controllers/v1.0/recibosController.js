@@ -547,7 +547,14 @@ exports.generarPDF = async (req, res, next) => {
 
     doc.pipe(res);
 
-    // Generar una página por recibo
+    // Obtener template activo de la BD
+    let templateDB = await db.ReciboTemplate.findOne({
+      where: { activo: true },
+    });
+
+    const templateHTML = templateDB?.html || getDefaultTemplateString();
+
+    // Generar una página por recibo usando el template
     recibos.forEach((recibo, index) => {
       // Agregar nueva página para cada recibo (excepto el primero)
       if (index > 0) {
@@ -557,45 +564,34 @@ exports.generarPDF = async (req, res, next) => {
       const numeroRecibo = recibo.numero_recibo ?? recibo.id;
       const numeroAfiliado = String(recibo.numero_afiliado).padStart(5, '0');
       const zonaCodigo = recibo.zona_codigo || '-';
-      const titular = `${recibo.titular_apellido}, ${recibo.titular_nombre}`;
-      const obraSocial = recibo.obra_social_nombre || '-';
-      const tipoGrupo = recibo.tipo_de_grupo_nombre || '-';
-      const tipoPlan = recibo.tipo_plan_nombre || '-';
       const localidad = recibo.PlanV1?.Localidad?.localidad_nombre || '-';
-      const domicilio = recibo.domicilio || '-';
-      const monto = `$${Number(recibo.valor_cuota).toFixed(2)}`;
+      const valor = Number(recibo.valor_cuota).toFixed(2);
 
+      // Reemplazar placeholders en el template
+      let content = templateHTML
+        .replace(/{{numero_recibo}}/g, numeroRecibo)
+        .replace(/{{zona_codigo}}/g, zonaCodigo)
+        .replace(/{{numero_afiliado}}/g, numeroAfiliado)
+        .replace(/{{titular_apellido}}/g, recibo.titular_apellido)
+        .replace(/{{titular_nombre}}/g, recibo.titular_nombre)
+        .replace(/{{obra_social_nombre}}/g, recibo.obra_social_nombre)
+        .replace(/{{tipo_de_grupo_nombre}}/g, recibo.tipo_de_grupo_nombre)
+        .replace(/{{tipo_plan_nombre}}/g, recibo.tipo_plan_nombre)
+        .replace(/{{localidad_nombre}}/g, localidad)
+        .replace(/{{domicilio}}/g, recibo.domicilio || '-')
+        .replace(/{{valor_cuota}}/g, `$${valor}`);
+
+      // Renderizar el contenido en el PDF
       let y = 10;
       const lineHeight = 11;
-
-      // Formato: Recibo nro: ...
       doc.fontSize(9).font('Helvetica').fillColor('#000');
-      doc.text(`Recibo nro: ${numeroRecibo}`, 15, y);
-      y += lineHeight;
 
-      doc.text(`Afiliado: ${zonaCodigo} - ${numeroAfiliado}`, 15, y);
-      y += lineHeight;
-
-      doc.text(`Titular: ${titular}`, 15, y);
-      y += lineHeight;
-
-      doc.text(`Obra social: ${obraSocial}`, 15, y);
-      y += lineHeight;
-
-      doc.text(`Tipo de grupo: ${tipoGrupo}`, 15, y);
-      y += lineHeight;
-
-      doc.text(`Tipo de plan: ${tipoPlan}`, 15, y);
-      y += lineHeight;
-
-      doc.text(`Localidad: ${localidad}`, 15, y);
-      y += lineHeight;
-
-      doc.text(`Domicilio: ${domicilio}`, 15, y);
-      y += lineHeight;
-
-      doc.fontSize(10).font('Helvetica-Bold').fillColor('#000');
-      doc.text(`Monto total: ${monto}`, 15, y);
+      // Dividir por líneas y renderizar cada una
+      const lines = content.split('\n');
+      lines.forEach((line) => {
+        doc.text(line, 15, y);
+        y += lineHeight;
+      });
     });
 
     // Finalizar documento
@@ -634,4 +630,17 @@ function getDefaultPDFTemplate() {
   </table>
 </body>
 </html>`;
+}
+
+// Helper: Template por defecto como string de texto simple
+function getDefaultTemplateString() {
+  return `Recibo nro: {{numero_recibo}}
+Afiliado: {{zona_codigo}} - {{numero_afiliado}}
+Titular: {{titular_apellido}}, {{titular_nombre}}
+Obra social: {{obra_social_nombre}}
+Tipo de grupo: {{tipo_de_grupo_nombre}}
+Tipo de plan: {{tipo_plan_nombre}}
+Localidad: {{localidad_nombre}}
+Domicilio: {{domicilio}}
+Monto total: {{valor_cuota}}`;
 }
