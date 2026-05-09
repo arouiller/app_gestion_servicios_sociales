@@ -27,4 +27,8 @@ router.get('/numero-max', verifyToken, recibosController.getMaxNumeroRecibo);
 // Detalle de un recibo
 router.get('/:id', verifyToken, recibosController.getById);
 
+// DELETE /api/recibos/periodo/:periodo
+// Eliminar todos los recibos de un período
+router.delete('/periodo/:periodo', verifyToken, recibosController.deletePeriodo);
+
 module.exports = router;

@@ -406,3 +406,84 @@ exports.getMaxNumeroRecibo = async (req, res, next) => {
     next(err);
   }
 };
+
+/**
+ * DELETE /api/recibos/periodo/:periodo
+ * Elimina todos los recibos de un período (YYYY-MM)
+ * También elimina sus integrantes (ReciboIntegrante) en cascada
+ * Y actualiza PeriodosRecibos
+ */
+exports.deletePeriodo = async (req, res, next) => {
+  const transaction = await sequelize.transaction();
+  try {
+    const { periodo } = req.params;
+
+    // Validar formato YYYY-MM
+    if (!/^\d{4}-\d{2}$/.test(periodo)) {
+      return res.status(400).json({
+        error: 'El período debe estar en formato YYYY-MM',
+      });
+    }
+
+    // Obtener todos los recibos del período
+    const recibos = await db.Recibo.findAll({
+      where: {
+        periodo: {
+          [Op.startsWith]: periodo,
+        },
+      },
+      transaction,
+    });
+
+    if (recibos.length === 0) {
+      await transaction.rollback();
+      return res.status(404).json({
+        error: 'No hay recibos para este período',
+      });
+    }
+
+    const recibosIds = recibos.map(r => r.id);
+
+    // 1. Eliminar ReciboIntegrante asociados
+    await db.ReciboIntegrante.destroy({
+      where: {
+        recibo_id: {
+          [Op.in]: recibosIds,
+        },
+      },
+      transaction,
+    });
+
+    // 2. Eliminar Recibos
+    await db.Recibo.destroy({
+      where: {
+        periodo: {
+          [Op.startsWith]: periodo,
+        },
+      },
+      transaction,
+    });
+
+    // 3. Eliminar PeriodosRecibos
+    await db.PeriodosRecibos.destroy({
+      where: {
+        periodo: periodo,
+      },
+      transaction,
+    });
+
+    await transaction.commit();
+
+    res.status(200).json({
+      success: true,
+      message: `Se eliminaron ${recibos.length} recibos del período ${periodo}`,
+      cantidad: recibos.length,
+    });
+  } catch (error) {
+    await transaction.rollback();
+    console.error('Error deleting recibos for period:', error);
+    res.status(500).json({
+      error: error.message || 'Error al eliminar recibos',
+    });
+  }
+};
