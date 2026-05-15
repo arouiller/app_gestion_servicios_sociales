@@ -27,7 +27,7 @@ Un bug solo puede pasar a estado solucionado, Descartado a traves del pedido exp
 
 | ID | Severidad | Fase | Descripción | Reportado | Estado |
 |----|-----------|------|-------------|-----------|--------|
-| BUG-044 | 🟡 IMPORTANTE | GestionPlanes | Selector de registros por página vuelve a valor original al cambiar | 2026-05-15 | 📋 Registrado |
+| BUG-044 | 🟡 IMPORTANTE | GestionPlanes | Selector de registros por página vuelve a valor original al cambiar | 2026-05-15 | 2026-05-15 | `c85027a` |
 | BUG-032 | 🟡 IMPORTANTE | Sortable Headers | Llamadas API duplicadas y redundantes al cargar GestionPlanesV1 | 2026-05-07 | ✅ Solucionado |
 
 ## Registros Recientemente Cerrados (Últimos 7 días)
@@ -3431,4 +3431,39 @@ En la pantalla de Gestión de Planes, al cambiar el tamaño de registros mostrad
 **Componente Afectado:**
 - `frontend/src/pages/DashboardPage/components/GestionPlanes/` (componente de tabla con selector de pagination)
 
-**Estado:** 📋 Registrado (2026-05-15)
+**Estado:** ✅ Solucionado (2026-05-15)
+
+**Root Cause:**
+En `GestionPlanesV1.jsx` línea 41, el estado `configItemsPerPage` no tenía setter:
+```javascript
+const [configItemsPerPage] = useState(globalConfig?.items_per_page ?? 15);
+```
+
+El callback `onItemsPerPageChange` (líneas 316-319) ignoraba el parámetro `newLimit` y solo resetaba la página, sin actualizar el límite.
+
+**Solución Implementada:**
+1. Línea 41: Agregado setter `setConfigItemsPerPage`
+   ```javascript
+   const [configItemsPerPage, setConfigItemsPerPage] = useState(globalConfig?.items_per_page ?? 15);
+   ```
+
+2. Líneas 316-319: Implementado callback para actualizar el estado
+   ```javascript
+   onItemsPerPageChange={(newLimit) => {
+     setConfigItemsPerPage(newLimit);
+     setPage(1);
+   }}
+   ```
+
+**Flujo Corregido:**
+- Usuario selecciona nuevo valor en selector (ej: 50)
+- Pagination llama `onItemsPerPageChange(50)`
+- Estado `configItemsPerPage` se actualiza a 50
+- Página resetea a 1 (useEffect en línea 90-92)
+- `cargar()` se ejecuta con nuevo límite
+- Selector se sincroniza correctamente con el nuevo valor
+
+**Archivos Modificados:**
+- `frontend/src/pages/DashboardPage/components/GestionPlanesV1/GestionPlanesV1.jsx`
+
+**Commit:** `c85027a` — fix(BUG-044): selector de página persiste correctamente al cambiar registros por página
