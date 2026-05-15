@@ -116,8 +116,8 @@ exports.bulkUpdateCuota = async (req, res, next) => {
     const { valor, tipoAumento, filtro } = req.body;
     const userId = req.user.id;
 
-    if (!valor || parseFloat(valor) <= 0) {
-      return res.status(400).json({ success: false, message: 'valor debe ser positivo' });
+    if (!valor) {
+      return res.status(400).json({ success: false, message: 'valor es requerido' });
     }
 
     if (tipoAumento && tipoAumento !== 'porcentual') {
