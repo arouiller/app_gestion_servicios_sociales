@@ -213,15 +213,11 @@
     width: 100%;
     border-collapse: collapse;
 
-    thead {
+    thead tr {
       position: sticky;
       top: 0;
       z-index: 99;
       background-color: var(--color-surface-alt);
-      box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
-    }
-
-    thead tr {
       border-bottom: 2px solid var(--color-border);
     }
 
@@ -230,7 +226,6 @@
       text-align: left;
       font-weight: 600;
       font-size: 0.875rem;
-      position: relative;
     }
 
     tbody tr {
