@@ -319,7 +319,7 @@ function BulkUpdateCuotaModal({ isOpen, onClose, onSuccess }) {
               <div className="preview-summary">
                 <p>Se afectarán <strong>{previewCount} planes</strong></p>
                 <p>
-                  Aumento: <strong>+{valor}%</strong>
+                  Aumento: <strong>{parseFloat(valor) > 0 ? '+' : ''}{valor}%</strong>
                 </p>
                 {filtro !== 'todos' && (
                   <p>
