@@ -48,10 +48,12 @@ exports.filter = async (req, res, next) => {
 
     // Pagination
     const pageNum = Math.max(1, parseInt(page) || 1);
-    const limitNum = Math.max(1, parseInt(limit) || 15);
-    const offset = (pageNum - 1) * limitNum;
+    const parsedLimit = parseInt(limit);
+    const sinPaginado = parsedLimit === 0;
+    const limitNum = sinPaginado ? null : Math.max(1, parsedLimit || 15);
+    const offset = sinPaginado ? 0 : (pageNum - 1) * limitNum;
 
-    const { count, rows } = await db.PlanV1.findAndCountAll({
+    const findOptions = {
       where,
       include: [
         { model: db.TipoDePlan, attributes: ['tipo_plan_numero', 'tipo_plan_nombre'] },
@@ -68,11 +70,17 @@ exports.filter = async (req, res, next) => {
         },
       ],
       order: orderBy,
-      limit: limitNum,
-      offset: offset,
-    });
+    };
 
-    const totalPages = Math.ceil(count / limitNum);
+    // Agregar limit y offset solo si se está paginando
+    if (!sinPaginado) {
+      findOptions.limit = limitNum;
+      findOptions.offset = offset;
+    }
+
+    const { count, rows } = await db.PlanV1.findAndCountAll(findOptions);
+
+    const totalPages = sinPaginado ? 1 : Math.ceil(count / limitNum);
 
     res.json({
       success: true,
