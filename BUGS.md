@@ -3675,3 +3675,4 @@ Reemplazar CSS `::before` con un overlay JavaScript + CSS usando un `<span>`:
 - `cd43ce2` — fix: selector de zona con overlay span
 - `c63e0b5` — fix: clase condicional --with-overlay
 - `312bffa` — fix: inicializar zonaCodigo en planes existentes
+- `bc5f971` — fix: ocultar texto del select con text-indent
