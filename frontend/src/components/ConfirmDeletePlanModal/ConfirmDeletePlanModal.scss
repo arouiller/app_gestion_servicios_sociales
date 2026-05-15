@@ -1,0 +1,167 @@
+// Reutilizar estilos base de confirm-delete-modal (igual que ConfirmDeletePeriodoRecibosModal)
+// Importar colores globales
+@import '../../styles/_colors.scss';
+
+.confirm-delete-modal {
+  position: fixed;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%) scale(0.95);
+  background: white;
+  border-radius: 8px;
+  box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+  max-width: 500px;
+  width: 90%;
+  opacity: 0;
+  pointer-events: none;
+  transition: all 0.3s ease;
+  z-index: 1001;
+
+  &--open {
+    opacity: 1;
+    pointer-events: auto;
+    transform: translate(-50%, -50%) scale(1);
+  }
+
+  &__header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 20px;
+    border-bottom: 1px solid #e0e0e0;
+  }
+
+  &__title {
+    font-size: 18px;
+    font-weight: 600;
+    margin: 0;
+    color: #333;
+  }
+
+  &__close {
+    background: none;
+    border: none;
+    font-size: 24px;
+    cursor: pointer;
+    color: #666;
+    padding: 0;
+    width: 32px;
+    height: 32px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: 4px;
+    transition: background-color 0.2s;
+
+    &:hover:not(:disabled) {
+      background-color: #f5f5f5;
+      color: #333;
+    }
+
+    &:disabled {
+      cursor: not-allowed;
+      opacity: 0.5;
+    }
+  }
+
+  &__body {
+    padding: 20px;
+    max-height: 60vh;
+    overflow-y: auto;
+  }
+
+  &__info-block {
+    background-color: #f9f9f9;
+    border-left: 4px solid $color-primary;
+    padding: 12px;
+    border-radius: 4px;
+    margin-bottom: 15px;
+  }
+
+  &__info-item {
+    font-size: 14px;
+    line-height: 1.6;
+    color: #555;
+
+    strong {
+      color: #333;
+      margin-right: 8px;
+    }
+
+    &:not(:last-child) {
+      margin-bottom: 8px;
+    }
+  }
+
+  &__description {
+    font-size: 14px;
+    color: #666;
+    line-height: 1.6;
+
+    p {
+      margin: 0;
+    }
+  }
+
+  &__footer {
+    display: flex;
+    gap: 10px;
+    padding: 20px;
+    border-top: 1px solid #e0e0e0;
+    background-color: #fafafa;
+  }
+
+  &__btn {
+    padding: 10px 16px;
+    border: none;
+    border-radius: 4px;
+    font-size: 14px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.2s;
+    flex: 1;
+
+    &:disabled {
+      cursor: not-allowed;
+      opacity: 0.6;
+    }
+
+    &--primary {
+      background-color: $color-primary;
+      color: white;
+
+      &:hover:not(:disabled) {
+        background-color: darken($color-primary, 10%);
+      }
+    }
+
+    &--cancel {
+      background-color: #e0e0e0;
+      color: #333;
+
+      &:hover:not(:disabled) {
+        background-color: #d0d0d0;
+      }
+    }
+
+    &--danger {
+      background-color: #dc3545;
+      color: white;
+
+      &:hover:not(:disabled) {
+        background-color: darken(#dc3545, 10%);
+      }
+    }
+  }
+}
+
+.confirm-delete-backdrop {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background-color: rgba(0, 0, 0, 0.5);
+  z-index: 1000;
+  cursor: pointer;
+}
