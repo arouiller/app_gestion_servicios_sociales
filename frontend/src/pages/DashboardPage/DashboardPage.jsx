@@ -80,7 +80,7 @@ function buildMenu(isAdmin) {
         { key: 'auditoria', label: 'Auditoría' },
         { key: 'herramienta-queries', label: 'Herramienta de Queries' },
         { key: 'gestion-usuarios', label: 'Gestión de Usuarios' },
-        { key: 'configuracion-notificaciones', label: 'Configuración UI' },
+        { key: 'configuracion-notificaciones', label: 'Configuración de la Aplicación' },
         { key: 'migraciones-bd', label: 'Migraciones BD' },
       ],
     });
