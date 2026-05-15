@@ -27,6 +27,7 @@ Un bug solo puede pasar a estado solucionado, Descartado a traves del pedido exp
 
 | ID | Severidad | Fase | Descripción | Reportado | Estado |
 |----|-----------|------|-------------|-----------|--------|
+| BUG-044 | 🟡 IMPORTANTE | GestionPlanes | Selector de registros por página vuelve a valor original al cambiar | 2026-05-15 | 📋 Registrado |
 | BUG-032 | 🟡 IMPORTANTE | Sortable Headers | Llamadas API duplicadas y redundantes al cargar GestionPlanesV1 | 2026-05-07 | ✅ Solucionado |
 
 ## Registros Recientemente Cerrados (Últimos 7 días)
@@ -3407,3 +3408,27 @@ El endpoint `/api/localidades` no tiene restricción de permisos y está disponi
 **Commit:** `8368f8c` — fix(BUG-043): permitir acceso a localidades para usuarios no-admin
 
 **Estado:** ✅ Solucionado (2026-05-15)
+
+---
+
+### BUG-044: Selector de Registros por Página Vuelve a Valor Original
+
+**Descripción:**
+En la pantalla de Gestión de Planes, al cambiar el tamaño de registros mostrados por página usando el selector (ej: de 10 a 50), el selector vuelve automáticamente a su valor original (10) y la tabla continúa mostrando solo 10 registros.
+
+**Severidad:** 🟡 IMPORTANTE
+- Afecta la experiencia del usuario
+- El cambio de tamaño de página se revertirá causando frustración
+
+**Síntomas:**
+1. Usuario abre Gestión de Planes
+2. Selecciona un valor diferente en el selector (ej: 50 registros por página)
+3. El selector cambia visualmente un instante
+4. El selector vuelve automáticamente a 10
+5. La tabla continúa mostrando 10 registros ❌
+6. El cambio no se refleja en la URL ni persiste
+
+**Componente Afectado:**
+- `frontend/src/pages/DashboardPage/components/GestionPlanes/` (componente de tabla con selector de pagination)
+
+**Estado:** 📋 Registrado (2026-05-15)
