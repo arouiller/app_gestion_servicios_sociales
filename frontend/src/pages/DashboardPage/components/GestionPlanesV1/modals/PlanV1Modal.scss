@@ -379,16 +379,22 @@
     color: inherit;
   }
 
-  // Cuando hay overlay visible, hacemos el select transparent
-  // para que se vea el código debajo
+  // Cuando hay overlay visible, ocultamos completamente el texto del select
+  // usando text-indent para desplazarlo fuera de vista
   &--with-overlay {
     color: transparent;
+    background-color: transparent;
+    caret-color: transparent;
+    text-indent: -9999px;
 
     // Cuando está abierto (focus/active), mostrar el texto normal
     &:focus,
     &:active,
     &:focus-visible {
       color: inherit;
+      background-color: initial;
+      caret-color: auto;
+      text-indent: 0;
     }
   }
 }
