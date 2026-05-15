@@ -25,14 +25,13 @@ Un bug solo puede pasar a estado solucionado, Descartado a traves del pedido exp
 
 ## Registros Activos (En Progress + Reportados)
 
-| ID | Severidad | Fase | Descripción | Reportado | Estado |
-|----|-----------|------|-------------|-----------|--------|
-| BUG-046 | 🟡 IMPORTANTE | Configuración | Validación incorrecta en "Items por página": rechaza valor 0 | 2026-05-15 | 🚀 Desarrollado |
+(Ninguno)
 
 ## Registros Recientemente Cerrados (Últimos 7 días)
 
 | ID | Severidad | Fase | Descripción | Reportado | Solucionado | Commit |
 |----|-----------|------|-------------|-----------|-------------|--------|
+| BUG-046 | 🟡 IMPORTANTE | Configuración | Validación incorrecta en "Items por página": rechaza valor 0 | 2026-05-15 | 2026-05-15 | `905d763` |
 | BUG-045 | 🟡 IMPORTANTE | Paginación | Eliminar selector de cantidad de registros que no funciona | 2026-05-15 | 2026-05-15 | `a77ee08` |
 | BUG-043 | 🔴 CRÍTICO | BACKLOG-061 | Dropdowns no se cargan al crear/editar plan (usuarios no admin) | 2026-05-15 | 2026-05-15 | `8368f8c` |
 | BUG-042 | 🔴 CRÍTICO | BACKLOG-061 | Cambios posteriores a crear plan no se guardan (modo editar no funciona) | 2026-05-08 | 2026-05-08 | Incluido en BACKLOG-061 |
