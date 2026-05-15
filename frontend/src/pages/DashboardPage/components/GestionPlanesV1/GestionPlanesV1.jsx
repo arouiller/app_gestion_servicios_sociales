@@ -374,14 +374,12 @@ function GestionPlanesV1() {
                           title="Editar"
                           onClick={() => handleEditarPlan(plan)}
                         />
-                        {plan.estado === 'ACTIVO' && (
-                          <IconButton
-                            icon="delete"
-                            title="Eliminar o Suspender"
-                            onClick={() => handleDeletePlan(plan)}
-                            className="icon-button--danger"
-                          />
-                        )}
+                        <IconButton
+                          icon="delete"
+                          title="Eliminar o Suspender"
+                          onClick={() => handleDeletePlan(plan)}
+                          className="icon-button--danger"
+                        />
                       </div>
                     </td>
                   </tr>
