@@ -2,12 +2,12 @@ import { useState, useMemo, useEffect } from 'react';
 
 function usePagination(items, defaultItemsPerPage = 15, configItemsPerPage = null) {
   const [currentPage, setCurrentPage] = useState(1);
-  // Usar configItemsPerPage si está disponible, sino usar defaultItemsPerPage
-  const [itemsPerPage, setItemsPerPage] = useState(configItemsPerPage || defaultItemsPerPage);
+  // Usar configItemsPerPage si está disponible (incluyendo 0), sino usar defaultItemsPerPage
+  const [itemsPerPage, setItemsPerPage] = useState(configItemsPerPage ?? defaultItemsPerPage);
 
   // Actualizar itemsPerPage cuando configItemsPerPage cambia
   useEffect(() => {
-    if (configItemsPerPage) {
+    if (configItemsPerPage !== null && configItemsPerPage !== undefined) {
       setItemsPerPage(configItemsPerPage);
       setCurrentPage(1); // Reset a página 1 cuando cambia el tamaño
     }
@@ -20,14 +20,17 @@ function usePagination(items, defaultItemsPerPage = 15, configItemsPerPage = nul
   }, [items.length]); // Depender solo de la longitud para evitar renders excesivos
 
   const totalItems = Array.isArray(items) ? items.length : 0;
-  const totalPages = Math.ceil(totalItems / itemsPerPage) || 1;
+
+  // Caso especial: items_per_page = 0 significa mostrar todos sin paginar
+  const sinPaginado = itemsPerPage === 0;
+  const totalPages = sinPaginado ? 1 : (Math.ceil(totalItems / itemsPerPage) || 1);
 
   // Validar que currentPage esté dentro de rango
   const validPage = Math.min(Math.max(1, currentPage), totalPages);
 
   // Calcular índices para slice
-  const startIndex = (validPage - 1) * itemsPerPage;
-  const endIndex = startIndex + itemsPerPage;
+  const startIndex = sinPaginado ? 0 : (validPage - 1) * itemsPerPage;
+  const endIndex = sinPaginado ? totalItems : startIndex + itemsPerPage;
 
   // Ítems paginados
   const paginatedItems = useMemo(() => {
@@ -57,7 +60,7 @@ function usePagination(items, defaultItemsPerPage = 15, configItemsPerPage = nul
     handleChangePage,
     handleChangeItemsPerPage,
     resetPage,
-    showPagination: totalItems > 10,
+    showPagination: totalItems > 10 && !sinPaginado,
   };
 }
 
