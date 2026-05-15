@@ -159,8 +159,8 @@ function GestionPlanesV1() {
     const key = e.key.toLowerCase();
     const altKey = e.altKey;
 
-    // ALT+G: Editar fila activa
-    if (altKey && key === 'g') {
+    // Enter: Editar fila activa
+    if (key === 'enter') {
       e.preventDefault();
       const activeRow = planesFiltered.find(p => p.plan_numero === activeRowId);
       if (activeRow) {
