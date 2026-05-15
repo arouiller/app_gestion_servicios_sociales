@@ -38,7 +38,7 @@ function GestionPlanesV1() {
   const [bulkUpdateModalOpen, setBulkUpdateModalOpen] = useState(false);
   const [generarRecibosModalOpen, setGenerarRecibosModalOpen] = useState(false);
   const [historialAumentosModalOpen, setHistorialAumentosModalOpen] = useState(false);
-  const [configItemsPerPage] = useState(globalConfig?.items_per_page ?? 15);
+  const [configItemsPerPage, setConfigItemsPerPage] = useState(globalConfig?.items_per_page ?? 15);
   const [page, setPage] = useState(1);
   const [totalCount, setTotalCount] = useState(0);
   const [totalPages, setTotalPages] = useState(0);
@@ -314,7 +314,7 @@ function GestionPlanesV1() {
           itemsPerPage={configItemsPerPage}
           onPageChange={setPage}
           onItemsPerPageChange={(newLimit) => {
-            // TODO: update configItemsPerPage in backend if needed
+            setConfigItemsPerPage(newLimit);
             setPage(1);
           }}
         />
