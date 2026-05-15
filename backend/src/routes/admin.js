@@ -46,10 +46,10 @@ router.put('/configuracion/:tipo', verifyToken, requireAdmin, async (req, res) =
 
     // Validaciones específicas por tipo
     if (tipo === 'items_per_page') {
-      if (duracion_ms < 5 || duracion_ms > 100) {
+      if (duracion_ms !== 0 && (duracion_ms < 5 || duracion_ms > 1000)) {
         return res.status(400).json({
           success: false,
-          message: 'items_per_page debe estar entre 5 y 100',
+          message: 'items_per_page debe ser 0 (sin paginado) o entre 5 y 1000',
         });
       }
     } else if (tipo === 'debounce_delay_ms') {

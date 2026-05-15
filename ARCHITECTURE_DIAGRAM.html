@@ -31,6 +31,7 @@
             display: flex;
             flex-direction: column;
             height: 90vh;
+            position: relative;
         }
 
         header {
@@ -115,15 +116,17 @@
         /* Contenedores de capas */
         .layer-container {
             position: absolute;
-            border: 2px solid;
+            border: 3px solid;
             border-radius: 8px;
             padding: 20px;
-            background-color: rgba(255, 255, 255, 0.1);
+            background-color: rgba(255, 255, 255, 0.3);
             display: flex;
             flex-direction: column;
             align-items: center;
             justify-content: flex-start;
             pointer-events: none;
+            z-index: 10;
+            box-shadow: inset 0 0 15px rgba(0, 0, 0, 0.1), 0 0 20px rgba(0, 0, 0, 0.15);
         }
 
         .layer-container.bd {
@@ -213,9 +216,7 @@
         </div>
 
         <div id="canvas">
-            <div id="zoomWrapper" style="position: relative; width: 100%; height: 100%; transform-origin: 0 0;">
-                <div id="layersWrapper" style="position: absolute; top: 0; left: 0;"></div>
-            </div>
+            <div id="layersWrapper" style="position: absolute; top: 0; left: 0; width: 100%; height: 100%; pointer-events: none; z-index: 100;"></div>
         </div>
 
         <div class="hint">
@@ -402,10 +403,10 @@
         // Posicionar nodos en capas sin física dinámica
         // Cálculo: ~19 elementos BD, ~21 API, ~10 Services, ~15 Components
         const layerPositions = {
-            'BD': { x: 50, y: 50, width: 420, height: 950, cols: 2, count: 21 },
-            'API': { x: 520, y: 50, width: 420, height: 950, cols: 2, count: 21 },
-            'Services': { x: 990, y: 50, width: 420, height: 500, cols: 2, count: 10 },
-            'Components': { x: 1460, y: 50, width: 420, height: 700, cols: 2, count: 15 }
+            'BD': { x: 40, y: 40, width: 300, height: 900, cols: 1, count: 21 },
+            'API': { x: 360, y: 40, width: 300, height: 900, cols: 1, count: 21 },
+            'Services': { x: 680, y: 40, width: 280, height: 500, cols: 1, count: 10 },
+            'Components': { x: 980, y: 40, width: 280, height: 700, cols: 1, count: 15 }
         };
 
         let nodeIndex = {};
@@ -417,13 +418,13 @@
             if (pos) {
                 const col = nodeIndex[layer] % pos.cols;
                 const row = Math.floor(nodeIndex[layer] / pos.cols);
-                const itemHeight = 85;
-                const itemWidth = 200;
+                const itemHeight = 60;
+                const itemWidth = 250;
 
                 // Centrar columnas dentro del contenedor
                 const colWidth = pos.width / pos.cols;
                 node.x = pos.x + (col * colWidth) + (colWidth / 2);
-                node.y = pos.y + 40 + (row * itemHeight);
+                node.y = pos.y + 35 + (row * itemHeight);
 
                 // Guardar información del contenedor para validación de límites
                 node.containerLayer = layer;
@@ -489,7 +490,6 @@
 
         // Variables de zoom
         let currentZoom = 1;
-        const zoomWrapper = document.getElementById('zoomWrapper');
         const layersWrapper = document.getElementById('layersWrapper');
 
         // Event: Click en nodo para resaltar
@@ -510,7 +510,7 @@
 
                 if (node && node.containerBounds) {
                     const bounds = node.containerBounds;
-                    const margin = 90; // Margen para considerar dentro del contenedor
+                    const margin = 50; // Margen para considerar dentro del contenedor
 
                     // Verificar si el nodo está dentro de los límites
                     if (node.x < bounds.x + margin) {
@@ -655,14 +655,8 @@
             currentZoom = params.scale;
 
             // Aplicar zoom proporcionalmente a los contenedores
-            zoomWrapper.style.transform = `scale(${currentZoom})`;
-
-            // También escalar el canvas interno de Vis.js
-            const canvas = container.querySelector('canvas');
-            if (canvas) {
-                canvas.style.transform = `scale(${currentZoom})`;
-                canvas.style.transformOrigin = '0 0';
-            }
+            layersWrapper.style.transform = `scale(${currentZoom})`;
+            layersWrapper.style.transformOrigin = '0 0';
         });
 
         // Crear contenedores después de que la red esté lista

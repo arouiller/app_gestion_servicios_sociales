@@ -13,7 +13,13 @@
       "Bash(git *)",
       "PowerShell(\\(Get-Content \"C:\\\\Users\\\\alejandro.rouiller\\\\Documents\\\\proyectos\\\\App_gestion_servicios_sociales\\\\backlog.md\"\\).Length)",
       "PowerShell(\\(Get-Content \"C:\\\\Users\\\\alejandro.rouiller\\\\Documents\\\\proyectos\\\\App_gestion_servicios_sociales\\\\backlog.md\" | Select-String \"^### BACKLOG-056\" -LineNumber\\).LineNumber)",
-      "PowerShell(mkdir \"C:\\\\Users\\\\alejandro.rouiller\\\\Documents\\\\proyectos\\\\App_gestion_servicios_sociales\\\\backend\\\\src\\\\migrations\\\\versions\\\\2.0.27_numero_recibo_recibos\")"
+      "PowerShell(mkdir \"C:\\\\Users\\\\alejandro.rouiller\\\\Documents\\\\proyectos\\\\App_gestion_servicios_sociales\\\\backend\\\\src\\\\migrations\\\\versions\\\\2.0.27_numero_recibo_recibos\")",
+      "Skill(superpowers:systematic-debugging)",
+      "Skill(superpowers:systematic-debugging:*)",
+      "Skill(superpowers:writing-plans)",
+      "Skill(superpowers:writing-plans:*)",
+      "Skill(superpowers:subagent-driven-development)",
+      "Skill(superpowers:subagent-driven-development:*)"
     ]
   }
 }

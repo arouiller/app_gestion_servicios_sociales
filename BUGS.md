@@ -27,7 +27,7 @@ Un bug solo puede pasar a estado solucionado, Descartado a traves del pedido exp
 
 | ID | Severidad | Fase | Descripción | Reportado | Estado |
 |----|-----------|------|-------------|-----------|--------|
-| BUG-046 | 🟡 IMPORTANTE | Configuración | Validación incorrecta en "Items por página": rechaza valor 0 | 2026-05-15 | 📋 Registrado |
+| BUG-046 | 🟡 IMPORTANTE | Configuración | Validación incorrecta en "Items por página": rechaza valor 0 | 2026-05-15 | 🚀 Desarrollado |
 
 ## Registros Recientemente Cerrados (Últimos 7 días)
 
@@ -3500,3 +3500,24 @@ Sin embargo, según los requisitos, este parámetro debe aceptar cualquier valor
 - Afecta a usuarios que quieren deshabilitar paginación
 
 **Reportado:** 2026-05-15
+
+**Causa Raíz:**
+Backend validaba rango incorrecto en `backend/src/routes/admin.js:48-54`:
+```javascript
+if (duracion_ms < 5 || duracion_ms > 100) {  // ❌ Restrictivo
+```
+
+El frontend ya estaba correcto permitiendo 0 y 5-1000.
+
+**Solución Implementada:**
+Cambiar validación en backend a:
+```javascript
+if (duracion_ms !== 0 && (duracion_ms < 5 || duracion_ms > 1000)) {  // ✅ Correcto
+```
+
+Esto permite:
+- 0 = sin paginación (mostrar todos los registros)
+- 5-1000 = con paginación
+
+**Archivos Modificados:**
+- `backend/src/routes/admin.js` (líneas 48-54)

@@ -1,0 +1,498 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Documentación de Componentes React - App Gestión Servicios Sociales</title>
+    <script type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/vis/4.21.0/vis.min.js"></script>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/vis/4.21.0/vis.min.css" rel="stylesheet" type="text/css" />
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            padding: 20px;
+        }
+
+        .container {
+            width: 100%;
+            background: white;
+            border-radius: 12px;
+            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+            overflow: hidden;
+            display: flex;
+            flex-direction: column;
+            height: 90vh;
+            position: relative;
+        }
+
+        header {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 30px 20px;
+            text-align: center;
+            flex-shrink: 0;
+        }
+
+        header h1 {
+            font-size: 2.2em;
+            margin-bottom: 8px;
+        }
+
+        .toolbar {
+            padding: 15px 20px;
+            background: #f8f9fa;
+            border-bottom: 1px solid #dee2e6;
+            display: flex;
+            gap: 15px;
+            flex-wrap: wrap;
+            align-items: center;
+            flex-shrink: 0;
+        }
+
+        .toolbar button {
+            padding: 8px 16px;
+            background: #667eea;
+            color: white;
+            border: none;
+            border-radius: 6px;
+            cursor: pointer;
+            font-size: 0.9em;
+            transition: all 0.3s ease;
+        }
+
+        .toolbar button:hover {
+            background: #764ba2;
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(102, 126, 234, 0.4);
+        }
+
+        .toolbar button.active {
+            background: #764ba2;
+            box-shadow: 0 4px 12px rgba(118, 75, 162, 0.4);
+        }
+
+        #canvas {
+            flex: 1;
+            background: white;
+            overflow: hidden;
+            position: relative;
+        }
+
+        .info-panel {
+            position: absolute;
+            bottom: 20px;
+            right: 20px;
+            background: white;
+            border: 2px solid #667eea;
+            border-radius: 8px;
+            padding: 15px;
+            max-width: 350px;
+            max-height: 300px;
+            overflow-y: auto;
+            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.2);
+            z-index: 100;
+            display: none;
+        }
+
+        .info-panel.active {
+            display: block;
+        }
+
+        .info-panel h3 {
+            color: #667eea;
+            margin-bottom: 10px;
+            border-bottom: 2px solid #667eea;
+            padding-bottom: 5px;
+        }
+
+        .info-section {
+            margin-bottom: 12px;
+        }
+
+        .info-section strong {
+            color: #333;
+            display: block;
+            font-size: 0.9em;
+            margin-bottom: 4px;
+        }
+
+        .info-section ul {
+            list-style: none;
+            margin-left: 0;
+        }
+
+        .info-section li {
+            font-size: 0.85em;
+            color: #666;
+            padding: 2px 0 2px 15px;
+            position: relative;
+        }
+
+        .info-section li:before {
+            content: "•";
+            position: absolute;
+            left: 5px;
+        }
+
+        .legend {
+            padding: 10px 20px;
+            background: #fff3cd;
+            border-top: 1px solid #ffc107;
+            display: flex;
+            gap: 20px;
+            flex-wrap: wrap;
+            font-size: 0.85em;
+            flex-shrink: 0;
+        }
+
+        .legend-item {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .legend-color {
+            width: 16px;
+            height: 16px;
+            border-radius: 3px;
+            border: 2px solid;
+        }
+
+        footer {
+            padding: 15px 20px;
+            background: #f8f9fa;
+            border-top: 1px solid #dee2e6;
+            text-align: center;
+            color: #666;
+            font-size: 0.85em;
+            flex-shrink: 0;
+        }
+
+        @media (max-width: 768px) {
+            header h1 {
+                font-size: 1.6em;
+            }
+            .info-panel {
+                max-width: 90vw;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <header>
+            <h1>📱 Documentación Interactiva de Componentes React</h1>
+            <p>Jerarquía, Servicios, Props, Hooks y Relaciones con Base de Datos</p>
+        </header>
+
+        <div class="toolbar">
+            <button id="btn-hierarchy" class="active">📊 Jerarquía</button>
+            <button id="btn-services">🔌 Servicios</button>
+            <button id="btn-tables">🗄️ Tablas BD</button>
+            <button id="btn-all" class="active">📋 Todo</button>
+            <span style="flex: 1;"></span>
+            <button id="btn-fit">⟲ Ajustar Vista</button>
+        </div>
+
+        <div id="canvas">
+            <div id="layersWrapper" style="position: absolute; top: 0; left: 0; width: 100%; height: 100%; pointer-events: none; z-index: 50;"></div>
+        </div>
+
+        <div class="legend">
+            <div class="legend-item">
+                <div class="legend-color" style="background: #ffe0b2; border-color: #FF9800;"></div>
+                <span>Componentes</span>
+            </div>
+            <div class="legend-item">
+                <div class="legend-color" style="background: #fffde7; border-color: #FBC02D;"></div>
+                <span>Servicios/Hooks</span>
+            </div>
+            <div class="legend-item">
+                <div class="legend-color" style="background: #e3f2fd; border-color: #2196F3;"></div>
+                <span>Tablas BD</span>
+            </div>
+            <div class="legend-item">
+                <div class="legend-color" style="background: #f1f8e9; border-color: #4CAF50;"></div>
+                <span>Contextos</span>
+            </div>
+        </div>
+
+        <div id="infoPanel" class="info-panel"></div>
+
+        <footer>
+            <p>Documentación generada automáticamente | Click en un componente para ver detalles</p>
+        </footer>
+    </div>
+
+    <script>
+        // Datos de componentes extraídos del análisis
+        const componentsData = {
+            'DashboardPage': {
+                path: 'frontend/src/pages/DashboardPage/DashboardPage.jsx',
+                category: 'Página Principal',
+                parent: null,
+                children: ['GestionPlanesV1', 'RecibosPage', 'DatosPersonales', 'MigrationsDashboard', 'GestionBugs', 'GestionUsuarios', 'Cobradores', 'ObrasSociales', 'ServiciosAdicionales', 'TiposDeGrupo', 'TiposDePlan', 'Zonas', 'GestionProvinciasZonas', 'GestionAuditoria'],
+                hooks: ['useState', 'useEffect', 'useAuth', 'useConfig', 'useNotification'],
+                contexts: ['AuthContext', 'NotificationContext', 'ConfigContext'],
+                services: [],
+                tables: [],
+                props: ['roles']
+            },
+            'GestionPlanesV1': {
+                path: 'frontend/src/pages/DashboardPage/components/GestionPlanesV1/GestionPlanesV1.jsx',
+                category: 'Gestión de Planes',
+                parent: 'DashboardPage',
+                children: ['PlanV1Modal', 'GenerarRecibosModal', 'BulkUpdateCuotaModal'],
+                hooks: ['useState', 'useEffect', 'useSortable', 'useCallback'],
+                contexts: ['NotificationContext'],
+                services: ['planesV1Service'],
+                tables: ['PlanV1', 'PlanIntegrante', 'Zona', 'ObraSocial'],
+                props: ['readOnly']
+            },
+            'RecibosPage': {
+                path: 'frontend/src/pages/RecibosPage/RecibosPage.jsx',
+                category: 'Gestión de Recibos',
+                parent: 'DashboardPage',
+                children: ['ReciboDetalleModal'],
+                hooks: ['useState', 'useEffect'],
+                contexts: ['NotificationContext'],
+                services: ['recibosService'],
+                tables: ['Recibo', 'ReciboIntegrante', 'PeriodosRecibos'],
+                props: []
+            },
+            'PlanV1Modal': {
+                path: 'frontend/src/pages/DashboardPage/components/GestionPlanesV1/modals/PlanV1Modal.jsx',
+                category: 'Modales',
+                parent: 'GestionPlanesV1',
+                children: ['AfiladoSearchModal'],
+                hooks: ['useState', 'useEffect', 'useCallback'],
+                contexts: ['NotificationContext'],
+                services: ['planesV1Service', 'personasService', 'planesIntegrantesService', 'lookupService'],
+                tables: ['PlanV1', 'Persona', 'PlanIntegrante', 'ObraSocial', 'TipoPlan'],
+                props: ['plan', 'isOpen', 'onClose', 'onSave', 'readOnly']
+            },
+            'GenerarRecibosModal': {
+                path: 'frontend/src/pages/DashboardPage/components/GestionPlanesV1/modals/GenerarRecibosModal.jsx',
+                category: 'Modales',
+                parent: 'GestionPlanesV1',
+                children: [],
+                hooks: ['useState', 'useEffect'],
+                contexts: ['NotificationContext'],
+                services: ['recibosService'],
+                tables: ['Recibo', 'ReciboIntegrante', 'PlanV1'],
+                props: ['isOpen', 'onClose', 'planes']
+            },
+            'ReciboDetalleModal': {
+                path: 'frontend/src/pages/RecibosPage/ReciboDetalleModal.jsx',
+                category: 'Modales',
+                parent: 'RecibosPage',
+                children: [],
+                hooks: ['useState', 'useEffect'],
+                contexts: ['NotificationContext'],
+                services: ['recibosService'],
+                tables: ['Recibo', 'ReciboIntegrante'],
+                props: ['recibo', 'isOpen', 'onClose']
+            },
+            'GestionBugs': {
+                path: 'frontend/src/pages/DashboardPage/components/GestionBugs/GestionBugs.jsx',
+                category: 'Gestión de Bugs',
+                parent: 'DashboardPage',
+                children: ['BugFormModal', 'BugDetalleModal'],
+                hooks: ['useState', 'useEffect'],
+                contexts: ['NotificationContext'],
+                services: [],
+                tables: [],
+                props: []
+            },
+            'GestionUsuarios': {
+                path: 'frontend/src/pages/DashboardPage/components/GestionUsuarios/GestionUsuarios.jsx',
+                category: 'Admin',
+                parent: 'DashboardPage',
+                children: ['UsuarioFormModal'],
+                hooks: ['useState', 'useEffect'],
+                contexts: ['NotificationContext'],
+                services: ['usuariosService'],
+                tables: ['Usuario'],
+                props: []
+            },
+            'BulkUpdateCuotaModal': {
+                path: 'frontend/src/pages/DashboardPage/components/BulkUpdateCuotaModal/BulkUpdateCuotaModal.jsx',
+                category: 'Modales',
+                parent: 'GestionPlanesV1',
+                children: [],
+                hooks: ['useState', 'useEffect', 'useCallback'],
+                contexts: ['NotificationContext'],
+                services: ['planesV1Service'],
+                tables: ['PlanV1'],
+                props: ['isOpen', 'onClose', 'planes']
+            },
+            'AfiladoSearchModal': {
+                path: 'frontend/src/pages/DashboardPage/components/GestionPlanesV1/modals/AfiladoSearchModal.jsx',
+                category: 'Modales',
+                parent: 'PlanV1Modal',
+                children: [],
+                hooks: ['useState', 'useEffect', 'useCallback'],
+                contexts: ['NotificationContext'],
+                services: ['planesV1Service', 'personasService'],
+                tables: ['PlanV1', 'Persona'],
+                props: ['isOpen', 'onClose', 'onSelect']
+            },
+            'DatosPersonales': {
+                path: 'frontend/src/pages/DashboardPage/components/DatosPersonales/DatosPersonales.jsx',
+                category: 'Mi Cuenta',
+                parent: 'DashboardPage',
+                children: [],
+                hooks: ['useState', 'useEffect'],
+                contexts: ['AuthContext'],
+                services: [],
+                tables: ['Usuario'],
+                props: []
+            },
+            'MigrationsDashboard': {
+                path: 'frontend/src/pages/DashboardPage/components/MigrationsDashboard/MigrationsDashboard.jsx',
+                category: 'Admin',
+                parent: 'DashboardPage',
+                children: ['PreviewModal'],
+                hooks: ['useState', 'useEffect', 'useCallback'],
+                contexts: ['NotificationContext'],
+                services: ['migrationsService'],
+                tables: ['migraciones_bd'],
+                props: []
+            },
+            'LookupCRUD': {
+                path: 'frontend/src/components/LookupCRUD/LookupCRUD.jsx',
+                category: 'Componentes Reutilizables',
+                parent: null,
+                children: [],
+                hooks: ['useState', 'useEffect', 'useCallback'],
+                contexts: ['NotificationContext'],
+                services: ['lookupService'],
+                tables: ['ObraSocial', 'TipoPlan', 'TipoGrupo', 'Cobrador'],
+                props: ['entity', 'title']
+            },
+            'GestionProvinciasZonas': {
+                path: 'frontend/src/pages/DashboardPage/components/GestionProvinciasZonas/GestionProvinciasZonas.jsx',
+                category: 'Gestión',
+                parent: 'DashboardPage',
+                children: ['ProvinciaFormModal', 'ZonaFormModal', 'LocalidadFormModal'],
+                hooks: ['useState', 'useEffect'],
+                contexts: ['NotificationContext'],
+                services: ['provinciaService', 'zonaService', 'localidadService'],
+                tables: ['Provincia', 'Zona', 'Localidad'],
+                props: []
+            }
+        };
+
+        // Crear nodos
+        const nodes = new vis.DataSet(
+            Object.entries(componentsData).map(([name, data]) => ({
+                id: name,
+                label: name,
+                color: '#ffe0b2',
+                borderWidth: 2,
+                borderColor: '#FF9800',
+                group: 'components',
+                data: data
+            }))
+        );
+
+        // Crear edges (relaciones padre-hijo)
+        const edges = new vis.DataSet(
+            Object.entries(componentsData)
+                .flatMap(([name, data]) =>
+                    (data.children || []).map(child => ({
+                        from: name,
+                        to: child,
+                        color: '#667eea',
+                        arrows: 'to'
+                    }))
+                )
+        );
+
+        // Posicionar nodos en malla
+        let nodeIndex = 0;
+        const colsPerPage = 4;
+        nodes.forEach(node => {
+            const col = nodeIndex % colsPerPage;
+            const row = Math.floor(nodeIndex / colsPerPage);
+            node.x = 150 + col * 350;
+            node.y = 150 + row * 250;
+            nodeIndex++;
+        });
+
+        const options = {
+            physics: { enabled: false },
+            interaction: {
+                navigationButtons: true,
+                keyboard: true,
+                zoomView: true,
+                dragView: true
+            },
+            nodes: {
+                font: { size: 13, color: '#333', face: 'Segoe UI' },
+                shape: 'box',
+                margin: 10,
+                widthConstraint: { maximum: 200 }
+            },
+            edges: {
+                smooth: { type: 'continuous' },
+                arrows: { to: { enabled: true, scaleFactor: 0.5 } },
+                font: { size: 11 }
+            }
+        };
+
+        const container = document.getElementById('canvas');
+        const data = { nodes, edges };
+        const network = new vis.Network(container, data, options);
+
+        // Info panel
+        const infoPanel = document.getElementById('infoPanel');
+
+        network.on('click', function(params) {
+            if (params.nodes.length > 0) {
+                const nodeId = params.nodes[0];
+                const node = nodes.get(nodeId);
+                const data = node.data;
+
+                let html = `<h3>${nodeId}</h3>`;
+                if (data.category) html += `<div class="info-section"><strong>Categoría:</strong> ${data.category}</div>`;
+                if (data.path) html += `<div class="info-section"><strong>Ruta:</strong> <small>${data.path}</small></div>`;
+
+                if (data.hooks && data.hooks.length > 0) {
+                    html += `<div class="info-section"><strong>Hooks:</strong><ul>${data.hooks.map(h => `<li>${h}</li>`).join('')}</ul></div>`;
+                }
+                if (data.contexts && data.contexts.length > 0) {
+                    html += `<div class="info-section"><strong>Contextos:</strong><ul>${data.contexts.map(c => `<li>${c}</li>`).join('')}</ul></div>`;
+                }
+                if (data.services && data.services.length > 0) {
+                    html += `<div class="info-section"><strong>Servicios:</strong><ul>${data.services.map(s => `<li>${s}</li>`).join('')}</ul></div>`;
+                }
+                if (data.tables && data.tables.length > 0) {
+                    html += `<div class="info-section"><strong>Tablas BD:</strong><ul>${data.tables.map(t => `<li>${t}</li>`).join('')}</ul></div>`;
+                }
+                if (data.props && data.props.length > 0) {
+                    html += `<div class="info-section"><strong>Props:</strong><ul>${data.props.map(p => `<li>${p}</li>`).join('')}</ul></div>`;
+                }
+                if (data.children && data.children.length > 0) {
+                    html += `<div class="info-section"><strong>Componentes Hijos:</strong><ul>${data.children.map(c => `<li>${c}</li>`).join('')}</ul></div>`;
+                }
+
+                infoPanel.innerHTML = html;
+                infoPanel.classList.add('active');
+            } else {
+                infoPanel.classList.remove('active');
+            }
+        });
+
+        // Botones
+        document.getElementById('btn-fit').addEventListener('click', () => network.fit());
+    </script>
+</body>
+</html>

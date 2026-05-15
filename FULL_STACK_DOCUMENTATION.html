@@ -1,0 +1,809 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Documentación Full-Stack - App Gestión Servicios Sociales</title>
+    <script type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/vis/4.21.0/vis.min.js"></script>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/vis/4.21.0/vis.min.css" rel="stylesheet" type="text/css" />
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            padding: 20px;
+        }
+
+        .container {
+            width: 100%;
+            background: white;
+            border-radius: 12px;
+            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+            overflow: hidden;
+            display: flex;
+            flex-direction: column;
+            height: 90vh;
+            position: relative;
+        }
+
+        header {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 30px 20px;
+            text-align: center;
+            flex-shrink: 0;
+        }
+
+        header h1 {
+            font-size: 2.2em;
+            margin-bottom: 8px;
+        }
+
+        header p {
+            font-size: 1em;
+            opacity: 0.95;
+        }
+
+        .toolbar {
+            padding: 15px 20px;
+            background: #f8f9fa;
+            border-bottom: 1px solid #dee2e6;
+            display: flex;
+            gap: 15px;
+            flex-wrap: wrap;
+            align-items: center;
+            flex-shrink: 0;
+        }
+
+        .toolbar button {
+            padding: 8px 16px;
+            background: #667eea;
+            color: white;
+            border: none;
+            border-radius: 6px;
+            cursor: pointer;
+            font-size: 0.9em;
+            transition: all 0.3s ease;
+        }
+
+        .toolbar button:hover {
+            background: #764ba2;
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(102, 126, 234, 0.4);
+        }
+
+        .toolbar button.active {
+            background: #764ba2;
+            box-shadow: 0 4px 12px rgba(118, 75, 162, 0.4);
+        }
+
+        #canvas {
+            flex: 1;
+            background: white;
+            overflow: hidden;
+            position: relative;
+        }
+
+        .info-panel {
+            position: absolute;
+            bottom: 20px;
+            right: 20px;
+            background: white;
+            border: 3px solid #667eea;
+            border-radius: 8px;
+            padding: 20px;
+            max-width: 400px;
+            max-height: 400px;
+            overflow-y: auto;
+            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.3);
+            z-index: 100;
+            display: none;
+        }
+
+        .info-panel.active {
+            display: block;
+            animation: slideIn 0.3s ease;
+        }
+
+        @keyframes slideIn {
+            from {
+                opacity: 0;
+                transform: translateY(10px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        .info-panel h3 {
+            color: #667eea;
+            margin-bottom: 12px;
+            border-bottom: 2px solid #667eea;
+            padding-bottom: 8px;
+            font-size: 1.1em;
+        }
+
+        .info-label {
+            color: #999;
+            font-size: 0.8em;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            margin-top: 10px;
+            margin-bottom: 5px;
+        }
+
+        .info-section {
+            margin-bottom: 12px;
+        }
+
+        .info-section strong {
+            color: #333;
+            display: block;
+            font-size: 0.95em;
+            margin-bottom: 6px;
+        }
+
+        .info-section ul {
+            list-style: none;
+            margin-left: 0;
+        }
+
+        .info-section li {
+            font-size: 0.85em;
+            color: #666;
+            padding: 3px 0 3px 15px;
+            position: relative;
+        }
+
+        .info-section li:before {
+            content: "→";
+            position: absolute;
+            left: 0;
+            color: #667eea;
+        }
+
+        .info-badge {
+            display: inline-block;
+            background: #667eea;
+            color: white;
+            padding: 2px 8px;
+            border-radius: 3px;
+            font-size: 0.75em;
+            margin-right: 5px;
+            margin-bottom: 5px;
+        }
+
+        .legend {
+            padding: 15px 20px;
+            background: #fff3cd;
+            border-top: 1px solid #ffc107;
+            display: flex;
+            gap: 25px;
+            flex-wrap: wrap;
+            font-size: 0.85em;
+            flex-shrink: 0;
+        }
+
+        .legend-item {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .legend-color {
+            width: 16px;
+            height: 16px;
+            border-radius: 3px;
+            border: 2px solid;
+        }
+
+        footer {
+            padding: 15px 20px;
+            background: #f8f9fa;
+            border-top: 1px solid #dee2e6;
+            text-align: center;
+            color: #666;
+            font-size: 0.85em;
+            flex-shrink: 0;
+        }
+
+        .layer-container {
+            position: absolute;
+            border: 3px solid;
+            border-radius: 8px;
+            padding: 20px;
+            background-color: rgba(255, 255, 255, 0.3);
+            pointer-events: none;
+            z-index: 10;
+            box-shadow: inset 0 0 15px rgba(0, 0, 0, 0.1), 0 0 20px rgba(0, 0, 0, 0.15);
+        }
+
+        .layer-title {
+            font-size: 12px;
+            font-weight: bold;
+            color: #666;
+            margin-bottom: 10px;
+        }
+
+        .layer-container.frontend {
+            border-color: #FF9800;
+            background-color: rgba(255, 152, 0, 0.05);
+        }
+
+        .layer-container.services {
+            border-color: #FBC02D;
+            background-color: rgba(251, 192, 45, 0.05);
+        }
+
+        .layer-container.backend {
+            border-color: #4CAF50;
+            background-color: rgba(76, 175, 80, 0.05);
+        }
+
+        .layer-container.database {
+            border-color: #2196F3;
+            background-color: rgba(33, 150, 243, 0.05);
+        }
+
+        @media (max-width: 768px) {
+            header h1 {
+                font-size: 1.6em;
+            }
+            .info-panel {
+                max-width: 90vw;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <header>
+            <h1>🏗️ Documentación Full-Stack Completa</h1>
+            <p>Frontend Components → Services → Backend Controllers → Database Models</p>
+        </header>
+
+        <div class="toolbar">
+            <button id="btn-all" class="active">📊 Vista Completa</button>
+            <button id="btn-flow">🔄 Flujo de Datos</button>
+            <button id="btn-db">🗄️ Base de Datos</button>
+            <span style="flex: 1;"></span>
+            <button id="btn-fit">⟲ Ajustar Vista</button>
+        </div>
+
+        <div id="canvas">
+            <div id="layersWrapper" style="position: absolute; top: 0; left: 0; width: 100%; height: 100%; pointer-events: none; z-index: 50;"></div>
+        </div>
+
+        <div class="legend">
+            <div class="legend-item">
+                <div class="legend-color" style="background: #ffe0b2; border-color: #FF9800;"></div>
+                <span>Componentes React</span>
+            </div>
+            <div class="legend-item">
+                <div class="legend-color" style="background: #fffde7; border-color: #FBC02D;"></div>
+                <span>Servicios Frontend</span>
+            </div>
+            <div class="legend-item">
+                <div class="legend-color" style="background: #f1f8e9; border-color: #4CAF50;"></div>
+                <span>Controllers Backend</span>
+            </div>
+            <div class="legend-item">
+                <div class="legend-color" style="background: #e3f2fd; border-color: #2196F3;"></div>
+                <span>Modelos BD</span>
+            </div>
+        </div>
+
+        <div id="infoPanel" class="info-panel"></div>
+
+        <footer>
+            <p>Documentación generada automáticamente | Click en elementos para ver detalles | Arrastra para mover, rueda para zoom</p>
+        </footer>
+    </div>
+
+    <script>
+        // Datos completos del stack
+        const componentsData = {
+            // ============= REACT COMPONENTS =============
+            'DashboardPage': {
+                type: 'component',
+                category: 'Frontend Components',
+                path: 'frontend/src/pages/DashboardPage/DashboardPage.jsx',
+                color: '#ffe0b2',
+                borderColor: '#FF9800',
+                children: ['GestionPlanesV1', 'RecibosPage', 'GestionBugs', 'GestionUsuarios'],
+                hooks: ['useState', 'useEffect', 'useAuth', 'useConfig'],
+                contexts: ['AuthContext', 'NotificationContext'],
+                description: 'Contenedor principal de la aplicación, router de páginas'
+            },
+            'GestionPlanesV1': {
+                type: 'component',
+                category: 'Frontend Components',
+                path: 'frontend/src/pages/DashboardPage/components/GestionPlanesV1/GestionPlanesV1.jsx',
+                color: '#ffe0b2',
+                borderColor: '#FF9800',
+                parent: 'DashboardPage',
+                children: ['PlanV1Modal', 'GenerarRecibosModal'],
+                services: ['planesV1Service'],
+                hooks: ['useState', 'useEffect', 'useSortable'],
+                description: 'Tabla de gestión de planes con CRUD'
+            },
+            'RecibosPage': {
+                type: 'component',
+                category: 'Frontend Components',
+                path: 'frontend/src/pages/RecibosPage/RecibosPage.jsx',
+                color: '#ffe0b2',
+                borderColor: '#FF9800',
+                parent: 'DashboardPage',
+                services: ['recibosService'],
+                hooks: ['useState', 'useEffect'],
+                description: 'Visualización y gestión de recibos'
+            },
+            'PlanV1Modal': {
+                type: 'component',
+                category: 'Frontend Components',
+                path: 'frontend/src/pages/DashboardPage/components/GestionPlanesV1/modals/PlanV1Modal.jsx',
+                color: '#ffe0b2',
+                borderColor: '#FF9800',
+                parent: 'GestionPlanesV1',
+                services: ['planesV1Service', 'personasService', 'lookupService'],
+                hooks: ['useState', 'useEffect', 'useCallback'],
+                description: 'Modal CRUD para editar/crear planes'
+            },
+            'GenerarRecibosModal': {
+                type: 'component',
+                category: 'Frontend Components',
+                path: 'frontend/src/pages/DashboardPage/components/GestionPlanesV1/modals/GenerarRecibosModal.jsx',
+                color: '#ffe0b2',
+                borderColor: '#FF9800',
+                parent: 'GestionPlanesV1',
+                services: ['recibosService'],
+                hooks: ['useState', 'useEffect'],
+                description: 'Modal para generar recibos en lote'
+            },
+            'GestionBugs': {
+                type: 'component',
+                category: 'Frontend Components',
+                path: 'frontend/src/pages/DashboardPage/components/GestionBugs/GestionBugs.jsx',
+                color: '#ffe0b2',
+                borderColor: '#FF9800',
+                parent: 'DashboardPage',
+                services: [],
+                hooks: ['useState', 'useEffect'],
+                description: 'Gestión de bugs y requerimientos'
+            },
+            'GestionUsuarios': {
+                type: 'component',
+                category: 'Frontend Components',
+                path: 'frontend/src/pages/DashboardPage/components/GestionUsuarios/GestionUsuarios.jsx',
+                color: '#ffe0b2',
+                borderColor: '#FF9800',
+                parent: 'DashboardPage',
+                services: ['usuariosService'],
+                hooks: ['useState', 'useEffect'],
+                description: 'Administración de usuarios del sistema'
+            },
+
+            // ============= FRONTEND SERVICES =============
+            'planesV1Service': {
+                type: 'service',
+                category: 'Frontend Services',
+                path: 'frontend/src/services/planesV1Service.js',
+                color: '#fffde7',
+                borderColor: '#FBC02D',
+                endpoints: ['POST /planes/crear-completo', 'GET /planes/filter', 'PUT /planes/actualizar-completo/:id', 'PATCH /planes/:id/estado', 'PATCH /planes/bulk-update-cuota'],
+                description: 'Cliente HTTP para operaciones de planes'
+            },
+            'recibosService': {
+                type: 'service',
+                category: 'Frontend Services',
+                path: 'frontend/src/services/recibosService.js',
+                color: '#fffde7',
+                borderColor: '#FBC02D',
+                endpoints: ['POST /recibos/generar', 'GET /recibos', 'GET /recibos/:id', 'GET /recibos/periodos'],
+                description: 'Cliente HTTP para operaciones de recibos'
+            },
+            'personasService': {
+                type: 'service',
+                category: 'Frontend Services',
+                path: 'frontend/src/services/personasService.js',
+                color: '#fffde7',
+                borderColor: '#FBC02D',
+                endpoints: ['POST /personas', 'GET /personas/search'],
+                description: 'Cliente HTTP para búsqueda y creación de personas'
+            },
+            'lookupService': {
+                type: 'service',
+                category: 'Frontend Services',
+                path: 'frontend/src/services/lookupService.js',
+                color: '#fffde7',
+                borderColor: '#FBC02D',
+                endpoints: ['GET /lookup/:entity', 'POST /lookup/:entity', 'DELETE /lookup/:entity/:id'],
+                description: 'Cliente HTTP para tablas de catálogo (lookup tables)'
+            },
+            'usuariosService': {
+                type: 'service',
+                category: 'Frontend Services',
+                path: 'frontend/src/services/usuariosService.js',
+                color: '#fffde7',
+                borderColor: '#FBC02D',
+                endpoints: ['GET /usuarios', 'POST /usuarios', 'PUT /usuarios/:id', 'DELETE /usuarios/:id'],
+                description: 'Cliente HTTP para gestión de usuarios'
+            },
+
+            // ============= BACKEND CONTROLLERS =============
+            'planesController': {
+                type: 'controller',
+                category: 'Backend Controllers',
+                path: 'backend/src/controllers/planesController.js',
+                color: '#f1f8e9',
+                borderColor: '#4CAF50',
+                functions: ['crearCompleto', 'filter', 'actualizarCompleto', 'actualizarEstado', 'bulkUpdateCuota'],
+                models: ['PlanV1', 'PlanIntegrante', 'Persona', 'ObraSocial'],
+                description: 'Lógica de negocio para planes'
+            },
+            'recibosController': {
+                type: 'controller',
+                category: 'Backend Controllers',
+                path: 'backend/src/controllers/recibosController.js',
+                color: '#f1f8e9',
+                borderColor: '#4CAF50',
+                functions: ['generar', 'obtenerTodos', 'obtenerPorId', 'obtenerPeriodos'],
+                models: ['Recibo', 'ReciboIntegrante', 'PlanV1', 'PeriodosRecibos'],
+                description: 'Lógica de generación y consulta de recibos'
+            },
+            'personasController': {
+                type: 'controller',
+                category: 'Backend Controllers',
+                path: 'backend/src/controllers/personasController.js',
+                color: '#f1f8e9',
+                borderColor: '#4CAF50',
+                functions: ['crear', 'buscar'],
+                models: ['Persona'],
+                description: 'Operaciones CRUD de personas'
+            },
+            'lookupController': {
+                type: 'controller',
+                category: 'Backend Controllers',
+                path: 'backend/src/controllers/lookupController.js',
+                color: '#f1f8e9',
+                borderColor: '#4CAF50',
+                functions: ['obtener', 'crear', 'eliminar'],
+                models: ['ObraSocial', 'TipoPlan', 'TipoDeGrupo', 'Cobrador'],
+                description: 'CRUD genérico para tablas de catálogo'
+            },
+            'usuariosController': {
+                type: 'controller',
+                category: 'Backend Controllers',
+                path: 'backend/src/controllers/usuariosController.js',
+                color: '#f1f8e9',
+                borderColor: '#4CAF50',
+                functions: ['obtenerTodos', 'crear', 'actualizar', 'eliminar'],
+                models: ['Usuario'],
+                description: 'Gestión de usuarios del sistema'
+            },
+
+            // ============= DATABASE MODELS =============
+            'PlanV1': {
+                type: 'model',
+                category: 'Database Models',
+                path: 'backend/src/models/PlanV1.js',
+                color: '#e3f2fd',
+                borderColor: '#2196F3',
+                fields: ['id', 'plan_numero', 'persona_id', 'fecha_inicio', 'fecha_fin', 'estado', 'cuota_basica', 'obra_social_id'],
+                relations: ['hasMany: PlanIntegrante', 'hasMany: Recibo', 'belongsTo: Persona', 'belongsTo: ObraSocial'],
+                description: 'Plan de afiliación principal'
+            },
+            'PlanIntegrante': {
+                type: 'model',
+                category: 'Database Models',
+                path: 'backend/src/models/PlanIntegrante.js',
+                color: '#e3f2fd',
+                borderColor: '#2196F3',
+                fields: ['id', 'plan_v1_id', 'persona_id', 'vinculo', 'fecha_inclusion'],
+                relations: ['belongsTo: PlanV1', 'belongsTo: Persona'],
+                description: 'Miembros integrantes de un plan'
+            },
+            'Persona': {
+                type: 'model',
+                category: 'Database Models',
+                path: 'backend/src/models/Persona.js',
+                color: '#e3f2fd',
+                borderColor: '#2196F3',
+                fields: ['id', 'numero_afiliado', 'nombre', 'apellido', 'documento', 'fecha_nacimiento'],
+                relations: ['hasMany: PlanV1', 'hasMany: PlanIntegrante'],
+                description: 'Registro de personas en el sistema'
+            },
+            'Recibo': {
+                type: 'model',
+                category: 'Database Models',
+                path: 'backend/src/models/Recibo.js',
+                color: '#e3f2fd',
+                borderColor: '#2196F3',
+                fields: ['id', 'plan_numero', 'numero_recibo', 'fecha_emision', 'monto_total'],
+                relations: ['hasMany: ReciboIntegrante', 'belongsTo: PlanV1'],
+                description: 'Comprobantes de pago'
+            },
+            'ReciboIntegrante': {
+                type: 'model',
+                category: 'Database Models',
+                path: 'backend/src/models/ReciboIntegrante.js',
+                color: '#e3f2fd',
+                borderColor: '#2196F3',
+                fields: ['id', 'recibo_id', 'persona_id', 'monto_cuota'],
+                relations: ['belongsTo: Recibo'],
+                description: 'Líneas de detalle de recibos'
+            },
+            'ObraSocial': {
+                type: 'model',
+                category: 'Database Models',
+                path: 'backend/src/models/ObraSocial.js',
+                color: '#e3f2fd',
+                borderColor: '#2196F3',
+                fields: ['id', 'codigo', 'nombre'],
+                relations: ['hasMany: PlanV1'],
+                description: 'Obras sociales/cobertura médica'
+            },
+            'Usuario': {
+                type: 'model',
+                category: 'Database Models',
+                path: 'backend/src/models/Usuario.js',
+                color: '#e3f2fd',
+                borderColor: '#2196F3',
+                fields: ['id', 'email', 'nombre', 'apellido', 'rol', 'activo'],
+                relations: ['hasMany: AuditLog'],
+                description: 'Usuarios del sistema'
+            },
+            'PeriodosRecibos': {
+                type: 'model',
+                category: 'Database Models',
+                path: 'backend/src/models/PeriodosRecibos.js',
+                color: '#e3f2fd',
+                borderColor: '#2196F3',
+                fields: ['id', 'periodo', 'fecha_vencimiento'],
+                relations: [],
+                description: 'Períodos de emisión de recibos'
+            }
+        };
+
+        // Crear nodos
+        const nodes = new vis.DataSet(
+            Object.entries(componentsData).map(([name, data]) => ({
+                id: name,
+                label: name,
+                color: data.color,
+                borderWidth: 2,
+                borderColor: data.borderColor,
+                group: data.type,
+                title: data.description,
+                data: data
+            }))
+        );
+
+        // Crear edges (relaciones)
+        const edges = new vis.DataSet();
+
+        // Component → Service
+        Object.entries(componentsData).forEach(([name, data]) => {
+            if (data.type === 'component' && data.services) {
+                data.services.forEach(service => {
+                    edges.add({
+                        from: name,
+                        to: service,
+                        color: '#667eea',
+                        arrows: 'to',
+                        width: 1.5,
+                        dashes: false
+                    });
+                });
+            }
+        });
+
+        // Service → Controller (basado en endpoints)
+        const serviceToController = {
+            'planesV1Service': 'planesController',
+            'recibosService': 'recibosController',
+            'personasService': 'personasController',
+            'lookupService': 'lookupController',
+            'usuariosService': 'usuariosController'
+        };
+
+        Object.entries(serviceToController).forEach(([service, controller]) => {
+            edges.add({
+                from: service,
+                to: controller,
+                color: '#ff9800',
+                arrows: 'to',
+                width: 1.5,
+                dashes: false
+            });
+        });
+
+        // Controller → Model
+        Object.entries(componentsData).forEach(([name, data]) => {
+            if (data.type === 'controller' && data.models) {
+                data.models.forEach(model => {
+                    edges.add({
+                        from: name,
+                        to: model,
+                        color: '#4CAF50',
+                        arrows: 'to',
+                        width: 1.5,
+                        dashes: false
+                    });
+                });
+            }
+        });
+
+        // Component → Component (padre-hijo)
+        Object.entries(componentsData).forEach(([name, data]) => {
+            if (data.type === 'component' && data.children) {
+                data.children.forEach(child => {
+                    edges.add({
+                        from: name,
+                        to: child,
+                        color: '#999',
+                        arrows: 'to',
+                        width: 1,
+                        dashes: true
+                    });
+                });
+            }
+        });
+
+        // Posicionar nodos por capas
+        const layers = {
+            'component': { x: 100, cols: 3 },
+            'service': { x: 550, cols: 2 },
+            'controller': { x: 950, cols: 2 },
+            'model': { x: 1350, cols: 3 }
+        };
+
+        let layerIndices = {};
+        nodes.forEach(node => {
+            const layer = node.group;
+            if (!layerIndices[layer]) layerIndices[layer] = 0;
+
+            const layerInfo = layers[layer];
+            const row = layerIndices[layer];
+            const col = row % layerInfo.cols;
+            const rowNum = Math.floor(row / layerInfo.cols);
+
+            node.x = layerInfo.x + col * 200;
+            node.y = 150 + rowNum * 220;
+
+            layerIndices[layer]++;
+        });
+
+        const options = {
+            physics: { enabled: false },
+            interaction: {
+                navigationButtons: true,
+                keyboard: true,
+                zoomView: true,
+                dragView: true
+            },
+            nodes: {
+                font: { size: 12, color: '#333', face: 'Segoe UI' },
+                shape: 'box',
+                margin: 10,
+                widthConstraint: { maximum: 160 }
+            },
+            edges: {
+                smooth: { type: 'continuous' },
+                arrows: { to: { enabled: true, scaleFactor: 0.5 } },
+                font: { size: 10 }
+            }
+        };
+
+        const container = document.getElementById('canvas');
+        const data = { nodes, edges };
+        const network = new vis.Network(container, data, options);
+
+        // Info panel
+        const infoPanel = document.getElementById('infoPanel');
+
+        network.on('click', function(params) {
+            if (params.nodes.length > 0) {
+                const nodeId = params.nodes[0];
+                const node = nodes.get(nodeId);
+                const data = node.data;
+
+                let html = `<h3>${nodeId}</h3>`;
+                html += `<div class="info-label">${data.type}</div>`;
+                html += `<div class="info-section"><strong>📁 Ruta:</strong> <small>${data.path}</small></div>`;
+
+                if (data.description) {
+                    html += `<div class="info-section"><strong>📝 Descripción:</strong> ${data.description}</div>`;
+                }
+
+                if (data.hooks && data.hooks.length > 0) {
+                    html += `<div class="info-section"><strong>⚙️ Hooks:</strong> ${data.hooks.map(h => `<span class="info-badge">${h}</span>`).join('')}</div>`;
+                }
+
+                if (data.contexts && data.contexts.length > 0) {
+                    html += `<div class="info-section"><strong>🎯 Contextos:</strong><ul>${data.contexts.map(c => `<li>${c}</li>`).join('')}</ul></div>`;
+                }
+
+                if (data.services && data.services.length > 0) {
+                    html += `<div class="info-section"><strong>🔌 Servicios:</strong><ul>${data.services.map(s => `<li>${s}</li>`).join('')}</ul></div>`;
+                }
+
+                if (data.endpoints && data.endpoints.length > 0) {
+                    html += `<div class="info-section"><strong>📡 Endpoints:</strong><ul>${data.endpoints.map(e => `<li>${e}</li>`).join('')}</ul></div>`;
+                }
+
+                if (data.functions && data.functions.length > 0) {
+                    html += `<div class="info-section"><strong>⚡ Funciones:</strong><ul>${data.functions.map(f => `<li>${f}</li>`).join('')}</ul></div>`;
+                }
+
+                if (data.models && data.models.length > 0) {
+                    html += `<div class="info-section"><strong>🗄️ Modelos:</strong><ul>${data.models.map(m => `<li>${m}</li>`).join('')}</ul></div>`;
+                }
+
+                if (data.fields && data.fields.length > 0) {
+                    html += `<div class="info-section"><strong>📋 Campos:</strong><ul>${data.fields.map(f => `<li>${f}</li>`).join('')}</ul></div>`;
+                }
+
+                if (data.relations && data.relations.length > 0) {
+                    html += `<div class="info-section"><strong>🔗 Relaciones:</strong><ul>${data.relations.map(r => `<li>${r}</li>`).join('')}</ul></div>`;
+                }
+
+                if (data.children && data.children.length > 0) {
+                    html += `<div class="info-section"><strong>📦 Componentes Hijos:</strong><ul>${data.children.map(c => `<li>${c}</li>`).join('')}</ul></div>`;
+                }
+
+                infoPanel.innerHTML = html;
+                infoPanel.classList.add('active');
+            } else {
+                infoPanel.classList.remove('active');
+            }
+        });
+
+        // Botones
+        document.getElementById('btn-fit').addEventListener('click', () => network.fit());
+
+        // Crear capas visuales
+        function createLayerContainers() {
+            const wrapper = document.getElementById('layersWrapper');
+            wrapper.innerHTML = '';
+
+            const layerPositions = {
+                'Frontend': { x: 40, y: 50, width: 420, height: 900, class: 'frontend' },
+                'Services': { x: 480, y: 50, width: 420, height: 900, class: 'services' },
+                'Backend': { x: 920, y: 50, width: 420, height: 900, class: 'backend' },
+                'Database': { x: 1360, y: 50, width: 420, height: 900, class: 'database' }
+            };
+
+            Object.entries(layerPositions).forEach(([layer, pos]) => {
+                const div = document.createElement('div');
+                div.className = `layer-container ${pos.class}`;
+                div.style.left = pos.x + 'px';
+                div.style.top = pos.y + 'px';
+                div.style.width = pos.width + 'px';
+                div.style.height = pos.height + 'px';
+                div.style.position = 'absolute';
+                div.style.boxSizing = 'border-box';
+
+                const title = document.createElement('div');
+                title.className = 'layer-title';
+                title.textContent = layer;
+                div.appendChild(title);
+
+                wrapper.appendChild(div);
+            });
+        }
+
+        setTimeout(() => {
+            createLayerContainers();
+            network.fit();
+        }, 300);
+    </script>
+</body>
+</html>
