@@ -576,7 +576,7 @@ function PlanV1Modal({ mode, planData, onClose, onSave }) {
                     id="field-zona_id"
                     value={form.zona_id}
                     onChange={handleZonaChange}
-                    className="plan-v1-modal__zona-select"
+                    className={`plan-v1-modal__zona-select ${zonaCodigo ? 'plan-v1-modal__zona-select--with-overlay' : ''}`}
                   >
                     <option value="">Seleccionar...</option>
                     {lookupData.zonas.map((z) => (

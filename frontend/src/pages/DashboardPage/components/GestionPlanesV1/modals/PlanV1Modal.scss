@@ -374,21 +374,22 @@
   position: relative;
   z-index: 1;
 
-  // Cuando hay overlay visible, hacemos el select partially transparent
-  // para que se vea el código debajo
-  &:has(+ .plan-v1-modal__zona-display) {
-    color: transparent;
-
-    // Cuando está abierto (focus), mostrar el texto normal
-    &:focus,
-    &:active {
-      color: inherit;
-    }
-  }
-
   // Las opciones siempre deben ser visibles
   option {
     color: inherit;
+  }
+
+  // Cuando hay overlay visible, hacemos el select transparent
+  // para que se vea el código debajo
+  &--with-overlay {
+    color: transparent;
+
+    // Cuando está abierto (focus/active), mostrar el texto normal
+    &:focus,
+    &:active,
+    &:focus-visible {
+      color: inherit;
+    }
   }
 }
 
