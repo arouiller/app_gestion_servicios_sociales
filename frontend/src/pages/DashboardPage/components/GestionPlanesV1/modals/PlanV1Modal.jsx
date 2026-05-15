@@ -57,6 +57,7 @@ function PlanV1Modal({ mode, planData, onClose, onSave }) {
   const [recibosLoading, setRecibosLoading] = useState(false);
   const [recibosPage, setRecibosPage] = useState(1);
   const recibosPerPage = 10;
+  const [zonaCodigo, setZonaCodigo] = useState('');
 
   // Column resize hooks for 3 tables
   const { widths: widthsAfiliados, getResizeHandle: getResizeHandleAfiliados } = useColumnResize(
@@ -478,6 +479,18 @@ function PlanV1Modal({ mode, planData, onClose, onSave }) {
     }
   };
 
+  const handleZonaChange = (e) => {
+    const selectedId = e.target.value;
+    handleFieldChange('zona_id', selectedId);
+
+    if (selectedId) {
+      const zona = lookupData.zonas.find(z => z.id === parseInt(selectedId));
+      setZonaCodigo(zona?.codigo || '');
+    } else {
+      setZonaCodigo('');
+    }
+  };
+
   return (
     <>
       <div className="plan-v1-modal__overlay" />
@@ -557,6 +570,25 @@ function PlanV1Modal({ mode, planData, onClose, onSave }) {
             <div className="plan-v1-modal__tab-content">
             <div className="plan-v1-modal__form-grid">
               <div className="plan-v1-modal__field">
+                <label>Zona</label>
+                <select
+                  id="field-zona_id"
+                  value={form.zona_id}
+                  onChange={handleZonaChange}
+                  data-selected-code={zonaCodigo}
+                  className="plan-v1-modal__zona-select"
+                >
+                  <option value="">Seleccionar...</option>
+                  {lookupData.zonas.map((z) => (
+                    <option key={z.id} value={z.id}>
+                      {z.codigo} — {z.nombre}
+                    </option>
+                  ))}
+                </select>
+                {errors.zona_id && <span className="plan-v1-modal__error">{errors.zona_id}</span>}
+              </div>
+
+              <div className="plan-v1-modal__field">
                 <label>Número de Afiliado *</label>
                 <input
                   id="field-numero_afiliado"
@@ -569,6 +601,23 @@ function PlanV1Modal({ mode, planData, onClose, onSave }) {
                   onChange={(e) => handleFieldChange('numero_afiliado', e.target.value)}
                 />
                 {errors.numero_afiliado && <span className="plan-v1-modal__error">{errors.numero_afiliado}</span>}
+              </div>
+
+              <div className="plan-v1-modal__field">
+                <label>Tipo de Grupo *</label>
+                <select
+                  id="field-tipo_de_grupo_numero"
+                  value={form.tipo_de_grupo_numero}
+                  onChange={(e) => handleFieldChange('tipo_de_grupo_numero', e.target.value)}
+                >
+                  <option value="">Seleccionar...</option>
+                  {lookupData.tiposDeGrupo.map((tg) => (
+                    <option key={tg.tipo_de_grupo_numero} value={tg.tipo_de_grupo_numero}>
+                      {tg.tipo_de_grupo_nombre}
+                    </option>
+                  ))}
+                </select>
+                {errors.tipo_de_grupo_numero && <span className="plan-v1-modal__error">{errors.tipo_de_grupo_numero}</span>}
               </div>
 
               <div className="plan-v1-modal__field">
@@ -623,23 +672,6 @@ function PlanV1Modal({ mode, planData, onClose, onSave }) {
               </div>
 
               <div className="plan-v1-modal__field">
-                <label>Tipo de Grupo *</label>
-                <select
-                  id="field-tipo_de_grupo_numero"
-                  value={form.tipo_de_grupo_numero}
-                  onChange={(e) => handleFieldChange('tipo_de_grupo_numero', e.target.value)}
-                >
-                  <option value="">Seleccionar...</option>
-                  {lookupData.tiposDeGrupo.map((tg) => (
-                    <option key={tg.tipo_de_grupo_numero} value={tg.tipo_de_grupo_numero}>
-                      {tg.tipo_de_grupo_nombre}
-                    </option>
-                  ))}
-                </select>
-                {errors.tipo_de_grupo_numero && <span className="plan-v1-modal__error">{errors.tipo_de_grupo_numero}</span>}
-              </div>
-
-              <div className="plan-v1-modal__field">
                 <label>Estado *</label>
                 <select
                   value={form.estado}
@@ -664,7 +696,6 @@ function PlanV1Modal({ mode, planData, onClose, onSave }) {
                 {errors.valor_cuota && <span className="plan-v1-modal__error">{errors.valor_cuota}</span>}
               </div>
 
-
               <div className="plan-v1-modal__field">
                 <label>Domicilio</label>
                 <input
@@ -681,23 +712,6 @@ function PlanV1Modal({ mode, planData, onClose, onSave }) {
                   value={form.telefono_1}
                   onChange={(e) => handleFieldChange('telefono_1', e.target.value)}
                 />
-              </div>
-
-              <div className="plan-v1-modal__field">
-                <label>Zona</label>
-                <select
-                  id="field-zona_id"
-                  value={form.zona_id}
-                  onChange={(e) => handleFieldChange('zona_id', e.target.value)}
-                >
-                  <option value="">Seleccionar...</option>
-                  {lookupData.zonas.map((z) => (
-                    <option key={z.id} value={z.id}>
-                      {z.codigo} — {z.nombre}
-                    </option>
-                  ))}
-                </select>
-                {errors.zona_id && <span className="plan-v1-modal__error">{errors.zona_id}</span>}
               </div>
 
               <div className="plan-v1-modal__field">

@@ -360,3 +360,39 @@
     transform: translateY(0);
   }
 }
+
+// Display personalizado para selector de zona
+.plan-v1-modal__zona-select {
+  position: relative;
+
+  // Cuando el select tiene el atributo data-selected-code,
+  // mostrar solo el código en lugar del texto completo
+  &[data-selected-code]:not([data-selected-code=""]) {
+    color: transparent;
+    background-image: none;
+
+    // Usar ::before para mostrar el código
+    &::before {
+      content: attr(data-selected-code);
+      position: absolute;
+      left: 8px;
+      top: 50%;
+      transform: translateY(-50%);
+      pointer-events: none;
+      color: inherit;
+      font-size: inherit;
+      font-family: inherit;
+    }
+  }
+
+  // Cuando el select está enfocado o activo, permitir ver las opciones
+  &:focus,
+  &:active {
+    color: initial;
+  }
+
+  // Las opciones dentro siempre deben ser visibles normalmente
+  option {
+    color: initial;
+  }
+}
