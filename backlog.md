@@ -102,6 +102,7 @@ De cualquier estado → Descartado
 | BACKLOG-072 | 🔴 Alta | 📋 Registrado | Búsqueda en gestión de planes: filtrar solo por apellido del titular | Actualmente la búsqueda por cadena de texto busca en múltiples campos. Requerimiento: restringir búsqueda solo al apellido del titular. | GestionPlanesV1.jsx, planesService.js |
 | BACKLOG-073 | 🔴 Alta | 📋 Registrado | Navegación por teclado en gestión de planes con registro activo | Implementar concepto de "registro activo" en tabla de planes. Navegación: ↑/↓ (un registro), scroll up/down (una página). ALT+G abre información del plan activo. Visual: fila resaltada. | GestionPlanesV1.jsx, PlanV1Modal.jsx, usePagination.js |
 | BACKLOG-074 | 🟡 Media | 📋 Registrado | Reordenar campos en formulario de planes: zona a la izquierda del número de afiliado | En el formulario de planes (PlanV1Modal), mover el selector de zona hacia la izquierda del campo de número de afiliado. Cuando se selecciona una opción, mostrar solo el número de zona. El número y nombre completo solo aparecen cuando se despliega el combo. | PlanV1Modal.jsx |
+| BACKLOG-075 | 🟡 Media | 📋 Registrado | Orden de campos en formulario de planes | Reordenar campos en el formulario del plan para mejorar el flujo de entrada: (1) Zona/Número de afiliado, (2) Tipo de grupo, (3) Tipo de plan, (4) Resto de los campos. | PlanV1Modal.jsx |
 
 ## Detalles de Items
 
