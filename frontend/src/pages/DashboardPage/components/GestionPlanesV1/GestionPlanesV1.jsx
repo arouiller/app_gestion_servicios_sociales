@@ -100,19 +100,10 @@ function GestionPlanesV1() {
     setPage(1);
   }, [sortBy, order, filtros, configItemsPerPage]);
 
-  // Filtrar planes por búsqueda de texto (en cliente, solo en los items de la página actual)
+  // Filtrar planes por búsqueda de texto (solo por apellido del titular)
   const planesFiltered = planes.filter(plan => {
     const searchLower = searchText.toLowerCase();
-    return (
-      plan.numero_afiliado?.toLowerCase().includes(searchLower) ||
-      plan.Zona?.codigo?.toLowerCase().includes(searchLower) ||
-      plan.TipoDePlan?.tipo_plan_nombre?.toLowerCase().includes(searchLower) ||
-      plan.Cobrador?.cobrador_apellido?.toLowerCase().includes(searchLower) ||
-      plan.Cobrador?.cobrador_nombre?.toLowerCase().includes(searchLower) ||
-      plan.ObraSocial?.os_nombre?.toLowerCase().includes(searchLower) ||
-      plan.PlanIntegrantes?.[0]?.Persona?.apellido?.toLowerCase().includes(searchLower) ||
-      plan.PlanIntegrantes?.[0]?.Persona?.nombre?.toLowerCase().includes(searchLower)
-    );
+    return plan.PlanIntegrantes?.[0]?.Persona?.apellido?.toLowerCase().includes(searchLower);
   });
 
   // Recargar planes cuando cambia el ordenamiento, filtros, página o búsqueda
@@ -264,7 +255,7 @@ function GestionPlanesV1() {
         {planes.length > 0 && (
           <div className="gestion-planes-v1__filters">
             <SearchContainer
-              placeholder="Buscar por identificador, titular, tipo de plan, cobrador u obra social... (presiona Enter para buscar inmediatamente)"
+              placeholder="Buscar por apellido del titular... (presiona Enter para buscar inmediatamente)"
               value={searchText}
               onChange={setSearchText}
               onKeyDown={handleSearchKeyDown}
