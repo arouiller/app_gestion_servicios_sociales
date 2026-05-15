@@ -224,6 +224,16 @@ function GestionPlanesV1() {
     };
   }, [handleKeyDown]);
 
+  // Hacer scroll a la fila activa cuando cambia
+  useEffect(() => {
+    if (activeRowId) {
+      const activeRow = document.querySelector(`tr[data-plan-numero="${activeRowId}"]`);
+      if (activeRow) {
+        activeRow.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+      }
+    }
+  }, [activeRowId]);
+
   const handleDeletePlan = (plan) => {
     setDeleteModalState({
       firstModal: true,
@@ -424,6 +434,7 @@ function GestionPlanesV1() {
                 {planesFiltered.map((plan) => (
                   <tr
                     key={plan.plan_numero}
+                    data-plan-numero={plan.plan_numero}
                     className={activeRowId === plan.plan_numero ? 'gestion-planes-v1__row--active' : ''}
                   >
                     <td>
