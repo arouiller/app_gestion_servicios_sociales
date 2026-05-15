@@ -27,12 +27,12 @@ Un bug solo puede pasar a estado solucionado, Descartado a traves del pedido exp
 
 | ID | Severidad | Fase | Descripción | Reportado | Estado |
 |----|-----------|------|-------------|-----------|--------|
-| BUG-049 | 🟡 IMPORTANTE | UI | Botón de colapsar menú se mueve con el scroll (debe ser fixed) | 2026-05-15 | 🚀 Desarrollado |
 
 ## Registros Recientemente Cerrados (Últimos 7 días)
 
 | ID | Severidad | Fase | Descripción | Reportado | Solucionado | Commit |
 |----|-----------|------|-------------|-----------|-------------|--------|
+| BUG-049 | 🟡 IMPORTANTE | UI | Botón de colapsar menú se mueve con el scroll (debe ser fixed) | 2026-05-15 | 2026-05-15 | `7d82852` |
 | BUG-048 | 🟡 IMPORTANTE | GestionPlanesV1 | Modal de confirmación muestra "Plan" e "sin titular" en lugar de datos reales | 2026-05-15 | 2026-05-15 | `94e1737` |
 | BUG-047 | 🟢 MENOR | GestionPlanesV1 | Fondo de celda "Estado" es amarillento en planes suspendidos | 2026-05-15 | 2026-05-15 | `b7cda15` |
 | BUG-046 | 🟡 IMPORTANTE | Configuración | Validación incorrecta en "Items por página": rechaza valor 0 | 2026-05-15 | 2026-05-15 | `905d763` |
