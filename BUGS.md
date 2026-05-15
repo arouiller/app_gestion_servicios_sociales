@@ -28,7 +28,7 @@ Un bug solo puede pasar a estado solucionado, Descartado a traves del pedido exp
 | ID | Severidad | Fase | Descripción | Reportado | Estado |
 |----|-----------|------|-------------|-----------|--------|
 | BUG-051 | 🔴 CRÍTICO | BACKLOG-074 | Selector de zona queda vacío al seleccionar opción (display personalizado falla) | 2026-05-15 | 🚀 Desarrollado |
-| BUG-050 | 🟢 MENOR | HistorialAumentosModal | Porcentajes negativos mostrados como "+-X.XX %" en lugar de "-X.XX %" | 2026-05-15 | 📋 Registrado |
+| BUG-050 | 🟢 MENOR | HistorialAumentosModal | Porcentajes negativos mostrados como "+-X.XX %" en lugar de "-X.XX %" | 2026-05-15 | 🚀 Desarrollado |
 
 ## Registros Recientemente Cerrados (Últimos 7 días)
 

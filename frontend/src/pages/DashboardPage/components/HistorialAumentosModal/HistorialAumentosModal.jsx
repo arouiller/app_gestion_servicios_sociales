@@ -96,7 +96,7 @@ function HistorialAumentosModal({ isOpen, onClose }) {
                       {paginatedHistorial.map((h) => (
                         <tr key={h.id}>
                           <td>{formatFecha(h.fecha)}</td>
-                          <td>+{Number(h.porcentaje).toFixed(2)}%</td>
+                          <td>{`${Number(h.porcentaje) >= 0 ? '+' : ''}${Number(h.porcentaje).toFixed(2)}%`}</td>
                           <td>
                             {h.Usuario
                               ? `${h.Usuario.apellido}, ${h.Usuario.nombre}`
