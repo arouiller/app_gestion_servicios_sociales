@@ -361,38 +361,48 @@
   }
 }
 
-// Display personalizado para selector de zona
-.plan-v1-modal__zona-select {
+// Wrapper para display personalizado de zona
+.plan-v1-modal__zona-wrapper {
   position: relative;
+  display: inline-block;
+  width: 100%;
+}
 
-  // Cuando el select tiene el atributo data-selected-code,
-  // mostrar solo el código en lugar del texto completo
-  &[data-selected-code]:not([data-selected-code=""]) {
+// Select de zona con overlay de código
+.plan-v1-modal__zona-select {
+  width: 100%;
+  position: relative;
+  z-index: 1;
+
+  // Cuando hay overlay visible, hacemos el select partially transparent
+  // para que se vea el código debajo
+  &:has(+ .plan-v1-modal__zona-display) {
     color: transparent;
-    background-image: none;
 
-    // Usar ::before para mostrar el código
-    &::before {
-      content: attr(data-selected-code);
-      position: absolute;
-      left: 8px;
-      top: 50%;
-      transform: translateY(-50%);
-      pointer-events: none;
+    // Cuando está abierto (focus), mostrar el texto normal
+    &:focus,
+    &:active {
       color: inherit;
-      font-size: inherit;
-      font-family: inherit;
     }
   }
 
-  // Cuando el select está enfocado o activo, permitir ver las opciones
-  &:focus,
-  &:active {
-    color: initial;
-  }
-
-  // Las opciones dentro siempre deben ser visibles normalmente
+  // Las opciones siempre deben ser visibles
   option {
-    color: initial;
+    color: inherit;
   }
+}
+
+// Overlay que muestra solo el código de zona
+.plan-v1-modal__zona-display {
+  position: absolute;
+  left: 8px;
+  top: 50%;
+  transform: translateY(-50%);
+  pointer-events: none;
+  z-index: 2;
+  color: inherit;
+  font-size: inherit;
+  font-family: inherit;
+  font-weight: inherit;
+  white-space: nowrap;
 }

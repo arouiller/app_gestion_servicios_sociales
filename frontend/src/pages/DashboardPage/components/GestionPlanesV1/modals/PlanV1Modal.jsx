@@ -571,20 +571,24 @@ function PlanV1Modal({ mode, planData, onClose, onSave }) {
             <div className="plan-v1-modal__form-grid">
               <div className="plan-v1-modal__field">
                 <label>Zona</label>
-                <select
-                  id="field-zona_id"
-                  value={form.zona_id}
-                  onChange={handleZonaChange}
-                  data-selected-code={zonaCodigo}
-                  className="plan-v1-modal__zona-select"
-                >
-                  <option value="">Seleccionar...</option>
-                  {lookupData.zonas.map((z) => (
-                    <option key={z.id} value={z.id}>
-                      {z.codigo} — {z.nombre}
-                    </option>
-                  ))}
-                </select>
+                <div className="plan-v1-modal__zona-wrapper">
+                  <select
+                    id="field-zona_id"
+                    value={form.zona_id}
+                    onChange={handleZonaChange}
+                    className="plan-v1-modal__zona-select"
+                  >
+                    <option value="">Seleccionar...</option>
+                    {lookupData.zonas.map((z) => (
+                      <option key={z.id} value={z.id}>
+                        {z.codigo} — {z.nombre}
+                      </option>
+                    ))}
+                  </select>
+                  {zonaCodigo && (
+                    <span className="plan-v1-modal__zona-display">{zonaCodigo}</span>
+                  )}
+                </div>
                 {errors.zona_id && <span className="plan-v1-modal__error">{errors.zona_id}</span>}
               </div>
 
