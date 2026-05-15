@@ -23,14 +23,15 @@ function ConfirmDeletePlanModal({
   if (!isOpen || !plan) return null;
 
   const formatIdentificador = () => {
-    if (!plan.zona || !plan.numero_afiliado) return 'Plan';
-    const zonaCode = String(plan.zona.codigo).padStart(2, '0');
+    if (!plan.Zona || !plan.numero_afiliado) return 'Plan';
+    const zonaCode = String(plan.Zona.codigo).padStart(2, '0');
     return `${zonaCode}-${plan.numero_afiliado}`;
   };
 
   const formatTitular = () => {
-    if (!plan.titular) return 'Sin titular';
-    const { apellido, nombre } = plan.titular;
+    const persona = plan.PlanIntegrantes?.[0]?.Persona;
+    if (!persona) return 'Sin titular';
+    const { apellido, nombre } = persona;
     return `${apellido}, ${nombre}`.trim();
   };
 
