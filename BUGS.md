@@ -25,7 +25,9 @@ Un bug solo puede pasar a estado solucionado, Descartado a traves del pedido exp
 
 ## Registros Activos (En Progress + Reportados)
 
-(Ninguno)
+| ID | Severidad | Fase | Descripción | Reportado | Estado |
+|----|-----------|------|-------------|-----------|--------|
+| BUG-047 | 🟢 MENOR | GestionPlanesV1 | Fondo de celda "Estado" es amarillento en planes suspendidos | 2026-05-15 | 🚀 Desarrollado |
 
 ## Registros Recientemente Cerrados (Últimos 7 días)
 
@@ -3520,3 +3522,46 @@ Esto permite:
 
 **Archivos Modificados:**
 - `backend/src/routes/admin.js` (líneas 48-54)
+
+---
+
+### BUG-047: Fondo de Celda "Estado" Es Amarillento en Planes Suspendidos
+
+**Descripción:**
+En el listado de planes (GestionPlanesV1), la columna "Estado" debe mantener su color de fondo original, independientemente del estado del plan. Actualmente, los planes con estado "Suspendido" muestran un fondo de celda amarillento, mientras que los planes "Activos" respetan el color de fondo estándar.
+
+**Severidad:** 🟢 MENOR
+- Es un problema visual/de estilo
+- No afecta funcionalidad ni datos
+- Inconsistencia de diseño
+
+**Síntomas:**
+1. Usuario abre la lista de planes (GestionPlanesV1)
+2. Observa la columna "Estado"
+3. **Esperado:** Todos los fondos de celda tienen el mismo color, el estado se muestra solo en el texto
+4. **Observado:** Planes suspendidos tienen fondo amarillento; planes activos tienen fondo normal
+
+**Archivos a revisar:**
+- `frontend/src/pages/DashboardPage/components/GestionPlanesV1/` (componentes de tabla/listado)
+- Estilos CSS/SCSS relacionados a la columna Estado
+- Buscar cualquier lógica condicional que aplique estilo al fondo de celda basado en estado
+
+**Reportado:** 2026-05-15
+
+**Causa Raíz Identificada:**
+En `frontend/src/pages/DashboardPage/components/GestionPlanesV1/GestionPlanesV1.scss`, líneas 268-270:
+```scss
+td:has(.status-badge--suspendido) {
+  background-color: var(--color-warning-bg);
+}
+```
+
+El selector CSS `:has(.status-badge--suspendido)` estaba aplicando color de fondo a la celda `<td>` padre cuando contenía un StatusBadge con estado suspendido. El StatusBadge ya tiene sus propios estilos de color que son suficientes para mostrar el estado.
+
+**Solución Implementada:**
+Eliminar las líneas 268-270 de `GestionPlanesV1.scss`. El StatusBadge mantiene su color de fondo (de StatusBadge.scss), mientras que la celda `<td>` regresa a su color original.
+
+**Archivos Modificados:**
+- `frontend/src/pages/DashboardPage/components/GestionPlanesV1/GestionPlanesV1.scss` (líneas 268-270 eliminadas)
+
+**Commit:** `b7cda15`
