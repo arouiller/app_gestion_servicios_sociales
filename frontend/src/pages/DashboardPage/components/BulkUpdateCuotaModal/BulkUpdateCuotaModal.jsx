@@ -153,7 +153,7 @@ function BulkUpdateCuotaModal({ isOpen, onClose, onSuccess }) {
     setError(null);
 
     // Validar valor
-    if (!valor || parseFloat(valor) <= 0) {
+    if (!valor) {
       setError('Ingresa un porcentaje válido');
       return;
     }
@@ -268,7 +268,6 @@ function BulkUpdateCuotaModal({ isOpen, onClose, onSuccess }) {
                   <input
                     type="number"
                     step="0.01"
-                    min="0.01"
                     value={valor}
                     onChange={(e) => setValor(e.target.value)}
                     placeholder="10"
