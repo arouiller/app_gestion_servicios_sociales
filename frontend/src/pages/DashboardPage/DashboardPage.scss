@@ -212,9 +212,9 @@ $sidebar-width: 220px;
   }
 
   &__sidebar-collapse-btn {
-    position: absolute;
+    position: fixed;
     left: 7px;
-    top: 2.5rem;
+    top: 70px;
     width: 36px;
     height: 36px;
     display: flex;

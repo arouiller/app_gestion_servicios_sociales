@@ -27,6 +27,7 @@ Un bug solo puede pasar a estado solucionado, Descartado a traves del pedido exp
 
 | ID | Severidad | Fase | Descripción | Reportado | Estado |
 |----|-----------|------|-------------|-----------|--------|
+| BUG-049 | 🟡 IMPORTANTE | UI | Botón de colapsar menú se mueve con el scroll (debe ser fixed) | 2026-05-15 | 🚀 Desarrollado |
 
 ## Registros Recientemente Cerrados (Últimos 7 días)
 
