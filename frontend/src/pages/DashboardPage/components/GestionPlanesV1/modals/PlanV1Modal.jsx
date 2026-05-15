@@ -1,6 +1,7 @@
 import React, { useState, useEffect, useCallback, useMemo, useRef } from 'react';
 import { DragDropContext, Droppable, Draggable } from 'react-beautiful-dnd';
 import { usePlanV1Form } from '../hooks/usePlanV1Form';
+import useTabNavigation from '../../../../../hooks/useTabNavigation';
 import ActionButton from '../../../../../components/ActionButton/ActionButton';
 import { formatNumeroAfiliado, formatDate, calculateAge } from '../../../../../utils/formatters';
 import planesV1Service from '../../../../../services/planesV1Service';
@@ -59,6 +60,12 @@ function PlanV1Modal({ mode, planData, onClose, onSave }) {
   const recibosPerPage = 10;
   const [zonaCodigo, setZonaCodigo] = useState('');
 
+  // Refs para navegación por teclado entre tabs
+  const refDatos = useRef(null);
+  const refAfiliados = useRef(null);
+  const refRecibos = useRef(null);
+  const refHistorial = useRef(null);
+
   // Column resize hooks for 3 tables
   const { widths: widthsAfiliados, getResizeHandle: getResizeHandleAfiliados } = useColumnResize(
     'plan-v1-afiliados',
@@ -72,6 +79,57 @@ function PlanV1Modal({ mode, planData, onClose, onSave }) {
     'plan-v1-historial',
     { fecha: 160, valorAnterior: 130, cambio: 140, valorNuevo: 130 }
   );
+
+  // Configurar navegación de tabs por teclado (ALT+A, ALT+R, ALT+D, ALT+H)
+  const tabsConfig = {
+    datos: {
+      key: 'd',
+      ref: refDatos,
+      focusSelector: 'input#field-numero_afiliado',
+      name: 'datos'
+    },
+    afiliados: {
+      key: 'a',
+      ref: refAfiliados,
+      focusSelector: 'button.plan-v1-modal__btn--secondary',
+      name: 'afiliados'
+    },
+    recibos: {
+      key: 'r',
+      ref: refRecibos,
+      focusSelector: 'table.plan-v1-modal__recibos-tabla tbody tr:first-child td:first-child',
+      name: 'recibos'
+    },
+    historial: {
+      key: 'h',
+      ref: refHistorial,
+      focusSelector: 'table.plan-v1-modal__historial-tabla tbody tr:first-child td:first-child',
+      name: 'historial'
+    }
+  };
+
+  const { handleTabKeyDown } = useTabNavigation(tabsConfig, (tabName) => {
+    setActiveTab(tabName);
+  });
+
+  // Agregar listener global para atajos de tabs
+  useEffect(() => {
+    window.addEventListener('keydown', handleTabKeyDown);
+    return () => {
+      window.removeEventListener('keydown', handleTabKeyDown);
+    };
+  }, [handleTabKeyDown]);
+
+  // Auto-focus cuando cambia tab
+  useEffect(() => {
+    const tabConfig = tabsConfig[activeTab];
+    if (tabConfig && tabConfig.ref?.current) {
+      const focusTarget = tabConfig.ref.current.querySelector(tabConfig.focusSelector);
+      if (focusTarget) {
+        setTimeout(() => focusTarget.focus(), 100);
+      }
+    }
+  }, [activeTab]);
 
   // Secondary modals
   const [afiladoSearchOpen, setAfiladoSearchOpen] = useState(false);
@@ -579,7 +637,7 @@ function PlanV1Modal({ mode, planData, onClose, onSave }) {
           <form className="plan-v1-modal__form" onSubmit={(e) => { e.preventDefault(); handleGuardar(); }}>
             {/* Tab: Datos Generales */}
             {activeTab === 'datos' && (
-            <div className="plan-v1-modal__tab-content">
+            <div ref={refDatos} className="plan-v1-modal__tab-content">
             <div className="plan-v1-modal__form-grid">
               <div className="plan-v1-modal__field">
                 <label>Zona</label>
@@ -752,7 +810,7 @@ function PlanV1Modal({ mode, planData, onClose, onSave }) {
 
             {/* Tab: Afiliados */}
             {activeTab === 'afiliados' && (
-              <div className="plan-v1-modal__tab-content">
+              <div ref={refAfiliados} className="plan-v1-modal__tab-content">
                 <div className="plan-v1-modal__afiliados-header">
                   <h4>Afiliados</h4>
                   <button
@@ -852,7 +910,7 @@ function PlanV1Modal({ mode, planData, onClose, onSave }) {
 
             {/* Tab: Recibos */}
             {activeTab === 'recibos' && (
-              <div className="plan-v1-modal__tab-content">
+              <div ref={refRecibos} className="plan-v1-modal__tab-content">
                 <h4>Recibos del plan</h4>
                 {recibosLoading ? (
                   <p className="plan-v1-modal__empty">Cargando recibos...</p>
@@ -922,7 +980,7 @@ function PlanV1Modal({ mode, planData, onClose, onSave }) {
 
             {/* Tab: Historial de Cuota */}
             {activeTab === 'historial' && (
-              <div className="plan-v1-modal__tab-content">
+              <div ref={refHistorial} className="plan-v1-modal__tab-content">
                 <h4>Historial de Cuota</h4>
                 {historialLoading ? (
                   <p className="plan-v1-modal__empty">Cargando historial...</p>
