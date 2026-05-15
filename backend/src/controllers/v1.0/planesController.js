@@ -303,19 +303,77 @@ const actualizar = async (req, res, next) => {
 
 // ── DELETE /api/v1.0/planes/:planNumero (admin) ────────────────────────────────
 
-const eliminar = async (req, res, next) => {
+const deletePermanently = async (req, res, next) => {
+  const t = await sequelize.transaction();
+
   try {
     const { planNumero } = req.params;
 
-    const plan = await db.PlanV1.findByPk(planNumero);
+    // Find plan first to ensure it exists
+    const plan = await db.PlanV1.findByPk(planNumero, { transaction: t });
     if (!plan) {
-      return res.status(404).json({ success: false, message: 'Plan no encontrado' });
+      await t.rollback();
+      return res.status(404).json({
+        success: false,
+        message: 'Plan not found',
+        code: 'PLAN_NOT_FOUND'
+      });
     }
 
-    await plan.destroy();
+    // Delete in cascading order (respecting FK constraints)
+    // 1. Delete IntegranteServicio (services for plan integrantes)
+    const integrantes = await db.PlanIntegrante.findAll(
+      { where: { plan_numero: planNumero }, transaction: t }
+    );
+    const integranteIds = integrantes.map(i => i.id);
+    if (integranteIds.length > 0) {
+      await db.IntegranteServicio.destroy(
+        { where: { plan_integrante_id: integranteIds }, transaction: t }
+      );
+    }
 
-    return res.json({ success: true, message: 'Plan eliminado correctamente' });
+    // 2. Delete PlanIntegrante (integrantes/afiliados of the plan)
+    await db.PlanIntegrante.destroy(
+      { where: { plan_numero: planNumero }, transaction: t }
+    );
+
+    // 3. Delete ReciboIntegrante (receipt lines)
+    const recibos = await db.Recibo.findAll(
+      { where: { plan_numero: planNumero }, transaction: t }
+    );
+    const reciboIds = recibos.map(r => r.id);
+    if (reciboIds.length > 0) {
+      await db.ReciboIntegrante.destroy(
+        { where: { recibo_id: reciboIds }, transaction: t }
+      );
+    }
+
+    // 4. Delete Recibo (receipts)
+    await db.Recibo.destroy(
+      { where: { plan_numero: planNumero }, transaction: t }
+    );
+
+    // 5. Delete HistorialCuota (quota history)
+    await db.HistorialCuota.destroy(
+      { where: { plan_numero: planNumero }, transaction: t }
+    );
+
+    // 6. Delete Plan
+    await db.PlanV1.destroy(
+      { where: { plan_numero: planNumero }, transaction: t }
+    );
+
+    // Commit transaction
+    await t.commit();
+
+    return res.json({
+      success: true,
+      message: 'Plan eliminado correctamente',
+      data: { plan_numero: planNumero }
+    });
   } catch (error) {
+    await t.rollback();
+    console.error('Transaction failed, rolled back:', error);
     next(error);
   }
 };
@@ -631,7 +689,7 @@ module.exports = {
   crearCompleto,
   actualizar,
   actualizarCompleto,
-  eliminar,
+  deletePermanently,
   getMaxAfiliadoNumber,
   getHistorialCuota,
 };
