@@ -51,6 +51,7 @@ function GestionPlanesV1() {
   const [page, setPage] = useState(1);
   const [totalCount, setTotalCount] = useState(0);
   const [totalPages, setTotalPages] = useState(0);
+  const [activeRowId, setActiveRowId] = useState(null);
 
   const DEFAULT_WIDTHS_PLANES = {
     identificador: 110,
@@ -98,6 +99,7 @@ function GestionPlanesV1() {
   // Resetear página a 1 cuando cambian filtros, ordenamiento o limit
   useEffect(() => {
     setPage(1);
+    setActiveRowId(null);
   }, [sortBy, order, filtros, configItemsPerPage]);
 
   // Filtrar planes por búsqueda de texto (solo por apellido del titular)
@@ -110,6 +112,13 @@ function GestionPlanesV1() {
   useEffect(() => {
     cargar();
   }, [cargar]);
+
+  // Establecer primera fila como activa cuando los planes cargan
+  useEffect(() => {
+    if (planesFiltered && planesFiltered.length > 0 && !activeRowId) {
+      setActiveRowId(planesFiltered[0].plan_numero);
+    }
+  }, [planesFiltered, activeRowId]);
 
   // Manejar búsqueda inmediata con Enter (sin debounce)
   const handleSearchKeyDown = (e) => {
