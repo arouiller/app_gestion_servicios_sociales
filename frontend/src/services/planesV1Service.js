@@ -48,6 +48,12 @@ const planesV1Service = {
     return planesV1Service.actualizar(planNumero, { estado: 'SUSPENDIDO' });
   },
 
+  // Eliminar plan permanentemente con cascada
+  deletePermanently: async (planNumero) => {
+    const { data } = await api.delete(`/v1.0/planes/${planNumero}`);
+    return data.data;
+  },
+
   // Obtener historial de cambios de cuota
   obtenerHistorialCuota: async (planNumero) => {
     const { data } = await api.get(`/v1.0/planes/${planNumero}/historial-cuota`);
