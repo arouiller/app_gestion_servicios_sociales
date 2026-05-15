@@ -377,7 +377,7 @@ function BulkUpdateCuotaModal({ isOpen, onClose, onSuccess }) {
                                 <td>{formatNumeroAfiliado(plan.numero_afiliado)}</td>
                                 <td>${Number(plan.valor_cuota || 0).toFixed(2)}</td>
                                 <td>
-                                  {`+${valor}% ($${difference.toFixed(2)})`}
+                                  {`${parseFloat(valor) > 0 ? '+' : ''}${valor}% (${parseFloat(difference) >= 0 ? '+' : ''}$${difference.toFixed(2)})`}
                                 </td>
                                 <td>${newCuota.toFixed(2)}</td>
                               </tr>
