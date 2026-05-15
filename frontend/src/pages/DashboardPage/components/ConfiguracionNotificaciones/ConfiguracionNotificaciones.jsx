@@ -179,7 +179,208 @@ export default function ConfiguracionNotificaciones() {
 
   return (
     <div className="configuracion-notificaciones">
+      {/* Sección 1: Redondeo de Cuotas */}
       <div className="configuracion-notificaciones__header">
+        <h2>Redondeo de Cuotas</h2>
+        <p className="configuracion-notificaciones__subtitle">
+          Precisión aplicada al calcular el nuevo valor en aumentos masivos de cuotas (redondeo hacia arriba)
+        </p>
+      </div>
+
+      <div className="configuracion-notificaciones__table-wrapper">
+        <table className="configuracion-notificaciones__table table-standard">
+          <thead>
+            <tr>
+              <th style={{ width: widthsRedondeo.tipo }}>Parámetro{getResizeHandleRedondeo('tipo')}</th>
+              <th style={{ width: widthsRedondeo.descripcion }}>Descripción{getResizeHandleRedondeo('descripcion')}</th>
+              <th style={{ width: widthsRedondeo.valor }}>Valor{getResizeHandleRedondeo('valor')}</th>
+              <th style={{ width: widthsRedondeo.acciones }}>Acciones</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td>
+                <span className="configuracion-notificaciones__tipo-badge" style={{ backgroundColor: '#fffaeb', color: '#b45309', borderLeftColor: '#b45309' }}>
+                  <span className="configuracion-notificaciones__icon">📐</span>
+                  Redondeo de Precisión
+                </span>
+              </td>
+              <td>Precisión de redondeo (hacia arriba) en aumento masivo de cuotas</td>
+              <td className="configuracion-notificaciones__duration-cell">
+                <div className="configuracion-notificaciones__duration-group">
+                  <input
+                    type="number"
+                    step="0.01"
+                    min="0.01"
+                    className="configuracion-notificaciones__duration-input"
+                    value={values.redondeo_precision || 1}
+                    onChange={(e) => setValues(prev => ({ ...prev, redondeo_precision: parseFloat(e.target.value) || 1 }))}
+                    disabled={saving.redondeo_precision}
+                  />
+                  <span className="configuracion-notificaciones__hint">
+                    (ej: 0.01, 1, 10, 100, 500)
+                  </span>
+                </div>
+                {errors.redondeo_precision && (
+                  <span className="configuracion-notificaciones__error">
+                    {errors.redondeo_precision}
+                  </span>
+                )}
+              </td>
+              <td className="configuracion-notificaciones__actions">
+                <button
+                  className="configuracion-notificaciones__btn-save"
+                  onClick={() => handleSave('redondeo_precision')}
+                  disabled={saving.redondeo_precision}
+                  title={saving.redondeo_precision ? 'Guardando...' : 'Guardar configuración'}
+                >
+                  {saving.redondeo_precision ? '⏳' : '💾'}
+                </button>
+              </td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+
+      <div className="configuracion-notificaciones__info">
+        <p>
+          💡 <strong>Ejemplos de redondeo hacia arriba:</strong>
+          <br/>
+          • Precisión 1: 105.50 → 106 | 100 → 100
+          <br/>
+          • Precisión 10: 105.50 → 110 | 101 → 110
+          <br/>
+          • Precisión 100: 150 → 200 | 101 → 200
+          <br/>
+          • Precisión 0.01: 105.523 → 105.53 | 105.509 → 105.51
+          <br/>
+          Ingresa cualquier valor positivo (números decimales permitidos).
+        </p>
+      </div>
+
+      {/* Sección 2: Configuración UI (unificada) */}
+      <div className="configuracion-notificaciones__header" style={{ marginTop: '2rem' }}>
+        <h2>Configuración UI</h2>
+        <p className="configuracion-notificaciones__subtitle">
+          Ajusta parámetros de búsquedas y interfaz de usuario
+        </p>
+      </div>
+
+      <div className="configuracion-notificaciones__table-wrapper">
+        <table className="configuracion-notificaciones__table table-standard">
+          <thead>
+            <tr>
+              <th style={{ width: widthsBusqueda.funcion }}>Función{getResizeHandleBusqueda('funcion')}</th>
+              <th style={{ width: widthsBusqueda.descripcion }}>Descripción{getResizeHandleBusqueda('descripcion')}</th>
+              <th style={{ width: widthsBusqueda.tiempo }}>Valor{getResizeHandleBusqueda('tiempo')}</th>
+              <th style={{ width: widthsBusqueda.acciones }}>Acciones</th>
+            </tr>
+          </thead>
+          <tbody>
+            {/* Debounce de búsquedas */}
+            <tr>
+              <td>
+                <span className="configuracion-notificaciones__tipo-badge" style={{ backgroundColor: '#e3f2fd', color: '#1976d2', borderLeftColor: '#1976d2' }}>
+                  <span className="configuracion-notificaciones__icon">🔍</span>
+                  Debounce de Búsquedas
+                </span>
+              </td>
+              <td>Tiempo a esperar sin escribir antes de ejecutar la búsqueda</td>
+              <td className="configuracion-notificaciones__duration-cell">
+                <div className="configuracion-notificaciones__duration-group">
+                  <input
+                    type="number"
+                    min="100"
+                    max="10000"
+                    step="100"
+                    className="configuracion-notificaciones__duration-input"
+                    value={values.debounce_delay_ms || 2000}
+                    onChange={(e) => handleChange('debounce_delay_ms', e.target.value)}
+                    disabled={saving.debounce_delay_ms}
+                  />
+                  <span className="configuracion-notificaciones__hint">
+                    ({msToSeconds(values.debounce_delay_ms || 2000)}s)
+                  </span>
+                </div>
+                {errors.debounce_delay_ms && (
+                  <span className="configuracion-notificaciones__error">
+                    {errors.debounce_delay_ms}
+                  </span>
+                )}
+              </td>
+              <td className="configuracion-notificaciones__actions">
+                <button
+                  className="configuracion-notificaciones__btn-save"
+                  onClick={() => handleSave('debounce_delay_ms')}
+                  disabled={saving.debounce_delay_ms}
+                  title={saving.debounce_delay_ms ? 'Guardando...' : 'Guardar configuración'}
+                >
+                  {saving.debounce_delay_ms ? '⏳' : '💾'}
+                </button>
+              </td>
+            </tr>
+
+            {/* Items por página */}
+            <tr>
+              <td>
+                <span className="configuracion-notificaciones__tipo-badge" style={{ backgroundColor: '#f3e5f5', color: '#7b1fa2', borderLeftColor: '#7b1fa2' }}>
+                  <span className="configuracion-notificaciones__icon">📊</span>
+                  Items por página
+                </span>
+              </td>
+              <td>Cantidad de registros mostrados en listados (planes, afiliados, bugs, etc.)</td>
+              <td className="configuracion-notificaciones__duration-cell">
+                <div className="configuracion-notificaciones__duration-group">
+                  <input
+                    type="number"
+                    min="0"
+                    max="1000"
+                    step="5"
+                    className="configuracion-notificaciones__duration-input"
+                    value={values.items_per_page ?? 15}
+                    onChange={(e) => handleChange('items_per_page', e.target.value)}
+                    disabled={saving.items_per_page}
+                  />
+                  <span className="configuracion-notificaciones__hint">
+                    (registros por página — 0 = sin paginado)
+                  </span>
+                </div>
+                {errors.items_per_page && (
+                  <span className="configuracion-notificaciones__error">
+                    {errors.items_per_page}
+                  </span>
+                )}
+              </td>
+              <td className="configuracion-notificaciones__actions">
+                <button
+                  className="configuracion-notificaciones__btn-save"
+                  onClick={() => handleSave('items_per_page')}
+                  disabled={saving.items_per_page}
+                  title={saving.items_per_page ? 'Guardando...' : 'Guardar configuración'}
+                >
+                  {saving.items_per_page ? '⏳' : '💾'}
+                </button>
+              </td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+
+      <div className="configuracion-notificaciones__info">
+        <p>
+          💡 <strong>Debounce:</strong> Evita realizar búsquedas mientras el usuario está escribiendo.
+          La búsqueda se ejecutará cuando el usuario haya dejado de escribir por el tiempo especificado.
+          Valores recomendados: 1000-3000 ms.
+          <br/><br/>
+          <strong>Items por página:</strong> Define cuántos registros se muestran por página en los listados.
+          Rango permitido: 0-1000. Valores recomendados: 10-20. Usa <strong>0 para deshabilitar paginación</strong>
+          y cargar todos los registros de una sola vez. Los cambios se aplicarán
+          inmediatamente al recargar los listados.
+        </p>
+      </div>
+
+      {/* Sección 3: Configuración de Notificaciones */}
+      <div className="configuracion-notificaciones__header" style={{ marginTop: '2rem' }}>
         <h2>Configuración de Notificaciones</h2>
         <p className="configuracion-notificaciones__subtitle">
           Ajusta los tiempos de visibilidad de las notificaciones del sistema
@@ -257,152 +458,7 @@ export default function ConfiguracionNotificaciones() {
         </p>
       </div>
 
-      {/* Sección: Configuración de Búsquedas */}
-      <div className="configuracion-notificaciones__header" style={{ marginTop: '2rem' }}>
-        <h2>Configuración de Búsquedas</h2>
-        <p className="configuracion-notificaciones__subtitle">
-          Ajusta los tiempos de espera para las búsquedas por texto
-        </p>
-      </div>
-
-      <div className="configuracion-notificaciones__table-wrapper">
-        <table className="configuracion-notificaciones__table table-standard">
-          <thead>
-            <tr>
-              <th style={{ width: widthsBusqueda.funcion }}>Función{getResizeHandleBusqueda('funcion')}</th>
-              <th style={{ width: widthsBusqueda.descripcion }}>Descripción{getResizeHandleBusqueda('descripcion')}</th>
-              <th style={{ width: widthsBusqueda.tiempo }}>Tiempo (ms){getResizeHandleBusqueda('tiempo')}</th>
-              <th style={{ width: widthsBusqueda.acciones }}>Acciones</th>
-            </tr>
-          </thead>
-          <tbody>
-            <tr>
-              <td>
-                <span className="configuracion-notificaciones__tipo-badge" style={{ backgroundColor: '#e3f2fd', color: '#1976d2', borderLeftColor: '#1976d2' }}>
-                  <span className="configuracion-notificaciones__icon">🔍</span>
-                  Debounce de Búsquedas
-                </span>
-              </td>
-              <td>Tiempo a esperar sin escribir antes de ejecutar la búsqueda</td>
-              <td className="configuracion-notificaciones__duration-cell">
-                <div className="configuracion-notificaciones__duration-group">
-                  <input
-                    type="number"
-                    min="100"
-                    max="10000"
-                    step="100"
-                    className="configuracion-notificaciones__duration-input"
-                    value={values.debounce_delay_ms || 2000}
-                    onChange={(e) => handleChange('debounce_delay_ms', e.target.value)}
-                    disabled={saving.debounce_delay_ms}
-                  />
-                  <span className="configuracion-notificaciones__hint">
-                    ({msToSeconds(values.debounce_delay_ms || 2000)}s)
-                  </span>
-                </div>
-                {errors.debounce_delay_ms && (
-                  <span className="configuracion-notificaciones__error">
-                    {errors.debounce_delay_ms}
-                  </span>
-                )}
-              </td>
-              <td className="configuracion-notificaciones__actions">
-                <button
-                  className="configuracion-notificaciones__btn-save"
-                  onClick={() => handleSave('debounce_delay_ms')}
-                  disabled={saving.debounce_delay_ms}
-                  title={saving.debounce_delay_ms ? 'Guardando...' : 'Guardar configuración'}
-                >
-                  {saving.debounce_delay_ms ? '⏳' : '💾'}
-                </button>
-              </td>
-            </tr>
-          </tbody>
-        </table>
-      </div>
-
-      <div className="configuracion-notificaciones__info">
-        <p>
-          💡 <strong>Tip:</strong> El debounce evita realizar búsquedas mientras el usuario está escribiendo.
-          La búsqueda se ejecutará cuando el usuario haya dejado de escribir por el tiempo especificado.
-          Valores recomendados: 1000-3000 ms.
-        </p>
-      </div>
-
-      {/* Sección: Configuración UI */}
-      <div className="configuracion-notificaciones__header" style={{ marginTop: '2rem' }}>
-        <h2>Configuración UI</h2>
-        <p className="configuracion-notificaciones__subtitle">
-          Ajusta parámetros de la interfaz de usuario
-        </p>
-      </div>
-
-      <div className="configuracion-notificaciones__table-wrapper">
-        <table className="configuracion-notificaciones__table table-standard">
-          <thead>
-            <tr>
-              <th style={{ width: widthsUI.parametro }}>Parámetro{getResizeHandleUI('parametro')}</th>
-              <th style={{ width: widthsUI.descripcion }}>Descripción{getResizeHandleUI('descripcion')}</th>
-              <th style={{ width: widthsUI.valor }}>Valor{getResizeHandleUI('valor')}</th>
-              <th style={{ width: widthsUI.acciones }}>Acciones</th>
-            </tr>
-          </thead>
-          <tbody>
-            <tr>
-              <td>
-                <span className="configuracion-notificaciones__tipo-badge" style={{ backgroundColor: '#f3e5f5', color: '#7b1fa2', borderLeftColor: '#7b1fa2' }}>
-                  <span className="configuracion-notificaciones__icon">📊</span>
-                  Items por página
-                </span>
-              </td>
-              <td>Cantidad de registros mostrados en listados (planes, afiliados, bugs, etc.)</td>
-              <td className="configuracion-notificaciones__duration-cell">
-                <div className="configuracion-notificaciones__duration-group">
-                  <input
-                    type="number"
-                    min="0"
-                    max="1000"
-                    step="5"
-                    className="configuracion-notificaciones__duration-input"
-                    value={values.items_per_page ?? 15}
-                    onChange={(e) => handleChange('items_per_page', e.target.value)}
-                    disabled={saving.items_per_page}
-                  />
-                  <span className="configuracion-notificaciones__hint">
-                    (registros por página — 0 = sin paginado)
-                  </span>
-                </div>
-                {errors.items_per_page && (
-                  <span className="configuracion-notificaciones__error">
-                    {errors.items_per_page}
-                  </span>
-                )}
-              </td>
-              <td className="configuracion-notificaciones__actions">
-                <button
-                  className="configuracion-notificaciones__btn-save"
-                  onClick={() => handleSave('items_per_page')}
-                  disabled={saving.items_per_page}
-                  title={saving.items_per_page ? 'Guardando...' : 'Guardar configuración'}
-                >
-                  {saving.items_per_page ? '⏳' : '💾'}
-                </button>
-              </td>
-            </tr>
-          </tbody>
-        </table>
-      </div>
-
-      <div className="configuracion-notificaciones__info">
-        <p>
-          💡 <strong>Tip:</strong> Define cuántos registros se muestran por página en los listados.
-          Rango permitido: 0-1000. Valores recomendados: 10-20. Usa <strong>0 para deshabilitar paginación</strong>
-          y cargar todos los registros de una sola vez. Los cambios se aplicarán
-          inmediatamente al recargar los listados.
-        </p>
-      </div>
-
-      {/* Sección: Configuración de Auditoría */}
+      {/* Sección 4: Configuración de Auditoría */}
       <div className="configuracion-notificaciones__header" style={{ marginTop: '2rem' }}>
         <h2>Configuración de Auditoría</h2>
         <p className="configuracion-notificaciones__subtitle">
@@ -512,79 +568,6 @@ export default function ConfiguracionNotificaciones() {
           💡 <strong>Tip:</strong> Los logs se limpian automáticamente después de N días.
           El cambio de habilitación tarda hasta 30 segundos en aplicarse.
           Rango permitido: 1-365 días. Valor recomendado: 90 días.
-        </p>
-      </div>
-
-      <div className="configuracion-notificaciones__header">
-        <h2>Redondeo de Cuotas</h2>
-        <p className="configuracion-notificaciones__subtitle">
-          Precisión aplicada al calcular el nuevo valor en aumentos masivos de cuotas (redondeo hacia arriba)
-        </p>
-      </div>
-
-      <div className="configuracion-notificaciones__table-wrapper">
-        <table className="configuracion-notificaciones__table table-standard">
-          <thead>
-            <tr>
-              <th style={{ width: widthsRedondeo.tipo }}>Parámetro{getResizeHandleRedondeo('tipo')}</th>
-              <th style={{ width: widthsRedondeo.descripcion }}>Descripción{getResizeHandleRedondeo('descripcion')}</th>
-              <th style={{ width: widthsRedondeo.valor }}>Valor{getResizeHandleRedondeo('valor')}</th>
-              <th style={{ width: widthsRedondeo.acciones }}>Acciones</th>
-            </tr>
-          </thead>
-          <tbody>
-            <tr>
-              <td><strong>redondeo_precision</strong></td>
-              <td>Precisión de redondeo (hacia arriba) en aumento masivo de cuotas</td>
-              <td className="configuracion-notificaciones__duration-cell">
-                <div className="configuracion-notificaciones__duration-group">
-                  <input
-                    type="number"
-                    step="0.01"
-                    min="0.01"
-                    className="configuracion-notificaciones__duration-input"
-                    value={values.redondeo_precision || 1}
-                    onChange={(e) => setValues(prev => ({ ...prev, redondeo_precision: parseFloat(e.target.value) || 1 }))}
-                    disabled={saving.redondeo_precision}
-                  />
-                  <span className="configuracion-notificaciones__hint">
-                    (ej: 0.01, 1, 10, 100, 500)
-                  </span>
-                </div>
-                {errors.redondeo_precision && (
-                  <span className="configuracion-notificaciones__error">
-                    {errors.redondeo_precision}
-                  </span>
-                )}
-              </td>
-              <td className="configuracion-notificaciones__actions">
-                <button
-                  className="configuracion-notificaciones__btn-save"
-                  onClick={() => handleSave('redondeo_precision')}
-                  disabled={saving.redondeo_precision}
-                  title={saving.redondeo_precision ? 'Guardando...' : 'Guardar configuración'}
-                >
-                  {saving.redondeo_precision ? '⏳' : '💾'}
-                </button>
-              </td>
-            </tr>
-          </tbody>
-        </table>
-      </div>
-
-      <div className="configuracion-notificaciones__info">
-        <p>
-          💡 <strong>Ejemplos de redondeo hacia arriba:</strong>
-          <br/>
-          • Precisión 1: 105.50 → 106 | 100 → 100
-          <br/>
-          • Precisión 10: 105.50 → 110 | 101 → 110
-          <br/>
-          • Precisión 100: 150 → 200 | 101 → 200
-          <br/>
-          • Precisión 0.01: 105.523 → 105.53 | 105.509 → 105.51
-          <br/>
-          Ingresa cualquier valor positivo (números decimales permitidos).
         </p>
       </div>
     </div>
