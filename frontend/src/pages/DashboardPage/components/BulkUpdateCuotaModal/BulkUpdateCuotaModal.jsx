@@ -262,7 +262,7 @@ function BulkUpdateCuotaModal({ isOpen, onClose, onSuccess }) {
               <div className="form-group">
                 <label>
                   Porcentaje de aumento (%):
-                  <span className="form-hint"> (ej: 10 para +10%)</span>
+                  <span className="form-hint"> (ej: 10 para +10%, -10 para -10%)</span>
                 </label>
                 <div className="input-with-unit">
                   <input
