@@ -25,7 +25,9 @@ Un bug solo puede pasar a estado solucionado, Descartado a traves del pedido exp
 
 ## Registros Activos (En Progress + Reportados)
 
-(Ninguno)
+| ID | Severidad | Fase | Descripción | Reportado | Estado |
+|----|-----------|------|-------------|-----------|--------|
+| BUG-046 | 🟡 IMPORTANTE | Configuración | Validación incorrecta en "Items por página": rechaza valor 0 | 2026-05-15 | 📋 Registrado |
 
 ## Registros Recientemente Cerrados (Últimos 7 días)
 
@@ -3465,3 +3467,36 @@ El callback `onItemsPerPageChange` (líneas 316-319) ignoraba el parámetro `new
 - `frontend/src/pages/DashboardPage/components/GestionPlanesV1/GestionPlanesV1.jsx`
 
 **Commit:** `c85027a` — fix(BUG-044): selector de página persiste correctamente al cambiar registros por página
+
+---
+
+## BUG-046: Validación Incorrecta en "Items por Página" de Configuración de Notificaciones
+
+**Descripción:**
+Al seleccionar **0** en el parámetro "Items por página" de la "Configuración de Notificaciones", el sistema muestra un error de validación:
+```
+"items_per_page debe estar entre 5 y 100"
+```
+
+Sin embargo, según los requisitos, este parámetro debe aceptar cualquier valor entero entre **0 y 1000**.
+
+**Valor 0 tiene significado especial:** Debería mostrar "todos los registros" o similar, sin paginación.
+
+**Pasos para reproducir:**
+1. Ir a Configuración de Notificaciones
+2. Localizar el campo "Items por página"
+3. Cambiar el valor a 0
+4. Intentar guardar
+5. **Esperado:** Guardar sin error, interpretando 0 como "sin límite de paginación"
+6. **Observado:** Error de validación rechazando el valor
+
+**Archivos a revisar:**
+- Validación en backend (controllers/services relacionadas a configuración)
+- Validación en frontend (si existe)
+- Lógica que interpreta items_per_page en queries
+
+**Severidad:** 🟡 IMPORTANTE
+- Bloquea una configuración válida y común (mostrar todos los registros)
+- Afecta a usuarios que quieren deshabilitar paginación
+
+**Reportado:** 2026-05-15
