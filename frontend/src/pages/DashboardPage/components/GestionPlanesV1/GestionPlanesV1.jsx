@@ -422,7 +422,10 @@ function GestionPlanesV1() {
               </thead>
               <tbody>
                 {planesFiltered.map((plan) => (
-                  <tr key={plan.plan_numero}>
+                  <tr
+                    key={plan.plan_numero}
+                    className={activeRowId === plan.plan_numero ? 'gestion-planes-v1__row--active' : ''}
+                  >
                     <td>
                       {plan.Zona?.codigo
                         ? `${plan.Zona.codigo}-${formatNumeroAfiliado(plan.numero_afiliado)}`
