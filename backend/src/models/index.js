@@ -97,10 +97,14 @@ if (db.IntegranteServicio && db.ServicioAdicional) {
   db.IntegranteServicio.belongsTo(db.ServicioAdicional, { foreignKey: 'servicio_adicional_numero' });
 }
 if (db.PlanIntegrante && db.IntegranteServicio) {
-  db.PlanIntegrante.hasMany(db.IntegranteServicio, { foreignKey: 'plan_integrante_id' });
-  db.IntegranteServicio.belongsTo(db.PlanIntegrante, { foreignKey: 'plan_integrante_id' });
+  db.PlanIntegrante.hasMany(db.IntegranteServicio, { foreignKey: 'plan_integrante_id', onDelete: 'CASCADE' });
+  db.IntegranteServicio.belongsTo(db.PlanIntegrante, { foreignKey: 'plan_integrante_id', onDelete: 'CASCADE' });
 }
 // HistorialCuota associations
+if (db.PlanV1 && db.HistorialCuota) {
+  db.PlanV1.hasMany(db.HistorialCuota, { foreignKey: 'plan_numero', onDelete: 'CASCADE' });
+  db.HistorialCuota.belongsTo(db.PlanV1, { foreignKey: 'plan_numero', onDelete: 'CASCADE' });
+}
 if (db.HistorialCuota && db.Usuario) {
   db.HistorialCuota.belongsTo(db.Usuario, { foreignKey: 'usuario_id' });
 }
