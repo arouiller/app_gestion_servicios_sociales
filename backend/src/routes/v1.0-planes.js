@@ -28,6 +28,6 @@ router.post('/crear-completo', verifyToken, controller.crearCompleto);
 router.post('/actualizar-completo/:planNumero', verifyToken, controller.actualizarCompleto);
 router.post('/', verifyToken, validate(crearSchema), controller.crear);
 router.put('/:planNumero', verifyToken, controller.actualizar);
-router.delete('/:planNumero', verifyToken, controller.eliminar);
+router.delete('/:planNumero', verifyToken, controller.deletePermanently);
 
 module.exports = router;
