@@ -8,6 +8,8 @@ import PlanV1Modal from './modals/PlanV1Modal';
 import BulkUpdateCuotaModal from '../BulkUpdateCuotaModal/BulkUpdateCuotaModal';
 import HistorialAumentosModal from '../HistorialAumentosModal/HistorialAumentosModal';
 import GenerarRecibosModal from './modals/GenerarRecibosModal';
+import ConfirmDeletePlanModal from '../../../../components/ConfirmDeletePlanModal/ConfirmDeletePlanModal';
+import ConfirmDeletePlanPermanentModal from '../../../../components/ConfirmDeletePlanPermanentModal/ConfirmDeletePlanPermanentModal';
 import SearchContainer from '../../../../components/SearchContainer/SearchContainer';
 import ActionButton from '../../../../components/ActionButton/ActionButton';
 import IconButton from '../../../../components/IconButton/IconButton';
@@ -38,6 +40,13 @@ function GestionPlanesV1() {
   const [bulkUpdateModalOpen, setBulkUpdateModalOpen] = useState(false);
   const [generarRecibosModalOpen, setGenerarRecibosModalOpen] = useState(false);
   const [historialAumentosModalOpen, setHistorialAumentosModalOpen] = useState(false);
+  const [deleteModalState, setDeleteModalState] = useState({
+    firstModal: false,
+    secondModal: false,
+    selectedPlan: null,
+    isLoading: false,
+    error: null,
+  });
   const [configItemsPerPage, setConfigItemsPerPage] = useState(globalConfig?.items_per_page ?? 15);
   const [page, setPage] = useState(1);
   const [totalCount, setTotalCount] = useState(0);
@@ -142,17 +151,86 @@ function GestionPlanesV1() {
     setError(null);
   };
 
-  const handleSuspenderPlan = async (plan) => {
-    if (!window.confirm(`¿Estás seguro de que querés suspender el plan ${formatNumeroAfiliado(plan.numero_afiliado)}?`)) {
-      return;
-    }
+  const handleDeletePlan = (plan) => {
+    setDeleteModalState({
+      firstModal: true,
+      secondModal: false,
+      selectedPlan: plan,
+      isLoading: false,
+      error: null,
+    });
+  };
 
+  const handleSuspendFromModal = async (plan) => {
+    setDeleteModalState(prev => ({ ...prev, isLoading: true }));
     try {
       await planesV1Service.suspender(plan.plan_numero);
       mostrarMensaje('Plan suspendido correctamente', 'success');
+      setDeleteModalState({
+        firstModal: false,
+        secondModal: false,
+        selectedPlan: null,
+        isLoading: false,
+        error: null,
+      });
       cargar();
     } catch (err) {
-      mostrarMensaje(err.response?.data?.message || 'Error al suspender plan', 'error');
+      mostrarMensaje(
+        err.response?.data?.message || 'Error al suspender plan',
+        'error'
+      );
+      setDeleteModalState(prev => ({ ...prev, isLoading: false }));
+    }
+  };
+
+  const handleDeleteChoice = () => {
+    setDeleteModalState(prev => ({
+      ...prev,
+      firstModal: false,
+      secondModal: true,
+      error: null,
+    }));
+  };
+
+  const handleBackToFirstModal = () => {
+    setDeleteModalState(prev => ({
+      ...prev,
+      firstModal: true,
+      secondModal: false,
+      error: null,
+    }));
+  };
+
+  const handleCloseDeleteModal = () => {
+    setDeleteModalState({
+      firstModal: false,
+      secondModal: false,
+      selectedPlan: null,
+      isLoading: false,
+      error: null,
+    });
+  };
+
+  const handleConfirmPermanentDelete = async () => {
+    const { selectedPlan } = deleteModalState;
+    setDeleteModalState(prev => ({ ...prev, isLoading: true, error: null }));
+    try {
+      await planesV1Service.deletePermanently(selectedPlan.plan_numero);
+      mostrarMensaje('Plan eliminado definitivamente', 'success');
+      setDeleteModalState({
+        firstModal: false,
+        secondModal: false,
+        selectedPlan: null,
+        isLoading: false,
+        error: null,
+      });
+      cargar();
+    } catch (err) {
+      setDeleteModalState(prev => ({
+        ...prev,
+        isLoading: false,
+        error: err.response?.data?.message || 'Error al eliminar plan',
+      }));
     }
   };
 
@@ -296,11 +374,11 @@ function GestionPlanesV1() {
                           title="Editar"
                           onClick={() => handleEditarPlan(plan)}
                         />
-                        {plan.estado !== 'SUSPENDIDO' && (
+                        {plan.estado === 'ACTIVO' && (
                           <IconButton
                             icon="delete"
-                            title="Suspender"
-                            onClick={() => handleSuspenderPlan(plan)}
+                            title="Eliminar o Suspender"
+                            onClick={() => handleDeletePlan(plan)}
                             className="icon-button--danger"
                           />
                         )}
@@ -354,6 +432,28 @@ function GestionPlanesV1() {
           mostrarMensaje(`${result.recibos?.length || 0} recibos generados exitosamente`, 'success');
         }}
       />
+
+      {deleteModalState.firstModal && (
+        <ConfirmDeletePlanModal
+          isOpen={deleteModalState.firstModal}
+          plan={deleteModalState.selectedPlan}
+          onSuspend={handleSuspendFromModal}
+          onDelete={handleDeleteChoice}
+          onCancel={handleCloseDeleteModal}
+          isLoading={deleteModalState.isLoading}
+        />
+      )}
+
+      {deleteModalState.secondModal && (
+        <ConfirmDeletePlanPermanentModal
+          isOpen={deleteModalState.secondModal}
+          plan={deleteModalState.selectedPlan}
+          onConfirm={handleConfirmPermanentDelete}
+          onCancel={handleBackToFirstModal}
+          isLoading={deleteModalState.isLoading}
+          error={deleteModalState.error}
+        />
+      )}
     </div>
   );
 }
