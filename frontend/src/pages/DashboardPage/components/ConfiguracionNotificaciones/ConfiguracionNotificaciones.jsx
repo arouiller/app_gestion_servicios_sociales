@@ -184,11 +184,15 @@ export default function ConfiguracionNotificaciones() {
 
     try {
       setSaving((prev) => ({ ...prev, [type]: true }));
-      // Normalizar valor decimal si es necesario
-      const valueToSave = type === 'valor_cuota_social' ? normalizeDecimalValue(newValue) : newValue;
+      // Normalizar y parsear valor decimal si es necesario
+      let valueToSave = newValue;
+      if (type === 'valor_cuota_social') {
+        const normalized = normalizeDecimalValue(newValue);
+        valueToSave = parseFloat(normalized);
+      }
       await configService.actualizarConfiguracion(type, valueToSave);
       const successMsg = type === 'valor_cuota_social'
-        ? `Valor cuota social actualizado a ${valueToSave}`
+        ? `Valor cuota social actualizado a ${parseFloat(valueToSave).toFixed(2)}`
         : `Duración de ${type} actualizada a ${newValue}ms`;
       showSuccess(successMsg);
       setErrors((prev) => {
