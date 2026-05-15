@@ -27,7 +27,7 @@ Un bug solo puede pasar a estado solucionado, Descartado a traves del pedido exp
 
 | ID | Severidad | Fase | Descripción | Reportado | Estado |
 |----|-----------|------|-------------|-----------|--------|
-| BUG-051 | 🔴 CRÍTICO | BACKLOG-074 | Selector de zona queda vacío al seleccionar opción (display personalizado falla) | 2026-05-15 | 📋 Registrado |
+| BUG-051 | 🔴 CRÍTICO | BACKLOG-074 | Selector de zona queda vacío al seleccionar opción (display personalizado falla) | 2026-05-15 | 🚀 Desarrollado |
 | BUG-050 | 🟢 MENOR | HistorialAumentosModal | Porcentajes negativos mostrados como "+-X.XX %" en lugar de "-X.XX %" | 2026-05-15 | 📋 Registrado |
 
 ## Registros Recientemente Cerrados (Últimos 7 días)
@@ -3635,3 +3635,40 @@ Posibles causas:
 - `frontend/src/pages/DashboardPage/components/GestionPlanesV1/modals/PlanV1Modal.scss` (estilos `plan-v1-modal__zona-select`)
 
 **Reportado:** 2026-05-15
+
+**Root Cause Confirmada:**
+Los elementos `<select>` son "elementos reemplazados" del navegador controlados por el SO/browser. No permiten pseudo-elementos como `::before` ni se puede usar `content: attr()` con ellos. El enfoque inicial con CSS `::before` fue incorrecto desde el diseño.
+
+**Solución Implementada:**
+Reemplazar CSS `::before` con un overlay JavaScript + CSS usando un `<span>`:
+
+1. **Wrapper div** (`.plan-v1-modal__zona-wrapper`):
+   - `position: relative` para posicionamiento contextual
+   - Ancho 100% para ocupar el espacio del select
+
+2. **Span overlay** (`.plan-v1-modal__zona-display`):
+   - Renderizado condicional solo cuando `zonaCodigo` no es vacío
+   - `position: absolute` posicionado sobre el select
+   - `z-index: 2` por encima del select (`z-index: 1`)
+   - `pointer-events: none` para no bloquear clicks al select
+   - Hereda color, font, etc. del contexto
+
+3. **Select styling**:
+   - Cuando hay overlay (`:has(+ .plan-v1-modal__zona-display)`), establece `color: transparent`
+   - Al hacer `:focus` o `:active`, vuelve `color: inherit` para mostrar opciones completas
+   - Las `<option>` siempre tienen `color: inherit` para visibilidad
+
+**Resultado:**
+- Select cerrado muestra solo el código de zona (ej: `01`)
+- Al hacer click/focus, el select muestra su text normal y opciones completas
+- Al seleccionar, vuelve a mostrar solo el código
+
+**Archivos Modificados:**
+- `frontend/src/pages/DashboardPage/components/GestionPlanesV1/modals/PlanV1Modal.jsx`:
+  - Agregar wrapper div con className `plan-v1-modal__zona-wrapper`
+  - Agregar span condicional con className `plan-v1-modal__zona-display` y texto `{zonaCodigo}`
+  - Remover atributos `data-selected-code` y `className` del select anterior
+- `frontend/src/pages/DashboardPage/components/GestionPlanesV1/modals/PlanV1Modal.scss`:
+  - Reemplazar estilos de `::before` con estilos de `.plan-v1-modal__zona-wrapper` y `.plan-v1-modal__zona-display`
+
+**Commit:** `cd43ce2`
