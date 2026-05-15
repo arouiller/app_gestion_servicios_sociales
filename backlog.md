@@ -94,6 +94,7 @@ De cualquier estado → Descartado
 | BACKLOG-003 | 🟡 Media | ✅ Solucionado | Estandarizar formato de listados: mismo layout para todas las tablas + iconos consistentes para acciones | Fase 1 + Fase 2 completadas: estilos estándar, componentes creados, aplicados a GestionPlanesV1 y LookupCRUD. | Múltiples componentes (todas las tablas de listado) |
 | BACKLOG-002 | 🔴 Alta | ✅ Solucionado | Agregar tab de recibos en vista de plan | Implementado y aprobado: Tab de recibos con paginación, carga dinámica y visualización de detalles. BUG-008 resuelto | PlanDetailModal.jsx, recibosService.js |
 | BACKLOG-001 | 🟡 Media | ✅ Solucionado | Mejorar preview de aumento de cuotas: navegación completa + comparación antes/después | Implementado y aprobado: Tabla con alineación correcta, paginación, búsqueda y contraste antes/después. BUG-009 resuelto | BulkUpdateCuotaModal.jsx, SCSS |
+| BACKLOG-067 | 🔴 Alta | 🚀 Desarrollado | Eliminar plan con confirmación de cascada | Al hacer clic en acción de "eliminar" un plan, mostrar modal que ofrece dos opciones: "Suspender" o "Eliminar". Si "Suspender": proceder como actualmente. Si "Eliminar": pedir confirmación adicional indicando que es irreversible, luego eliminar plan y todos sus dependientes (integrantes, recibos, historiales de cuota, etc). Actualizar grilla tras eliminación. (Commits: bea185d, f467520, 0ed8de6, 8eb415e, 39f8860, 561e466, 05f9b65) | ConfirmDeletePlanModal.jsx, ConfirmDeletePlanPermanentModal.jsx, planesController.js, planesV1Service.js, GestionPlanesV1.jsx |
 
 ## Detalles de Items
 
@@ -5601,6 +5602,84 @@ d. **Reorden Automático**
 - ✅ `handleGuardar` no necesita cambios (el diff contra BD detecta integrantes ya guardados)
 - ✅ No afecta modo "crear" (comportamiento original)
 - ✅ Completamente compatible con "Guardar y Seguir Editando"
+
+---
+
+### BACKLOG-067: Eliminar Plan con Confirmación de Cascada
+
+**Descripción:**
+Mejorar el flujo de eliminación de planes para ofrecer al usuario dos opciones claras: "Suspender" o "Eliminar". Esto permite que el usuario pueda elegir entre una operación reversible (suspender) o irreversible (eliminar permanentemente).
+
+**Comportamiento Actual:**
+Al hacer clic en la acción de "eliminar" un plan en la tabla, se muestra un modal de confirmación única que elimina el plan directamente.
+
+**Comportamiento Requerido:**
+1. Usuario hace clic en acción "eliminar" plan
+2. Se abre primer modal con dos opciones:
+   - **Suspender**: Plan pasa a estado SUSPENDIDO (reversible)
+   - **Eliminar**: Procede a confirmación adicional
+3. Si selecciona "Suspender": 
+   - Proceder como actualmente lo estamos haciendo (cambiar estado a SUSPENDIDO)
+4. Si selecciona "Eliminar":
+   - Mostrar segundo modal de confirmación con advertencia explícita de que **es una operación irreversible**
+   - Si el usuario confirma: eliminar plan en cascada
+   - Actualizar grilla después de eliminación
+
+**Requerimientos Funcionales:**
+
+a. **Primer Modal: Opción de Acción**
+   - Título: "¿Suspender o Eliminar Plan?"
+   - Descripción breve del plan identificando (zona-número, titular)
+   - Dos botones:
+     * "Suspender Plan" (acción primaria)
+     * "Eliminar Plan" (acción destructiva, rojo/warning)
+     * Botón de cierre/cancelar
+
+b. **Segundo Modal: Confirmación Irreversible (solo si elige Eliminar)**
+   - Título: "⚠️ Confirmar Eliminación Permanente"
+   - Mensaje destacado: "Esta acción no se puede deshacer. Se eliminarán:"
+   - Lista de lo que se eliminará:
+     * El plan y todos sus integrantes/afiliados
+     * Todos los recibos asociados
+     * Todo el historial de cuotas del plan
+     * Cualquier otro registro dependiente
+   - Dos botones:
+     * "Cancelar" (primario)
+     * "Sí, Eliminar Permanentemente" (destructivo, rojo)
+
+c. **Lógica de Backend**
+   - Endpoint DELETE /api/planes/:id o similar debe:
+     * Verificar permisos (admin o usuario propietario)
+     * Eliminar en cascada (ON DELETE CASCADE en BD, o manejo explícito en controller):
+       - plan_integrantes (integrantes/afiliados)
+       - recibos (ReciboIntegrante y Recibo)
+       - historial_cuota (HistorialCuota)
+       - servicios_integrantes (IntegranteServicio)
+       - Cualquier otro registro que referencia a planes
+     * Usar transacción para garantizar consistencia
+     * Retornar success: true, message: "Plan eliminado completamente"
+
+d. **UX/Feedback**
+   - Suspender: Toast "Plan suspendido exitosamente"
+   - Eliminar: Toast "Plan eliminado definitivamente"
+   - Después de completar cualquiera: cerrar modal y refrescar tabla de planes
+   - Si hay error: mostrar error en modal o toast y permitir reintentar
+
+e. **Componentes Necesarios**
+   - `ConfirmDeletePlanModal.jsx`: Modal con dos opciones (Suspender/Eliminar)
+   - `ConfirmDeletePlanPermanentModal.jsx`: Modal de confirmación irreversible
+   - Actualizar `PlanV1Modal.jsx` o `GestionPlanesV1.jsx` para:
+     * Reemplazar lógica de delete simple por este nuevo flujo
+     * Manejar estados modales
+     * Refrescar tabla después de eliminación
+
+**Archivos Afectados Estimados:**
+- `frontend/src/pages/DashboardPage/components/GestionPlanesV1.jsx`
+- `frontend/src/components/ConfirmDeletePlanModal.jsx` (nuevo)
+- `frontend/src/components/ConfirmDeletePlanPermanentModal.jsx` (nuevo)
+- `frontend/src/services/planesService.js` (agregar método deleteCompletely)
+- `backend/src/controllers/planesController.js` (endpoint DELETE con cascada)
+- `backend/src/services/planesV1Service.js` (lógica de eliminación en cascada)
 
 ---
 
