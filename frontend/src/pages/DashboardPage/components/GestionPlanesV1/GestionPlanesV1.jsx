@@ -102,10 +102,10 @@ function GestionPlanesV1() {
     setActiveRowId(null);
   }, [sortBy, order, filtros, configItemsPerPage]);
 
-  // Filtrar planes por búsqueda de texto (solo por apellido del titular)
+  // Filtrar planes por búsqueda de texto (solo por apellido del titular - que comience con el texto)
   const planesFiltered = planes.filter(plan => {
     const searchLower = searchText.toLowerCase();
-    return plan.PlanIntegrantes?.[0]?.Persona?.apellido?.toLowerCase().includes(searchLower);
+    return plan.PlanIntegrantes?.[0]?.Persona?.apellido?.toLowerCase().startsWith(searchLower);
   });
 
   // Recargar planes cuando cambia el ordenamiento, filtros, página o búsqueda
