@@ -138,6 +138,17 @@ export default function ConfiguracionNotificaciones() {
       }
     }
 
+    // Validaciones específicas para items_per_page
+    if (type === 'items_per_page') {
+      if (newValue !== 0 && (newValue < 5 || newValue > 1000)) {
+        setErrors((prev) => ({
+          ...prev,
+          [type]: 'Debe ser 0 (sin paginado) o entre 5 y 1000',
+        }));
+        return;
+      }
+    }
+
     try {
       setSaving((prev) => ({ ...prev, [type]: true }));
       await configService.actualizarConfiguracion(type, newValue);
@@ -349,16 +360,16 @@ export default function ConfiguracionNotificaciones() {
                 <div className="configuracion-notificaciones__duration-group">
                   <input
                     type="number"
-                    min="5"
-                    max="100"
+                    min="0"
+                    max="1000"
                     step="5"
                     className="configuracion-notificaciones__duration-input"
-                    value={values.items_per_page || 15}
+                    value={values.items_per_page ?? 15}
                     onChange={(e) => handleChange('items_per_page', e.target.value)}
                     disabled={saving.items_per_page}
                   />
                   <span className="configuracion-notificaciones__hint">
-                    (registros por página)
+                    (registros por página — 0 = sin paginado)
                   </span>
                 </div>
                 {errors.items_per_page && (
@@ -385,7 +396,8 @@ export default function ConfiguracionNotificaciones() {
       <div className="configuracion-notificaciones__info">
         <p>
           💡 <strong>Tip:</strong> Define cuántos registros se muestran por página en los listados.
-          Rango permitido: 5-100. Valores recomendados: 10-20. Los cambios se aplicarán
+          Rango permitido: 0-1000. Valores recomendados: 10-20. Usa <strong>0 para deshabilitar paginación</strong>
+          y cargar todos los registros de una sola vez. Los cambios se aplicarán
           inmediatamente al recargar los listados.
         </p>
       </div>
