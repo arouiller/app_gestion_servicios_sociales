@@ -33,6 +33,7 @@ Un bug solo puede pasar a estado solucionado, Descartado a traves del pedido exp
 
 | ID | Severidad | Fase | Descripción | Reportado | Solucionado | Commit |
 |----|-----------|------|-------------|-----------|-------------|--------|
+| BUG-043 | 🔴 CRÍTICO | BACKLOG-061 | Dropdowns no se cargan al crear/editar plan (usuarios no admin) | 2026-05-15 | 2026-05-15 | `8368f8c` |
 | BUG-042 | 🔴 CRÍTICO | BACKLOG-061 | Cambios posteriores a crear plan no se guardan (modo editar no funciona) | 2026-05-08 | 2026-05-08 | Incluido en BACKLOG-061 |
 | BUG-041 | 🔴 CRÍTICO | BACKLOG-060 | Intento de guardar dos veces plan nuevo genera error de duplicado | 2026-05-08 | 2026-05-08 | `de72333` |
 | BUG-040 | 🔴 CRÍTICO | BACKLOG-060 | Tercera fila duplicada en tabla de afiliados con key null | 2026-05-08 | 2026-05-08 | `9831b49` |
@@ -3339,3 +3340,70 @@ if (!planNumero) {
 - `64a7141` — fix(BUG-042): usar savedPlanData como fallback en modo editar
 
 **Estado:** 🚀 Desarrollado (2026-05-08)
+
+---
+
+### BUG-043: Dropdowns No Se Cargan Al Crear/Editar Plan (Usuarios No Admin)
+
+**Descripción:**
+Cuando un usuario con rol "usuario" (no administrador) intenta crear o editar un plan, los dropdowns para seleccionar los siguientes valores no se completan/cargan:
+- Tipo de Plan
+- Cobrador
+- Obra Social
+- Tipo de Grupo
+- Zona
+- Localidad
+
+Sin embargo, estos valores sí se ven correctamente en otras vistas de la aplicación (por ejemplo, en tablas de listado). El problema es específico al formulario de crear/editar planes.
+
+**Pasos para reproducir:**
+1. Iniciar sesión con usuario no-admin (rol "usuario")
+2. Ir a Dashboard → Gestión → Gestión de Planes
+3. Hacer click en "Crear Nuevo Plan" o en editar un plan existente
+4. Ver que los dropdowns aparecen vacíos sin opciones
+5. **Esperado:** Los dropdowns deberían mostrar todas las opciones disponibles (Tipos de Plan, Cobradores, etc.)
+
+**Comportamiento observado:**
+- Los dropdowns están presentes pero sin opciones
+- No hay mensaje de error visible
+- Los datos existen en la BD y se cargan correctamente en otras partes de la app
+- El comportamiento es consistente para todos los dropdowns de lookup
+
+**Causa probable:**
+1. Restricción de permisos en el backend no permite que usuarios comunes accedan a endpoints de lookup
+2. La lógica de carga de datos `loadLookupData()` en PlanV1Modal.jsx puede estar filtrando resultados basado en rol
+3. Los endpoints `/api/lookup/*` pueden estar limitados solo a admin
+
+**Archivos a revisar:**
+- `frontend/src/pages/DashboardPage/components/GestionPlanesV1/modals/PlanV1Modal.jsx` (método loadLookupData)
+- `backend/src/controllers/lookupController.js` (endpoints de lookup)
+- `backend/src/routes/*.js` (restricciones de permisos en rutas de lookup)
+- `frontend/src/services/lookupService.js` (llamadas a API)
+
+**Severidad:** 🔴 CRÍTICO
+- Bloquea completamente la funcionalidad de crear/editar planes para usuarios no-admin
+- No hay forma de completar un plan sin acceso a los datos de lookup
+
+**Reportado:** 2026-05-15
+**Asociado a:** BACKLOG-061 (Creación/edición de planes)
+
+**Causa Raíz:**
+`localidadService.js` estaba llamando a `/api/admin/localidades` que tiene middleware `requireAdmin`. 
+Los usuarios no-admin reciben HTTP 403, causando que `loadLookupData()` falle silenciosamente y retorne arrays vacíos.
+
+Otros endpoints (tipos-de-plan, cobradores, obras-sociales, tipos-de-grupo, zonas) sí están disponibles en `/api/lookup/*` sin restricción.
+
+**Solución Implementada:**
+Cambiar `localidadService.js` para llamar a `/localidades` en lugar de `/admin/localidades`:
+- Línea 6: `GET /localidades` (en lugar de `/admin/localidades`)
+- Línea 11: `GET /localidades/by-provincia/:id` (en lugar de `/admin/provincias/:id/localidades`)
+- Líneas 16, 21, 27, 38: actualizar URLs para usar `/localidades`
+
+El endpoint `/api/localidades` no tiene restricción de permisos y está disponible para todos los usuarios autenticados.
+
+**Archivos Modificados:**
+- `frontend/src/services/localidadService.js`
+
+**Commit:** `8368f8c` — fix(BUG-043): permitir acceso a localidades para usuarios no-admin
+
+**Estado:** ✅ Solucionado (2026-05-15)
