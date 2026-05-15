@@ -129,6 +129,28 @@ function GestionPlanesV1() {
     }
   };
 
+  const mostrarMensaje = (texto, tipo = 'success') => {
+    if (tipo === 'success') {
+      setSuccess(texto);
+      setTimeout(() => setSuccess(null), 4000);
+    } else if (tipo === 'error') {
+      setError(texto);
+      setTimeout(() => setError(null), 5000);
+    }
+  };
+
+  const handleCrearPlan = () => {
+    setModalMode('crear');
+    setPlanEditando(null);
+    setError(null);
+  };
+
+  const handleEditarPlan = (plan) => {
+    setPlanEditando(plan);
+    setModalMode('editar');
+    setError(null);
+  };
+
   // Navegación por teclado en tabla de planes
   const handleKeyDown = useCallback((e) => {
     // Solo escuchar si no hay modal abierto y la tabla tiene filas
@@ -201,28 +223,6 @@ function GestionPlanesV1() {
       window.removeEventListener('keydown', handleKeyDown);
     };
   }, [handleKeyDown]);
-
-  const mostrarMensaje = (texto, tipo = 'success') => {
-    if (tipo === 'success') {
-      setSuccess(texto);
-      setTimeout(() => setSuccess(null), 4000);
-    } else if (tipo === 'error') {
-      setError(texto);
-      setTimeout(() => setError(null), 5000);
-    }
-  };
-
-  const handleCrearPlan = () => {
-    setModalMode('crear');
-    setPlanEditando(null);
-    setError(null);
-  };
-
-  const handleEditarPlan = (plan) => {
-    setPlanEditando(plan);
-    setModalMode('editar');
-    setError(null);
-  };
 
   const handleDeletePlan = (plan) => {
     setDeleteModalState({
