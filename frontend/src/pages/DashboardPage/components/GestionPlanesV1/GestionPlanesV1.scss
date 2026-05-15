@@ -1,5 +1,17 @@
 .gestion-planes-v1 {
-  padding: 1rem;
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+
+  &__sticky-header {
+    position: sticky;
+    top: 0;
+    z-index: 100;
+    background-color: var(--color-background);
+    padding: 1rem;
+    border-bottom: 1px solid var(--color-border);
+    flex-shrink: 0;
+  }
 
   &__title {
     font-size: 1.75rem;
@@ -30,7 +42,6 @@
     display: flex;
     justify-content: space-between;
     align-items: center;
-    margin-bottom: 1.5rem;
     gap: 1rem;
     flex-wrap: wrap;
   }
@@ -41,10 +52,30 @@
     flex-wrap: wrap;
   }
 
+  &__table-scrollable {
+    flex: 1;
+    overflow-y: auto;
+    overflow-x: auto;
+    border: 1px solid var(--color-border);
+    border-radius: 4px;
+  }
+
+  &__empty {
+    padding: 2rem;
+    text-align: center;
+    color: var(--color-text-muted);
+    font-style: italic;
+  }
+
   @media (max-width: 600px) {
+    &__sticky-header {
+      padding: 0.75rem;
+    }
+
     &__filters {
       flex-direction: column;
       align-items: stretch;
+      margin-bottom: 1rem;
 
       .search-container {
         min-width: 100%;
@@ -62,6 +93,15 @@
 
       button {
         width: 100%;
+      }
+    }
+
+    &__tabla {
+      font-size: 0.75rem;
+
+      th,
+      td {
+        padding: 0.5rem;
       }
     }
   }
@@ -168,18 +208,18 @@
     font-style: italic;
   }
 
-  &__tabla-wrapper {
-    overflow-x: auto;
-    border: 1px solid var(--color-border);
-    border-radius: 4px;
-  }
-
   &__tabla {
     width: 100%;
     border-collapse: collapse;
 
-    thead tr {
+    thead {
+      position: sticky;
+      top: 0;
+      z-index: 99;
       background-color: var(--color-surface-alt);
+    }
+
+    thead tr {
       border-bottom: 2px solid var(--color-border);
     }
 

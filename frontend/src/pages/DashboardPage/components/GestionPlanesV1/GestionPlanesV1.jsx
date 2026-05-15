@@ -176,135 +176,143 @@ function GestionPlanesV1() {
 
   return (
     <div className="gestion-planes-v1">
-      <h2 className="gestion-planes-v1__title">Planes</h2>
+      {/* Sticky Header */}
+      <div className="gestion-planes-v1__sticky-header">
+        <h2 className="gestion-planes-v1__title">Planes</h2>
 
-      {error && <div className="gestion-planes-v1__alert gestion-planes-v1__alert--error">{error}</div>}
-      {success && <div className="gestion-planes-v1__alert gestion-planes-v1__alert--success">{success}</div>}
+        {error && <div className="gestion-planes-v1__alert gestion-planes-v1__alert--error">{error}</div>}
+        {success && <div className="gestion-planes-v1__alert gestion-planes-v1__alert--success">{success}</div>}
 
-      {planes.length > 0 && (
-        <div className="gestion-planes-v1__filters">
-          <SearchContainer
-            placeholder="Buscar por identificador, titular, tipo de plan, cobrador u obra social... (presiona Enter para buscar inmediatamente)"
-            value={searchText}
-            onChange={setSearchText}
-            onKeyDown={handleSearchKeyDown}
-            count={planes.length}
-            maxItems={totalCount}
-          />
-          <div className="gestion-planes-v1__actions">
-            <ActionButton variant="primary" icon="+" onClick={handleCrearPlan}>
-              Nuevo Plan
-            </ActionButton>
-            <ActionButton
-              variant="primary"
-              onClick={() => setBulkUpdateModalOpen(true)}
-            >
-              Aumento Masivo
-            </ActionButton>
-            <ActionButton
-              variant="primary"
-              onClick={() => setHistorialAumentosModalOpen(true)}
-            >
-              Ver historial de aumentos
-            </ActionButton>
-            <ActionButton variant="primary" onClick={() => setGenerarRecibosModalOpen(true)}>
-              Generar Recibos
-            </ActionButton>
+        {planes.length > 0 && (
+          <div className="gestion-planes-v1__filters">
+            <SearchContainer
+              placeholder="Buscar por identificador, titular, tipo de plan, cobrador u obra social... (presiona Enter para buscar inmediatamente)"
+              value={searchText}
+              onChange={setSearchText}
+              onKeyDown={handleSearchKeyDown}
+              count={planes.length}
+              maxItems={totalCount}
+            />
+            <div className="gestion-planes-v1__header">
+              <div className="gestion-planes-v1__actions">
+                <ActionButton variant="primary" icon="+" onClick={handleCrearPlan}>
+                  Nuevo Plan
+                </ActionButton>
+                <ActionButton
+                  variant="primary"
+                  onClick={() => setBulkUpdateModalOpen(true)}
+                >
+                  Aumento Masivo
+                </ActionButton>
+                <ActionButton
+                  variant="primary"
+                  onClick={() => setHistorialAumentosModalOpen(true)}
+                >
+                  Ver historial de aumentos
+                </ActionButton>
+                <ActionButton variant="primary" onClick={() => setGenerarRecibosModalOpen(true)}>
+                  Generar Recibos
+                </ActionButton>
+              </div>
+            </div>
           </div>
-        </div>
-      )}
+        )}
+      </div>
 
-      {planes.length === 0 ? (
-        <p className="gestion-planes-v1__empty">
-          {isAdmin ? 'No hay planes. Creá el primero.' : 'No hay planes disponibles.'}
-        </p>
-      ) : (
-        <div className="table-wrapper">
-          <table className="table-standard gestion-planes-v1__tabla">
-            <thead>
-              <tr>
-                <th
-                  style={{ width: widths.identificador, cursor: 'pointer' }}
-                  onClick={() => handleSort('numero_afiliado')}
-                >
-                  Identificador{getSortIcon('numero_afiliado')}{getResizeHandle('identificador')}
-                </th>
-                <th
-                  style={{ width: widths.titular, cursor: 'pointer' }}
-                  onClick={() => handleSort('PlanIntegrante.Persona.apellido')}
-                >
-                  Titular{getSortIcon('PlanIntegrante.Persona.apellido')}{getResizeHandle('titular')}
-                </th>
-                <th
-                  style={{ width: widths.tipoPlan, cursor: 'pointer' }}
-                  onClick={() => handleSort('TipoDePlan.tipo_plan_nombre')}
-                >
-                  Tipo de Plan{getSortIcon('TipoDePlan.tipo_plan_nombre')}{getResizeHandle('tipoPlan')}
-                </th>
-                <th
-                  style={{ width: widths.cobrador, cursor: 'pointer' }}
-                  onClick={() => handleSort('cobrador_numero')}
-                >
-                  Cobrador{getSortIcon('cobrador_numero')}{getResizeHandle('cobrador')}
-                </th>
-                <th
-                  style={{ width: widths.obraSocial, cursor: 'pointer' }}
-                  onClick={() => handleSort('ObraSocial.os_nombre')}
-                >
-                  Obra Social{getSortIcon('ObraSocial.os_nombre')}{getResizeHandle('obraSocial')}
-                </th>
-                <th
-                  style={{ width: widths.estado, cursor: 'pointer' }}
-                  onClick={() => handleSort('estado')}
-                >
-                  Estado{getSortIcon('estado')}{getResizeHandle('estado')}
-                </th>
-                <th style={{ width: widths.acciones }}>Acciones</th>
-              </tr>
-            </thead>
-            <tbody>
-              {planesFiltered.map((plan) => (
-                <tr key={plan.plan_numero}>
-                  <td>
-                    {plan.Zona?.codigo
-                      ? `${plan.Zona.codigo}-${formatNumeroAfiliado(plan.numero_afiliado)}`
-                      : formatNumeroAfiliado(plan.numero_afiliado)}
-                  </td>
-                  <td>
-                    {plan.PlanIntegrantes?.[0]?.Persona
-                      ? `${plan.PlanIntegrantes[0].Persona.apellido}, ${plan.PlanIntegrantes[0].Persona.nombre}`
-                      : '—'}
-                  </td>
-                  <td>{plan.TipoDePlan?.tipo_plan_nombre || '—'}</td>
-                  <td>{plan.Cobrador?.cobrador_apellido}, {plan.Cobrador?.cobrador_nombre}</td>
-                  <td>{plan.ObraSocial?.os_nombre || '—'}</td>
-                  <td>
-                    <StatusBadge status={plan.estado} />
-                  </td>
-                  <td className="table-actions">
-                    <div className="action-button-group">
-                      <ActionButton
-                        variant="primary"
-                        icon="✎"
-                        title="Editar"
-                        onClick={() => handleEditarPlan(plan)}
-                      />
-                      {plan.estado !== 'SUSPENDIDO' && (
-                        <IconButton
-                          icon="delete"
-                          title="Suspender"
-                          onClick={() => handleSuspenderPlan(plan)}
-                          className="icon-button--danger"
-                        />
-                      )}
-                    </div>
-                  </td>
+      {/* Table Scrollable Container */}
+      <div className="gestion-planes-v1__table-scrollable">
+        {planes.length === 0 ? (
+          <p className="gestion-planes-v1__empty">
+            {isAdmin ? 'No hay planes. Creá el primero.' : 'No hay planes disponibles.'}
+          </p>
+        ) : (
+          <div className="table-wrapper">
+            <table className="table-standard gestion-planes-v1__tabla">
+              <thead>
+                <tr>
+                  <th
+                    style={{ width: widths.identificador, cursor: 'pointer' }}
+                    onClick={() => handleSort('numero_afiliado')}
+                  >
+                    Identificador{getSortIcon('numero_afiliado')}{getResizeHandle('identificador')}
+                  </th>
+                  <th
+                    style={{ width: widths.titular, cursor: 'pointer' }}
+                    onClick={() => handleSort('PlanIntegrante.Persona.apellido')}
+                  >
+                    Titular{getSortIcon('PlanIntegrante.Persona.apellido')}{getResizeHandle('titular')}
+                  </th>
+                  <th
+                    style={{ width: widths.tipoPlan, cursor: 'pointer' }}
+                    onClick={() => handleSort('TipoDePlan.tipo_plan_nombre')}
+                  >
+                    Tipo de Plan{getSortIcon('TipoDePlan.tipo_plan_nombre')}{getResizeHandle('tipoPlan')}
+                  </th>
+                  <th
+                    style={{ width: widths.cobrador, cursor: 'pointer' }}
+                    onClick={() => handleSort('cobrador_numero')}
+                  >
+                    Cobrador{getSortIcon('cobrador_numero')}{getResizeHandle('cobrador')}
+                  </th>
+                  <th
+                    style={{ width: widths.obraSocial, cursor: 'pointer' }}
+                    onClick={() => handleSort('ObraSocial.os_nombre')}
+                  >
+                    Obra Social{getSortIcon('ObraSocial.os_nombre')}{getResizeHandle('obraSocial')}
+                  </th>
+                  <th
+                    style={{ width: widths.estado, cursor: 'pointer' }}
+                    onClick={() => handleSort('estado')}
+                  >
+                    Estado{getSortIcon('estado')}{getResizeHandle('estado')}
+                  </th>
+                  <th style={{ width: widths.acciones }}>Acciones</th>
                 </tr>
-              ))}
-            </tbody>
-          </table>
-        </div>
-      )}
+              </thead>
+              <tbody>
+                {planesFiltered.map((plan) => (
+                  <tr key={plan.plan_numero}>
+                    <td>
+                      {plan.Zona?.codigo
+                        ? `${plan.Zona.codigo}-${formatNumeroAfiliado(plan.numero_afiliado)}`
+                        : formatNumeroAfiliado(plan.numero_afiliado)}
+                    </td>
+                    <td>
+                      {plan.PlanIntegrantes?.[0]?.Persona
+                        ? `${plan.PlanIntegrantes[0].Persona.apellido}, ${plan.PlanIntegrantes[0].Persona.nombre}`
+                        : '—'}
+                    </td>
+                    <td>{plan.TipoDePlan?.tipo_plan_nombre || '—'}</td>
+                    <td>{plan.Cobrador?.cobrador_apellido}, {plan.Cobrador?.cobrador_nombre}</td>
+                    <td>{plan.ObraSocial?.os_nombre || '—'}</td>
+                    <td>
+                      <StatusBadge status={plan.estado} />
+                    </td>
+                    <td className="table-actions">
+                      <div className="action-button-group">
+                        <ActionButton
+                          variant="primary"
+                          icon="✎"
+                          title="Editar"
+                          onClick={() => handleEditarPlan(plan)}
+                        />
+                        {plan.estado !== 'SUSPENDIDO' && (
+                          <IconButton
+                            icon="delete"
+                            title="Suspender"
+                            onClick={() => handleSuspenderPlan(plan)}
+                            className="icon-button--danger"
+                          />
+                        )}
+                      </div>
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        )}
+      </div>
 
       {totalPages > 1 && configItemsPerPage !== 0 && (
         <Pagination
