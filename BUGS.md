@@ -27,6 +27,7 @@ Un bug solo puede pasar a estado solucionado, Descartado a traves del pedido exp
 
 | ID | Severidad | Fase | Descripción | Reportado | Estado |
 |----|-----------|------|-------------|-----------|--------|
+| BUG-051 | 🔴 CRÍTICO | BACKLOG-074 | Selector de zona queda vacío al seleccionar opción (display personalizado falla) | 2026-05-15 | 📋 Registrado |
 | BUG-050 | 🟢 MENOR | HistorialAumentosModal | Porcentajes negativos mostrados como "+-X.XX %" en lugar de "-X.XX %" | 2026-05-15 | 📋 Registrado |
 
 ## Registros Recientemente Cerrados (Últimos 7 días)
@@ -3597,3 +3598,40 @@ El código **siempre antepone un `+`** sin validar el signo del número. Cuando 
 - `frontend/src/pages/DashboardPage/components/HistorialAumentosModal/HistorialAumentosModal.jsx` (línea 99)
 
 **Commit:** `b7cda15`
+
+---
+
+### BUG-051: Selector de Zona Queda Vacío Al Seleccionar (Display Personalizado Falla)
+
+**Descripción:**
+En el formulario modal de planes (PlanV1Modal), al seleccionar una zona del dropdown, el select queda completamente vacío en lugar de mostrar el código de la zona seleccionada. El selector de zona debería mostrar solo el código (ej: `01`) cuando está cerrado, pero permanece en blanco.
+
+**Severidad:** 🔴 CRÍTICO
+- Bloquea la funcionalidad de BACKLOG-074
+- El usuario no puede verificar visualmente qué zona ha seleccionado
+- Afecta el flujo de creación/edición de planes
+
+**Síntomas:**
+1. Usuario abre modal de crear/editar plan
+2. Hace click en selector de "Zona"
+3. Despliega dropdown mostrando opciones con formato: `01 — Zona Centro`, `02 — Zona Norte`, etc. ✓
+4. Usuario selecciona una zona (ej: `01 — Zona Centro`)
+5. **Esperado:** Select cerrado muestra `01`
+6. **Observado:** Select cerrado queda completamente vacío
+
+**Root Cause Probable:**
+En [PlanV1Modal.jsx](frontend/src/pages/DashboardPage/components/GestionPlanesV1/modals/PlanV1Modal.jsx):
+- El handler `handleZonaChange` actualiza el state `zonaCodigo` correctamente
+- El atributo `data-selected-code={zonaCodigo}` se establece en el select
+- Pero el CSS en [PlanV1Modal.scss](frontend/src/pages/DashboardPage/components/GestionPlanesV1/modals/PlanV1Modal.scss) no está renderizando el contenido del atributo `data-selected-code` correctamente
+
+Posibles causas:
+1. La pseudo-clase `::before` con `content: attr(data-selected-code)` no funciona como se esperaba en el contexto de un `<select>` (los select son elementos reemplazados)
+2. El selector CSS `.plan-v1-modal__zona-select[data-selected-code]:not([data-selected-code=""])` puede no estar coincidiendo correctamente
+3. Falta de estilos `pointer-events: none` o posicionamiento correcto del overlay
+
+**Archivos Afectados:**
+- `frontend/src/pages/DashboardPage/components/GestionPlanesV1/modals/PlanV1Modal.jsx` (líneas ~59 state, ~495 handler, ~575 select)
+- `frontend/src/pages/DashboardPage/components/GestionPlanesV1/modals/PlanV1Modal.scss` (estilos `plan-v1-modal__zona-select`)
+
+**Reportado:** 2026-05-15
