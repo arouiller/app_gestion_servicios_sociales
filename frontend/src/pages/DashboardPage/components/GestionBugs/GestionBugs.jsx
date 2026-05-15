@@ -194,7 +194,6 @@ function GestionBugs() {
           totalItems={pagination.totalItems}
           itemsPerPage={pagination.itemsPerPage}
           onPageChange={pagination.handleChangePage}
-          onItemsPerPageChange={pagination.handleChangeItemsPerPage}
         />
       )}
 
