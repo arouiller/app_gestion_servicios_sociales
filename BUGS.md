@@ -25,15 +25,14 @@ Un bug solo puede pasar a estado solucionado, Descartado a traves del pedido exp
 
 ## Registros Activos (En Progress + Reportados)
 
-| ID | Severidad | Fase | Descripción | Reportado | Estado |
-|----|-----------|------|-------------|-----------|--------|
-| BUG-051 | 🔴 CRÍTICO | BACKLOG-074 | Selector de zona queda vacío al seleccionar opción (display personalizado falla) | 2026-05-15 | 🚀 Desarrollado |
-| BUG-050 | 🟢 MENOR | HistorialAumentosModal | Porcentajes negativos mostrados como "+-X.XX %" en lugar de "-X.XX %" | 2026-05-15 | 🚀 Desarrollado |
+_(Sin items activos)_
 
 ## Registros Recientemente Cerrados (Últimos 7 días)
 
 | ID | Severidad | Fase | Descripción | Reportado | Solucionado | Commit |
 |----|-----------|------|-------------|-----------|-------------|--------|
+| BUG-051 | 🔴 CRÍTICO | BACKLOG-074 | Selector de zona queda vacío al seleccionar opción (display personalizado falla) | 2026-05-15 | 2026-05-15 | `63c1aad` (BACKLOG-074) |
+| BUG-050 | 🟢 MENOR | HistorialAumentosModal | Porcentajes negativos mostrados como "+-X.XX %" en lugar de "-X.XX %" | 2026-05-15 | 2026-05-15 | `a651354` (BACKLOG-071) |
 | BUG-049 | 🟡 IMPORTANTE | UI | Botón de colapsar menú se mueve con el scroll (debe ser fixed) | 2026-05-15 | 2026-05-15 | `7d82852` |
 | BUG-048 | 🟡 IMPORTANTE | GestionPlanesV1 | Modal de confirmación muestra "Plan" e "sin titular" en lugar de datos reales | 2026-05-15 | 2026-05-15 | `94e1737` |
 | BUG-047 | 🟢 MENOR | GestionPlanesV1 | Fondo de celda "Estado" es amarillento en planes suspendidos | 2026-05-15 | 2026-05-15 | `b7cda15` |
