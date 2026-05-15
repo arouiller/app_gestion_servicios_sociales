@@ -27,6 +27,7 @@ Un bug solo puede pasar a estado solucionado, Descartado a traves del pedido exp
 
 | ID | Severidad | Fase | Descripción | Reportado | Estado |
 |----|-----------|------|-------------|-----------|--------|
+| BUG-050 | 🟢 MENOR | HistorialAumentosModal | Porcentajes negativos mostrados como "+-X.XX %" en lugar de "-X.XX %" | 2026-05-15 | 📋 Registrado |
 
 ## Registros Recientemente Cerrados (Últimos 7 días)
 
@@ -3565,5 +3566,34 @@ Eliminar las líneas 268-270 de `GestionPlanesV1.scss`. El StatusBadge mantiene 
 
 **Archivos Modificados:**
 - `frontend/src/pages/DashboardPage/components/GestionPlanesV1/GestionPlanesV1.scss` (líneas 268-270 eliminadas)
+
+---
+
+### BUG-050: Porcentajes Negativos Mostrados como "+-X.XX %" en Historial de Aumentos
+
+**Descripción:**
+En el modal de "Historial de Aumentos de Cuota", los porcentajes de cambio se muestran incorrectamente. Los aumentos positivos se muestran como `+X.XX %` (correcto), pero los decrementos se muestran como `+-X.XX %` (incorrecto) en lugar de `-X.XX %`.
+
+**Severidad:** 🟢 MENOR
+- Es un problema de formato visual
+- Los datos subyacentes son correctos
+- No afecta la lógica ni integridad de datos
+
+**Síntomas:**
+1. Usuario abre "Historial de Aumentos de Cuota" desde la pantalla de planes
+2. Observa una fila con decremento de cuota (ej: -5% de aumento)
+3. **Esperado:** Mostrar `-5.00 %`
+4. **Observado:** Muestra `+-5.00 %`
+
+**Root Cause:**
+En [HistorialAumentosModal.jsx:99](frontend/src/pages/DashboardPage/components/HistorialAumentosModal/HistorialAumentosModal.jsx#L99):
+```javascript
+<td>+{Number(h.porcentaje).toFixed(2)}%</td>
+```
+
+El código **siempre antepone un `+`** sin validar el signo del número. Cuando `h.porcentaje` es negativo (ej: `-5`), se genera `+-5.00%`.
+
+**Archivos Afectados:**
+- `frontend/src/pages/DashboardPage/components/HistorialAumentosModal/HistorialAumentosModal.jsx` (línea 99)
 
 **Commit:** `b7cda15`
