@@ -69,12 +69,25 @@ export default function ConfiguracionNotificaciones() {
     }
   }, [config]);
 
+  // Normalizar valor decimal: reemplazar coma por punto
+  const normalizeDecimalValue = (value) => {
+    return String(value).replace(',', '.');
+  };
+
   // Manejar cambio de input
   const handleChange = (type, value) => {
-    setValues((prev) => ({
-      ...prev,
-      [type]: Math.max(0, parseInt(value, 10) || 0),
-    }));
+    // Para valor_cuota_social, permitir entrada de texto (con validación posterior)
+    if (type === 'valor_cuota_social') {
+      setValues((prev) => ({
+        ...prev,
+        [type]: value,
+      }));
+    } else {
+      setValues((prev) => ({
+        ...prev,
+        [type]: Math.max(0, parseInt(value, 10) || 0),
+      }));
+    }
     // Limpiar error anterior de este tipo
     if (errors[type]) {
       setErrors((prev) => {
@@ -138,6 +151,26 @@ export default function ConfiguracionNotificaciones() {
       }
     }
 
+    // Validaciones específicas para valor_cuota_social
+    if (type === 'valor_cuota_social') {
+      const normalized = normalizeDecimalValue(newValue);
+      if (!/^\d+(\.\d{1,2})?$/.test(normalized)) {
+        setErrors((prev) => ({
+          ...prev,
+          [type]: 'Formato inválido. Use punto (10.50) o coma (10,50) como separador decimal',
+        }));
+        return;
+      }
+      const numValue = parseFloat(normalized);
+      if (isNaN(numValue) || numValue < 0) {
+        setErrors((prev) => ({
+          ...prev,
+          [type]: 'Debe ser un número >= 0',
+        }));
+        return;
+      }
+    }
+
     // Validaciones específicas para items_per_page
     if (type === 'items_per_page') {
       if (newValue !== 0 && (newValue < 5 || newValue > 1000)) {
@@ -151,8 +184,13 @@ export default function ConfiguracionNotificaciones() {
 
     try {
       setSaving((prev) => ({ ...prev, [type]: true }));
-      await configService.actualizarConfiguracion(type, newValue);
-      showSuccess(`Duración de ${type} actualizada a ${newValue}ms`);
+      // Normalizar valor decimal si es necesario
+      const valueToSave = type === 'valor_cuota_social' ? normalizeDecimalValue(newValue) : newValue;
+      await configService.actualizarConfiguracion(type, valueToSave);
+      const successMsg = type === 'valor_cuota_social'
+        ? `Valor cuota social actualizado a ${valueToSave}`
+        : `Duración de ${type} actualizada a ${newValue}ms`;
+      showSuccess(successMsg);
       setErrors((prev) => {
         const newErrors = { ...prev };
         delete newErrors[type];
@@ -164,7 +202,7 @@ export default function ConfiguracionNotificaciones() {
         ...prev,
         [type]: error.response?.data?.message || 'Error al guardar',
       }));
-      showError(`Error al actualizar duración de ${type}`);
+      showError(`Error al actualizar ${type}`);
     } finally {
       setSaving((prev) => ({ ...prev, [type]: false }));
     }
@@ -179,11 +217,11 @@ export default function ConfiguracionNotificaciones() {
 
   return (
     <div className="configuracion-notificaciones">
-      {/* Sección 1: Redondeo de Cuotas */}
+      {/* Sección 1: Parámetros de configuración */}
       <div className="configuracion-notificaciones__header">
-        <h2>Redondeo de Cuotas</h2>
+        <h2>Parámetros de configuración</h2>
         <p className="configuracion-notificaciones__subtitle">
-          Precisión aplicada al calcular el nuevo valor en aumentos masivos de cuotas (redondeo hacia arriba)
+          Parámetros centrales del sistema: redondeo, cuota social y valores base
         </p>
       </div>
 
@@ -238,6 +276,47 @@ export default function ConfiguracionNotificaciones() {
                 </button>
               </td>
             </tr>
+            <tr>
+              <td>
+                <span className="configuracion-notificaciones__tipo-badge" style={{ backgroundColor: '#f0f7ff', color: '#0369a1', borderLeftColor: '#0369a1' }}>
+                  <span className="configuracion-notificaciones__icon">💰</span>
+                  Valor Cuota Social
+                </span>
+              </td>
+              <td>Valor base configurable de la cuota social del sistema</td>
+              <td className="configuracion-notificaciones__duration-cell">
+                <div className="configuracion-notificaciones__duration-group">
+                  <input
+                    type="text"
+                    placeholder="0.00"
+                    pattern="[0-9,.]+"
+                    className="configuracion-notificaciones__duration-input"
+                    value={values.valor_cuota_social || '0.00'}
+                    onChange={(e) => setValues(prev => ({ ...prev, valor_cuota_social: e.target.value }))}
+                    disabled={saving.valor_cuota_social}
+                    title="Ingrese un número con punto (.) o coma (,) como separador decimal"
+                  />
+                  <span className="configuracion-notificaciones__hint">
+                    (ej: 10.50 o 10,50)
+                  </span>
+                </div>
+                {errors.valor_cuota_social && (
+                  <span className="configuracion-notificaciones__error">
+                    {errors.valor_cuota_social}
+                  </span>
+                )}
+              </td>
+              <td className="configuracion-notificaciones__actions">
+                <button
+                  className="configuracion-notificaciones__btn-save"
+                  onClick={() => handleSave('valor_cuota_social')}
+                  disabled={saving.valor_cuota_social}
+                  title={saving.valor_cuota_social ? 'Guardando...' : 'Guardar configuración'}
+                >
+                  {saving.valor_cuota_social ? '⏳' : '💾'}
+                </button>
+              </td>
+            </tr>
           </tbody>
         </table>
       </div>
@@ -254,7 +333,7 @@ export default function ConfiguracionNotificaciones() {
           <br/>
           • Precisión 0.01: 105.523 → 105.53 | 105.509 → 105.51
           <br/>
-          Ingresa cualquier valor positivo (números decimales permitidos).
+          <strong>Cuota Social:</strong> Ingresa valor con punto (10.50) o coma (10,50) como separador decimal.
         </p>
       </div>
 
