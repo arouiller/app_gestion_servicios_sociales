@@ -106,13 +106,6 @@ function ConfirmDeletePlanModal({
 
         <div className="confirm-delete-modal__footer">
           <button
-            className="confirm-delete-modal__btn confirm-delete-modal__btn--primary"
-            onClick={handleSuspend}
-            disabled={isLoading}
-          >
-            {isLoading ? 'Suspendiendo...' : 'Suspender Plan'}
-          </button>
-          <button
             className="confirm-delete-modal__btn confirm-delete-modal__btn--cancel"
             onClick={handleCancel}
             disabled={isLoading}
@@ -125,6 +118,13 @@ function ConfirmDeletePlanModal({
             disabled={isLoading}
           >
             Eliminar Plan
+          </button>
+          <button
+            className="confirm-delete-modal__btn confirm-delete-modal__btn--primary"
+            onClick={handleSuspend}
+            disabled={isLoading}
+          >
+            {isLoading ? 'Suspendiendo...' : 'Suspender Plan'}
           </button>
         </div>
       </div>
