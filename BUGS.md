@@ -3671,4 +3671,7 @@ Reemplazar CSS `::before` con un overlay JavaScript + CSS usando un `<span>`:
 - `frontend/src/pages/DashboardPage/components/GestionPlanesV1/modals/PlanV1Modal.scss`:
   - Reemplazar estilos de `::before` con estilos de `.plan-v1-modal__zona-wrapper` y `.plan-v1-modal__zona-display`
 
-**Commit:** `cd43ce2`
+**Commits:**
+- `cd43ce2` — fix: selector de zona con overlay span
+- `c63e0b5` — fix: clase condicional --with-overlay
+- `312bffa` — fix: inicializar zonaCodigo en planes existentes
