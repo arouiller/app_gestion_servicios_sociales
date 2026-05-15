@@ -300,17 +300,13 @@ const LookupCRUD = ({ titulo, singularName, endpoint, campos, tableKey = 'lookup
         </div>
       )}
 
-      {totalPages > 1 && (
+      {totalPages > 1 && configItemsPerPage !== 0 && (
         <Pagination
           currentPage={page}
           totalPages={totalPages}
           totalItems={totalCount}
           itemsPerPage={configItemsPerPage}
           onPageChange={setPage}
-          onItemsPerPageChange={(newLimit) => {
-            // TODO: update configItemsPerPage in backend if needed
-            setPage(1);
-          }}
         />
       )}
 
