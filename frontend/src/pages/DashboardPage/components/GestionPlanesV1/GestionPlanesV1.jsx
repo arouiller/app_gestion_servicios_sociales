@@ -129,6 +129,79 @@ function GestionPlanesV1() {
     }
   };
 
+  // Navegación por teclado en tabla de planes
+  const handleKeyDown = useCallback((e) => {
+    // Solo escuchar si no hay modal abierto y la tabla tiene filas
+    if (modalMode || planesFiltered.length === 0) return;
+
+    const key = e.key.toLowerCase();
+    const altKey = e.altKey;
+
+    // ALT+G: Editar fila activa
+    if (altKey && key === 'g') {
+      e.preventDefault();
+      const activeRow = planesFiltered.find(p => p.plan_numero === activeRowId);
+      if (activeRow) {
+        handleEditarPlan(activeRow);
+      }
+      return;
+    }
+
+    // Teclas de navegación
+    let newActiveIndex = planesFiltered.findIndex(p => p.plan_numero === activeRowId);
+    if (newActiveIndex === -1) newActiveIndex = 0;
+
+    let targetIndex = newActiveIndex;
+
+    switch (key) {
+      case 'arrowup': // Una fila arriba
+        e.preventDefault();
+        targetIndex = Math.max(0, newActiveIndex - 1);
+        break;
+      case 'arrowdown': // Una fila abajo
+        e.preventDefault();
+        targetIndex = Math.min(planesFiltered.length - 1, newActiveIndex + 1);
+        break;
+      case 'pageup': // 10 filas arriba
+        e.preventDefault();
+        targetIndex = Math.max(0, newActiveIndex - 10);
+        break;
+      case 'pagedown': // 10 filas abajo
+        e.preventDefault();
+        targetIndex = Math.min(planesFiltered.length - 1, newActiveIndex + 10);
+        break;
+      default:
+        return; // No es una tecla de navegación
+    }
+
+    // Establecer la nueva fila activa
+    const newActivePlan = planesFiltered[targetIndex];
+    if (newActivePlan) {
+      setActiveRowId(newActivePlan.plan_numero);
+
+      // Auto-paginar si la fila objetivo no está en la página actual
+      const planeOnCurrentPage = planesFiltered.slice(
+        (page - 1) * configItemsPerPage,
+        page * configItemsPerPage
+      );
+      const isRowOnCurrentPage = planeOnCurrentPage.some(p => p.plan_numero === newActivePlan.plan_numero);
+
+      if (!isRowOnCurrentPage && totalPages > 1) {
+        // Calcular en qué página está la fila objetivo
+        const targetPage = Math.ceil((targetIndex + 1) / configItemsPerPage);
+        setPage(Math.max(1, Math.min(targetPage, totalPages)));
+      }
+    }
+  }, [modalMode, planesFiltered, page, configItemsPerPage, totalPages, activeRowId, handleEditarPlan]);
+
+  // Agregar listener de teclado para navegación
+  useEffect(() => {
+    window.addEventListener('keydown', handleKeyDown);
+    return () => {
+      window.removeEventListener('keydown', handleKeyDown);
+    };
+  }, [handleKeyDown]);
+
   const mostrarMensaje = (texto, tipo = 'success') => {
     if (tipo === 'success') {
       setSuccess(texto);
