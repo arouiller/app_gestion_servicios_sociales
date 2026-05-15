@@ -7,7 +7,7 @@ const queryExecController = require('../controllers/queryExecController');
 const router = express.Router();
 
 // Tipos de notificación y configuración válidos
-const VALID_TYPES = ['error', 'warning', 'success', 'info', 'debounce_delay_ms', 'items_per_page', 'audit_enabled', 'audit_retention_days', 'redondeo_precision'];
+const VALID_TYPES = ['error', 'warning', 'success', 'info', 'debounce_delay_ms', 'items_per_page', 'audit_enabled', 'audit_retention_days', 'redondeo_precision', 'valor_cuota_social'];
 
 // GET /api/admin/configuracion - Público (lectura de configuración)
 router.get('/configuracion', async (req, res) => {
@@ -78,6 +78,13 @@ router.put('/configuracion/:tipo', verifyToken, requireAdmin, async (req, res) =
         return res.status(400).json({
           success: false,
           message: 'redondeo_precision debe ser un valor positivo (ej: 0.01, 1, 10, 100, 500)',
+        });
+      }
+    } else if (tipo === 'valor_cuota_social') {
+      if (duracion_ms < 0 || !Number.isFinite(duracion_ms)) {
+        return res.status(400).json({
+          success: false,
+          message: 'valor_cuota_social debe ser un número >= 0 (ej: 10.50)',
         });
       }
     }
