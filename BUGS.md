@@ -27,6 +27,7 @@ Un bug solo puede pasar a estado solucionado, Descartado a traves del pedido exp
 
 | ID | Severidad | Fase | Descripción | Reportado | Estado |
 |----|-----------|------|-------------|-----------|--------|
+| BUG-045 | 🟡 IMPORTANTE | Paginación | Eliminar selector de cantidad de registros que no funciona | 2026-05-15 | 📋 Registrado |
 | BUG-044 | 🟡 IMPORTANTE | GestionPlanes | Selector de registros por página vuelve a valor original al cambiar | 2026-05-15 | 2026-05-15 | `c85027a` |
 | BUG-032 | 🟡 IMPORTANTE | Sortable Headers | Llamadas API duplicadas y redundantes al cargar GestionPlanesV1 | 2026-05-07 | ✅ Solucionado |
 
