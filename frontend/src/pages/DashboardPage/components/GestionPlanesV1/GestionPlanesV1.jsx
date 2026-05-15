@@ -306,17 +306,13 @@ function GestionPlanesV1() {
         </div>
       )}
 
-      {totalPages > 1 && (
+      {totalPages > 1 && configItemsPerPage !== 0 && (
         <Pagination
           currentPage={page}
           totalPages={totalPages}
           totalItems={totalCount}
           itemsPerPage={configItemsPerPage}
           onPageChange={setPage}
-          onItemsPerPageChange={(newLimit) => {
-            setConfigItemsPerPage(newLimit);
-            setPage(1);
-          }}
         />
       )}
 
