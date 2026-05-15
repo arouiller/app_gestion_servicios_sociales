@@ -7,7 +7,6 @@ function Pagination({
   totalItems,
   itemsPerPage,
   onPageChange,
-  onItemsPerPageChange,
 }) {
   if (totalPages <= 1) {
     return null;
@@ -71,20 +70,6 @@ function Pagination({
         <span className="pagination__text">
           Mostrando {startItem}-{endItem} de {totalItems} registros
         </span>
-        <div className="pagination__items-per-page">
-          <label htmlFor="items-select">Por página:</label>
-          <select
-            id="items-select"
-            value={itemsPerPage}
-            onChange={(e) => onItemsPerPageChange(parseInt(e.target.value))}
-            className="pagination__select"
-          >
-            <option value={10}>10</option>
-            <option value={15}>15</option>
-            <option value={20}>20</option>
-            <option value={50}>50</option>
-          </select>
-        </div>
       </div>
 
       <div className="pagination__controls">
