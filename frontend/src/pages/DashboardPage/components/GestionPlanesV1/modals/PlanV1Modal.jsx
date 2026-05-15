@@ -123,6 +123,18 @@ function PlanV1Modal({ mode, planData, onClose, onSave }) {
     }
   }, [mode, planData?.plan_numero]);
 
+  // Initialize zonaCodigo when lookups are loaded or zona_id changes
+  useEffect(() => {
+    if (form.zona_id && lookupData.zonas.length > 0) {
+      const zona = lookupData.zonas.find(z => z.id === parseInt(form.zona_id));
+      if (zona) {
+        setZonaCodigo(zona.codigo);
+      }
+    } else if (!form.zona_id) {
+      setZonaCodigo('');
+    }
+  }, [form.zona_id, lookupData.zonas]);
+
   const loadLookupData = async () => {
     try {
       const [lookups, localidades] = await Promise.all([
