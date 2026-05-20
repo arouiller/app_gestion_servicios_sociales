@@ -1,0 +1,75 @@
+@import '../../../../../styles/colors';
+
+.recibo-desglose {
+  margin: 20px 0;
+  padding: 15px;
+  background: #f9f9f9;
+  border-left: 4px solid $color-primary;
+  border-radius: 4px;
+
+  h4 {
+    margin: 0 0 12px 0;
+    font-size: 14px;
+    font-weight: 600;
+    color: $color-dark;
+  }
+
+  .desglose-table {
+    width: 100%;
+    border-collapse: collapse;
+    margin-bottom: 12px;
+    font-size: 13px;
+
+    tr {
+      border-bottom: 1px solid #e0e0e0;
+
+      &.desglose-total {
+        border-top: 2px solid $color-primary;
+        border-bottom: none;
+        background: #f0f7ff;
+      }
+
+      &.negativo {
+        background: #fff3cd;
+        color: #856404;
+      }
+    }
+
+    td {
+      padding: 8px 12px;
+      text-align: right;
+
+      &.desglose-label {
+        text-align: left;
+        font-weight: 500;
+        color: $color-dark;
+      }
+
+      &.desglose-value {
+        font-weight: 600;
+        font-family: 'Monaco', monospace;
+        color: $color-success;
+
+        .warning-icon {
+          margin-left: 6px;
+          font-size: 12px;
+        }
+      }
+    }
+
+    tr.desglose-total td.desglose-value {
+      color: $color-primary;
+      font-size: 14px;
+    }
+  }
+
+  .desglose-warning {
+    padding: 10px 12px;
+    background: #fff3cd;
+    border: 1px solid #ffc107;
+    border-radius: 3px;
+    color: #856404;
+    font-size: 12px;
+    margin-top: 8px;
+  }
+}
