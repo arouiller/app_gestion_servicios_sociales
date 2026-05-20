@@ -714,9 +714,12 @@ function getDefaultPDFTemplate() {
 function parseTemplate(template) {
   const configMatch = template.match(/^---\n([\s\S]*?)\n---\n([\s\S]*)$/);
 
+  // Valores por defecto: A4 con márgenes para 2-per-page layout
+  const defaultConfig = { pageSize: 'A4', orientation: 'portrait', margins: 20 };
+
   if (!configMatch) {
     return {
-      config: { pageSize: 'A7', orientation: 'portrait', margins: 10 },
+      config: defaultConfig,
       content: template,
     };
   }
@@ -724,11 +727,7 @@ function parseTemplate(template) {
   const configStr = configMatch[1];
   const content = configMatch[2];
 
-  const config = {
-    pageSize: 'A7',
-    orientation: 'portrait',
-    margins: 10,
-  };
+  const config = { ...defaultConfig };
 
   // Parsear líneas de configuración
   configStr.split('\n').forEach((line) => {
