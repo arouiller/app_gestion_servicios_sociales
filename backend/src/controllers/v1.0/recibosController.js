@@ -1,6 +1,14 @@
 const db = require('../../models');
 const sequelize = require('../../config/database');
 const { Op, literal } = require('sequelize');
+const {
+  formatCurrency,
+  replaceAllPlaceholders,
+  getArancelCSSClass,
+  getArancelWarningIcon,
+  groupRecibosInPairs,
+  getDefaultTemplateString,
+} = require('../../utils/pdfHelpers');
 
 /**
  * POST /api/recibos/generar
@@ -526,8 +534,9 @@ exports.deletePeriodo = async (req, res, next) => {
 
 /**
  * GET /api/recibos/generar-pdf
- * Genera un PDF con todos los recibos de un período
+ * Genera un PDF con todos los recibos de un período con desglose de cuotas y layout 2-per-page
  * Query params: periodo (YYYY-MM)
+ * BACKLOG-080: Mejora con desglose y optimización de layout
  */
 exports.generarPDF = async (req, res, next) => {
   try {
@@ -561,7 +570,7 @@ exports.generarPDF = async (req, res, next) => {
       });
     }
 
-    // Obtener template activo de la BD
+    // Obtener template activo de la BD o usar template por defecto
     let templateDB = await db.ReciboTemplate.findOne({
       where: { activo: true },
     });
@@ -579,48 +588,44 @@ exports.generarPDF = async (req, res, next) => {
     // Pipe al response
     doc.pipe(res);
 
-    // Generar una página por recibo usando el template
-    recibos.forEach((recibo, index) => {
-      // Agregar nueva página para cada recibo (excepto el primero)
-      if (index > 0) {
+    // BACKLOG-080: Procesar recibos en pares para layout 2-per-page
+    const pares = groupRecibosInPairs(recibos);
+    let pageNumber = 0;
+
+    pares.forEach((par) => {
+      // Agregar nueva página para cada par (excepto el primero)
+      if (pageNumber > 0) {
         doc.addPage();
       }
+      pageNumber++;
 
-      const numeroRecibo = recibo.numero_recibo ?? recibo.id;
-      const numeroAfiliado = String(recibo.numero_afiliado).padStart(5, '0');
-      const zonaCodigo = recibo.zona_codigo || '-';
-      const localidad = recibo.localidad_nombre || '-';
-      const valor = Number(recibo.valor_cuota).toFixed(2);
+      // Procesar cada recibo en el par
+      par.forEach((recibo, indexInPar) => {
+        const reciboHTML = renderRecibo(recibo, content);
 
-      // Reemplazar placeholders en el template
-      let contentRendered = content
-        .replace(/{{numero_recibo}}/g, numeroRecibo)
-        .replace(/{{zona_codigo}}/g, zonaCodigo)
-        .replace(/{{numero_afiliado}}/g, numeroAfiliado)
-        .replace(/{{titular_apellido}}/g, recibo.titular_apellido)
-        .replace(/{{titular_nombre}}/g, recibo.titular_nombre)
-        .replace(/{{obra_social_nombre}}/g, recibo.obra_social_nombre)
-        .replace(/{{tipo_de_grupo_nombre}}/g, recibo.tipo_de_grupo_nombre)
-        .replace(/{{tipo_plan_nombre}}/g, recibo.tipo_plan_nombre)
-        .replace(/{{localidad_nombre}}/g, localidad)
-        .replace(/{{domicilio}}/g, recibo.domicilio || '-')
-        .replace(/{{valor_cuota}}/g, `$${valor}`);
+        // Renderizar el recibo en el PDF
+        let y = config.margins;
+        if (reciboHTML.includes('<')) {
+          // Contenido HTML
+          y = renderHTMLtoPDF(doc, reciboHTML, config, y);
+        } else {
+          // Contenido texto plano
+          const lineHeight = 11;
+          doc.fontSize(9).font('Helvetica').fillColor('#000');
+          const lines = reciboHTML.split('\n');
+          lines.forEach((line) => {
+            doc.text(line, config.margins + 5, y);
+            y += lineHeight;
+          });
+        }
 
-      // Renderizar el contenido en el PDF (soporta HTML y texto plano)
-      let y = config.margins;
-      if (contentRendered.includes('<')) {
-        // Contenido HTML
-        y = renderHTMLtoPDF(doc, contentRendered, config, y);
-      } else {
-        // Contenido texto plano
-        const lineHeight = 11;
-        doc.fontSize(9).font('Helvetica').fillColor('#000');
-        const lines = contentRendered.split('\n');
-        lines.forEach((line) => {
-          doc.text(line, config.margins + 5, y);
-          y += lineHeight;
-        });
-      }
+        // Agregar separador si hay un segundo recibo en el par
+        if (indexInPar === 0 && par.length === 2) {
+          y += 10; // Espacio vertical
+          doc.strokeColor('#ccc').lineWidth(0.5).moveTo(config.margins, y).lineTo(doc.page.width - config.margins, y).stroke();
+          y += 10;
+        }
+      });
     });
 
     // Finalizar documento
@@ -632,6 +637,41 @@ exports.generarPDF = async (req, res, next) => {
     });
   }
 };
+
+/**
+ * BACKLOG-080: Renderiza un recibo individual reemplazando todos los placeholders
+ */
+function renderRecibo(recibo, template) {
+  const numeroRecibo = recibo.numero_recibo ?? recibo.id;
+  const numeroAfiliado = String(recibo.numero_afiliado).padStart(5, '0');
+  const zonaCodigo = recibo.zona_codigo || '-';
+  const localidad = recibo.localidad_nombre || '-';
+  const cuotaSocial = parseFloat(recibo.cuota_social || 0).toFixed(2);
+  const arancelPorServicio = parseFloat(recibo.arancel_por_servicio || 0).toFixed(2);
+  const valorCuota = parseFloat(recibo.valor_cuota || 0).toFixed(2);
+
+  // BACKLOG-080: Preparar datos para placeholders de desglose
+  const reciboData = {
+    numero_recibo: numeroRecibo,
+    numero_afiliado: numeroAfiliado,
+    zona_codigo: zonaCodigo,
+    titular_apellido: recibo.titular_apellido,
+    titular_nombre: recibo.titular_nombre,
+    obra_social_nombre: recibo.obra_social_nombre,
+    tipo_de_grupo_nombre: recibo.tipo_de_grupo_nombre,
+    tipo_plan_nombre: recibo.tipo_plan_nombre,
+    localidad_nombre: localidad,
+    domicilio: recibo.domicilio || '-',
+    valor_cuota: valorCuota,
+    cuota_social: cuotaSocial,
+    arancel_por_servicio: arancelPorServicio,
+    arancel_negativo_class: getArancelCSSClass(arancelPorServicio),
+    arancel_warning_icon: getArancelWarningIcon(arancelPorServicio),
+  };
+
+  // Usar helper para reemplazar todos los placeholders
+  return replaceAllPlaceholders(template, reciboData);
+}
 
 // Helper: Template por defecto hardcodeado
 function getDefaultPDFTemplate() {
@@ -661,52 +701,7 @@ function getDefaultPDFTemplate() {
 </html>`;
 }
 
-// Helper: Template por defecto con HTML
-function getDefaultTemplateString() {
-  return `---
-pageSize: A7
-orientation: portrait
-margins: 10
----
-<table>
-  <tr>
-    <td width="35%"><b>Recibo nro:</b></td>
-    <td width="65%">{{numero_recibo}}</td>
-  </tr>
-  <tr>
-    <td width="35%"><b>Afiliado:</b></td>
-    <td width="65%">{{zona_codigo}} - {{numero_afiliado}}</td>
-  </tr>
-  <tr>
-    <td width="35%"><b>Titular:</b></td>
-    <td width="65%">{{titular_apellido}}, {{titular_nombre}}</td>
-  </tr>
-  <tr>
-    <td width="35%"><b>Obra social:</b></td>
-    <td width="65%">{{obra_social_nombre}}</td>
-  </tr>
-  <tr>
-    <td width="35%"><b>Tipo de grupo:</b></td>
-    <td width="65%">{{tipo_de_grupo_nombre}}</td>
-  </tr>
-  <tr>
-    <td width="35%"><b>Tipo de plan:</b></td>
-    <td width="65%">{{tipo_plan_nombre}}</td>
-  </tr>
-  <tr>
-    <td width="35%"><b>Localidad:</b></td>
-    <td width="65%">{{localidad_nombre}}</td>
-  </tr>
-  <tr>
-    <td width="35%"><b>Domicilio:</b></td>
-    <td width="65%">{{domicilio}}</td>
-  </tr>
-  <tr>
-    <td width="35%"><b>Monto total:</b></td>
-    <td width="65%">{{valor_cuota}}</td>
-  </tr>
-</table>`;
-}
+// Nota: getDefaultTemplateString() ahora viene de pdfHelpers.js (importado al principio)
 
 // Helper: Parsear template para extraer configuración y contenido
 function parseTemplate(template) {
