@@ -210,6 +210,7 @@ margins: 20
 
 /**
  * Reemplaza todos los placeholders en un string HTML con valores del recibo
+ * Los valores ya vienen formateados desde renderRecibo(), no reformatear
  */
 function replaceAllPlaceholders(html, recibo) {
   let result = html;
@@ -220,17 +221,16 @@ function replaceAllPlaceholders(html, recibo) {
     'obra_social_nombre', 'tipo_de_grupo_nombre', 'tipo_plan_nombre',
     'localidad_nombre', 'domicilio',
     'valor_cuota', 'cuota_social', 'arancel_por_servicio',
-    'arancel_negativo_class', 'arancel_warning_icon'
+    'arancel_negativo_class', 'arancel_warning_icon',
+    'arancel_bg', 'arancel_color'
   ];
 
   placeholders.forEach((placeholder) => {
     const key = placeholder;
     let value = recibo[key] || '';
 
-    // Formatos especiales para placeholders de moneda
-    if (placeholder === 'valor_cuota' || placeholder === 'cuota_social' || placeholder === 'arancel_por_servicio') {
-      value = formatCurrency(recibo[key]);
-    }
+    // NO reformatear valores que ya vienen formateados desde renderRecibo()
+    // Solo usar el valor tal como viene
 
     const regex = new RegExp(`{{${placeholder}}}`, 'g');
     result = result.replace(regex, value);
