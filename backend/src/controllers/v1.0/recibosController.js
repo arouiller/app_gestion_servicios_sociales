@@ -599,12 +599,12 @@ exports.generarPDF = async (req, res, next) => {
       }
       pageNumber++;
 
-      // Procesar cada recibo en el par
+      // Procesar cada recibo en el par, manteniendo Y entre recibos
+      let y = config.margins;
       par.forEach((recibo, indexInPar) => {
         const reciboHTML = renderRecibo(recibo, content);
 
         // Renderizar el recibo en el PDF
-        let y = config.margins;
         if (reciboHTML.includes('<')) {
           // Contenido HTML
           y = renderHTMLtoPDF(doc, reciboHTML, config, y);
