@@ -1,7 +1,7 @@
 const express = require('express');
 const router = express.Router();
 const { verifyToken } = require('../middleware/auth');
-const recibosController = require('../controllers/v1.0/recibosController');
+const recibosController = require('../controllers/recibosController');
 
 // POST /api/recibos/generar
 // Generar recibos para un período
