@@ -148,7 +148,28 @@ exports.generar = async (req, res, next) => {
           continue; // Sin titular, omitir
         }
 
-      // Crear recibo con snapshots
+      // BACKLOG-079: Obtener parámetro sistema valor_cuota_social
+      const configApp = await db.ConfiguracionApp.findOne({
+        attributes: ['valor_cuota_social'],
+        where: {},
+        transaction,
+      });
+      const cuotaSocial = parseFloat(configApp?.valor_cuota_social || 0);
+
+      // BACKLOG-079: Calcular arancel por servicio
+      const valorCuota = parseFloat(plan.valor_cuota || 0);
+      const arancelPorServicio = valorCuota - cuotaSocial;
+
+      // BACKLOG-079: Log warning si arancel es negativo
+      if (arancelPorServicio < 0) {
+        console.warn(
+          `[BACKLOG-079] arancel_por_servicio negativo en recibo. ` +
+          `Plan: ${plan.numero_afiliado}, valor_cuota: ${valorCuota}, ` +
+          `cuota_social: ${cuotaSocial}, arancel: ${arancelPorServicio}`
+        );
+      }
+
+      // Crear recibo con snapshots y desglose
       const recibo = await db.Recibo.create(
         {
           plan_numero: planNumero,
@@ -163,12 +184,26 @@ exports.generar = async (req, res, next) => {
           cobrador_apellido: plan.Cobrador?.cobrador_apellido || '',
           cobrador_nombre: plan.Cobrador?.cobrador_nombre || '',
           domicilio: plan.domicilio,
-          valor_cuota: plan.valor_cuota,
+          valor_cuota: valorCuota,
+          cuota_social: cuotaSocial,
+          arancel_por_servicio: arancelPorServicio,
           zona_codigo: plan.Zona?.codigo || null,
           usuario_id: userId,
         },
         { transaction }
       );
+
+      // BACKLOG-079: Validar invariante (suma = total)
+      const invariante = Math.abs(
+        (recibo.cuota_social + recibo.arancel_por_servicio) - recibo.valor_cuota
+      );
+      if (invariante > 0.01) {
+        throw new Error(
+          `Invariante de desglose violada. Recibo: ${recibo.id}. ` +
+          `Suma: ${recibo.cuota_social + recibo.arancel_por_servicio}, ` +
+          `Total: ${recibo.valor_cuota}`
+        );
+      }
 
       reciboIndex++;
 
