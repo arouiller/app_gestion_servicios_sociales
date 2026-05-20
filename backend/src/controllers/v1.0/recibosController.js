@@ -149,12 +149,13 @@ exports.generar = async (req, res, next) => {
         }
 
       // BACKLOG-079: Obtener parámetro sistema valor_cuota_social
+      // configuracion_app usa modelo genérico: tipo_notificacion + duracion_ms
       const configApp = await db.ConfiguracionApp.findOne({
-        attributes: ['valor_cuota_social'],
-        where: {},
+        attributes: ['duracion_ms'],
+        where: { tipo_notificacion: 'valor_cuota_social' },
         transaction,
       });
-      const cuotaSocial = parseFloat(configApp?.valor_cuota_social || 0);
+      const cuotaSocial = parseFloat(configApp?.duracion_ms || 0);
 
       // BACKLOG-079: Calcular arancel por servicio
       const valorCuota = parseFloat(plan.valor_cuota || 0);
