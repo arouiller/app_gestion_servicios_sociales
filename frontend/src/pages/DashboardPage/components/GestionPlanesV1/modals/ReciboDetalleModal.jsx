@@ -1,7 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import recibosService from '../../../../../services/recibosService';
 import { formatNumeroAfiliado } from '../../../../../utils/formatters';
-import ResumenDesglose from './ResumenDesglose';
 import './ReciboDetalleModal.scss';
 
 function ReciboDetalleModal({ reciboId, onClose, reciboData }) {
@@ -102,13 +101,6 @@ function ReciboDetalleModal({ reciboId, onClose, reciboData }) {
               <p>{recibo?.fecha_emision ? new Date(recibo.fecha_emision).toLocaleDateString('es-AR') : '—'}</p>
             </div>
           </div>
-
-          {/* Desglose de Cuota (BACKLOG-079) */}
-          <ResumenDesglose
-            cuotaSocial={recibo.cuota_social}
-            arancelPorServicio={recibo.arancel_por_servicio}
-            valorCuota={recibo.valor_cuota}
-          />
             </>
           )}
         </div>
