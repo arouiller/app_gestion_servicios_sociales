@@ -646,9 +646,14 @@ function renderRecibo(recibo, template) {
   const numeroAfiliado = String(recibo.numero_afiliado).padStart(5, '0');
   const zonaCodigo = recibo.zona_codigo || '-';
   const localidad = recibo.localidad_nombre || '-';
-  const cuotaSocial = parseFloat(recibo.cuota_social || 0).toFixed(2);
-  const arancelPorServicio = parseFloat(recibo.arancel_por_servicio || 0).toFixed(2);
-  const valorCuota = parseFloat(recibo.valor_cuota || 0).toFixed(2);
+  const cuotaSocial = formatCurrency(recibo.cuota_social || 0);
+  const arancelPorServicio = parseFloat(recibo.arancel_por_servicio || 0);
+  const valorCuota = formatCurrency(recibo.valor_cuota || 0);
+
+  // BACKLOG-080: Colores dinámicos para arancel negativo
+  const isArancelNegative = arancelPorServicio < 0;
+  const arancelBg = isArancelNegative ? '#fff3cd' : '#f9f9f9';
+  const arancelColor = isArancelNegative ? '#856404' : '#27ae60';
 
   // BACKLOG-080: Preparar datos para placeholders de desglose
   const reciboData = {
@@ -664,9 +669,11 @@ function renderRecibo(recibo, template) {
     domicilio: recibo.domicilio || '-',
     valor_cuota: valorCuota,
     cuota_social: cuotaSocial,
-    arancel_por_servicio: arancelPorServicio,
+    arancel_por_servicio: formatCurrency(arancelPorServicio),
     arancel_negativo_class: getArancelCSSClass(arancelPorServicio),
     arancel_warning_icon: getArancelWarningIcon(arancelPorServicio),
+    arancel_bg: arancelBg,
+    arancel_color: arancelColor,
   };
 
   // Usar helper para reemplazar todos los placeholders
