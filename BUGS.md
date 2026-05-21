@@ -25,12 +25,15 @@ Un bug solo puede pasar a estado solucionado, Descartado a traves del pedido exp
 
 ## Registros Activos (En Progress + Reportados)
 
-_(Sin items activos)_
+| ID | Severidad | Fase | Descripción | Reportado | Estado |
+|----|-----------|------|-------------|-----------|--------|
+| BUG-052 | 🔴 CRÍTICO | Recibos PDF | Generación de PDF: Código HTML/CSS de plantilla aparece en primeras páginas | 2026-05-21 | 📋 Registrado |
 
 ## Registros Recientemente Cerrados (Últimos 7 días)
 
 | ID | Severidad | Fase | Descripción | Reportado | Solucionado | Commit |
 |----|-----------|------|-------------|-----------|-------------|--------|
+| BUG-052 | 🔴 CRÍTICO | Recibos PDF | Generación de PDF: Código HTML/CSS aparece literal en primeras páginas | 2026-05-21 | - | - |
 | BUG-051 | 🔴 CRÍTICO | BACKLOG-074 | Selector de zona queda vacío al seleccionar opción (display personalizado falla) | 2026-05-15 | 2026-05-15 | `63c1aad` (BACKLOG-074) |
 | BUG-050 | 🟢 MENOR | HistorialAumentosModal | Porcentajes negativos mostrados como "+-X.XX %" en lugar de "-X.XX %" | 2026-05-15 | 2026-05-15 | `a651354` (BACKLOG-071) |
 | BUG-049 | 🟡 IMPORTANTE | UI | Botón de colapsar menú se mueve con el scroll (debe ser fixed) | 2026-05-15 | 2026-05-15 | `7d82852` |
@@ -3675,3 +3678,92 @@ Reemplazar CSS `::before` con un overlay JavaScript + CSS usando un `<span>`:
 - `c63e0b5` — fix: clase condicional --with-overlay
 - `312bffa` — fix: inicializar zonaCodigo en planes existentes
 - `bc5f971` — fix: ocultar texto del select con text-indent
+
+---
+
+### BUG-052: Generación de PDF — Código HTML/CSS Aparece Literal en Primeras Páginas
+
+**Descripción:**
+Al generar un PDF de recibos para un período, el documento contiene en las primeras páginas el código HTML/CSS de la plantilla impreso literalmente, en lugar de ser procesado y renderizado. Solo los recibos finales (página 3 en adelante) se muestran correctamente renderizados.
+
+**Síntomas observados:**
+1. Generar PDF de recibos: `GET /api/recibos/generar-pdf?periodo=2026-04`
+2. Descargar PDF y abrir en visor
+3. **Página 1:** Muestra código HTML literal:
+   ```html
+   <style>
+     body {
+       font-family: 'Arial', sans-serif;
+       font-size: 11px;
+       color: #000;
+   ```
+4. **Página 2:** Sigue mostrando código HTML:
+   ```html
+   <table [...]  width: 100%; ...>
+   <seccion-izquierda [ border: 1px solid #333; ... ]>
+   ```
+5. **Página 3+:** Finalmente se muestran recibos correctamente renderizados
+   - García, Juan
+   - Recibo "C" 00002
+   - Datos completos y formatos correctos
+
+**Severidad:** 🔴 CRÍTICO
+- PDFs generados son completamente inutilizables
+- Usuarios no pueden descargar recibos funcionales
+- Bloquea funcionalidad principal: descarga de recibos en PDF
+
+**Causa raíz identificada:**
+
+El sistema utiliza un parser HTML manual (`parseHTMLSimple`) que:
+1. Solo busca etiquetas `<table>` específicamente
+2. Todo lo demás (incluyendo `<style>` y `<div>`) se trata como "texto plano"
+3. Cuando se renderiza como texto con PDFKit `.text()`, se imprime literalmente
+
+**Archivos afectados:**
+- `backend/src/controllers/v1.0/recibosController.js`:
+  - Función `generarPDF()` línea 541-639
+  - Función `parseHTMLSimple()` línea 809-864 (RAÍZ DEL PROBLEMA)
+  - Función `renderHTMLtoPDF()` línea 785-806
+- `backend/src/utils/pdfHelpers.js`:
+  - Función `getDefaultTemplateString()` línea 86-466 (template que usa divs + CSS)
+
+**Análisis técnico:**
+
+El template por defecto en `pdfHelpers.js` usa estructura HTML moderna:
+- Bloque `<style>` grande (360 líneas de CSS)
+- Contenido con `<div class="recibo-container">`, flexbox layout, etc.
+- NO usa `<table>` para layout
+
+Sin embargo, `parseHTMLSimple()` solo busca:
+```javascript
+const tableRegex = /<table[^>]*>([\s\S]*?)<\/table>/gi;
+```
+
+Cuando no encuentra `<table>`, trata TODO como "text":
+```javascript
+const textAfter = html.substring(lastIndex).trim();
+if (textAfter) {
+  elements.push({ type: 'text', content: textAfter });
+}
+```
+
+Cuando PDFKit renderiza como texto plano:
+```javascript
+doc.text(element.content, pageMargin, y);  // Imprime literalmente
+```
+
+Resultado: El contenido completo del HTML (incluyendo `<style>` y tags) se imprime como texto plano.
+
+**Estado:** 📋 Registrado (2026-05-21)
+
+**Diseño de solución:**
+Ver archivo [./diseño-BUG-052.md](./diseño-BUG-052.md)
+
+**Resumen de solución propuesta:**
+Reemplazar parser HTML manual con librería `html2pdf.js`:
+- Soporta CSS completo (flexbox, colores, borders)
+- Renderización idéntica a browser
+- Elimina ~200 líneas de código frágil
+- Escalable para templates futuros
+
+---
