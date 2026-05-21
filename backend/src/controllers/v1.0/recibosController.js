@@ -550,19 +550,23 @@ exports.generarPDF = async (req, res, next) => {
       });
     }
 
-    // Obtener todos los recibos del período con localidad y datos del titular
+    // Obtener todos los recibos del período con localidad, datos del titular y abreviaciones
     const recibos = await sequelize.query(`
       SELECT
         r.*,
         l.nombre as localidad_nombre,
         pe.numero_documento,
         pe.fecha_nacimiento,
-        pe.fecha_cobertura
+        pe.fecha_cobertura,
+        tp.abreviacion as tipo_plan_abreviacion,
+        tg.abreviacion as tipo_grupo_abreviacion
       FROM recibos r
       LEFT JOIN planes p ON r.plan_numero = p.plan_numero
       LEFT JOIN localidades l ON p.localidad_id = l.id
       LEFT JOIN plan_integrantes pi ON r.plan_numero = pi.plan_numero AND pi.rol = 'titular'
       LEFT JOIN personas pe ON pi.persona_id = pe.id
+      LEFT JOIN tipos_de_plan tp ON r.tipo_plan_nombre = tp.tipo_plan_nombre
+      LEFT JOIN tipos_de_grupo tg ON r.tipo_de_grupo_nombre = tg.tipo_de_grupo_nombre
       WHERE r.periodo LIKE ?
       ORDER BY r.id
     `, {
@@ -704,8 +708,8 @@ function renderRecibo(recibo, template) {
     titular_apellido: recibo.titular_apellido,
     titular_nombre: recibo.titular_nombre,
     obra_social_nombre: recibo.obra_social_nombre,
-    tipo_de_grupo_nombre: recibo.tipo_de_grupo_nombre,
-    tipo_plan_nombre: recibo.tipo_plan_nombre,
+    tipo_de_grupo_nombre: recibo.tipo_grupo_abreviacion || recibo.tipo_de_grupo_nombre,
+    tipo_plan_nombre: recibo.tipo_plan_abreviacion || recibo.tipo_plan_nombre,
     localidad_nombre: localidad,
     domicilio: recibo.domicilio || '-',
     valor_cuota: valorCuota,
