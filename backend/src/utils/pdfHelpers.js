@@ -155,7 +155,8 @@ function replaceAllPlaceholders(html, recibo) {
     'localidad_nombre', 'domicilio',
     'valor_cuota', 'cuota_social', 'arancel_por_servicio',
     'arancel_negativo_class', 'arancel_warning_icon',
-    'arancel_bg', 'arancel_color'
+    'arancel_bg', 'arancel_color',
+    'fecha_nacimiento', 'fecha_cobertura', 'numero_documento', 'periodo'
   ];
 
   placeholders.forEach((placeholder) => {
