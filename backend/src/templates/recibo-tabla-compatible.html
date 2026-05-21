@@ -1,0 +1,316 @@
+---
+pageSize: A4
+orientation: portrait
+margins: 10
+---
+<style>
+  body {
+    font-family: Arial, sans-serif;
+    font-size: 10px;
+    color: #000;
+  }
+
+  table {
+    width: 100%;
+    border-collapse: collapse;
+  }
+
+  td {
+    padding: 3px 5px;
+  }
+
+  .header-table {
+    border: 2px solid #000;
+    margin-bottom: 5px;
+  }
+
+  .header-logo {
+    width: 60px;
+    border-right: 1px solid #999;
+    text-align: center;
+    font-size: 8px;
+    font-weight: bold;
+    color: #0066cc;
+  }
+
+  .header-nombre {
+    flex-grow: 1;
+    padding: 5px;
+  }
+
+  .header-nombre-title {
+    font-size: 14px;
+    font-weight: bold;
+    color: #d91e63;
+  }
+
+  .header-nombre-subtitle {
+    font-size: 9px;
+    font-style: italic;
+    color: #666;
+  }
+
+  .header-nombre-dir {
+    font-size: 8px;
+  }
+
+  .header-items {
+    border-left: 1px solid #999;
+    padding-left: 5px;
+  }
+
+  .header-item {
+    border-right: 1px solid #999;
+    padding-right: 5px;
+    text-align: center;
+    font-size: 9px;
+  }
+
+  .header-item-label {
+    font-weight: bold;
+    font-size: 8px;
+  }
+
+  .header-item-value {
+    font-weight: bold;
+    font-size: 9px;
+  }
+
+  .contenido-table {
+    border: 2px solid #000;
+    margin-bottom: 5px;
+    width: 100%;
+  }
+
+  .seccion-izq {
+    border-right: 1px solid #000;
+    width: 35%;
+    vertical-align: top;
+  }
+
+  .seccion-centro {
+    border-right: 1px solid #000;
+    width: 30%;
+    vertical-align: top;
+    background: #f9f9f9;
+    height: 80px;
+  }
+
+  .seccion-der {
+    width: 35%;
+    vertical-align: top;
+    padding: 5px;
+  }
+
+  .datos-table {
+    width: 100%;
+    font-size: 9px;
+  }
+
+  .datos-table td {
+    padding: 2px 3px;
+    border-bottom: 1px solid #ddd;
+  }
+
+  .datos-label {
+    font-weight: bold;
+    width: 40%;
+  }
+
+  .desglose-table {
+    width: 100%;
+    font-size: 9px;
+    margin-top: 5px;
+  }
+
+  .desglose-item {
+    border-bottom: 1px solid #ddd;
+  }
+
+  .desglose-item td {
+    padding: 2px 3px;
+  }
+
+  .desglose-label {
+    font-weight: bold;
+  }
+
+  .desglose-value {
+    text-align: right;
+    font-family: 'Courier New', monospace;
+    font-weight: bold;
+  }
+
+  .desglose-total {
+    border-top: 2px solid #000;
+    border-bottom: 2px solid #000;
+    font-weight: bold;
+  }
+
+  .mensaje-table {
+    border: 2px solid #000;
+    margin-bottom: 5px;
+    width: 100%;
+  }
+
+  .mensaje-label {
+    font-weight: bold;
+    font-size: 9px;
+    padding: 3px 5px;
+  }
+
+  .mensaje-contenido {
+    height: 30px;
+    padding: 5px;
+    background: #f9f9f9;
+  }
+
+  .aviso-importante {
+    text-align: center;
+    font-weight: bold;
+    font-size: 9px;
+    border-top: 1px solid #000;
+    border-bottom: 1px solid #000;
+    padding: 5px;
+    margin: 5px 0;
+  }
+
+  .talon-table {
+    border: 2px solid #000;
+    width: 100%;
+  }
+
+  .talon-label {
+    font-weight: bold;
+    font-size: 9px;
+    padding: 3px 5px;
+    background: #f0f7ff;
+  }
+
+  .talon-contenido {
+    padding: 5px;
+    background: #f0f7ff;
+    font-size: 9px;
+    line-height: 1.4;
+  }
+</style>
+
+<!-- HEADER -->
+<table class="header-table">
+  <tr>
+    <td class="header-logo">LOGO</td>
+    <td class="header-nombre">
+      <div class="header-nombre-title">PREVISORA DEL NORTE</div>
+      <div class="header-nombre-subtitle">Servicios Sociales</div>
+      <div class="header-nombre-dir">San Miguel 323, Bovril, Entre Ríos</div>
+    </td>
+    <td class="header-item">
+      <div class="header-item-label">Teléfono</div>
+      <div class="header-item-value">03438-421645</div>
+    </td>
+    <td class="header-item">
+      <div class="header-item-label">Recibo "C"</div>
+      <div class="header-item-value">{{numero_recibo}}</div>
+    </td>
+    <td class="header-item">
+      <div class="header-item-label">Asociado</div>
+      <div class="header-item-value">{{numero_afiliado}}</div>
+    </td>
+    <td class="header-item">
+      <div class="header-item-label">Plan</div>
+      <div class="header-item-value">{{tipo_plan_nombre}}</div>
+    </td>
+    <td class="header-item">
+      <div class="header-item-label">Composición</div>
+      <div class="header-item-value">{{tipo_de_grupo_nombre}}</div>
+    </td>
+    <td>
+      <div class="header-item-label">Beneficios y Coberturas</div>
+    </td>
+  </tr>
+</table>
+
+<!-- CONTENIDO PRINCIPAL -->
+<table class="contenido-table">
+  <tr>
+    <td class="seccion-izq">
+      <table class="datos-table">
+        <tr>
+          <td class="datos-label">Titular Adherente:</td>
+          <td><b>{{titular_apellido}}, {{titular_nombre}}</b></td>
+        </tr>
+        <tr>
+          <td class="datos-label">Fecha Nacimiento:</td>
+          <td>{{fecha_nacimiento}}</td>
+        </tr>
+        <tr>
+          <td class="datos-label">Fecha Cobertura:</td>
+          <td>{{fecha_cobertura}}</td>
+        </tr>
+        <tr>
+          <td class="datos-label">Documento:</td>
+          <td>{{numero_documento}}</td>
+        </tr>
+      </table>
+    </td>
+    <td class="seccion-centro"></td>
+    <td class="seccion-der">
+      <table class="datos-table" style="margin-bottom: 5px;">
+        <tr>
+          <td class="datos-label">Domicilio:</td>
+          <td>{{domicilio}}</td>
+        </tr>
+        <tr>
+          <td class="datos-label">Localidad:</td>
+          <td>{{localidad_nombre}}</td>
+        </tr>
+        <tr>
+          <td class="datos-label">Mes y Año:</td>
+          <td>{{periodo}}</td>
+        </tr>
+      </table>
+      <table class="desglose-table">
+        <tr class="desglose-item">
+          <td class="desglose-label">Cuota Social:</td>
+          <td class="desglose-value">{{cuota_social}}</td>
+        </tr>
+        <tr class="desglose-item">
+          <td class="desglose-label">Arancel por Serv:</td>
+          <td class="desglose-value">{{arancel_por_servicio}}</td>
+        </tr>
+        <tr class="desglose-item desglose-total">
+          <td class="desglose-label">Total Cuota:</td>
+          <td class="desglose-value">{{valor_cuota}}</td>
+        </tr>
+      </table>
+    </td>
+  </tr>
+</table>
+
+<!-- SECCIÓN MENSAJE -->
+<table class="mensaje-table">
+  <tr>
+    <td class="mensaje-label">Mensaje:</td>
+  </tr>
+  <tr>
+    <td class="mensaje-contenido"></td>
+  </tr>
+</table>
+
+<!-- AVISO IMPORTANTE -->
+<div class="aviso-importante">
+LA FALTA DE PAGO DE DOS CUOTAS CONSECUTIVAS PRODUCE LA MORA AUTOMÁTICA
+</div>
+
+<!-- TALÓN DEL COBRADOR -->
+<table class="talon-table">
+  <tr>
+    <td class="talon-label">Talón para el cobrador:</td>
+  </tr>
+  <tr>
+    <td class="talon-contenido">
+Afil. N:{{numero_afiliado}} {{titular_apellido}} {{titular_nombre}}
+Recibo N {{numero_recibo}} Fecha: {{periodo}} {{valor_cuota}}
+    </td>
+  </tr>
+</table>
