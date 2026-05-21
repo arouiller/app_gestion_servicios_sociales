@@ -10,10 +10,6 @@ exports.getActiveTemplate = async (req, res) => {
   try {
     const template = await ReciboTemplate.findOne({
       where: { activo: true },
-      include: [
-        { as: 'creator', attributes: ['id', 'nombre'] },
-        { as: 'updater', attributes: ['id', 'nombre'] },
-      ],
     });
 
     if (!template) {
@@ -34,12 +30,10 @@ exports.getActiveTemplate = async (req, res) => {
       versionNumber: template.versionNumber,
       createdAt: template.createdAt,
       updatedAt: template.updatedAt,
-      createdBy: template.creator,
-      updatedBy: template.updater,
     });
   } catch (error) {
     console.error('Error fetching active template:', error);
-    return res.status(500).json({ error: 'Internal server error' });
+    return res.status(500).json({ error: 'Internal server error', details: error.message });
   }
 };
 
