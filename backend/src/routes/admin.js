@@ -206,4 +206,25 @@ router.delete('/localidades/:id', verifyToken, requireAdmin, (req, res, next) =>
   localidadController.delete(req, res).catch(next);
 });
 
+// Templates de Recibos (Table Builder)
+router.get('/recibos/templates/active', verifyToken, requireAdmin, (req, res, next) => {
+  const adminController = require('../controllers/v1.0/adminController');
+  adminController.getActiveTemplate(req, res).catch(next);
+});
+
+router.get('/recibos/templates/versions', verifyToken, requireAdmin, (req, res, next) => {
+  const adminController = require('../controllers/v1.0/adminController');
+  adminController.getVersions(req, res).catch(next);
+});
+
+router.get('/recibos/placeholders', verifyToken, requireAdmin, (req, res, next) => {
+  const adminController = require('../controllers/v1.0/adminController');
+  adminController.getPlaceholders(req, res).catch(next);
+});
+
+router.post('/recibos/templates/save', verifyToken, requireAdmin, (req, res, next) => {
+  const adminController = require('../controllers/v1.0/adminController');
+  adminController.saveTemplate(req, res).catch(next);
+});
+
 module.exports = router;
