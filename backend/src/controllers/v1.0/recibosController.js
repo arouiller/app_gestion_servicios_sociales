@@ -1,6 +1,7 @@
 const db = require('../../models');
 const sequelize = require('../../config/database');
 const { Op, literal } = require('sequelize');
+const pdf = require('html-pdf');
 const {
   formatCurrency,
   replaceAllPlaceholders,
@@ -578,58 +579,56 @@ exports.generarPDF = async (req, res, next) => {
     const fullTemplate = templateDB?.html || getDefaultTemplateString();
     const { config, content } = parseTemplate(fullTemplate);
 
-    // Crear documento con configuración del template
-    let doc = createConfiguredPDFDoc(config);
+    // Construir HTML completo para todos los recibos
+    let fullHTML = '';
+    recibos.forEach((recibo, idx) => {
+      const reciboHTML = renderRecibo(recibo, content);
+      fullHTML += reciboHTML;
 
-    // Header
-    res.setHeader('Content-Type', 'application/pdf');
-    res.setHeader('Content-Disposition', `attachment; filename="recibos_${periodo}.pdf"`);
-
-    // Pipe al response
-    doc.pipe(res);
-
-    // BACKLOG-080: Procesar recibos en pares para layout 2-per-page
-    const pares = groupRecibosInPairs(recibos);
-    let pageNumber = 0;
-
-    pares.forEach((par) => {
-      // Agregar nueva página para cada par (excepto el primero)
-      if (pageNumber > 0) {
-        doc.addPage();
+      // Agregar salto de página entre recibos (en pares)
+      if ((idx + 1) % 2 === 0 && idx < recibos.length - 1) {
+        fullHTML += '<div style="page-break-after: always;"></div>';
       }
-      pageNumber++;
-
-      // Procesar cada recibo en el par, manteniendo Y entre recibos
-      let y = config.margins;
-      par.forEach((recibo, indexInPar) => {
-        const reciboHTML = renderRecibo(recibo, content);
-
-        // Renderizar el recibo en el PDF
-        if (reciboHTML.includes('<')) {
-          // Contenido HTML
-          y = renderHTMLtoPDF(doc, reciboHTML, config, y);
-        } else {
-          // Contenido texto plano
-          const lineHeight = 11;
-          doc.fontSize(9).font('Helvetica').fillColor('#000');
-          const lines = reciboHTML.split('\n');
-          lines.forEach((line) => {
-            doc.text(line, config.margins + 5, y);
-            y += lineHeight;
-          });
-        }
-
-        // Agregar separador si hay un segundo recibo en el par
-        if (indexInPar === 0 && par.length === 2) {
-          y += 10; // Espacio vertical
-          doc.strokeColor('#ccc').lineWidth(0.5).moveTo(config.margins, y).lineTo(doc.page.width - config.margins, y).stroke();
-          y += 10;
-        }
-      });
     });
 
-    // Finalizar documento
-    doc.end();
+    // Extraer estilos del template
+    const templateStyles = extractStylesFromTemplate(content);
+
+    // Construir HTML completo con estilos y DOCTYPE
+    const htmlConEstilos = `<!DOCTYPE html>
+<html lang="es-AR">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <style>
+    ${templateStyles}
+  </style>
+</head>
+<body style="margin: ${config.margins}mm;">
+  ${fullHTML}
+</body>
+</html>`;
+
+    // Configuración para html-pdf
+    const options = {
+      format: config.pageSize.toUpperCase(),
+      orientation: config.orientation,
+      margin: `${config.margins}mm`,
+    };
+
+    // Generar PDF con html-pdf
+    pdf.create(htmlConEstilos, options).toStream((err, stream) => {
+      if (err) {
+        console.error('Error generating PDF:', err);
+        return res.status(500).json({
+          error: err.message || 'Error al generar PDF',
+        });
+      }
+
+      res.setHeader('Content-Type', 'application/pdf');
+      res.setHeader('Content-Disposition', `attachment; filename="recibos_${periodo}.pdf"`);
+      stream.pipe(res);
+    });
   } catch (error) {
     console.error('Error generating PDF:', error);
     res.status(500).json({
@@ -637,6 +636,14 @@ exports.generarPDF = async (req, res, next) => {
     });
   }
 };
+
+/**
+ * Extrae el bloque <style> del contenido HTML del template
+ */
+function extractStylesFromTemplate(templateContent) {
+  const styleMatch = templateContent.match(/<style[^>]*>([\s\S]*?)<\/style>/i);
+  return styleMatch ? styleMatch[1] : '';
+}
 
 /**
  * BACKLOG-080: Renderiza un recibo individual reemplazando todos los placeholders
