@@ -632,7 +632,7 @@ exports.generarPDF = async (req, res, next) => {
     }
   </style>
 </head>
-<body style="margin: ${config.margins}mm;">
+<body style="padding: ${config.margins}mm; margin: 0;">
   ${fullHTML}
 </body>
 </html>`;
