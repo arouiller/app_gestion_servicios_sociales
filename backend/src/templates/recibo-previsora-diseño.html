@@ -1,90 +1,4 @@
-/**
- * PDF Helper Functions para generación de recibos con desglose (BACKLOG-080)
- */
-
-/**
- * Formatea un número como moneda ($X.XX)
- */
-function formatCurrency(value) {
-  const num = parseFloat(value || 0);
-  return `$${num.toFixed(2)}`;
-}
-
-/**
- * Reemplaza un placeholder con su valor del recibo, formateado correctamente
- */
-function replacePlaceholder(placeholder, recibo) {
-  const key = placeholder.replace(/{{|}}/g, '');
-  const value = recibo[key];
-
-  // Placeholders de moneda: formatea como $X.XX
-  if (placeholder === '{{cuota_social}}' ||
-      placeholder === '{{arancel_por_servicio}}' ||
-      placeholder === '{{valor_cuota}}') {
-    return formatCurrency(value);
-  }
-
-  return String(value || '');
-}
-
-/**
- * Detecta si el arancel por servicio es negativo
- */
-function detectNegativeArancel(arancel) {
-  return parseFloat(arancel || 0) < 0;
-}
-
-/**
- * Retorna clase CSS "negativo" si arancel < 0, vacío en otro caso
- */
-function getArancelCSSClass(arancel) {
-  return parseFloat(arancel || 0) < 0 ? 'negativo' : '';
-}
-
-/**
- * Retorna símbolo ⚠️ si arancel < 0, vacío en otro caso
- */
-function getArancelWarningIcon(arancel) {
-  return parseFloat(arancel || 0) < 0 ? '⚠️' : '';
-}
-
-/**
- * Agrupa recibos en pares para layout 2-per-page
- * Retorna array de arrays: [[rec1, rec2], [rec3, rec4], [rec5], ...]
- */
-function groupRecibosInPairs(recibos) {
-  const pairs = [];
-  for (let i = 0; i < recibos.length; i += 2) {
-    if (i + 1 < recibos.length) {
-      pairs.push([recibos[i], recibos[i + 1]]);
-    } else {
-      pairs.push([recibos[i]]);
-    }
-  }
-  return pairs;
-}
-
-/**
- * Valida que cuota_social + arancel_por_servicio ≈ valor_cuota
- * Tolerancia: 0.01
- */
-function validateReciboInvariant(recibo) {
-  const cuotaSocial = parseFloat(recibo.cuota_social || 0);
-  const arancelPorServicio = parseFloat(recibo.arancel_por_servicio || 0);
-  const valorCuota = parseFloat(recibo.valor_cuota || 0);
-
-  const suma = cuotaSocial + arancelPorServicio;
-  const diferencia = Math.abs(suma - valorCuota);
-
-  return diferencia <= 0.01;
-}
-
-/**
- * Retorna el template por defecto con estructura de Previsora del Norte
- * Incluye desglose de cuotas y datos del afiliado
- */
-function getDefaultTemplateString() {
-  return `---
+---
 pageSize: A4
 orientation: portrait
 margins: 10
@@ -111,6 +25,7 @@ margins: 10
     page-break-inside: avoid;
   }
 
+  /* Header principal */
   .header {
     display: flex;
     align-items: flex-start;
@@ -202,6 +117,7 @@ margins: 10
     padding-right: 8px;
   }
 
+  /* Contenido principal */
   .contenido {
     display: flex;
     gap: 8px;
@@ -302,6 +218,7 @@ margins: 10
     font-weight: bold;
   }
 
+  /* Sección mensaje */
   .seccion-mensaje {
     border: 1px solid #333;
     padding: 5px;
@@ -321,6 +238,7 @@ margins: 10
     line-height: 1.3;
   }
 
+  /* Aviso importante */
   .aviso-importante {
     text-align: center;
     font-weight: bold;
@@ -332,6 +250,7 @@ margins: 10
     color: #333;
   }
 
+  /* Talón del cobrador */
   .talon-cobrador {
     border: 1px solid #333;
     padding: 5px;
@@ -349,9 +268,17 @@ margins: 10
     font-size: 9px;
     line-height: 1.4;
   }
+
+  /* Separador entre recibos */
+  .separador-recibos {
+    height: 8px;
+    border-bottom: 1px dashed #ccc;
+    margin: 5px 0;
+  }
 </style>
 
 <div class="recibo-container">
+  <!-- Header -->
   <div class="header">
     <div class="logo-section">
       <div class="logo-box">LOGO</div>
@@ -390,7 +317,9 @@ margins: 10
     </div>
   </div>
 
+  <!-- Contenido principal -->
   <div class="contenido">
+    <!-- Sección izquierda: datos del afiliado -->
     <div class="seccion-izquierda">
       <table class="datos-afiliado">
         <tr>
@@ -412,8 +341,10 @@ margins: 10
       </table>
     </div>
 
+    <!-- Espacio central para foto -->
     <div class="espacio-foto"></div>
 
+    <!-- Sección derecha: datos y desglose -->
     <div class="seccion-derecha">
       <div class="datos-derechos">
         <div class="datos-derechos-item">
@@ -447,15 +378,18 @@ margins: 10
     </div>
   </div>
 
+  <!-- Sección de mensaje -->
   <div class="seccion-mensaje">
     <div class="seccion-mensaje-label">Mensaje:</div>
     <div class="seccion-mensaje-contenido"></div>
   </div>
 
+  <!-- Aviso importante -->
   <div class="aviso-importante">
     LA FALTA DE PAGO DE DOS CUOTAS CONSECUTIVAS PRODUCE LA MORA AUTOMÁTICA
   </div>
 
+  <!-- Talón del cobrador -->
   <div class="talon-cobrador">
     <div class="talon-label">Talón para el cobrador:</div>
     <div class="talon-contenido">
@@ -463,48 +397,4 @@ margins: 10
       Recibo N {{numero_recibo}} Fecha: {{periodo}} {{valor_cuota}}
     </div>
   </div>
-</div>`;
-}
-
-/**
- * Reemplaza todos los placeholders en un string HTML con valores del recibo
- * Los valores ya vienen formateados desde renderRecibo(), no reformatear
- */
-function replaceAllPlaceholders(html, recibo) {
-  let result = html;
-
-  const placeholders = [
-    'numero_recibo', 'numero_afiliado', 'zona_codigo',
-    'titular_apellido', 'titular_nombre',
-    'obra_social_nombre', 'tipo_de_grupo_nombre', 'tipo_plan_nombre',
-    'localidad_nombre', 'domicilio',
-    'valor_cuota', 'cuota_social', 'arancel_por_servicio',
-    'arancel_negativo_class', 'arancel_warning_icon',
-    'arancel_bg', 'arancel_color'
-  ];
-
-  placeholders.forEach((placeholder) => {
-    const key = placeholder;
-    let value = recibo[key] || '';
-
-    // NO reformatear valores que ya vienen formateados desde renderRecibo()
-    // Solo usar el valor tal como viene
-
-    const regex = new RegExp(`{{${placeholder}}}`, 'g');
-    result = result.replace(regex, value);
-  });
-
-  return result;
-}
-
-module.exports = {
-  formatCurrency,
-  replacePlaceholder,
-  replaceAllPlaceholders,
-  detectNegativeArancel,
-  getArancelCSSClass,
-  getArancelWarningIcon,
-  groupRecibosInPairs,
-  validateReciboInvariant,
-  getDefaultTemplateString,
-};
+</div>
