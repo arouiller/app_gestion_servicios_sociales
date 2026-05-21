@@ -584,22 +584,24 @@ exports.generarPDF = async (req, res, next) => {
     const fullTemplate = templateDB?.html || getDefaultTemplateString();
     const { config, content } = parseTemplate(fullTemplate);
 
-    // Construir HTML completo agrupando recibos en pares (2 por página)
+    // Construir HTML completo agrupando recibos en pares con tabla (2 por página)
     let fullHTML = '';
     for (let i = 0; i < recibos.length; i += 2) {
-      fullHTML += '<div class="recibos-pair">';
+      fullHTML += '<table class="recibos-table"><tr>';
 
-      // Primer recibo del par
+      // Primer recibo del par en celda izquierda
       const reciboHTML1 = renderRecibo(recibos[i], content);
-      fullHTML += reciboHTML1;
+      fullHTML += '<td class="recibo-cell">' + reciboHTML1 + '</td>';
 
-      // Segundo recibo del par (si existe)
+      // Segundo recibo del par en celda derecha (o celda vacía si es impar)
       if (i + 1 < recibos.length) {
         const reciboHTML2 = renderRecibo(recibos[i + 1], content);
-        fullHTML += reciboHTML2;
+        fullHTML += '<td class="recibo-cell">' + reciboHTML2 + '</td>';
+      } else {
+        fullHTML += '<td class="recibo-cell"></td>';
       }
 
-      fullHTML += '</div>';
+      fullHTML += '</tr></table>';
     }
 
     // Extraer estilos del template
@@ -614,21 +616,32 @@ exports.generarPDF = async (req, res, next) => {
   <style>
     ${templateStyles}
 
-    .recibos-pair {
-      display: flex;
-      gap: 8px;
+    .recibos-table {
+      width: 100%;
+      border-collapse: collapse;
+      margin: 0;
+      padding: 0;
       page-break-after: always;
       page-break-inside: avoid;
-      width: 100%;
     }
 
-    .recibos-pair .recibo-container {
-      flex: 1;
-      width: 50%;
-    }
-
-    .recibos-pair:last-child {
+    .recibos-table:last-of-type {
       page-break-after: avoid;
+    }
+
+    .recibos-table tr {
+      display: table-row;
+    }
+
+    .recibo-cell {
+      width: 50%;
+      padding: 5px;
+      vertical-align: top;
+      border: none;
+    }
+
+    .recibo-cell .recibo-container {
+      width: 100%;
     }
   </style>
 </head>
