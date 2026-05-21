@@ -615,8 +615,16 @@ exports.generarPDF = async (req, res, next) => {
     ${templateStyles}
 
     .recibos-pair {
-      display: block;
+      display: flex;
+      gap: 8px;
       page-break-after: always;
+      page-break-inside: avoid;
+      width: 100%;
+    }
+
+    .recibos-pair .recibo-container {
+      flex: 1;
+      width: 50%;
     }
 
     .recibos-pair:last-child {
