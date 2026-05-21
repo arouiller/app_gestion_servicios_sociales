@@ -699,7 +699,8 @@ function renderRecibo(recibo, template) {
 
 // Helper: Parsear template para extraer configuración y contenido
 function parseTemplate(template) {
-  const configMatch = template.match(/^---\n([\s\S]*?)\n---\n([\s\S]*)$/);
+  // Soportar tanto CRLF (\r\n) como LF (\n)
+  const configMatch = template.match(/^---[\r\n]+([\s\S]*?)[\r\n]+---[\r\n]+([\s\S]*)$/);
 
   // Valores por defecto: A4 con márgenes para 2-per-page layout
   const defaultConfig = { pageSize: 'A4', orientation: 'portrait', margins: 20 };
@@ -716,8 +717,8 @@ function parseTemplate(template) {
 
   const config = { ...defaultConfig };
 
-  // Parsear líneas de configuración
-  configStr.split('\n').forEach((line) => {
+  // Parsear líneas de configuración (soportar CRLF y LF)
+  configStr.split(/[\r\n]+/).forEach((line) => {
     const [key, value] = line.split(':').map(s => s.trim());
     if (key === 'pageSize') config.pageSize = value;
     if (key === 'orientation') config.orientation = value;
