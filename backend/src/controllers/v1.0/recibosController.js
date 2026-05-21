@@ -550,14 +550,19 @@ exports.generarPDF = async (req, res, next) => {
       });
     }
 
-    // Obtener todos los recibos del período con localidad via raw query
+    // Obtener todos los recibos del período con localidad y datos del titular
     const recibos = await sequelize.query(`
       SELECT
         r.*,
-        l.nombre as localidad_nombre
+        l.nombre as localidad_nombre,
+        pe.numero_documento,
+        pe.fecha_nacimiento,
+        pe.fecha_cobertura
       FROM recibos r
       LEFT JOIN planes p ON r.plan_numero = p.plan_numero
       LEFT JOIN localidades l ON p.localidad_id = l.id
+      LEFT JOIN plan_integrantes pi ON r.plan_numero = pi.plan_numero AND pi.rol = 'titular'
+      LEFT JOIN personas pe ON pi.persona_id = pe.id
       WHERE r.periodo LIKE ?
       ORDER BY r.id
     `, {
