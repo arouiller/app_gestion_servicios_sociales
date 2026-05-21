@@ -140,9 +140,5 @@ if (db.Provincia && db.Localidad) {
   db.Localidad.belongsTo(db.Provincia, { foreignKey: 'provincia_id', as: 'provincia', onDelete: 'RESTRICT' });
 }
 
-// ReciboTemplate associations
-if (db.ReciboTemplate && db.Usuario) {
-  db.ReciboTemplate.belongsTo(db.Usuario, { foreignKey: 'usuario_id' });
-}
 
 module.exports = db;
