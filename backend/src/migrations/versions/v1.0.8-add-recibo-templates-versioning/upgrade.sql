@@ -1,33 +1,47 @@
--- Agregar columnas a tabla recibo_templates existente
+-- Agregar columnas de versionado a tabla recibo_templates
 ALTER TABLE recibo_templates
-ADD COLUMN template_group_id INT,
-ADD COLUMN version_number INT DEFAULT 1,
-ADD COLUMN created_by INT,
-ADD COLUMN updated_by INT;
+ADD COLUMN IF NOT EXISTS template_group_id INT,
+ADD COLUMN IF NOT EXISTS version_number INT DEFAULT 1,
+ADD COLUMN IF NOT EXISTS created_by INT,
+ADD COLUMN IF NOT EXISTS updated_by INT;
 
 -- Crear índices para consultas de versiones y template activo
-CREATE INDEX idx_template_group_id ON recibo_templates(template_group_id);
-CREATE INDEX idx_activo ON recibo_templates(activo);
-CREATE UNIQUE INDEX uk_template_group_version ON recibo_templates(template_group_id, version_number);
+CREATE INDEX IF NOT EXISTS idx_template_group_id ON recibo_templates(template_group_id);
+CREATE UNIQUE INDEX IF NOT EXISTS uk_template_group_version ON recibo_templates(template_group_id, version_number);
 
--- Agregar foreign keys
-ALTER TABLE recibo_templates
-ADD CONSTRAINT fk_template_group FOREIGN KEY (template_group_id)
-  REFERENCES recibo_templates(id) ON DELETE SET NULL,
-ADD CONSTRAINT fk_created_by FOREIGN KEY (created_by)
-  REFERENCES usuarios(id),
-ADD CONSTRAINT fk_updated_by FOREIGN KEY (updated_by)
-  REFERENCES usuarios(id);
+-- Agregar foreign keys (usar ALTER TABLE con nombre de constraint único)
+SET @sql = '';
+SELECT COUNT(*) INTO @constraint_exists FROM INFORMATION_SCHEMA.TABLE_CONSTRAINTS
+WHERE TABLE_NAME = 'recibo_templates' AND CONSTRAINT_NAME = 'fk_template_group';
 
--- Opcional: crear tabla de auditoría para historial completo
-CREATE TABLE recibo_template_versions (
-  id INT PRIMARY KEY AUTO_INCREMENT,
-  template_id INT NOT NULL,
-  html_snapshot LONGTEXT,
-  changed_by INT NOT NULL,
-  change_description VARCHAR(500),
-  created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
-  FOREIGN KEY (template_id) REFERENCES recibo_templates(id) ON DELETE CASCADE,
-  FOREIGN KEY (changed_by) REFERENCES usuarios(id),
-  INDEX idx_template_id (template_id)
+SET @sql = IF(@constraint_exists = 0,
+  'ALTER TABLE recibo_templates ADD CONSTRAINT fk_template_group FOREIGN KEY (template_group_id) REFERENCES recibo_templates(id) ON DELETE SET NULL',
+  'SELECT 1'
 );
+PREPARE stmt FROM @sql;
+EXECUTE stmt;
+DEALLOCATE PREPARE stmt;
+
+SET @sql = '';
+SELECT COUNT(*) INTO @constraint_exists FROM INFORMATION_SCHEMA.TABLE_CONSTRAINTS
+WHERE TABLE_NAME = 'recibo_templates' AND CONSTRAINT_NAME = 'fk_template_created_by';
+
+SET @sql = IF(@constraint_exists = 0,
+  'ALTER TABLE recibo_templates ADD CONSTRAINT fk_template_created_by FOREIGN KEY (created_by) REFERENCES usuarios(id)',
+  'SELECT 1'
+);
+PREPARE stmt FROM @sql;
+EXECUTE stmt;
+DEALLOCATE PREPARE stmt;
+
+SET @sql = '';
+SELECT COUNT(*) INTO @constraint_exists FROM INFORMATION_SCHEMA.TABLE_CONSTRAINTS
+WHERE TABLE_NAME = 'recibo_templates' AND CONSTRAINT_NAME = 'fk_template_updated_by';
+
+SET @sql = IF(@constraint_exists = 0,
+  'ALTER TABLE recibo_templates ADD CONSTRAINT fk_template_updated_by FOREIGN KEY (updated_by) REFERENCES usuarios(id)',
+  'SELECT 1'
+);
+PREPARE stmt FROM @sql;
+EXECUTE stmt;
+DEALLOCATE PREPARE stmt;
