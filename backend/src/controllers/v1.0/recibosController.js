@@ -584,17 +584,23 @@ exports.generarPDF = async (req, res, next) => {
     const fullTemplate = templateDB?.html || getDefaultTemplateString();
     const { config, content } = parseTemplate(fullTemplate);
 
-    // Construir HTML completo para todos los recibos
+    // Construir HTML completo agrupando recibos en pares (2 por página)
     let fullHTML = '';
-    recibos.forEach((recibo, idx) => {
-      const reciboHTML = renderRecibo(recibo, content);
-      fullHTML += reciboHTML;
+    for (let i = 0; i < recibos.length; i += 2) {
+      fullHTML += '<div class="recibos-pair">';
 
-      // Agregar salto de página entre recibos (en pares)
-      if ((idx + 1) % 2 === 0 && idx < recibos.length - 1) {
-        fullHTML += '<div style="page-break-after: always;"></div>';
+      // Primer recibo del par
+      const reciboHTML1 = renderRecibo(recibos[i], content);
+      fullHTML += reciboHTML1;
+
+      // Segundo recibo del par (si existe)
+      if (i + 1 < recibos.length) {
+        const reciboHTML2 = renderRecibo(recibos[i + 1], content);
+        fullHTML += reciboHTML2;
       }
-    });
+
+      fullHTML += '</div>';
+    }
 
     // Extraer estilos del template
     const templateStyles = extractStylesFromTemplate(content);
@@ -607,6 +613,15 @@ exports.generarPDF = async (req, res, next) => {
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <style>
     ${templateStyles}
+
+    .recibos-pair {
+      display: block;
+      page-break-after: always;
+    }
+
+    .recibos-pair:last-child {
+      page-break-after: avoid;
+    }
   </style>
 </head>
 <body style="margin: ${config.margins}mm;">
