@@ -140,5 +140,9 @@ if (db.Provincia && db.Localidad) {
   db.Localidad.belongsTo(db.Provincia, { foreignKey: 'provincia_id', as: 'provincia', onDelete: 'RESTRICT' });
 }
 
+// ReciboTemplate associations (self-reference and user audit)
+if (db.ReciboTemplate) {
+  db.ReciboTemplate.associate(db);
+}
 
 module.exports = db;
