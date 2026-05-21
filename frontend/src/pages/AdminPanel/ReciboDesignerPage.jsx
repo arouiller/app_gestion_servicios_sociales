@@ -6,7 +6,7 @@ import { ReciboPreview } from '../../components/ReciboDesigner/ReciboPreview';
 import '../../components/ReciboDesigner/ReciboDesigner.scss';
 
 export const ReciboDesignerPage = () => {
-  const { loadTemplate, error, setError } = useReciboDesignerStore();
+  const { loadTemplate, error, setError, currentTemplate } = useReciboDesignerStore();
   const [isLoading, setIsLoading] = useState(true);
 
   useEffect(() => {
@@ -16,9 +16,25 @@ export const ReciboDesignerPage = () => {
         loadTemplate(template);
         setError(null);
       } catch (err) {
-        setError(
-          err.response?.data?.error || 'Error al cargar template activo'
-        );
+        if (err.response?.status === 404) {
+          // Sin template activo, crear uno nuevo vacío
+          loadTemplate({
+            id: null,
+            nombre: 'Nuevo Template',
+            html: '<table></table>',
+            pageSize: 'A4',
+            orientation: 'portrait',
+            margins: 8,
+            activo: false,
+            templateGroupId: null,
+            versionNumber: 1,
+          });
+          setError(null);
+        } else {
+          setError(
+            err.response?.data?.error || 'Error al cargar template activo'
+          );
+        }
       } finally {
         setIsLoading(false);
       }
@@ -38,6 +54,7 @@ export const ReciboDesignerPage = () => {
   return (
     <div style={{ padding: '20px' }}>
       <h1 style={{ marginBottom: '20px' }}>Diseñador de Templates de Recibos</h1>
+      {!currentTemplate && <div className="recibo-designer__warning">Crear nuevo template</div>}
       {error && <div className="recibo-designer__error">{error}</div>}
       <div className="recibo-designer">
         <ReciboDesignerToolbar />
