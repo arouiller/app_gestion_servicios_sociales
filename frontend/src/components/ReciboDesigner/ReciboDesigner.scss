@@ -1,11 +1,11 @@
-@import '../../styles/colors.scss';
+@import '../../styles/_colors.scss';
 
 .recibo-designer {
   display: flex;
   height: calc(100vh - 120px);
   gap: 20px;
   padding: 20px;
-  background: $color-bg;
+  background: $color-bg-light;
 
   &__toolbar {
     flex: 0 0 300px;
@@ -100,7 +100,7 @@
   &__section-title {
     font-size: 12px;
     font-weight: 600;
-    color: $color-text-secondary;
+    color: $color-text-muted;
     text-transform: uppercase;
     margin-bottom: 10px;
   }
@@ -157,6 +157,6 @@
     justify-content: center;
     height: 100%;
     font-size: 14px;
-    color: $color-text-secondary;
+    color: $color-text-muted;
   }
 }
