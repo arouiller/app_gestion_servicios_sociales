@@ -681,6 +681,10 @@ function renderRecibo(recibo, template) {
     arancel_warning_icon: getArancelWarningIcon(arancelPorServicio),
     arancel_bg: arancelBg,
     arancel_color: arancelColor,
+    fecha_nacimiento: recibo.fecha_nacimiento || '-',
+    fecha_cobertura: recibo.fecha_cobertura || '-',
+    numero_documento: recibo.numero_documento || '-',
+    periodo: recibo.periodo || '-',
   };
 
   // Usar helper para reemplazar todos los placeholders
