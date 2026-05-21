@@ -584,24 +584,22 @@ exports.generarPDF = async (req, res, next) => {
     const fullTemplate = templateDB?.html || getDefaultTemplateString();
     const { config, content } = parseTemplate(fullTemplate);
 
-    // Construir HTML completo agrupando recibos en pares con tabla (2 por página)
+    // Construir HTML completo agrupando recibos en pares con tabla (2 recibos por página, apilados verticalmente)
     let fullHTML = '';
     for (let i = 0; i < recibos.length; i += 2) {
-      fullHTML += '<table class="recibos-table"><tr>';
+      fullHTML += '<table class="recibos-table">';
 
-      // Primer recibo del par en celda izquierda
+      // Primer recibo del par en primera fila
       const reciboHTML1 = renderRecibo(recibos[i], content);
-      fullHTML += '<td class="recibo-cell">' + reciboHTML1 + '</td>';
+      fullHTML += '<tr><td class="recibo-cell">' + reciboHTML1 + '</td></tr>';
 
-      // Segundo recibo del par en celda derecha (o celda vacía si es impar)
+      // Segundo recibo del par en segunda fila (si existe)
       if (i + 1 < recibos.length) {
         const reciboHTML2 = renderRecibo(recibos[i + 1], content);
-        fullHTML += '<td class="recibo-cell">' + reciboHTML2 + '</td>';
-      } else {
-        fullHTML += '<td class="recibo-cell"></td>';
+        fullHTML += '<tr><td class="recibo-cell">' + reciboHTML2 + '</td></tr>';
       }
 
-      fullHTML += '</tr></table>';
+      fullHTML += '</table>';
     }
 
     // Extraer estilos del template
@@ -621,12 +619,7 @@ exports.generarPDF = async (req, res, next) => {
       border-collapse: collapse;
       margin: 0;
       padding: 0;
-      page-break-after: always;
       page-break-inside: avoid;
-    }
-
-    .recibos-table:last-of-type {
-      page-break-after: avoid;
     }
 
     .recibos-table tr {
@@ -634,8 +627,8 @@ exports.generarPDF = async (req, res, next) => {
     }
 
     .recibo-cell {
-      width: 50%;
-      padding: 5px;
+      width: 100%;
+      padding: 0;
       vertical-align: top;
       border: none;
     }
