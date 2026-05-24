@@ -2,8 +2,11 @@ import { create } from 'zustand';
 
 const FONTS = ['Arial', 'Times New Roman', 'Courier New', 'Georgia', 'Verdana', 'Helvetica'];
 
+// Generar ID único simple (sin depender de crypto.randomUUID)
+const generateId = () => `${Date.now()}-${Math.random().toString(36).substr(2, 9)}`;
+
 const makeCell = (overrides = {}) => ({
-  id: crypto.randomUUID(),
+  id: generateId(),
   content: '',
   hidden: false,
   rowspan: 1,
@@ -28,7 +31,7 @@ const makeCell = (overrides = {}) => ({
 });
 
 const makeRow = (numCols) => ({
-  id: crypto.randomUUID(),
+  id: generateId(),
   height: null,
   cells: Array.from({ length: numCols }, () => makeCell()),
 });
@@ -548,7 +551,7 @@ export const useReciboDesignerStore = create((set, get) => ({
           }
 
           return {
-            id: crypto.randomUUID(),
+            id: generateId(),
             height: null,
             cells,
           };
