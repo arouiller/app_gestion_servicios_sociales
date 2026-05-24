@@ -184,9 +184,51 @@ exports.saveTemplate = async (req, res) => {
           updatedBy: created.updater,
         },
       });
+    } else if (saveMode === 'create') {
+      // Crear nuevo template
+      const newTemplate = await ReciboTemplate.create({
+        nombre: 'Template Principal',
+        html,
+        pageSize,
+        orientation,
+        margins: JSON.stringify(pageConfig || {}),
+        activo: true,
+        templateGroupId: null,
+        versionNumber: 1,
+        createdBy: userId,
+        updatedBy: userId,
+      });
+
+      const created = await newTemplate.reload({
+        include: [
+          { as: 'creator', attributes: ['id', 'nombre'] },
+          { as: 'updater', attributes: ['id', 'nombre'] },
+        ],
+      });
+
+      return res.status(201).json({
+        success: true,
+        templateId: newTemplate.id,
+        message: 'Template creado',
+        template: {
+          id: created.id,
+          nombre: created.nombre,
+          html: created.html,
+          pageSize: created.pageSize,
+          orientation: created.orientation,
+          margins: created.margins,
+          activo: created.activo,
+          templateGroupId: created.templateGroupId,
+          versionNumber: created.versionNumber,
+          createdAt: created.createdAt,
+          updatedAt: created.updatedAt,
+          createdBy: created.creator,
+          updatedBy: created.updater,
+        },
+      });
     } else {
       return res.status(400).json({
-        error: 'saveMode debe ser "overwrite" o "new_version"',
+        error: 'saveMode debe ser "overwrite", "new_version" o "create"',
       });
     }
   } catch (error) {
