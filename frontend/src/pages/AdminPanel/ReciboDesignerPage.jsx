@@ -19,17 +19,18 @@ export const ReciboDesignerPage = () => {
       } catch (err) {
         if (err.response?.status === 404) {
           // Sin template activo, crear uno nuevo vacío
+          const defaultPageConfig = {
+            size: 'A4',
+            orientation: 'portrait',
+            pageMargins: { top: 10, right: 10, bottom: 10, left: 10 },
+            reciboMargins: { top: 4, right: 4, bottom: 4, left: 4 },
+            recibosPerPage: 1,
+          };
           loadTemplate({
             id: null,
             nombre: 'Nuevo Template',
-            html: '<table></table>',
-            pageConfig: {
-              size: 'A4',
-              orientation: 'portrait',
-              pageMargins: { top: 10, right: 10, bottom: 10, left: 10 },
-              reciboMargins: { top: 4, right: 4, bottom: 4, left: 4 },
-              recibosPerPage: 1,
-            },
+            html: '<table><tr><td>Celda 1</td><td>Celda 2</td><td>Celda 3</td></tr><tr><td>Celda 4</td><td>Celda 5</td><td>Celda 6</td></tr><tr><td>Celda 7</td><td>Celda 8</td><td>Celda 9</td></tr></table>',
+            margins: JSON.stringify(defaultPageConfig),
             activo: false,
             templateGroupId: null,
             versionNumber: 1,
