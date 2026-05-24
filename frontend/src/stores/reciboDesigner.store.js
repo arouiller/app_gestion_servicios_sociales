@@ -448,8 +448,13 @@ export const useReciboDesignerStore = create((set, get) => ({
         return;
       }
 
-      const rows = Array.from(table.querySelectorAll('tbody > tr'));
-      const numCols = Math.max(...rows.map((row) => row.querySelectorAll('td, th').length), 3);
+      let rows = Array.from(table.querySelectorAll('tbody > tr'));
+      if (rows.length === 0) {
+        rows = Array.from(table.querySelectorAll('tr'));
+      }
+      const numCols = rows.length > 0
+        ? Math.max(...rows.map((row) => row.querySelectorAll('td, th').length), 3)
+        : 3;
 
       const cellCursor = rows.map(() => Array(numCols).fill(0));
 
