@@ -16,12 +16,27 @@ export const EditorToolbar = () => {
     selection,
     table,
     pageConfig,
-  } = useReciboDesignerStore();
+  } = useReciboDesignerStore((s) => ({
+    addRowBefore: s.addRowBefore,
+    addRowAfter: s.addRowAfter,
+    deleteRow: s.deleteRow,
+    addColumnBefore: s.addColumnBefore,
+    addColumnAfter: s.addColumnAfter,
+    deleteColumn: s.deleteColumn,
+    mergeCells: s.mergeCells,
+    splitCell: s.splitCell,
+    updateCellStyle: s.updateCellStyle,
+    activeCellPos: s.activeCellPos,
+    selection: s.selection,
+    table: s.table,
+    pageConfig: s.pageConfig,
+  }));
 
   const canMerge = selection.anchor && selection.focus;
-  const canSplit = activeCellPos &&
-    table.rows[activeCellPos.row]?.cells[activeCellPos.col]?.rowspan > 1 ||
-    table.rows[activeCellPos.row]?.cells[activeCellPos.col]?.colspan > 1;
+  const canSplit = activeCellPos && (
+    (table.rows[activeCellPos.row]?.cells[activeCellPos.col]?.rowspan ?? 1) > 1 ||
+    (table.rows[activeCellPos.row]?.cells[activeCellPos.col]?.colspan ?? 1) > 1
+  );
 
   const getCanDeleteRow = () => table.rows.length > 1;
   const getCanDeleteCol = () => (table.rows[0]?.cells.length ?? 0) > 1;
