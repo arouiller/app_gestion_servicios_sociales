@@ -29,7 +29,7 @@ export const ReciboDesignerPage = () => {
           loadTemplate({
             id: null,
             nombre: 'Nuevo Template',
-            html: '<table><tr><td>Celda 1</td><td>Celda 2</td><td>Celda 3</td></tr><tr><td>Celda 4</td><td>Celda 5</td><td>Celda 6</td></tr><tr><td>Celda 7</td><td>Celda 8</td><td>Celda 9</td></tr></table>',
+            html: '<table><tbody><tr><td></td><td></td><td></td></tr><tr><td></td><td></td><td></td></tr><tr><td></td><td></td><td></td></tr></tbody></table>',
             margins: JSON.stringify(defaultPageConfig),
             activo: false,
             templateGroupId: null,
