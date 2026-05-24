@@ -452,10 +452,13 @@ export const useReciboDesignerStore = create((set, get) => ({
       if (rows.length === 0) {
         rows = Array.from(table.querySelectorAll('tr'));
       }
-      const numCols = rows.length > 0
-        ? Math.max(...rows.map((row) => row.querySelectorAll('td, th').length), 3)
-        : 3;
 
+      if (rows.length === 0) {
+        set({ table: getDefaultTable() });
+        return;
+      }
+
+      const numCols = Math.max(...rows.map((row) => row.querySelectorAll('td, th').length), 3);
       const cellCursor = rows.map(() => Array(numCols).fill(0));
 
       const newTable = {
