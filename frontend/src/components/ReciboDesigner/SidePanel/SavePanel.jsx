@@ -62,7 +62,7 @@ export const SavePanel = () => {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
-          'Authorization': `Bearer ${localStorage.getItem('token')}`,
+          'Authorization': `Bearer ${localStorage.getItem('jwt_token')}`,
         },
         body: JSON.stringify({
           id: currentTemplate?.id,
@@ -102,7 +102,7 @@ export const SavePanel = () => {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
-          'Authorization': `Bearer ${localStorage.getItem('token')}`,
+          'Authorization': `Bearer ${localStorage.getItem('jwt_token')}`,
         },
         body: JSON.stringify({
           id: currentTemplate?.id,
