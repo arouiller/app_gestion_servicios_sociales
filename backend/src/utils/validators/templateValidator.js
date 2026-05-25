@@ -64,9 +64,22 @@ const validatePageConfig = (pageSize, orientation, margins) => {
     );
   }
 
-  const marginNum = parseInt(margins, 10);
-  if (isNaN(marginNum) || marginNum < 0 || marginNum > 50) {
-    errors.push('margins debe ser número entre 0 y 50 mm');
+  // margins puede ser un JSON string o un número simple
+  if (!margins) {
+    errors.push('margins no puede estar vacío');
+  } else if (typeof margins === 'string') {
+    try {
+      const parsed = JSON.parse(margins);
+      if (!parsed.pageMargins || !parsed.reciboMargins) {
+        errors.push('margins debe contener pageMargins y reciboMargins');
+      }
+    } catch (e) {
+      // Si no es JSON válido, intentar parsear como número
+      const marginNum = parseInt(margins, 10);
+      if (isNaN(marginNum) || marginNum < 0 || marginNum > 50) {
+        errors.push('margins debe ser número entre 0 y 50 mm o JSON válido');
+      }
+    }
   }
 
   return errors;
