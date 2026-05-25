@@ -27,8 +27,8 @@ const ReciboTemplate = sequelize.define(
       defaultValue: 'portrait',
     },
     margins: {
-      type: DataTypes.INTEGER,
-      defaultValue: 8,
+      type: DataTypes.TEXT,
+      defaultValue: null,
     },
     activo: {
       type: DataTypes.BOOLEAN,
