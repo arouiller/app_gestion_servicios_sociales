@@ -191,7 +191,7 @@ exports.saveTemplate = async (req, res) => {
         html,
         pageSize,
         orientation,
-        margins: JSON.stringify(pageConfig || {}),
+        margins,
         activo: true,
         templateGroupId: null,
         versionNumber: 1,
