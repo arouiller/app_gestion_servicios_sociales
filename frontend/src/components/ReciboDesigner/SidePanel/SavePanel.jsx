@@ -58,7 +58,7 @@ export const SavePanel = () => {
       const html = generateHTML();
       const saveMode = currentTemplate?.id ? 'overwrite' : 'create';
 
-      const response = await fetch('/api/admin/recibo-templates', {
+      const response = await fetch('/api/admin/recibos/templates/save', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -67,7 +67,9 @@ export const SavePanel = () => {
         body: JSON.stringify({
           id: currentTemplate?.id,
           html,
-          pageConfig,
+          pageSize: pageConfig.size,
+          orientation: pageConfig.orientation,
+          margins: JSON.stringify(pageConfig),
           saveMode,
         }),
       });
@@ -96,7 +98,7 @@ export const SavePanel = () => {
 
       const html = generateHTML();
 
-      const response = await fetch('/api/admin/recibo-templates', {
+      const response = await fetch('/api/admin/recibos/templates/save', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -105,7 +107,9 @@ export const SavePanel = () => {
         body: JSON.stringify({
           id: currentTemplate?.id,
           html,
-          pageConfig,
+          pageSize: pageConfig.size,
+          orientation: pageConfig.orientation,
+          margins: JSON.stringify(pageConfig),
           saveMode: 'new_version',
           versionName,
         }),
