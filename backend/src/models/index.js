@@ -26,6 +26,7 @@ const IntegranteServicio = require('./IntegranteServicio');
 const HistorialCuota = require('./HistorialCuota');
 const Recibo = require('./Recibo');
 const ReciboIntegrante = require('./ReciboIntegrante');
+const ReciboTemplate = require('./ReciboTemplate');
 const PeriodosRecibos = require('./PeriodosRecibos');
 const Bug = require('./Bug');
 const AuditLog = require('./AuditLog');
@@ -55,6 +56,7 @@ const db = {
   HistorialCuota,
   Recibo,
   ReciboIntegrante,
+  ReciboTemplate,
   PeriodosRecibos,
   Bug,
   AuditLog,
@@ -130,6 +132,11 @@ if (db.AuditLog && db.Usuario) {
 // AumentoMasivo associations
 if (db.AumentoMasivo && db.Usuario) {
   db.AumentoMasivo.belongsTo(db.Usuario, { foreignKey: 'usuario_id' });
+}
+
+// ReciboTemplate associations
+if (db.ReciboTemplate && db.Usuario) {
+  db.ReciboTemplate.belongsTo(db.Usuario, { foreignKey: 'usuario_id', as: 'creador' });
 }
 
 // Provincia and Localidad associations
