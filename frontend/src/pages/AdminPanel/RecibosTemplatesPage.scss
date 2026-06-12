@@ -9,17 +9,7 @@ $color-neutral-300: #d1d5db;
 $color-neutral-400: #9ca3af;
 $color-neutral-500: #6b7280;
 $color-neutral-600: #4b5563;
-$color-neutral-700;
-
-// Animations
-@keyframes spin {
-  from {
-    transform: rotate(0deg);
-  }
-  to {
-    transform: rotate(360deg);
-  }
-}: #374151;
+$color-neutral-700: #374151;
 
 .recibos-templates-page {
   padding: 20px;
