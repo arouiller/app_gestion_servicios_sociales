@@ -25,16 +25,31 @@ const TemplateEditor = ({ onBack }) => {
   const updateTemplate = useTemplateStore((state) => state.updateTemplate);
   const setIsSaving = useTemplateStore((state) => state.setIsSaving);
   const resetTemplate = useTemplateStore((state) => state.resetTemplate);
+  const setCurrentTemplate = useTemplateStore((state) => state.setCurrentTemplate);
 
+  // Cargar template completo del servidor y placeholders
   useEffect(() => {
-    const loadPlaceholders = async () => {
-      const result = await templateService.getPlaceholders();
-      if (result.success) {
-        setPlaceholders(result.placeholders);
+    const loadData = async () => {
+      // Cargar placeholders
+      const placeholderResult = await templateService.getPlaceholders();
+      if (placeholderResult.success) {
+        setPlaceholders(placeholderResult.placeholders);
+      }
+
+      // Cargar template completo si no tiene datos
+      if (currentTemplate.id && !currentTemplate.bloque_encabezado) {
+        setLoading(true);
+        const templateResult = await templateService.getTemplate(currentTemplate.id);
+        if (templateResult.success) {
+          setCurrentTemplate(templateResult.data);
+        } else {
+          setError('Error cargando template');
+        }
+        setLoading(false);
       }
     };
-    loadPlaceholders();
-  }, []);
+    loadData();
+  }, [currentTemplate.id]);
 
   const handleSave = async () => {
     if (!currentTemplate.bloque_pageconfig) {
