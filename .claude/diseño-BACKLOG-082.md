@@ -876,6 +876,51 @@ Obtiene preview del template con datos de una persona
 }
 ```
 
+#### **POST /api/admin/recibos/templates/:templateId/generar-pdf**
+Genera PDF in situ (bajo demanda) del template con datos de una persona
+
+**Body:**
+```json
+{
+  "persona_id": 123,              // ID de persona para datos reales
+  "recibo_data": null             // (opcional) SI null usa persona_id; SI presente usa estos datos
+}
+```
+
+**Alternativa: datos ficticios sin persona_id**
+```json
+{
+  "usar_datos_ficticios": true    // Generar PDF con datos de ejemplo
+}
+```
+
+**Response (200) - PDF binario:**
+```
+Content-Type: application/pdf
+Content-Disposition: attachment; filename="recibo_YYYYMMDD_HHMMSS.pdf"
+[Binary PDF data]
+```
+
+**Alternativa: Response JSON (para preview en iframe)**
+```json
+{
+  "success": true,
+  "pdf_base64": "JVBERi0xLjQKJeLj...",  // PDF codificado en base64
+  "pdf_url": "data:application/pdf;base64,JVBERi0xLjQK...",
+  "persona": { /* datos usados */ }
+}
+```
+
+**Validaciones:**
+- `persona_id` debe existir en BD (si se proporciona)
+- Template debe estar completo (todos los bloques presentes)
+- Timeout: máximo 30 segundos para renderizar y generar PDF
+- Fallback a datos ficticios si `persona_id` es inválido
+
+**Uso frontend:**
+- Click botón "Descargar PDF" → POST con persona_id → descarga binario
+- Click botón "Ver PDF" en preview → POST → abre en ventana nueva (iframe o ventana emergente)
+
 ### 4.3 Frontend - Componentes
 
 **Estructura de carpetas:**
@@ -924,6 +969,11 @@ frontend/src/services/
 - **PlaceholderSelector.jsx**: Botón junto a cada `<input>` de texto que abre dropdown categorizado
 - **TemplatePreview.jsx**: Muestra vista previa con datos del afiliado seleccionado (o ficticios si vacío)
 - **AfiliadoSelector.jsx**: Dropdown que lista afiliados; sin selección = fallback a ficticios
+- **PDFGenerator.jsx**: Componente para generación in situ
+  - Botón "Ver PDF" → abre en iframe o ventana nueva
+  - Botón "Descargar PDF" → descarga binario
+  - Spinner durante generación
+  - Error handling con reintentos
 
 ### 4.4 Estado del Cliente (Zustand o Context)
 
@@ -1074,10 +1124,22 @@ frontend/src/services/
 
 #### AC8: Generación PDF
 - ✅ Botón "Ver PDF" en editor de template
-- ✅ Puppeteer renderiza HTML → PDF
+- ✅ Botón "Descargar PDF" en editor de template
+- ✅ Puppeteer renderiza HTML → PDF in situ (bajo demanda)
 - ✅ PDF respeta: tamaño página, márgenes, orientación, recibos por página
 - ✅ Si múltiples recibos: se distribuyen según layout (vertical/grilla)
-- ✅ PDF abre en ventana emergente o descarga
+- ✅ "Ver PDF" abre en ventana nueva o iframe
+- ✅ "Descargar PDF" inicia descarga binaria (filename con timestamp)
+
+#### AC9: Generación PDF In Situ
+- ✅ Endpoint `POST /api/admin/recibos/templates/:id/generar-pdf`
+- ✅ Acepta: `{ persona_id: 123 }` o `{ usar_datos_ficticios: true }`
+- ✅ Valida template completo antes de generar
+- ✅ Timeout máximo 30 segundos (fallback a error si excede)
+- ✅ Respuesta: binario (descarga) o base64 (preview en iframe)
+- ✅ Limit: 10 PDF/minuto por usuario
+- ✅ Error claro si template está incompleto
+- ✅ Fallback a datos ficticios si persona_id inválido
 
 ### 5.6 Manejo de Errores y Edge Cases
 
@@ -1135,6 +1197,40 @@ UI: Aviso a partir de 4 templates creados
 Escenario: Usuario intenta insertar placeholder que no existe
 Validación: Solo permitir placeholders de lista autorizada
 Respuesta: Placeholder selector solo muestra válidos (no input libre)
+```
+
+#### Error: PDF Timeout (In Situ)
+```
+Escenario: Usuario hace click "Descargar PDF" y Puppeteer tarda > 30s
+Validación: Timeout máximo 30 segundos
+Respuesta: Error 504 "Timeout: PDF tardó demasiado en generar"
+UI: Toast rojo, spinner se detiene, opción de reintentar
+```
+
+#### Error: Rate Limit PDF
+```
+Escenario: Usuario hace click 15 veces "Descargar PDF" en 1 minuto
+Validación: Máximo 10 PDFs por minuto por usuario
+Respuesta: Error 429 "Demasiadas solicitudes. Espere 30 segundos."
+UI: Botón deshabilitado temporalmente, contador regresivo
+```
+
+#### Error: Template Incompleto en PDF
+```
+Escenario: Usuario intenta generar PDF de template en edición (sin Bloque 5)
+Validación: Template debe estar estructuralmente completo
+Respuesta: Error 400 "Template incompleto: faltan campos en Bloque 5"
+UI: Toast rojo + lista de campos faltantes
+```
+
+#### Edge Case: Múltiples Recibos en PDF
+```
+Escenario: Template con 6 recibos/página, layout grilla, usuario genera PDF
+Comportamiento:
+- 1 PDF con 1 página (6 recibos distribuidos 2×3)
+- Márgenes respetados en todos
+- Gaps (espaciado) aplicados correctamente
+- Responsive: recibos se ajustan al espacio disponible
 ```
 
 ---
@@ -1221,6 +1317,131 @@ Flujo:
   "persona": { /* datos usados */ }
 }
 ```
+
+### 6.5 Generación PDF In Situ (Bajo Demanda)
+
+**Propósito:** Permitir que administradores generen PDFs de prueba directamente desde el editor sin guardar el template. Útil para validar diseño antes de activar.
+
+**Endpoint:** `POST /api/admin/recibos/templates/:templateId/generar-pdf`
+
+**Uso Casos:**
+1. **Preview → Descargar PDF**: Usuario ve preview y hace click "Descargar PDF" → recibe PDF binario
+2. **Ver PDF en ventana**: Usuario hace click "Ver PDF" → se abre en ventana nueva/iframe
+3. **Template en edición**: Template aún no guardado, pero usuario quiere ver cómo se vería en PDF
+
+**Flujo Backend:**
+
+```
+1. POST /api/admin/recibos/templates/:templateId/generar-pdf
+   └─ Body: { persona_id: 123 } o { usar_datos_ficticios: true }
+
+2. Backend:
+   a. Valida template (estructura JSON completa)
+   b. Obtiene datos de persona (si persona_id) o usa ficticios
+   c. Serializa template → HTML (JSON → HTML con CSS)
+   d. Reemplaza placeholders con datos
+   e. Puppeteer renderiza HTML → PDF binario
+   f. Retorna PDF
+
+3. Opciones de respuesta:
+   - Response binario: Content-Type: application/pdf → descarga directo
+   - Response base64: JSON con pdf_base64 → abre en iframe/ventana
+```
+
+**Body - Opción 1: Con Persona Real**
+```json
+{
+  "persona_id": 123,
+  "periodo": "2026-06"  // (opcional) si necesita datos de período específico
+}
+```
+
+**Body - Opción 2: Datos Ficticios**
+```json
+{
+  "usar_datos_ficticios": true
+}
+```
+
+**Response (200) - Binario (para descarga):**
+```
+HTTP/1.1 200 OK
+Content-Type: application/pdf
+Content-Disposition: attachment; filename="recibo_20260612_143022.pdf"
+Content-Length: 45678
+
+[Binary PDF data...]
+```
+
+**Response (200) - Base64 (para preview en iframe):**
+```json
+{
+  "success": true,
+  "pdf_base64": "JVBERi0xLjQKJeLj...",
+  "pdf_url": "data:application/pdf;base64,JVBERi0xLjQK...",
+  "filename": "recibo_20260612_143022.pdf",
+  "persona": {
+    "numero_afiliado": "0001",
+    "titular_nombre": "Juan",
+    "valor_cuota": 250.50
+  }
+}
+```
+
+**Response (400) - Errores:**
+```json
+{
+  "success": false,
+  "message": "Template incompleto: bloque_pageconfig falta",
+  "errors": {
+    "bloque_pageconfig": "Requerido",
+    "bloque_encabezado": "Requerido"
+  }
+}
+```
+
+```json
+{
+  "success": false,
+  "message": "Persona no encontrada o inactiva (ID: 123)"
+}
+```
+
+**Validaciones:**
+- ✅ Template debe estar completo (todos los bloques presentes)
+- ✅ `persona_id` debe existir en BD (si se proporciona)
+- ✅ Timeout máximo: 30 segundos para Puppeteer
+- ✅ Fallback a ficticios si persona_id es inválido
+- ✅ Limit de 10 PDFs por minuto por usuario (para no sobrecargar servidor)
+
+**UI Frontend:**
+
+En el editor del template:
+
+```
+┌─ Panel Preview ─────────────┐
+│ [Selector Afiliado] ▼       │
+│ [Preview HTML]              │
+│                             │
+│ [Botón] Ver PDF (nuevo)     │  → abre en ventana/iframe
+│ [Botón] Descargar PDF       │  → descarga binario
+└─────────────────────────────┘
+```
+
+**Comportamiento:**
+- Usuario hace click → POST `/templates/:id/generar-pdf` con persona_id
+- Esperador: "Generando PDF..." spinner
+- Si éxito: 
+  - "Ver PDF" → abre en ventana nueva o en `<iframe>`
+  - "Descargar PDF" → inicia descarga binaria
+- Si error: Toast rojo con mensaje de error
+
+**Ventajas:**
+- ✅ Validación visual antes de guardar
+- ✅ Detecta problemas de formato/márgenes
+- ✅ No requiere guardar template (útil en drafts)
+- ✅ Rápido: 2-5 segundos por PDF
+- ✅ Personalizable: usuario elige qué afiliado usar
 
 ---
 
