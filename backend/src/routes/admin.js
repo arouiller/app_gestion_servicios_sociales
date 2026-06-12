@@ -206,4 +206,79 @@ router.delete('/localidades/:id', verifyToken, requireAdmin, (req, res, next) =>
   localidadController.delete(req, res).catch(next);
 });
 
+// Recibos Templates CRUD (lazy load controllers) - BACKLOG-082
+// Simple rate limiter for PDF generation: 10 requests per minute per user
+const pdfRateLimitMap = new Map();
+const pdfRateLimiter = (req, res, next) => {
+  const userId = req.user?.id;
+  if (!userId) return next();
+
+  const now = Date.now();
+  const oneMinuteAgo = now - 60000;
+
+  if (!pdfRateLimitMap.has(userId)) {
+    pdfRateLimitMap.set(userId, []);
+  }
+
+  const requests = pdfRateLimitMap.get(userId).filter(time => time > oneMinuteAgo);
+
+  if (requests.length >= 10) {
+    const retryAfter = Math.ceil((requests[0] + 60000 - now) / 1000);
+    return res.status(429).json({
+      success: false,
+      message: 'Demasiadas solicitudes de PDF. Intenta más tarde.',
+      retry_after: retryAfter
+    });
+  }
+
+  requests.push(now);
+  pdfRateLimitMap.set(userId, requests);
+  next();
+};
+
+router.get('/recibos/templates', verifyToken, requireAdmin, (req, res, next) => {
+  const controller = require('../controllers/recibosTemplatesController');
+  controller.list(req, res).catch(next);
+});
+
+router.post('/recibos/templates', verifyToken, requireAdmin, (req, res, next) => {
+  const controller = require('../controllers/recibosTemplatesController');
+  controller.create(req, res).catch(next);
+});
+
+router.get('/recibos/templates/:id', verifyToken, requireAdmin, (req, res, next) => {
+  const controller = require('../controllers/recibosTemplatesController');
+  controller.getById(req, res).catch(next);
+});
+
+router.put('/recibos/templates/:id', verifyToken, requireAdmin, (req, res, next) => {
+  const controller = require('../controllers/recibosTemplatesController');
+  controller.update(req, res).catch(next);
+});
+
+router.patch('/recibos/templates/:id/activar', verifyToken, requireAdmin, (req, res, next) => {
+  const controller = require('../controllers/recibosTemplatesController');
+  controller.activate(req, res).catch(next);
+});
+
+router.delete('/recibos/templates/:id', verifyToken, requireAdmin, (req, res, next) => {
+  const controller = require('../controllers/recibosTemplatesController');
+  controller.delete(req, res).catch(next);
+});
+
+router.post('/recibos/templates/:id/duplicar', verifyToken, requireAdmin, (req, res, next) => {
+  const controller = require('../controllers/recibosTemplatesController');
+  controller.duplicate(req, res).catch(next);
+});
+
+router.get('/recibos/placeholders', verifyToken, requireAdmin, (req, res, next) => {
+  const controller = require('../controllers/recibosTemplatesController');
+  controller.getPlaceholders(req, res).catch(next);
+});
+
+router.post('/recibos/templates/:templateId/generar-pdf', verifyToken, requireAdmin, pdfRateLimiter, (req, res, next) => {
+  const controller = require('../controllers/recibosTemplatesController');
+  controller.generatePdf(req, res).catch(next);
+});
+
 module.exports = router;
