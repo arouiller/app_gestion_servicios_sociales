@@ -273,6 +273,149 @@ const useTemplateStore = create((set) => ({
 
 ---
 
+## 2.2 Gestión de Estado, Concurrencia y Persistencia
+
+### F11: Rate Limit - Solo PDF, Sin Límite General
+
+**Decisión:** Límite ÚNICO de **10 PDFs/minuto por usuario** (solo endpoint `/generar-pdf`).
+
+**Cambio:** Eliminar "20 requests/minuto global" de sección 5.4. Solo aplica a PDF generation.
+
+**Backend Middleware:**
+```javascript
+const pdfRateLimiter = rateLimit({
+  windowMs: 60 * 1000,  // 1 minuto
+  max: 10,              // máximo 10 PDFs
+  keyGenerator: (req) => req.user.id,  // por usuario (desde JWT)
+  message: "Demasiadas solicitudes. Espere 30 segundos.",
+  skip: (req) => !req.path.includes('/generar-pdf')  // solo PDF
+});
+
+router.post('/generar-pdf', pdfRateLimiter, generatePdfController);
+```
+
+**Response 429:**
+```json
+{
+  "success": false,
+  "message": "Rate limit excedido: máximo 10 PDFs/minuto",
+  "retry_after_seconds": 30
+}
+```
+
+### F15: Editar Mientras Se Genera PDF - Validación Previa
+
+**Decisión:** Si hay cambios sin guardar → **validar y pedir guardar** antes de generar PDF.
+
+**Flujo:**
+1. Usuario edita Bloque 1 (nombre empresa)
+2. Click "Descargar PDF"
+3. Sistema detecta: `isDirty = true` (hay cambios no guardados)
+4. **Modal de confirmación:**
+   ```
+   "¿Guardar cambios antes de generar PDF?"
+   [Guardar y Generar]  [Generar Solo (con versión anterior)]  [Cancelar]
+   ```
+5. Si "Guardar y Generar" → POST guardar → POST generar → descarga
+6. Si "Generar Solo" → usa template actual en BD (ignora editor cambios)
+
+**Lógica en componente:**
+```javascript
+const handleGeneratePdf = async () => {
+  const { currentTemplate, isDirty } = useTemplateStore();
+  
+  if (isDirty) {
+    // Mostrar modal de confirmación
+    const result = await confirmSaveBeforePdf();
+    if (result === 'SAVE_AND_GENERATE') {
+      await saveTemplate();  // POST /api/admin/recibos/templates/:id
+      await generatePdf();   // POST /api/admin/recibos/templates/:id/generar-pdf
+    } else if (result === 'GENERATE_ONLY') {
+      await generatePdf();   // Usa versión en BD
+    }
+    // Si CANCEL, no hacer nada
+  } else {
+    // Sin cambios, generar directamente
+    await generatePdf();
+  }
+};
+```
+
+### NEW-1: Generar PDF sin Bloque 5 - Error Bloqueante
+
+**Decisión:** Si Bloque 5 está incompleto → **error 400, no generar PDF**.
+
+**Validación:**
+```javascript
+if (!template.bloque_pageconfig || !template.bloque_pageconfig.tamaño) {
+  return res.status(400).json({
+    success: false,
+    message: "No se puede generar PDF: Bloque 5 (Configuración de Página) está incompleto",
+    missing_fields: ['tamaño', 'orientacion', 'margenes', 'recibos_por_pagina', 'layout', 'espaciado']
+  });
+}
+```
+
+**UI:** Toast rojo + destaca sección Bloque 5 en editor
+
+### NEW-2: Edición Concurrente - Last Write Wins
+
+**Decisión:** Sin manejo de conflictos. Aceptar "last write wins" (última guardada sobrescribe).
+
+**Razón:** Simplificar v1. Conflictos pueden manejarse en v2 con timestamps/versioning.
+
+**Comportamiento:**
+```
+Admin A: edita nombre → [Guardar] → OK
+Admin B: edita nombre → [Guardar] → OK (sobrescribe cambio de A)
+
+Resultado: Cambio de A se pierde. B gana.
+```
+
+**Mitigación:** Usar `updated_at` timestamp para auditoría (quién guardó último).
+
+**Nota en logs:**
+```
+Template ID: uuid-123
+updated_at: 2026-06-12 14:32:00 (Admin B)
+Cambio anterior: 2026-06-12 14:31:00 (Admin A)
+```
+
+### NEW-3: Multi-Pestaña - Sin Sincronización
+
+**Decisión:** Zustand store **NO sincroniza** entre pestañas. Cada pestaña es independiente.
+
+**Comportamiento:**
+```
+Pestaña A: abre template → Zustand store A
+Pestaña B: abre MISMO template → Zustand store B (separado)
+
+A edita nombre → no visible en B
+B edita nombre → no visible en A
+A: [Guardar] → BD versión de A
+B: [Guardar] → sobrescribe con versión de B (last-write-wins, como NEW-2)
+```
+
+**No agregar localStorage sync** para simplificar (v1).
+
+**Advertencia futura:** En v2, considerar `useLocalStorage` + `useBeforeUnload` para avisar si hay cambios pendientes en otra pestaña.
+
+### NEW-4: PDF Temporal - Sin Auto-Guardar
+
+**Decisión:** Generar PDF **NO guarda** cambios. Es visualización temporal.
+
+**Flujo:**
+1. Usuario edita template (cambios en Zustand editor)
+2. Click "Descargar PDF" → valida (se muestra modal si isDirty)
+3. Usuario elige "Generar Solo" → PDF usa versión en BD (cambios ignorados)
+4. O elige "Guardar y Generar" → primero guarda, luego genera PDF
+
+**Key Point:** PDF nunca auto-guarda. Usuario decide explícitamente.
+
+**Ventaja:** Evita guardar templates incompletos o experimentos.
+
+---
+
 ## 3. Especificación Funcional
 
 ### 3.1 Acceso y Navegación
@@ -1363,7 +1506,8 @@ const { currentTemplate, previewPersonaId } = useTemplateStore();
 - Todos los endpoints requieren `verifyToken` y `requireAdmin`
 - Sanitizar HTML en preview (prevenir XSS)
 - Validar MIME type de logo URL
-- Rate limit: 20 requests/minuto por usuario para endpoints de templates
+- Rate limit: **10 PDFs/minuto por usuario** para endpoint `/generar-pdf`
+  - (Sin límite general en otros endpoints de templates)
 
 ### 5.5 Criterios de Aceptación (AC)
 
@@ -1429,12 +1573,45 @@ const { currentTemplate, previewPersonaId } = useTemplateStore();
 #### AC9: Generación PDF In Situ
 - ✅ Endpoint `POST /api/admin/recibos/templates/:id/generar-pdf`
 - ✅ Acepta: `{ persona_id: 123 }` o `{ usar_datos_ficticios: true }`
-- ✅ Valida template completo antes de generar
-- ✅ Timeout máximo 30 segundos (fallback a error si excede)
-- ✅ Respuesta: binario (descarga) o base64 (preview en iframe)
-- ✅ Limit: 10 PDF/minuto por usuario
+- ✅ Valida template completo antes de generar (Bloque 5 obligatorio)
+- ✅ Timeout máximo 30 segundos (fallback a error 504 si excede)
+- ✅ Respuesta: siempre binario (descarga con filename timestamp)
+- ✅ Limit: 10 PDFs/minuto por usuario (error 429 si excede)
 - ✅ Error claro si template está incompleto
 - ✅ Fallback a datos ficticios si persona_id inválido
+
+#### AC10: Validación Bloque 5 en Generación PDF
+- ✅ Click "Descargar PDF" sin guardar Bloque 5 → Error 400
+- ✅ Mensaje claro: "Bloque 5 es obligatorio para generar PDF"
+- ✅ No hay auto-relleno de defaults
+- ✅ Usuario debe completar Bloque 5 y guardar primero
+
+#### AC11: Guardar vs Generar PDF (Sin Cambios Automáticos)
+- ✅ Generar PDF **no auto-guarda** template
+- ✅ Si hay cambios sin guardar (isDirty=true) → modal de confirmación
+- ✅ Opciones en modal:
+  - "Guardar y Generar" → POST guardar + POST generar
+  - "Generar Solo" → usar versión en BD (ignora cambios editor)
+  - "Cancelar" → abortar
+- ✅ Sin cambios pendientes → generar directo (sin modal)
+
+#### AC12: Concurrencia - Last Write Wins
+- ✅ Sin validación de conflictos (acepta pérdida de datos)
+- ✅ Si Admin A y Admin B editan simultáneamente → última guardada gana
+- ✅ Timestamp updated_at refleja quién guardó último
+- ✅ Documentar en logs para auditoría
+
+#### AC13: Multi-Pestaña - Sin Sincronización
+- ✅ Zustand store NO sincroniza entre pestañas
+- ✅ Cada pestaña tiene su editor state independiente
+- ✅ Si 2 pestañas guardan → last-write-wins (como AC12)
+- ✅ Sin localStorage sync en v1
+
+#### AC14: Rate Limit PDF - 10/minuto
+- ✅ Máximo 10 PDFs generados por minuto por usuario
+- ✅ Error 429 si se excede: "Demasiadas solicitudes"
+- ✅ Retry-After header indica segundos para reintentar
+- ✅ Sin límite en otros endpoints de templates
 
 ### 5.6 Manejo de Errores y Edge Cases
 
@@ -1526,6 +1703,73 @@ Comportamiento:
 - Márgenes respetados en todos
 - Gaps (espaciado) aplicados correctamente
 - Responsive: recibos se ajustan al espacio disponible
+```
+
+#### Error: Generar PDF sin Bloque 5
+```
+Escenario: Usuario abre template, no completa Bloque 5, hace click "Descargar PDF"
+Validación: Bloque 5 es obligatorio
+Respuesta: Error 400 "Bloque 5 (Configuración de Página) incompleto"
+UI: Toast rojo + destaca sección Bloque 5 sin completar
+```
+
+#### Escenario: Editar Mientras Se Genera PDF
+```
+Escenario: 
+1. Usuario edita nombre empresa en Bloque 1
+2. Click "Descargar PDF"
+3. Sistema detecta isDirty=true
+
+Flujo:
+- Modal: "¿Guardar cambios antes de generar PDF?"
+  [Guardar y Generar] [Generar Solo] [Cancelar]
+
+Opciones:
+- "Guardar y Generar": guarda cambios en BD → genera PDF de versión nueva
+- "Generar Solo": ignora cambios, genera PDF de última versión guardada
+- "Cancelar": aborta, vuelve a editor
+```
+
+#### Escenario: Edición Concurrente (Admin A vs Admin B)
+```
+Escenario:
+- Admin A: edita nombre → [Guardar] → OK (updated_at: 14:31:00)
+- Admin B: edita descripción → [Guardar] → OK (updated_at: 14:32:00)
+
+Resultado: Cambio de A se sobrescribió. B solo ve cambio de B.
+Cambio de A perdido (last-write-wins).
+
+Mitigación: Auditoría logs muestra quién guardó último.
+Nota: En v2, considerar optimistic locking o conflict detection.
+```
+
+#### Escenario: Multi-Pestaña (2 editors)
+```
+Escenario:
+- Pestaña A: abre template → edita nombre
+- Pestaña B: abre MISMO template → edita descripción
+- Pestaña A: [Guardar] → guarda versión A
+- Pestaña B: [Guardar] → sobrescribe con versión B
+
+Resultado: Cambios de A perdidos (last-write-wins, como concurrencia).
+Zustand stores A y B son independientes, no sincronizados.
+
+Sin localStorage sync en v1. Documentar para v2.
+```
+
+#### Escenario: PDF Temporal (sin persistencia)
+```
+Escenario:
+- Usuario edita template (sin guardar)
+- Click "Descargar PDF"
+- Elige "Generar Solo" → PDF usa versión guardada (cambios ignorados)
+
+Resultado:
+- PDF generado con datos antiguos
+- Cambios del editor se pierden (no se guardan)
+- Usuario debe hacer [Guardar] explícitamente para persistir
+
+Key: PDF nunca auto-guarda. Usuario es responsable de guardar.
 ```
 
 ---
