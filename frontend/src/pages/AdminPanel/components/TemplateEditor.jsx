@@ -3,6 +3,8 @@ import html2pdf from 'html2pdf.js';
 import templateService from '../../../services/templateService';
 import useTemplateStore from '../../../hooks/useTemplateStore';
 import DraggableBlock from './DraggableBlock';
+import PageGuides, { calculateRecibosPositions } from './PageGuides';
+import StaticBlockPreview from './StaticBlockPreview';
 import BloqueEncabezado from './BlockEditor/BloqueEncabezado';
 import BloqueAfiliado from './BlockEditor/BloqueAfiliado';
 import BloqueDetalles from './BlockEditor/BloqueDetalles';
@@ -211,6 +213,24 @@ const TemplateEditor = ({ onBack }) => {
 
   const blocks = ['encabezado', 'afiliado', 'detalles', 'pie'];
 
+  // Calcular posiciones de los recibos estáticos
+  const reciboPositions = currentTemplate.bloque_pageconfig
+    ? calculateRecibosPositions(currentTemplate.bloque_pageconfig)
+    : null;
+
+  const getReciboPosStyle = (reciboNumber) => {
+    if (!reciboPositions || !reciboPositions.recibos[reciboNumber - 1]) {
+      return {};
+    }
+    const recibo = reciboPositions.recibos[reciboNumber - 1];
+    return {
+      left: `${recibo.x}mm`,
+      top: `${recibo.y}mm`,
+      width: `${recibo.width}mm`,
+      height: `${recibo.height}mm`
+    };
+  };
+
   const renderBlockContent = (blockName) => {
     switch (blockName) {
       case 'encabezado':
@@ -262,22 +282,53 @@ const TemplateEditor = ({ onBack }) => {
         {/* Panel izquierdo: Canvas A4 con bloques draggables */}
         <div className="editor-canvas">
           <div className="a4-page" ref={canvasRef}>
-            {blocks.map((blockName) => (
-              currentTemplate[`bloque_${blockName}`] && (
-                <div
-                  key={blockName}
-                  onClick={() => setSelectedBlock(blockName)}
-                  style={{ cursor: 'pointer' }}
-                >
-                  <DraggableBlock blockName={blockName}>
-                    {renderBlockContent(blockName)}
-                  </DraggableBlock>
+            {/* Guías visuales: márgenes y límites de recibos */}
+            {currentTemplate.bloque_pageconfig && (
+              <PageGuides pageConfig={currentTemplate.bloque_pageconfig} />
+            )}
+
+            {/* Recibo 1: Editable con DraggableBlock */}
+            <div className="recibo-container recibo-1">
+              {blocks.map((blockName) => (
+                currentTemplate[`bloque_${blockName}`] && (
+                  <div
+                    key={blockName}
+                    onClick={() => setSelectedBlock(blockName)}
+                    style={{ cursor: 'pointer' }}
+                  >
+                    <DraggableBlock blockName={blockName}>
+                      {renderBlockContent(blockName)}
+                    </DraggableBlock>
+                  </div>
+                )
+              ))}
+              {blocks.every((b) => !currentTemplate[`bloque_${b}`]) && (
+                <div className="a4-empty-state">
+                  <p>📋 No hay bloques. Agrega algunos en el panel derecho.</p>
                 </div>
-              )
-            ))}
-            {blocks.every((b) => !currentTemplate[`bloque_${b}`]) && (
-              <div className="a4-empty-state">
-                <p>📋 No hay bloques. Agrega algunos en el panel derecho.</p>
+              )}
+            </div>
+
+            {/* Recibos 2+: Estáticos (read-only) */}
+            {currentTemplate.bloque_pageconfig?.recibos_por_pagina > 1 && (
+              <div className="recibos-static-container">
+                {Array.from({ length: (currentTemplate.bloque_pageconfig?.recibos_por_pagina || 1) - 1 }).map((_, idx) => (
+                  <div
+                    key={idx + 2}
+                    className={`recibo-static recibo-${idx + 2}`}
+                    style={getReciboPosStyle(idx + 2)}
+                  >
+                    {blocks.map((blockName) => (
+                      currentTemplate[`bloque_${blockName}`] && (
+                        <StaticBlockPreview
+                          key={blockName}
+                          blockName={blockName}
+                          blockData={currentTemplate[`bloque_${blockName}`]}
+                        />
+                      )
+                    ))}
+                  </div>
+                ))}
               </div>
             )}
           </div>
