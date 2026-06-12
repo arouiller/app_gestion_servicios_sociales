@@ -15,9 +15,10 @@ const AfililadoSelector = ({ onSelect }) => {
     setLoading(true);
     setError(null);
     try {
-      const response = await api.get('/personas?limit=100');
-      if (response.data.success && response.data.data) {
-        setAfiliados(response.data.data);
+      // Usar parámetro search con wildcard para traer todos los afiliados
+      const response = await api.get('/personas?search=%');
+      if (Array.isArray(response.data) && response.data.length > 0) {
+        setAfiliados(response.data);
       } else {
         setError('No hay afiliados en el sistema');
       }
@@ -55,7 +56,7 @@ const AfililadoSelector = ({ onSelect }) => {
         <option value="">-- Datos de Ejemplo --</option>
         {afiliados.map((a) => (
           <option key={a.id} value={a.id}>
-            {a.numero_afiliado} - {a.apellido}, {a.nombre}
+            {a.numero_documento || a.id} - {a.apellido}, {a.nombre}
           </option>
         ))}
       </select>
