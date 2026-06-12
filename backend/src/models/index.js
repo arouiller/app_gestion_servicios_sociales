@@ -30,7 +30,6 @@ const PeriodosRecibos = require('./PeriodosRecibos');
 const Bug = require('./Bug');
 const AuditLog = require('./AuditLog');
 const AumentoMasivo = require('./AumentoMasivo');
-const ReciboTemplate = require('./ReciboTemplate');
 
 // Initialize all models
 const db = {
@@ -60,7 +59,6 @@ const db = {
   Bug,
   AuditLog,
   AumentoMasivo,
-  ReciboTemplate,
 };
 
 // Define associations for 1.0.x
@@ -138,11 +136,6 @@ if (db.AumentoMasivo && db.Usuario) {
 if (db.Provincia && db.Localidad) {
   db.Provincia.hasMany(db.Localidad, { foreignKey: 'provincia_id', as: 'localidades', onDelete: 'RESTRICT' });
   db.Localidad.belongsTo(db.Provincia, { foreignKey: 'provincia_id', as: 'provincia', onDelete: 'RESTRICT' });
-}
-
-// ReciboTemplate associations (self-reference and user audit)
-if (db.ReciboTemplate) {
-  db.ReciboTemplate.associate(db);
 }
 
 module.exports = db;

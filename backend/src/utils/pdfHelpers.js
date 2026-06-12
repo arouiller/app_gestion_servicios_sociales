@@ -80,68 +80,6 @@ function validateReciboInvariant(recibo) {
 }
 
 /**
- * Retorna un template por defecto minimalista
- * Usado cuando no hay template personalizado en la BD
- */
-function getDefaultTemplateString() {
-  return `---
-pageSize: A4
-orientation: portrait
-margins: 20
----
-<style>
-  body {
-    font-family: Arial, sans-serif;
-    font-size: 12px;
-    line-height: 1.6;
-  }
-  .container {
-    border: 1px solid #333;
-    padding: 20px;
-    margin-bottom: 10px;
-  }
-  .title {
-    font-size: 18px;
-    font-weight: bold;
-    text-align: center;
-    margin-bottom: 20px;
-  }
-  .info {
-    margin-bottom: 15px;
-  }
-  .row {
-    display: flex;
-    margin-bottom: 10px;
-  }
-  .label {
-    font-weight: bold;
-    width: 200px;
-  }
-  .value {
-    flex: 1;
-  }
-</style>
-
-<div class="container">
-  <div class="title">TEMPLATE POR DEFECTO</div>
-  <div class="info">
-    <div class="row">
-      <div class="label">Número de Afiliado:</div>
-      <div class="value">{{numero_afiliado}}</div>
-    </div>
-    <div class="row">
-      <div class="label">Nombre:</div>
-      <div class="value">{{titular_apellido}}, {{titular_nombre}}</div>
-    </div>
-    <div class="row">
-      <div class="label">Valor Cuota:</div>
-      <div class="value">{{valor_cuota}}</div>
-    </div>
-  </div>
-</div>`;
-}
-
-/**
  * Reemplaza todos los placeholders en un string HTML con valores del recibo
  * Los valores ya vienen formateados desde renderRecibo(), no reformatear
  */
@@ -182,5 +120,4 @@ module.exports = {
   getArancelWarningIcon,
   groupRecibosInPairs,
   validateReciboInvariant,
-  getDefaultTemplateString,
 };
