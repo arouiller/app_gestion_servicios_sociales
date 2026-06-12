@@ -1,6 +1,12 @@
 const db = require('../models');
 const { v4: uuidv4 } = require('uuid');
-const puppeteer = require('puppeteer');
+
+let puppeteer = null;
+try {
+  puppeteer = require('puppeteer');
+} catch (err) {
+  console.warn('Puppeteer not available - PDF generation disabled:', err.message);
+}
 
 const MAX_TEMPLATES = 5;
 
@@ -349,6 +355,14 @@ exports.getPlaceholders = async (req, res, next) => {
  */
 exports.generatePdf = async (req, res, next) => {
   try {
+    // Verificar que Puppeteer está disponible
+    if (!puppeteer) {
+      return res.status(503).json({
+        success: false,
+        message: 'Funcionalidad de generación de PDF no disponible en este servidor'
+      });
+    }
+
     const { templateId } = req.params;
     const { persona_id, usar_datos_ficticios } = req.body;
 

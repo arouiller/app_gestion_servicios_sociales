@@ -199,6 +199,13 @@ const templateService = {
           retryAfter
         };
       }
+      if (error.response?.status === 503) {
+        return {
+          success: false,
+          message: 'Funcionalidad de PDF no disponible en este servidor',
+          unavailable: true
+        };
+      }
       return {
         success: false,
         message: error.response?.data?.message || error.message
