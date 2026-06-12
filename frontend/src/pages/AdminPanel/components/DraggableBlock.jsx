@@ -11,36 +11,87 @@ const DraggableBlock = ({ blockName, children, reciboSize }) => {
   const blockPos = positions[blockName] || { x: 10, y: 10, width: 190, height: 50 };
 
   // Calcular límites máximos basado en el tamaño disponible del recibo
+  // y restricciones de drag para que no salga del recibo
   const maxDimensions = useMemo(() => {
     if (!reciboSize) {
-      return { maxWidth: Infinity, maxHeight: Infinity };
+      return {
+        maxWidth: Infinity,
+        maxHeight: Infinity,
+        dragBounds: undefined
+      };
     }
+
+    // Límites de drag: el bloque no puede salir del recibo
+    const dragBounds = {
+      left: reciboSize.x,
+      top: reciboSize.y,
+      right: reciboSize.x + reciboSize.width - blockPos.width,
+      bottom: reciboSize.y + reciboSize.height - blockPos.height
+    };
+
     return {
       maxWidth: reciboSize.width + (reciboSize.x - blockPos.x),
-      maxHeight: reciboSize.height + (reciboSize.y - blockPos.y)
+      maxHeight: reciboSize.height + (reciboSize.y - blockPos.y),
+      dragBounds
     };
   }, [reciboSize, blockPos]);
 
   const handleDragStop = (e, d) => {
+    // Restringir la posición dentro del recibo
+    let x = d.x;
+    let y = d.y;
+
+    if (reciboSize) {
+      // No puede estar más a la izquierda que el recibo
+      x = Math.max(x, reciboSize.x);
+      // No puede estar más a la derecha que el recibo menos su ancho
+      x = Math.min(x, reciboSize.x + reciboSize.width - blockPos.width);
+      // No puede estar más arriba que el recibo
+      y = Math.max(y, reciboSize.y);
+      // No puede estar más abajo que el recibo menos su alto
+      y = Math.min(y, reciboSize.y + reciboSize.height - blockPos.height);
+    }
+
     const newPositions = {
       ...positions,
       [blockName]: {
         ...blockPos,
-        x: d.x,
-        y: d.y
+        x,
+        y
       }
     };
     updateTemplate({ bloque_positions: newPositions });
   };
 
   const handleResizeStop = (e, direction, ref, delta, position) => {
+    let x = position.x;
+    let y = position.y;
+    let width = blockPos.width + delta.width;
+    let height = blockPos.height + delta.height;
+
+    if (reciboSize) {
+      // Asegurar que no sale del recibo por los lados
+      x = Math.max(x, reciboSize.x);
+      y = Math.max(y, reciboSize.y);
+
+      // Asegurar que el lado derecho no supera el recibo
+      if (x + width > reciboSize.x + reciboSize.width) {
+        width = reciboSize.x + reciboSize.width - x;
+      }
+
+      // Asegurar que el lado inferior no supera el recibo
+      if (y + height > reciboSize.y + reciboSize.height) {
+        height = reciboSize.y + reciboSize.height - y;
+      }
+    }
+
     const newPositions = {
       ...positions,
       [blockName]: {
-        x: position.x,
-        y: position.y,
-        width: blockPos.width + delta.width,
-        height: blockPos.height + delta.height
+        x,
+        y,
+        width: Math.max(30, width),
+        height: Math.max(20, height)
       }
     };
     updateTemplate({ bloque_positions: newPositions });
@@ -60,6 +111,7 @@ const DraggableBlock = ({ blockName, children, reciboSize }) => {
       minHeight={20}
       maxWidth={maxDimensions.maxWidth}
       maxHeight={maxDimensions.maxHeight}
+      bounds={maxDimensions.dragBounds}
       disableDragging={false}
       enableResizing={{
         top: true,
