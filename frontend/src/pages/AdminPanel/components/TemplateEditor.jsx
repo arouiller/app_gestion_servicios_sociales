@@ -1,4 +1,5 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
+import html2pdf from 'html2pdf.js';
 import templateService from '../../../services/templateService';
 import useTemplateStore from '../../../hooks/useTemplateStore';
 import DraggableBlock from './DraggableBlock';
@@ -18,6 +19,7 @@ const TemplateEditor = ({ onBack }) => {
   const [placeholders, setPlaceholders] = useState({});
   const [pendingAction, setPendingAction] = useState(null);
   const [selectedBlock, setSelectedBlock] = useState(null);
+  const canvasRef = useRef(null);
 
   const currentTemplate = useTemplateStore((state) => state.currentTemplate);
   const isDirty = useTemplateStore((state) => state.isDirty);
@@ -83,47 +85,79 @@ const TemplateEditor = ({ onBack }) => {
     }
   };
 
-  const handleGeneratePdf = async () => {
+  const handleViewPdf = async () => {
     if (!currentTemplate.bloque_pageconfig) {
       setError('Bloque 5 es obligatorio para generar PDF');
       return;
     }
 
     if (isDirty) {
-      setPendingAction('pdf');
+      setPendingAction('pdf-view');
       setShowConfirmModal(true);
       return;
     }
 
-    await generatePdf();
+    await generatePdf(false);
   };
 
-  const generatePdf = async () => {
-    setLoading(true);
-    const result = await templateService.generatePdf(currentTemplate.id, null, true);
-
-    if (result.success) {
-      const url = window.URL.createObjectURL(new Blob([result.blob]));
-      const link = document.createElement('a');
-      link.href = url;
-      link.setAttribute('download', `recibo_${Date.now()}.pdf`);
-      document.body.appendChild(link);
-      link.click();
-      link.parentNode.removeChild(link);
-    } else {
-      setError(result.message || 'Error generando PDF');
+  const handleDownloadPdf = async () => {
+    if (!currentTemplate.bloque_pageconfig) {
+      setError('Bloque 5 es obligatorio para generar PDF');
+      return;
     }
 
-    setLoading(false);
+    if (isDirty) {
+      setPendingAction('pdf-download');
+      setShowConfirmModal(true);
+      return;
+    }
+
+    await generatePdf(true);
+  };
+
+  const generatePdf = async (shouldDownload = true) => {
+    if (!canvasRef.current) return;
+
+    setLoading(true);
+    setError(null);
+
+    try {
+      const options = {
+        margin: 10,
+        filename: `recibo_${Date.now()}.pdf`,
+        image: { type: 'jpeg', quality: 0.98 },
+        html2canvas: { scale: 2 },
+        jsPDF: { orientation: 'portrait', unit: 'mm', format: 'a4' }
+      };
+
+      const pdfGenerator = html2pdf()
+        .set(options)
+        .from(canvasRef.current);
+
+      if (shouldDownload) {
+        await pdfGenerator.save();
+      } else {
+        const pdfDataUrl = await pdfGenerator.outputPdf('dataurlstring');
+        window.open(pdfDataUrl, '_blank');
+      }
+
+      setLoading(false);
+    } catch (err) {
+      setError('Error generando PDF: ' + err.message);
+      setLoading(false);
+    }
   };
 
   const handleConfirmAction = async () => {
     if (pendingAction === 'cancel') {
       resetTemplate();
       onBack();
-    } else if (pendingAction === 'pdf') {
+    } else if (pendingAction === 'pdf-view') {
       await handleSave();
-      await generatePdf();
+      await generatePdf(false);
+    } else if (pendingAction === 'pdf-download') {
+      await handleSave();
+      await generatePdf(true);
     }
     setShowConfirmModal(false);
     setPendingAction(null);
@@ -227,7 +261,7 @@ const TemplateEditor = ({ onBack }) => {
       <div className="editor-container-new">
         {/* Panel izquierdo: Canvas A4 con bloques draggables */}
         <div className="editor-canvas">
-          <div className="a4-page">
+          <div className="a4-page" ref={canvasRef}>
             {blocks.map((blockName) => (
               currentTemplate[`bloque_${blockName}`] && (
                 <div
@@ -323,14 +357,14 @@ const TemplateEditor = ({ onBack }) => {
         </button>
         <button
           className="btn btn-info"
-          onClick={handleGeneratePdf}
+          onClick={handleViewPdf}
           disabled={loading}
         >
           📄 Ver PDF
         </button>
         <button
           className="btn btn-download"
-          onClick={handleGeneratePdf}
+          onClick={handleDownloadPdf}
           disabled={loading}
         >
           ⬇️ Descargar PDF
@@ -398,7 +432,7 @@ const TemplateEditor = ({ onBack }) => {
                   </button>
                 </>
               )}
-              {pendingAction === 'pdf' && (
+              {(pendingAction === 'pdf-view' || pendingAction === 'pdf-download') && (
                 <>
                   <button
                     className="btn btn-primary"
@@ -409,7 +443,11 @@ const TemplateEditor = ({ onBack }) => {
                   <button
                     className="btn btn-secondary"
                     onClick={() => {
-                      generatePdf();
+                      if (pendingAction === 'pdf-view') {
+                        generatePdf(false);
+                      } else {
+                        generatePdf(true);
+                      }
                       setShowConfirmModal(false);
                     }}
                   >
