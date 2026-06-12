@@ -90,13 +90,19 @@ Interfaz visual especializada donde administradores diseñan templates mediante:
 │  │  - Placeholders: {{valor_cuota}}, {{arancel_por_servicio}} │
 │  │  [Editar] [Copiar] [Eliminar]                              │
 │  │                                                             │
-│  └─ Bloque 4: Pie/Firma                                      │
-│     - Texto legal, fecha, referencias                         │
-│     [Editar] [Copiar] [Eliminar]                              │
+│  ├─ Bloque 4: Pie/Firma                                      │
+│  │  - Texto legal, fecha, referencias                         │
+│  │  [Editar] [Copiar] [Eliminar]                              │
+│  │                                                             │
+│  └─ Bloque 5: Configuración de Página [colapsible]           │
+│     - Tamaño página, orientación, márgenes                    │
+│     - Recibos por página, distribución, espacios              │
+│     - [Expandir/Contraer] [Editar]                            │
 │                                                             │
 │  PREVIEW (derecha):                                           │
 │  [Mostrar template completo con datos de ejemplo]             │
-│  Selector de "Afiliado de Ejemplo": [Dropdown con afiliados] │
+│  Selector "Afiliado de Ejemplo": [Dropdown - usuario elige]  │
+│  (Datos se repiten si hay múltiples recibos por página)      │
 └─────────────────────────────────────────────────────────────┘
 ┌─ Footer: Guardar, Cancelar, Vista Previa PDF                 │
 └─────────────────────────────────────────────────────────────┘
@@ -315,6 +321,34 @@ Al hacer click **[Editar]** en un bloque:
 - Al modificar campos, preview se actualiza automáticamente
 - Sin necesidad de guardar para ver cambios
 
+### 3.5.1 Preview en Vivo
+
+**Panel de Preview (lado derecho del editor):**
+
+```
+┌─ Preview del Template ─────────────────┐
+│                                        │
+│ Selector "Afiliado de Ejemplo":        │
+│ [Dropdown: Elige afiliado]             │
+│                                        │
+│ [Template renderizado con datos]      │
+│ - Si hay múltiples recibos/página:    │
+│   • Datos del afiliado se repiten     │
+│   • Layout respeta configuración      │
+│   • Márgenes y espaciado visible      │
+│                                        │
+│ [Botón] Ver PDF (abre en ventana)     │
+└────────────────────────────────────────┘
+```
+
+**Comportamiento:**
+- Usuario abre dropdown y selecciona un afiliado del sistema
+- Si no hay afiliados: fallback automático a datos ficticios de ejemplo
+- Preview se actualiza inmediatamente (debounce 300ms)
+- Si `recibos_por_página > 1`: los mismos datos del afiliado aparecen en cada recibo
+- Las líneas punteadas indican márgenes de página
+- Preview respeta `bloque_pageconfig` (tamaño, orientación, espaciado)
+
 ### 3.6 Placeholders Disponibles
 
 **Categoría: Datos del Afiliado**
@@ -387,22 +421,34 @@ Usuario → En cada bloque, expande sección "Estilos"
 **4. Insertar Placeholders**
 ```
 Usuario → En campo de texto (ej: Bloque 2)
-→ Click botón "Insertar Placeholder"
+→ Click botón "Insertar Placeholder" (junto al input)
 → Dropdown categorizado con todos los placeholders
 → Selecciona {{placeholder}} → se inserta en el campo
 ```
 
-**5. Guardar Template**
+**5. Configurar Página (Bloque 5)**
 ```
-Usuario → Completa ediciones
-→ Click "Guardar" en footer
-→ Validación en frontend (no campos vacíos requeridos)
-→ POST /api/admin/recibos/templates
-→ Backend guarda o actualiza template en BD
-→ Toast de éxito
+Usuario → Expande sección "Bloque 5: Configuración de Página"
+→ Selecciona tamaño (A4, A5, Letter, Personalizado)
+→ Elige orientación (portrait/landscape)
+→ Ajusta márgenes de página (5-50mm)
+→ Define recibos por página (1, 2, 3, 4, 6, 8)
+→ Selecciona layout (vertical o grilla)
+→ Configura espaciado entre recibos (5-20mm)
+→ Preview actualiza automáticamente mostrando la distribución
 ```
 
-**6. Activar Template**
+**7. Guardar Template**
+```
+Usuario → Completa ediciones (Bloque 5 es obligatorio)
+→ Click "Guardar" en footer
+→ Validación en frontend (Bloque 5 debe estar completo)
+→ POST /api/admin/recibos/templates
+→ Backend guarda o actualiza template en BD
+→ Toast de éxito, vuelve a listado
+```
+
+**8. Activar Template**
 ```
 Usuario → En listado, click [Activar] en un template
 → Confirma: "Este template se usará para generar todos los recibos"
@@ -411,13 +457,15 @@ Usuario → En listado, click [Activar] en un template
 → Futuras generaciones usan este template
 ```
 
-**7. Vista Previa**
+**9. Vista Previa**
 ```
 Usuario → Abre template
 → Panel derecho muestra preview en tiempo real
-→ Selector "Afiliado de Ejemplo" permite cambiar datos
-→ Preview se actualiza con datos de ese afiliado
-→ Botón "Ver PDF" abre previsualización en PDF
+→ Selector "Afiliado de Ejemplo": elige afiliado del sistema
+→ Preview muestra datos del afiliado seleccionado
+→ Si hay múltiples recibos por página: datos se repiten en cada recibo
+→ Si no hay afiliados: fallback a datos ficticios
+→ Botón "Ver PDF" abre previsualización (puppeteer)
 ```
 
 ---
@@ -711,12 +759,27 @@ Crea nuevo template
 }
 ```
 
+**Validaciones:**
+- `bloque_pageconfig` es obligatorio (error 400 si falta)
+- `nombre` no puede estar vacío
+- `usuario_id` se extrae del JWT (desde middleware `verifyToken`)
+- Todos los campos de `bloque_pageconfig` deben estar presentes y válidos
+- No se permite crear template incompleto
+
 **Response (201):**
 ```json
 {
   "success": true,
   "templateId": "uuid-nuevo",
   "message": "Template creado exitosamente"
+}
+```
+
+**Response (400) - Template incompleto:**
+```json
+{
+  "success": false,
+  "message": "bloque_pageconfig es obligatorio. Debe configurar tamaño, orientación, márgenes, recibos por página y espaciado."
 }
 ```
 
@@ -824,23 +887,43 @@ frontend/src/pages/AdminPanel/
 ├── components/
 │   ├── TemplatesList.jsx             # Tabla de templates
 │   ├── TemplateEditor.jsx            # Modal de edición completa
+│   │                                 # (Contiene Bloque 1-5 colapsibles)
 │   ├── BlockEditor/
-│   │   ├── BloqueEncabezado.jsx      # Editor del bloque 1
-│   │   ├── BloqueAfiliado.jsx        # Editor del bloque 2
-│   │   ├── BloqueDetalles.jsx        # Editor del bloque 3
-│   │   ├── BloquePie.jsx             # Editor del bloque 4
+│   │   ├── BloqueEncabezado.jsx      # Editor del bloque 1 (logo, empresa)
+│   │   ├── BloqueAfiliado.jsx        # Editor del bloque 2 (filas, drag&drop)
+│   │   ├── BloqueDetalles.jsx        # Editor del bloque 3 (tabla)
+│   │   ├── BloquePie.jsx             # Editor del bloque 4 (pie, firma)
 │   │   ├── BloquePageConfig.jsx      # Editor del bloque 5 (página)
+│   │   │                              # - Tamaño página, orientación
+│   │   │                              # - Márgenes, recibos por página
+│   │   │                              # - Layout, espaciado
 │   │   └── BloqueCommon.scss         # Estilos comunes
 │   ├── TemplatePreview.jsx           # Panel de preview (derecha)
-│   ├── PagePreview.jsx               # Previsualización de página con márgenes/layout
-│   ├── StylesPanel.jsx               # Controles de estilos
-│   └── PlaceholderSelector.jsx       # Dropdown de placeholders
+│   │                                 # - Dropdown selector afiliados
+│   │                                 # - Renderización con datos reales/ficticios
+│   ├── PagePreview.jsx               # Renderización de página
+│   │                                 # - Márgenes (línea punteada)
+│   │                                 # - Múltiples recibos con layout
+│   ├── StylesPanel.jsx               # Panel de estilos (reutilizable)
+│   ├── PlaceholderSelector.jsx       # Dropdown con placeholders
+│   │                                 # - Aparece junto a cada input de texto
+│   │                                 # - Categorizado por tipo
+│   └── AfililadoSelector.jsx         # Dropdown para elegir afiliado preview
 └── hooks/
-    └── useTemplateEditor.js          # Hook compartido para estado
+    └── useTemplateEditor.js          # Hook de estado (template, editingBlock, etc)
 
 frontend/src/services/
-├── templateService.js                # Llamadas API a /api/admin/recibos/templates
+├── templateService.js                # API: POST/PUT/GET templates
+├── previewService.js                 # API: preview HTML, PDF preview
+└── afiliados.js                      # API: listar afiliados para selector
 ```
+
+**Detalles de componentes clave:**
+
+- **BloquePageConfig.jsx**: Formulario con campos para tamaño, orientación, márgenes, recibos/página, layout, espaciado
+- **PlaceholderSelector.jsx**: Botón junto a cada `<input>` de texto que abre dropdown categorizado
+- **TemplatePreview.jsx**: Muestra vista previa con datos del afiliado seleccionado (o ficticios si vacío)
+- **AfiliadoSelector.jsx**: Dropdown que lista afiliados; sin selección = fallback a ficticios
 
 ### 4.4 Estado del Cliente (Zustand o Context)
 
@@ -937,39 +1020,205 @@ frontend/src/services/
 - Validar MIME type de logo URL
 - Rate limit: 20 requests/minuto por usuario para endpoints de templates
 
+### 5.5 Criterios de Aceptación (AC)
+
+#### AC1: Crear Template
+- ✅ Modal "Nuevo Template" abre con campos vacíos
+- ✅ Nombre es obligatorio (max 100 caracteres)
+- ✅ Bloque 5 (Configuración Página) es obligatorio al guardar
+- ✅ Si falta Bloque 5: error 400 "Bloque 5 es obligatorio"
+- ✅ Template se asigna a usuario creador (desde JWT)
+- ✅ Token de éxito muestra ID del nuevo template
+
+#### AC2: Editar Template
+- ✅ Click [Editar] abre editor con datos cargados
+- ✅ Cambios en bloques 1-4 se reflejan en preview (debounce 300ms)
+- ✅ Cambios en Bloque 5 recalculan layout de página
+- ✅ [Guardar] valida Bloque 5 antes de POST
+- ✅ Usuario puede abandonar sin guardar (confirmación opcional)
+
+#### AC3: Preview Afiliados
+- ✅ Dropdown muestra lista de afiliados activos
+- ✅ Al seleccionar afiliado: preview se actualiza con sus datos
+- ✅ Si no hay afiliados: fallback automático a datos ficticios
+- ✅ Si `recibos_por_página > 1`: datos se repiten en cada recibo
+- ✅ Márgenes de página visibles (línea punteada)
+
+#### AC4: Bloque 5 - Configuración Página
+- ✅ Selector tamaño: A4, A5, Letter, Personalizado
+- ✅ Si Personalizado: inputs para ancho (100-300mm) y alto (100-400mm)
+- ✅ Selector orientación: portrait, landscape
+- ✅ Inputs de márgenes: superior, derecho, inferior, izquierdo (5-50mm)
+- ✅ Selector recibos/página: 1, 2, 3, 4, 6, 8
+- ✅ Selector layout: "Vertical" (siempre visible), "Grilla" (solo si ≥4 recibos)
+- ✅ Inputs espaciado: gap_vertical, gap_horizontal (5-20mm, ignorados si 1 recibo)
+
+#### AC5: Placeholders
+- ✅ Botón "Insertar Placeholder" junto a cada `<input>` de texto
+- ✅ Dropdown muestra placeholders categorizados
+- ✅ Click en placeholder: se inserta en posición del cursor
+- ✅ Placeholders no son editables (read-only)
+
+#### AC6: Validación en Guardar
+- ✅ Validar Bloque 5 completo (todos los campos presentes)
+- ✅ Validar márgenes de página (5-50mm)
+- ✅ Validar gap espaciado (5-20mm, solo si > 1 recibo)
+- ✅ Validar personalizado (100-300mm ancho, 100-400mm alto)
+- ✅ Error claro si falta algún campo obligatorio
+
+#### AC7: Activar Template
+- ✅ Click [Activar] en listado abre confirmación
+- ✅ Confirmación: "Este template se usará para nuevos recibos"
+- ✅ Al confirmar: desactiva anterior (si existe), activa este
+- ✅ Badge cambia a "Activo" (verde)
+
+#### AC8: Generación PDF
+- ✅ Botón "Ver PDF" en editor de template
+- ✅ Puppeteer renderiza HTML → PDF
+- ✅ PDF respeta: tamaño página, márgenes, orientación, recibos por página
+- ✅ Si múltiples recibos: se distribuyen según layout (vertical/grilla)
+- ✅ PDF abre en ventana emergente o descarga
+
+### 5.6 Manejo de Errores y Edge Cases
+
+#### Error: Bloque 5 Obligatorio
+```
+Escenario: Usuario intenta guardar sin configurar Bloque 5
+Respuesta: Error 400 "bloque_pageconfig es obligatorio"
+UI: Toast rojo, foco en sección Bloque 5
+```
+
+#### Error: Márgenes Inválidos
+```
+Escenario: Usuario introduce margen superior 100mm en A4 portrait (alto 297mm)
+Validación: Suma de márgenes ≤ alto disponible
+Respuesta: Error 400 "Márgenes exceden dimensiones de página"
+```
+
+#### Edge Case: Sin Afiliados
+```
+Escenario: Sistema sin afiliados en BD, usuario abre preview
+Comportamiento: Fallback automático a datos ficticios
+UI: Muestra "Usando datos de ejemplo (no hay afiliados reales)"
+```
+
+#### Edge Case: Personalizado Mínimo
+```
+Escenario: Usuario selecciona Personalizado 100mm × 100mm
+Validación: Ancho ≥ 100mm, Alto ≥ 100mm
+Comportamiento: Permite crear pero avisa "Dimensión muy pequeña"
+```
+
+#### Edge Case: Grilla con < 4 Recibos
+```
+Escenario: Usuario selecciona layout "Grilla" con 2 recibos/página
+Validación: Grilla solo permite si ≥ 4 recibos
+Respuesta: Selector "Grilla" deshabilitado (solo "Vertical" visible)
+```
+
+#### Error: Eliminar Template Activo
+```
+Escenario: Usuario intenta eliminar template marcado como Activo
+Validación: No permitir (error 400)
+Respuesta: "No puede eliminar template activo. Primero active otro."
+```
+
+#### Error: Máximo Templates Alcanzado
+```
+Escenario: Sistema ya tiene 5 templates, usuario intenta crear otro
+Respuesta: Error 400 "Máximo 5 templates permitidos"
+UI: Aviso a partir de 4 templates creados
+```
+
+#### Error: Placeholder Inválido
+```
+Escenario: Usuario intenta insertar placeholder que no existe
+Validación: Solo permitir placeholders de lista autorizada
+Respuesta: Placeholder selector solo muestra válidos (no input libre)
+```
+
 ---
 
 ## 6. Integración con Generación de Recibos
 
-### Flujo de Generación (sin cambios)
+### 6.1 PDF Generator - Puppeteer
+
+**Librería:** Puppeteer (Node.js)  
+**Razón:** Renderiza HTML con CSS completo, maneja múltiples páginas y layouts complejos
+
+**Instalación:**
+```bash
+npm install puppeteer
+```
+
+**Flujo:**
+1. JSON del template → HTML con CSS embebido
+2. Puppeteer abre navegador headless
+3. Renderiza HTML → screenshot/PDF
+4. Guarda PDF binario
+
+### 6.2 Serialización: JSON → HTML
+
+**Función: `serializeTemplate(template, persona, recibo)`**
+
+Convierte JSON a HTML estructurado:
+
+```javascript
+function serializeTemplate(template, persona, recibo) {
+  const { bloque_encabezado, bloque_afiliado, bloque_detalles, bloque_pie, bloque_pageconfig } = template;
+  
+  // 1. Crear estructura HTML con tamaño y orientación
+  const pageStyle = buildPageStyle(bloque_pageconfig);  // CSS: tamaño, márgenes, orientación
+  
+  // 2. Serializar cada bloque a HTML
+  let html = `<html><head><style>${pageStyle}</style></head><body>`;
+  html += renderBloqueEncabezado(bloque_encabezado);
+  html += renderBloqueAfiliado(bloque_afiliado, persona);
+  html += renderBloqueDetalles(bloque_detalles, recibo);
+  html += renderBloquePie(bloque_pie, recibo);
+  html += `</body></html>`;
+  
+  // 3. Reemplazar placeholders
+  html = replacePlaceholders(html, persona, recibo);
+  
+  return html;
+}
+```
+
+**Manejo de placeholders en CSS:**
+- Placeholder como class: `{{arancel_negativo_class}}` → sustituir con nombre de clase CSS
+- Ejemplo: si arancel < 0 → agregar clase `text-red` al elemento
+
+### 6.3 Flujo de Generación de Recibos
 
 ```
 1. Usuario solicita generar recibos: POST /api/recibos/generar?periodo=2026-04
 2. Backend obtiene template activo: SELECT * FROM recibo_templates WHERE activo = TRUE
 3. Para cada persona en período:
-   a. Obtiene datos personalizados
-   b. Reemplaza placeholders en template
-   c. Renderiza HTML → PDF
-   d. Guarda recibo en tabla `recibos`
+   a. Obtiene datos personalizados de BD
+   b. Serializa JSON → HTML (serializeTemplate)
+   c. Reemplaza placeholders con datos reales
+   d. Puppeteer renderiza HTML → PDF binario
+   e. Guarda PDF en storage (o en tabla recibos como BLOB)
+   f. Registra en tabla `recibos` (referencia a PDF)
 ```
 
-### Reemplazo de Placeholders (nuevo)
+### 6.4 Vista Previa Antes de Guardar
 
-**Pseudocódigo backend:**
+**Endpoint:** `POST /api/admin/recibos/preview/:templateId/:personaId`
 
-```javascript
-function renderTemplate(template, persona, recibo) {
-  let html = serializeTemplate(template);  // JSON → HTML
-  
-  // Reemplazar placeholders
-  html = html.replace(/{{numero_afiliado}}/g, persona.numero_afiliado);
-  html = html.replace(/{{titular_nombre}}/g, persona.titular_nombre);
-  // ... más placeholders
-  
-  // Reemplazar valores monetarios (con formato)
-  html = html.replace(/{{valor_cuota}}/g, formatCurrency(recibo.valor_cuota));
-  
-  return html;
+Flujo:
+1. Obtiene template y datos de persona
+2. Serializa a HTML
+3. Puppeteer renderiza snapshot
+4. Retorna HTML al frontend para preview en vivo
+
+**Response:**
+```json
+{
+  "success": true,
+  "html": "<html>...</html>",  // HTML renderizado
+  "persona": { /* datos usados */ }
 }
 ```
 
@@ -977,47 +1226,67 @@ function renderTemplate(template, persona, recibo) {
 
 ## 7. Migraciones de Base de Datos
 
-### Migración: `3.0.0_templates_rediseño`
+### Migración: `2.0.34_recibo_templates`
 
-**Upgrade:**
+**Contexto:** Fresh start - tabla nueva, sin migración de datos legacy. Se crea con estructura completa (bloques 1-5 + página config).
+
+**Upgrade (upgrade.sql):**
 ```sql
--- Crear nueva tabla con estructura simplificada + página config
-CREATE TABLE IF NOT EXISTS recibo_templates_v2 (
-  id CHAR(36) PRIMARY KEY,
+-- Crear tabla recibo_templates con estructura JSON modular
+-- Esta es una tabla NUEVA sin datos previos que migrar
+CREATE TABLE IF NOT EXISTS recibo_templates (
+  id CHAR(36) PRIMARY KEY DEFAULT (UUID()),
+  
   nombre VARCHAR(100) NOT NULL,
   descripcion TEXT,
-  bloque_encabezado JSON NOT NULL,
-  bloque_afiliado JSON NOT NULL,
-  bloque_detalles JSON NOT NULL,
-  bloque_pie JSON NOT NULL,
-  bloque_pageconfig JSON NOT NULL,
+  
+  -- 5 bloques en JSON (estructura modular)
+  bloque_encabezado JSON NOT NULL,       -- Logo, empresa, contacto
+  bloque_afiliado JSON NOT NULL,         -- Filas con placeholders
+  bloque_detalles JSON NOT NULL,         -- Tabla de valores
+  bloque_pie JSON NOT NULL,              -- Legal, firma
+  bloque_pageconfig JSON NOT NULL,       -- Tamaño, márgenes, orientación, distribución
+  
+  -- Metadata
   activo BOOLEAN DEFAULT FALSE,
   usuario_id INT,
+  
   created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
   updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+  
   FOREIGN KEY (usuario_id) REFERENCES usuarios(id),
-  UNIQUE KEY unique_activo (activo)  -- Solo un template activo
+  UNIQUE KEY unique_activo (activo)  -- Constraint: solo un template activo
 );
 
--- Crear template por defecto (si no existe tabla anterior)
-INSERT INTO recibo_templates_v2 VALUES (
+-- Insertar template por defecto (inicial)
+INSERT INTO recibo_templates (id, nombre, descripcion, bloque_encabezado, bloque_afiliado, bloque_detalles, bloque_pie, bloque_pageconfig, activo, usuario_id) VALUES (
   UUID(),
   'Template Predefinido',
   'Template estándar del sistema',
-  '{"logo_url":"","empresa_nombre":"Mi Empresa",...}',
-  '{"filas":[...],...}',
-  '{"template_preset":"simple",...}',
-  '{"aclaracion":"","texto_legal":"",...}',
+  '{"logo_url":"","empresa_nombre":"Mi Empresa","empresa_direccion":"","empresa_telefono":"","empresa_email":"","empresa_sitio":"","estilos":{"fontFamily":"Arial","fontSize":14,"color":"#000000","textAlign":"center","backgroundColor":"#FFFFFF","padding":10},"layout":{"ancho":"100%","alto":"auto","margen_superior":0,"margen_inferior":5}}',
+  '{"filas":[{"id":"fila_1","visible":true,"etiqueta":"Número Afiliado","placeholder":"{{numero_afiliado}}"},{"id":"fila_2","visible":true,"etiqueta":"Titular","placeholder":"{{titular_nombre}} {{titular_apellido}}"}],"estilos":{"fontFamily":"Arial","fontSize":11,"color":"#000000","borderWidth":1,"borderColor":"#CCCCCC","padding":5},"layout":{"ancho":"100%","alto":"auto","margen_superior":0,"margen_inferior":5}}',
+  '{"template_preset":"simple","filas":[{"id":"detalle_1","etiqueta":"Cuota Social","placeholder":"{{cuota_social}}"}],"fila_total":{"etiqueta":"TOTAL A PAGAR","placeholder":"{{valor_cuota}}"},"estilos":{"fontFamily":"Arial","fontSize":11,"color":"#000000","borderWidth":1,"borderStyle":"solid","borderColor":"#000000","headerBgColor":"#F0F0F0"},"layout":{"ancho":"100%","alto":"auto","margen_superior":0,"margen_inferior":10}}',
+  '{"aclaracion":"Comprobante válido para...","texto_legal":"Conservar para sus...","fecha_formato":"dd/mm/aaaa","mostrar_linea_firma":true,"referencia":"Comprobante Nº {{numero_recibo}}","estilos":{"fontFamily":"Arial","fontSize":10,"color":"#666666","textAlign":"center","paddingTop":20},"layout":{"ancho":"100%","alto":"auto","margen_superior":0,"margen_inferior":0}}',
   '{"tamaño":"A4","orientacion":"portrait","margenes":{"superior":10,"derecho":10,"inferior":10,"izquierdo":10},"recibos_por_pagina":1,"layout":"vertical","espaciado":{"gap_vertical":5,"gap_horizontal":5}}',
   TRUE,  -- Activo por defecto
-  1,
-  NOW(),
-  NOW()
+  1      -- Usuario admin (asume que existe usuario_id = 1)
 );
-
--- Si existe tabla anterior (recibo_templates), hacer migración de datos (opcional)
--- ALTER TABLE recibo_templates_v2 RENAME TO recibo_templates;
 ```
+
+**Downgrade (downgrade.sql):**
+```sql
+-- Esta es una migración destructiva
+-- El downgrade solo elimina la tabla, datos NO se recuperan
+DROP TABLE IF EXISTS recibo_templates;
+
+-- Si necesita recuperar datos, debe restaurar desde backup anterior
+```
+
+**Notas importantes:**
+- ✅ Fresh start: tabla nueva, no hay datos previos que migrar
+- ✅ Valores JSON son estructuras válidas listas para usar
+- ⚠️ `usuario_id = 1` asume que existe un usuario admin con ese ID (verif icar antes de ejecutar)
+- ⚠️ Downgrade es DESTRUCTIVO y no reversible sin backup
 
 **Downgrade:**
 ```sql
