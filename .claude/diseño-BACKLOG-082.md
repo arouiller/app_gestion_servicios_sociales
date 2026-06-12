@@ -1,39 +1,39 @@
-# Editor de Templates de Recibos - Redefinición (BACKLOG-082)
+# Editor de Templates de Recibos (BACKLOG-082)
 
 **Fecha:** 2026-06-12  
 **Estado:** Especificación Formal  
-**Versión:** 1.0  
-**Reemplaza:** BACKLOG-081 (eliminado)
+**Versión:** 1.0
 
 ---
 
 ## 1. Resumen Ejecutivo
 
-Redefinición completa del editor visual de templates de recibos con enfoque en **secciones/bloques reutilizables** en lugar de edición libre de tabla. El nuevo diseño permite administradores crear múltiples templates (3-5 activos), cada uno con estructura modular de 4 bloques principales, sin complejidad de versionado.
+Sistema completo para que administradores diseñen y personalicen templates de recibos de forma visual e intuitiva. El editor permite crear múltiples templates (hasta 5), cada uno con estructura modular compuesta por 4 bloques predefinidos (encabezado, datos del afiliado, tabla de detalles, pie/firma).
 
-**Cambios clave respecto a BACKLOG-081:**
-- ❌ Sin versionado (un guardado por template)
-- ✅ Múltiples templates activos simultáneamente
-- ✅ Estructura modular por bloques (no tabla libre)
-- ✅ Un template global se aplica a todos los recibos
-- ✅ Preview con datos reales de afiliado
+**Características principales:**
+- ✅ Editor visual WYSIWYG con vista previa en tiempo real
+- ✅ Estructura modular con 4 bloques independientes
+- ✅ Múltiples templates almacenados, uno activo globalmente
+- ✅ Personalización granular de estilos (fuentes, colores, bordes)
+- ✅ Inserción de placeholders/campos dinámicos
+- ✅ Preview con datos reales de afiliados
+- ✅ Generación de PDF de prueba
+- ✅ Gestión simple sin historial de versiones
 
 ---
 
-## 2. Contexto
+## 2. Contexto y Necesidad
 
-### Problemas de BACKLOG-081 (Eliminado)
-1. Complejidad excesiva de UI (demasiadas opciones)
-2. Versionado no necesario (causa overhead)
-3. Un solo template activo (inflexible para casos de uso múltiples)
-4. Curva de aprendizaje alta para administradores
+### Problema
+Sin un editor visual, la personalización de templates de recibos requiere intervención técnica (SQL directo o código). Los administradores no pueden realizar cambios de diseño de forma autónoma.
 
-### Nueva Propuesta
-Simplificar mediante:
-- Estructura **modular predefinida** (4 bloques fijos)
-- **Sin versioning** (facilita implementación)
-- **Múltiples templates** almacenados
-- **Un template activo** que se aplica globalmente
+### Solución Propuesta
+Interfaz visual especializada donde administradores diseñan templates mediante:
+- Bloques predefinidos (componentes reutilizables)
+- Formularios intuitivos para edición de contenido
+- Estilos controlados (opciones limitadas pero suficientes)
+- Inserción de placeholders desde dropdown
+- Vista previa actualizada en vivo
 
 ---
 
@@ -856,22 +856,7 @@ DROP TABLE IF EXISTS recibo_templates_v2;
 
 ---
 
-## 9. Cambios Respecto a BACKLOG-081
-
-| Aspecto | BACKLOG-081 | BACKLOG-082 |
-|---------|-------------|------------|
-| **Estructura** | Tabla libre (drag-drop) | Bloques predefinidos |
-| **Versionado** | Sí (histórico completo) | No (solo último guardado) |
-| **Templates activos** | 1 único | Múltiples (3-5) |
-| **Edición** | Grid muy flexible | Formularios en modales |
-| **Complejidad** | Alta (muchas opciones) | Media (opciones limitadas) |
-| **UI** | 6+ tabs en panel lateral | 4 modales específicas |
-| **Curva aprendizaje** | Empinada | Media |
-| **Mantenimiento** | Complejo (versionado) | Simple |
-
----
-
-## 10. Commits Esperados
+## 9. Commits Esperados
 
 ```
 feat(BACKLOG-082): diseño de nueva arquitectura de templates
@@ -895,7 +880,6 @@ docs(BACKLOG-082): documentación completa
 
 ## 12. Referencias
 
-- **Reemplaza:** BACKLOG-081 (eliminado 2026-06-12)
-- **Documento anterior:** `./.claude/diseño-recibos.md`
 - **Especificación de placeholders:** `./docs/superpowers/specs/2026-05-09-impresion-recibos-pdf-design.md`
 - **CLAUDE.md:** Instrucciones del proyecto
+- **Modelo de base de datos:** Consultar migraciones en `backend/src/migrations/versions/`
