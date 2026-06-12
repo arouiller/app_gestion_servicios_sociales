@@ -238,47 +238,47 @@ const pdfRateLimiter = (req, res, next) => {
 
 router.get('/recibos/templates', verifyToken, requireAdmin, (req, res, next) => {
   const controller = require('../controllers/recibosTemplatesController');
-  controller.list(req, res).catch(next);
+  controller.list(req, res, next);
 });
 
 router.post('/recibos/templates', verifyToken, requireAdmin, (req, res, next) => {
   const controller = require('../controllers/recibosTemplatesController');
-  controller.create(req, res).catch(next);
+  controller.create(req, res, next);
 });
 
 router.get('/recibos/templates/:id', verifyToken, requireAdmin, (req, res, next) => {
   const controller = require('../controllers/recibosTemplatesController');
-  controller.getById(req, res).catch(next);
+  controller.getById(req, res, next);
 });
 
 router.put('/recibos/templates/:id', verifyToken, requireAdmin, (req, res, next) => {
   const controller = require('../controllers/recibosTemplatesController');
-  controller.update(req, res).catch(next);
+  controller.update(req, res, next);
 });
 
 router.patch('/recibos/templates/:id/activar', verifyToken, requireAdmin, (req, res, next) => {
   const controller = require('../controllers/recibosTemplatesController');
-  controller.activate(req, res).catch(next);
+  controller.activate(req, res, next);
 });
 
 router.delete('/recibos/templates/:id', verifyToken, requireAdmin, (req, res, next) => {
   const controller = require('../controllers/recibosTemplatesController');
-  controller.delete(req, res).catch(next);
+  controller.delete(req, res, next);
 });
 
 router.post('/recibos/templates/:id/duplicar', verifyToken, requireAdmin, (req, res, next) => {
   const controller = require('../controllers/recibosTemplatesController');
-  controller.duplicate(req, res).catch(next);
+  controller.duplicate(req, res, next);
 });
 
 router.get('/recibos/placeholders', verifyToken, requireAdmin, (req, res, next) => {
   const controller = require('../controllers/recibosTemplatesController');
-  controller.getPlaceholders(req, res).catch(next);
+  controller.getPlaceholders(req, res, next);
 });
 
 router.post('/recibos/templates/:templateId/generar-pdf', verifyToken, requireAdmin, pdfRateLimiter, (req, res, next) => {
   const controller = require('../controllers/recibosTemplatesController');
-  controller.generatePdf(req, res).catch(next);
+  controller.generatePdf(req, res, next);
 });
 
 module.exports = router;
