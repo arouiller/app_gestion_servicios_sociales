@@ -3,58 +3,42 @@ import { Rnd } from 'react-rnd';
 import useTemplateStore from '../../../hooks/useTemplateStore';
 import { calculateRecibosPositions } from './PageGuides';
 
-const DraggableBlock = ({ blockName, children, reciboSize, reciboOffset = { x: 0, y: 0 } }) => {
+const DraggableBlock = ({ blockName, children, reciboSize }) => {
   const currentTemplate = useTemplateStore((state) => state.currentTemplate);
   const updateTemplate = useTemplateStore((state) => state.updateTemplate);
 
   const positions = currentTemplate.bloque_positions || {};
   const blockPos = positions[blockName] || { x: 10, y: 10, width: 190, height: 50 };
 
-  // Convertir posición relativa al recibo a posición absoluta en la página
-  const absolutePos = {
-    x: blockPos.x + reciboOffset.x,
-    y: blockPos.y + reciboOffset.y,
-    width: blockPos.width,
-    height: blockPos.height
-  };
-
-  // Calcular límites máximos basado en el tamaño disponible del recibo
-  // y restricciones de drag para que no salga del recibo
-  const maxDimensions = useMemo(() => {
+  // Calcular límites máximos y de drag basado en el tamaño disponible del recibo
+  const limits = useMemo(() => {
     if (!reciboSize) {
       return {
         maxWidth: Infinity,
-        maxHeight: Infinity,
-        dragBounds: undefined
+        maxHeight: Infinity
       };
     }
 
-    // Límites de drag: el bloque no puede salir del recibo
-    const dragBounds = {
-      left: reciboSize.x,
-      top: reciboSize.y,
-      right: reciboSize.x + reciboSize.width - blockPos.width,
-      bottom: reciboSize.y + reciboSize.height - blockPos.height
-    };
+    // Espacio disponible desde la posición actual hasta los bordes del recibo
+    const maxWidth = reciboSize.width - (blockPos.x - reciboSize.x);
+    const maxHeight = reciboSize.height - (blockPos.y - reciboSize.y);
 
     return {
-      maxWidth: reciboSize.width + (reciboSize.x - blockPos.x),
-      maxHeight: reciboSize.height + (reciboSize.y - blockPos.y),
-      dragBounds
+      maxWidth: Math.max(maxWidth, 30),
+      maxHeight: Math.max(maxHeight, 20)
     };
   }, [reciboSize, blockPos]);
 
   const handleDragStop = (e, d) => {
-    // Convertir posición absoluta a relativa del recibo
-    let x = d.x - reciboOffset.x;
-    let y = d.y - reciboOffset.y;
+    let x = d.x;
+    let y = d.y;
 
     if (reciboSize) {
-      // Restringir dentro de los límites del recibo (en coordenadas relativas)
-      x = Math.max(x, 0);
-      x = Math.min(x, reciboSize.width - blockPos.width);
-      y = Math.max(y, 0);
-      y = Math.min(y, reciboSize.height - blockPos.height);
+      // Restringir dentro de los límites del recibo
+      x = Math.max(x, reciboSize.x);
+      x = Math.min(x, reciboSize.x + reciboSize.width - blockPos.width);
+      y = Math.max(y, reciboSize.y);
+      y = Math.min(y, reciboSize.y + reciboSize.height - blockPos.height);
     }
 
     const newPositions = {
@@ -69,25 +53,24 @@ const DraggableBlock = ({ blockName, children, reciboSize, reciboOffset = { x: 0
   };
 
   const handleResizeStop = (e, direction, ref, delta, position) => {
-    // Convertir posición absoluta a relativa del recibo
-    let x = position.x - reciboOffset.x;
-    let y = position.y - reciboOffset.y;
+    let x = position.x;
+    let y = position.y;
     let width = blockPos.width + delta.width;
     let height = blockPos.height + delta.height;
 
     if (reciboSize) {
-      // Asegurar que no sale del recibo (en coordenadas relativas)
-      x = Math.max(x, 0);
-      y = Math.max(y, 0);
+      // Asegurar que no sale del recibo
+      x = Math.max(x, reciboSize.x);
+      y = Math.max(y, reciboSize.y);
 
       // Asegurar que el lado derecho no supera el recibo
-      if (x + width > reciboSize.width) {
-        width = reciboSize.width - x;
+      if (x + width > reciboSize.x + reciboSize.width) {
+        width = reciboSize.x + reciboSize.width - x;
       }
 
       // Asegurar que el lado inferior no supera el recibo
-      if (y + height > reciboSize.height) {
-        height = reciboSize.height - y;
+      if (y + height > reciboSize.y + reciboSize.height) {
+        height = reciboSize.y + reciboSize.height - y;
       }
     }
 
@@ -106,18 +89,17 @@ const DraggableBlock = ({ blockName, children, reciboSize, reciboOffset = { x: 0
   return (
     <Rnd
       default={{
-        x: absolutePos.x,
-        y: absolutePos.y,
-        width: absolutePos.width,
-        height: absolutePos.height
+        x: blockPos.x,
+        y: blockPos.y,
+        width: blockPos.width,
+        height: blockPos.height
       }}
       onDragStop={handleDragStop}
       onResizeStop={handleResizeStop}
       minWidth={30}
       minHeight={20}
-      maxWidth={maxDimensions.maxWidth}
-      maxHeight={maxDimensions.maxHeight}
-      bounds={maxDimensions.dragBounds}
+      maxWidth={limits.maxWidth}
+      maxHeight={limits.maxHeight}
       disableDragging={false}
       enableResizing={{
         top: true,
