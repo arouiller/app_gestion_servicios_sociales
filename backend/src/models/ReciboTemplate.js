@@ -45,6 +45,16 @@ const ReciboTemplate = sequelize.define('ReciboTemplate', {
     },
     comment: 'Bloque 5 (OBLIGATORIO): Tamaño, orientación, márgenes, layout'
   },
+  bloque_positions: {
+    type: DataTypes.JSON,
+    defaultValue: {
+      encabezado: { x: 10, y: 10, width: 190, height: 50 },
+      afiliado: { x: 10, y: 65, width: 190, height: 40 },
+      detalles: { x: 10, y: 110, width: 190, height: 60 },
+      pie: { x: 10, y: 175, width: 190, height: 30 }
+    },
+    comment: 'Posición (x, y) y tamaño (width, height) en mm de cada bloque'
+  },
   activo: {
     type: DataTypes.BOOLEAN,
     defaultValue: false,

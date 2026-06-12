@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import templateService from '../../../services/templateService';
 import useTemplateStore from '../../../hooks/useTemplateStore';
-import TemplatePreview from './TemplatePreview';
+import DraggableBlock from './DraggableBlock';
 import BloqueEncabezado from './BlockEditor/BloqueEncabezado';
 import BloqueAfiliado from './BlockEditor/BloqueAfiliado';
 import BloqueDetalles from './BlockEditor/BloqueDetalles';
@@ -17,6 +17,7 @@ const TemplateEditor = ({ onBack }) => {
   const [showPlaceholders, setShowPlaceholders] = useState(false);
   const [placeholders, setPlaceholders] = useState({});
   const [pendingAction, setPendingAction] = useState(null);
+  const [activeBlockEditor, setActiveBlockEditor] = useState(null);
 
   const currentTemplate = useTemplateStore((state) => state.currentTemplate);
   const isDirty = useTemplateStore((state) => state.isDirty);
@@ -25,7 +26,6 @@ const TemplateEditor = ({ onBack }) => {
   const setIsSaving = useTemplateStore((state) => state.setIsSaving);
   const resetTemplate = useTemplateStore((state) => state.resetTemplate);
 
-  // Cargar placeholders disponibles
   useEffect(() => {
     const loadPlaceholders = async () => {
       const result = await templateService.getPlaceholders();
@@ -37,7 +37,6 @@ const TemplateEditor = ({ onBack }) => {
   }, []);
 
   const handleSave = async () => {
-    // Validación: Bloque 5 obligatorio
     if (!currentTemplate.bloque_pageconfig) {
       setError('Bloque 5 (Configuración de Página) es obligatorio');
       return;
@@ -76,7 +75,6 @@ const TemplateEditor = ({ onBack }) => {
     }
 
     if (isDirty) {
-      // Modal: Guardar, Generar solo, Cancelar
       setPendingAction('pdf');
       setShowConfirmModal(true);
       return;
@@ -109,7 +107,6 @@ const TemplateEditor = ({ onBack }) => {
       resetTemplate();
       onBack();
     } else if (pendingAction === 'pdf') {
-      // Opción: Guardar primero
       await handleSave();
       await generatePdf();
     }
@@ -117,8 +114,25 @@ const TemplateEditor = ({ onBack }) => {
     setPendingAction(null);
   };
 
+  const blocks = ['encabezado', 'afiliado', 'detalles', 'pie'];
+
+  const renderBlockContent = (blockName) => {
+    switch (blockName) {
+      case 'encabezado':
+        return currentTemplate.bloque_encabezado ? <BloqueEncabezado /> : null;
+      case 'afiliado':
+        return currentTemplate.bloque_afiliado ? <BloqueAfiliado /> : null;
+      case 'detalles':
+        return currentTemplate.bloque_detalles ? <BloqueDetalles /> : null;
+      case 'pie':
+        return currentTemplate.bloque_pie ? <BloquePie /> : null;
+      default:
+        return null;
+    }
+  };
+
   return (
-    <div className="template-editor">
+    <div className="template-editor-new">
       <div className="editor-header">
         <button className="btn btn-back" onClick={handleCancel}>
           ← Atrás
@@ -139,21 +153,26 @@ const TemplateEditor = ({ onBack }) => {
       {error && <div className="alert alert-error">{error}</div>}
       {successMessage && <div className="alert alert-success">{successMessage}</div>}
 
-      <div className="editor-container">
-        {/* Panel izquierdo: Bloques */}
-        <div className="editor-left">
-          <div className="blocks-panel">
-            <BloqueEncabezado />
-            <BloqueAfiliado />
-            <BloqueDetalles />
-            <BloquePie />
-            <BloquePageConfig />
+      <div className="editor-container-new">
+        {/* Panel izquierdo: Canvas A4 con bloques draggables */}
+        <div className="editor-canvas">
+          <div className="a4-page">
+            {blocks.map((blockName) => (
+              currentTemplate[`bloque_${blockName}`] && (
+                <DraggableBlock key={blockName} blockName={blockName}>
+                  {renderBlockContent(blockName)}
+                </DraggableBlock>
+              )
+            ))}
           </div>
         </div>
 
-        {/* Panel derecho: Preview */}
-        <div className="editor-right">
-          <TemplatePreview />
+        {/* Panel derecho: Editor de propiedades */}
+        <div className="editor-properties">
+          <h3>Configuración de Bloques</h3>
+          <div className="blocks-editor">
+            <BloquePageConfig />
+          </div>
         </div>
       </div>
 
@@ -189,7 +208,7 @@ const TemplateEditor = ({ onBack }) => {
         </button>
       </div>
 
-      {/* Panel de placeholders disponibles */}
+      {/* Panel de placeholders */}
       {showPlaceholders && (
         <div className="placeholders-panel">
           <div className="placeholders-header">

@@ -33,6 +33,20 @@ const TemplatePreview = () => {
     });
   };
 
+  const getBlockStyle = (blockName) => {
+    const positions = currentTemplate.bloque_positions || {};
+    const pos = positions[blockName];
+    if (!pos) return {};
+
+    return {
+      position: 'absolute',
+      left: `${pos.x}mm`,
+      top: `${pos.y}mm`,
+      width: `${pos.width}mm`,
+      height: `${pos.height}mm`
+    };
+  };
+
   const handleViewPdf = () => {
     if (!previewRef.current) return;
 
@@ -111,9 +125,9 @@ const TemplatePreview = () => {
         )}
       </div>
 
-      <div className="preview-content" ref={previewRef}>
+      <div className="a4-preview" ref={previewRef} style={{ position: 'relative', width: '210mm', height: '297mm', background: 'white', margin: '20px auto', boxShadow: '0 2px 8px rgba(0,0,0,0.1)' }}>
         {currentTemplate.bloque_encabezado && (
-          <div className="preview-section encabezado">
+          <div className="preview-section encabezado" style={getBlockStyle('encabezado')}>
             {currentTemplate.bloque_encabezado.empresa_nombre && (
               <h2>{currentTemplate.bloque_encabezado.empresa_nombre}</h2>
             )}
@@ -124,7 +138,7 @@ const TemplatePreview = () => {
         )}
 
         {currentTemplate.bloque_afiliado && (
-          <div className="preview-section afiliado">
+          <div className="preview-section afiliado" style={getBlockStyle('afiliado')}>
             <table>
               <tbody>
                 {currentTemplate.bloque_afiliado.filas?.map((fila, idx) => (
@@ -139,7 +153,7 @@ const TemplatePreview = () => {
         )}
 
         {currentTemplate.bloque_detalles && (
-          <div className="preview-section detalles">
+          <div className="preview-section detalles" style={getBlockStyle('detalles')}>
             <table border="1">
               <tbody>
                 {currentTemplate.bloque_detalles.filas?.map((fila, idx) => (
@@ -154,7 +168,7 @@ const TemplatePreview = () => {
         )}
 
         {currentTemplate.bloque_pie && (
-          <div className="preview-section pie">
+          <div className="preview-section pie" style={getBlockStyle('pie')}>
             {currentTemplate.bloque_pie.aclaracion && (
               <p className="aclaracion">{currentTemplate.bloque_pie.aclaracion}</p>
             )}

@@ -20,7 +20,8 @@
     "react-quill": "^2.0.0",
     "ajv": "^8.12.0",
     "react-beautiful-dnd": "^13.1.1",
-    "html2pdf.js": "^0.10.1"
+    "html2pdf.js": "^0.10.1",
+    "react-rnd": "^10.4.1"
   },
   "devDependencies": {
     "react-scripts": "5.0.1",
