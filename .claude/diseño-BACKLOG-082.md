@@ -195,6 +195,58 @@ Propósito: Información legal y cierre
 - Alineación
 - Padding superior (espaciado respecto a tabla)
 
+#### **Bloque 5: Configuración de Página**
+Propósito: Controlar tamaño, márgenes, orientación y distribución de recibos en la página
+
+**Campos editables:**
+```
+- Tamaño de página:
+  * A4 (210 × 297 mm)
+  * A5 (148 × 210 mm)
+  * Letter (215.9 × 279.4 mm)
+  * Personalizado (ancho x alto en mm)
+
+- Orientación:
+  * Portrait (vertical)
+  * Landscape (horizontal)
+
+- Márgenes de página (en mm):
+  * Margen superior: 5-50 mm (default: 10)
+  * Margen derecho: 5-50 mm (default: 10)
+  * Margen inferior: 5-50 mm (default: 10)
+  * Margen izquierdo: 5-50 mm (default: 10)
+
+- Recibos por página:
+  * 1 recibo por página (full page)
+  * 2 recibos por página
+  * 3 recibos por página
+  * 4 recibos por página
+  * 6 recibos por página (grilla 2×3)
+  * 8 recibos por página (grilla 2×4)
+
+- Layout/Distribución:
+  * Vertical: Recibos apilados de arriba a abajo
+  * Grilla: Recibos distribuidos en columnas (2 columnas fijas)
+
+- Espaciado entre recibos:
+  * Gap vertical: 5-20 mm (separación entre filas)
+  * Gap horizontal: 5-20 mm (separación entre columnas)
+```
+
+**Comportamiento:**
+- Los campos "Recibos por página" y "Gap" solo aplican si hay múltiples recibos
+- El layout "Grilla" solo se muestra si hay 4+ recibos por página
+- Los márgenes afectan el área imprimible dentro de la página
+- La orientación redimensiona el canvas automáticamente
+- Los valores de gap se ignoran si solo hay 1 recibo por página
+
+**Vista previa en tiempo real:**
+- Al cambiar cualquier parámetro, el preview muestra:
+  - Tamaño y orientación de la página
+  - Posición de los márgenes (línea punteada)
+  - Distribución de múltiples recibos (si aplica)
+  - Espacios entre recibos
+
 ### 3.5 Panel de Edición de Bloque (Modal)
 
 Al hacer click **[Editar]** en un bloque:
@@ -350,6 +402,7 @@ CREATE TABLE recibo_templates (
   bloque_afiliado    JSON NOT NULL,                  -- Filas con placeholders
   bloque_detalles    JSON NOT NULL,                  -- Tabla de valores
   bloque_pie         JSON NOT NULL,                  -- Legal, firma
+  bloque_pageconfig  JSON NOT NULL,                  -- Tamaño, márgenes, orientación
   
   -- Metadata
   activo             BOOLEAN DEFAULT FALSE,
@@ -358,7 +411,8 @@ CREATE TABLE recibo_templates (
   created_at         TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
   updated_at         TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
   
-  FOREIGN KEY (usuario_id) REFERENCES usuarios(id)
+  FOREIGN KEY (usuario_id) REFERENCES usuarios(id),
+  UNIQUE KEY unique_activo (activo)                  -- Solo un template activo
 );
 ```
 
@@ -465,6 +519,50 @@ CREATE TABLE recibo_templates (
 }
 ```
 
+#### Estructura JSON: `bloque_pageconfig`
+
+```json
+{
+  "tamaño": "A4",                    // "A4" | "A5" | "Letter" | "Personalizado"
+  "ancho_custom": 210,               // mm (solo si tamaño = "Personalizado")
+  "alto_custom": 297,                // mm (solo si tamaño = "Personalizado")
+  
+  "orientacion": "portrait",         // "portrait" | "landscape"
+  
+  "margenes": {
+    "superior": 10,                  // mm (5-50)
+    "derecho": 10,                   // mm (5-50)
+    "inferior": 10,                  // mm (5-50)
+    "izquierdo": 10                  // mm (5-50)
+  },
+  
+  "recibos_por_pagina": 1,           // 1 | 2 | 3 | 4 | 6 | 8
+  "layout": "vertical",              // "vertical" | "grilla"
+  
+  "espaciado": {
+    "gap_vertical": 5,               // mm (5-20, ignorado si recibos_por_pagina = 1)
+    "gap_horizontal": 5              // mm (5-20, ignorado si recibos_por_pagina = 1)
+  }
+}
+```
+
+**Definiciones de tamaños estándar:**
+```
+A4:       210 × 297 mm
+A5:       148 × 210 mm
+Letter:   215.9 × 279.4 mm
+Custom:   Definido por usuario
+```
+
+**Cálculo de dimensiones en preview:**
+```
+Ancho disponible = ancho_pagina - margen_izquierdo - margen_derecho
+Alto disponible = alto_pagina - margen_superior - margen_inferior
+
+Ancho recibo = (Ancho disponible - (gap_horizontal × (columnas-1))) / columnas
+Alto recibo = (Alto disponible - (gap_vertical × (filas-1))) / filas
+```
+
 ### 4.2 Backend - API Endpoints
 
 #### **GET /api/admin/recibos/templates**
@@ -509,6 +607,14 @@ Obtiene template específico para edición
     "bloque_afiliado": { ... },
     "bloque_detalles": { ... },
     "bloque_pie": { ... },
+    "bloque_pageconfig": {
+      "tamaño": "A4",
+      "orientacion": "portrait",
+      "margenes": { "superior": 10, "derecho": 10, "inferior": 10, "izquierdo": 10 },
+      "recibos_por_pagina": 1,
+      "layout": "vertical",
+      "espaciado": { "gap_vertical": 5, "gap_horizontal": 5 }
+    },
     "activo": true
   }
 }
@@ -525,7 +631,15 @@ Crea nuevo template
   "bloque_encabezado": { /* estructura JSON */ },
   "bloque_afiliado": { /* estructura JSON */ },
   "bloque_detalles": { /* estructura JSON */ },
-  "bloque_pie": { /* estructura JSON */ }
+  "bloque_pie": { /* estructura JSON */ },
+  "bloque_pageconfig": {
+    "tamaño": "A4",
+    "orientacion": "portrait",
+    "margenes": { "superior": 10, "derecho": 10, "inferior": 10, "izquierdo": 10 },
+    "recibos_por_pagina": 1,
+    "layout": "vertical",
+    "espaciado": { "gap_vertical": 5, "gap_horizontal": 5 }
+  }
 }
 ```
 
@@ -647,8 +761,10 @@ frontend/src/pages/AdminPanel/
 │   │   ├── BloqueAfiliado.jsx        # Editor del bloque 2
 │   │   ├── BloqueDetalles.jsx        # Editor del bloque 3
 │   │   ├── BloquePie.jsx             # Editor del bloque 4
+│   │   ├── BloquePageConfig.jsx      # Editor del bloque 5 (página)
 │   │   └── BloqueCommon.scss         # Estilos comunes
 │   ├── TemplatePreview.jsx           # Panel de preview (derecha)
+│   ├── PagePreview.jsx               # Previsualización de página con márgenes/layout
 │   ├── StylesPanel.jsx               # Controles de estilos
 │   └── PlaceholderSelector.jsx       # Dropdown de placeholders
 └── hooks/
@@ -704,12 +820,24 @@ frontend/src/services/
 - Colores: validar formato hex (#XXXXXX)
 - Tamaños: validar rangos (8-24px, 0-20px)
 - Placeholders: validar que existan en lista autorizada
+- Página config:
+  - Tamaño: debe estar en lista permitida (A4, A5, Letter, Personalizado)
+  - Personalizado: ancho 100-300mm, alto 100-400mm
+  - Orientación: portrait o landscape
+  - Márgenes: valores 5-50mm cada uno
+  - Recibos por página: 1, 2, 3, 4, 6 u 8
+  - Layout: vertical o grilla
+  - Espaciado: valores 5-20mm cada uno
 
 **Backend:**
-- Validar estructura JSON de bloques
+- Validar estructura JSON de bloques (incluyendo bloque_pageconfig)
 - No permitir template activo sin bloques requeridos
 - Usuario debe ser admin
 - Validar referencias de usuario_id
+- Validar bloque_pageconfig:
+  - Si tamaño = "Personalizado", validar ancho_custom y alto_custom
+  - Validar que margenes suma no exceda dimensiones disponibles
+  - Validar que layout "grilla" solo se use con 4+ recibos por página
 
 ### 5.2 Restricciones
 
@@ -775,7 +903,7 @@ function renderTemplate(template, persona, recibo) {
 
 **Upgrade:**
 ```sql
--- Crear nueva tabla con estructura simplificada
+-- Crear nueva tabla con estructura simplificada + página config
 CREATE TABLE IF NOT EXISTS recibo_templates_v2 (
   id CHAR(36) PRIMARY KEY,
   nombre VARCHAR(100) NOT NULL,
@@ -784,6 +912,7 @@ CREATE TABLE IF NOT EXISTS recibo_templates_v2 (
   bloque_afiliado JSON NOT NULL,
   bloque_detalles JSON NOT NULL,
   bloque_pie JSON NOT NULL,
+  bloque_pageconfig JSON NOT NULL,
   activo BOOLEAN DEFAULT FALSE,
   usuario_id INT,
   created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
@@ -801,6 +930,7 @@ INSERT INTO recibo_templates_v2 VALUES (
   '{"filas":[...],...}',
   '{"template_preset":"simple",...}',
   '{"aclaracion":"","texto_legal":"",...}',
+  '{"tamaño":"A4","orientacion":"portrait","margenes":{"superior":10,"derecho":10,"inferior":10,"izquierdo":10},"recibos_por_pagina":1,"layout":"vertical","espaciado":{"gap_vertical":5,"gap_horizontal":5}}',
   TRUE,  -- Activo por defecto
   1,
   NOW(),
