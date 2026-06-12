@@ -63,6 +63,16 @@ exports.getById = async (req, res, next) => {
       });
     }
 
+    // Inicializar bloque_positions con valores por defecto si no existen
+    if (!template.bloque_positions) {
+      template.bloque_positions = {
+        encabezado: { x: 10, y: 10, width: 190, height: 50 },
+        afiliado: { x: 10, y: 65, width: 190, height: 40 },
+        detalles: { x: 10, y: 110, width: 190, height: 60 },
+        pie: { x: 10, y: 175, width: 190, height: 30 }
+      };
+    }
+
     return res.status(200).json({
       success: true,
       data: template
