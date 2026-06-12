@@ -273,7 +273,141 @@ const useTemplateStore = create((set) => ({
 
 ---
 
-## 2.2 Gestión de Estado, Concurrencia y Persistencia
+## 2.2 Validación de Contenido y Límites
+
+### 6: Obligatoriedad de Bloques 1-4
+
+**Decisión:** Todos los Bloques 1-4 son OPCIONALES. Template puede estar vacío en contenido.
+
+**Flujo permitido:**
+```
+Usuario crea template vacío:
+- Bloque 1: vacío (sin logo, empresa, etc)
+- Bloque 2: vacío (sin filas de afiliado)
+- Bloque 3: vacío (sin tabla de detalles)
+- Bloque 4: vacío (sin pie/firma)
+- Bloque 5: LLENO (obligatorio)
+
+Resultado: Template válido (solo config de página, sin contenido)
+```
+
+**Validación:** Solo Bloque 5 es obligatorio. Si falta algún campo en Bloque 5 → error 400.
+
+**Use case:** Admin crea template plantilla base y lo completa después. Flexible.
+
+### 8: Límites de Caracteres - Sin Restricción
+
+**Decisión:** NO hay límites máximos de caracteres. Aceptar cualquier longitud.
+
+**Campos afectados:**
+- Aclaración (Bloque 4): sin límite
+- Texto legal (Bloque 4): sin límite
+- Dirección (Bloque 1): sin límite
+- Teléfono (Bloque 1): sin límite
+- Email (Bloque 1): sin límite
+- Sitio web (Bloque 1): sin límite
+- Nombre empresa (Bloque 1): sin límite
+- Etiquetas de filas (Bloque 2): sin límite
+- Descripciones en tabla (Bloque 3): sin límite
+
+**Validación:** Solo validar formato (URL, email) si aplica, no longitud.
+
+**Fallback:** Si contenido es muy largo, PDF puede truncar o romper líneas (no validar en backend).
+
+### 1: Límites de Placeholders - Sin Restricción
+
+**Decisión:** Sin límites. User puede insertar múltiples placeholders en un campo.
+
+**Ejemplos permitidos:**
+```
+"{{numero_afiliado}} - {{titular_nombre}} {{titular_apellido}}"
+"Empresa: {{empresa_nombre}} - Teléfono: {{empresa_telefono}} - Email: {{empresa_email}}"
+"{{cuota_social}} + {{arancel_por_servicio}} = {{valor_cuota}}"
+```
+
+**Sin restricción de:**
+- Cantidad de placeholders por campo
+- Longitud total del campo
+- Mezcla de placeholders y texto
+
+**Validación:** Solo validar que placeholders existan en lista autorizada (no permitir {{campo_inventado}}).
+
+### 4: Error Cargando Dropdown de Afiliados
+
+**Decisión:** Graceful degradation a datos ficticios. Toast rojo informativo.
+
+**Flujo:**
+```
+1. Frontend intenta cargar GET /api/admin/recibos/afiliados
+2. API falla (500, timeout, network error)
+3. Mostrar Toast: "⚠️ Error cargando afiliados. Usando datos de ejemplo."
+4. Dropdown deshabilitar (grisado) con texto: "No disponible"
+5. Preview se muestra con datos ficticios automáticamente
+6. Usuario puede generar PDF igual (con ficticios)
+```
+
+**Código (Frontend):**
+```javascript
+try {
+  const afiliados = await fetchAfiliados();
+  setAfiliados(afiliados);
+} catch (error) {
+  showToast("⚠️ Error cargando afiliados. Usando datos de ejemplo.", "warning");
+  setAfiliados([]);  // empty list
+  setUsarFicticios(true);  // auto fallback
+}
+```
+
+**Sin bloqueo:** Preview y generación de PDF funcionan normalmente con ficticios.
+
+### 5: Recalculación de Layout Grilla - Automática con Debounce
+
+**Decisión:** Preview se recalcula automáticamente cuando user cambia Bloque 5.
+
+**Flujo:**
+```
+1. User abre Bloque 5
+2. Cambia "recibos_por_página" de 1 a 6
+3. Cambia "grilla_columnas" a 2
+4. Sistema calcula: filas = ceil(6 / 2) = 3
+5. Debounce 300ms
+6. Preview recalcula grilla 2×3 automáticamente
+```
+
+**Algoritmo:**
+```javascript
+const calculateGridLayout = (recibos_por_pagina, grilla_columnas) => {
+  if (layout === 'vertical') {
+    return { columnas: 1, filas: recibos_por_pagina };
+  }
+  if (layout === 'grilla') {
+    const filas = Math.ceil(recibos_por_pagina / grilla_columnas);
+    return { columnas: grilla_columnas, filas };
+  }
+};
+
+// Debounce 300ms en Zustand store
+const updatePageConfig = debounce((updates) => {
+  const newLayout = calculateGridLayout(
+    updates.recibos_por_pagina,
+    updates.grilla_columnas
+  );
+  set((state) => ({
+    currentTemplate: {
+      ...state.currentTemplate,
+      bloque_pageconfig: { ...state.currentTemplate.bloque_pageconfig, ...updates }
+    }
+  }));
+}, 300);
+```
+
+**Preview:** Muestra grilla recalculada al instante (después de debounce 300ms).
+
+**No requiere:** Botón [Aplicar] o [Confirmar]. Completamente automático.
+
+---
+
+## 2.3 Gestión de Estado, Concurrencia y Persistencia
 
 ### F11: Rate Limit - Solo PDF, Sin Límite General
 
@@ -1613,6 +1747,36 @@ const { currentTemplate, previewPersonaId } = useTemplateStore();
 - ✅ Retry-After header indica segundos para reintentar
 - ✅ Sin límite en otros endpoints de templates
 
+#### AC15: Bloques 1-4 Opcionales
+- ✅ Template puede estar vacío en Bloques 1-4
+- ✅ Solo Bloque 5 es obligatorio (configuración página)
+- ✅ Permite crear plantillas base y completar después
+- ✅ Sin validación de contenido mínimo en 1-4
+
+#### AC16: Sin Límites de Caracteres
+- ✅ Todos los campos de texto: sin máximo de caracteres
+- ✅ Aclaración, texto legal, dirección, teléfono, email, sitio: sin restricción
+- ✅ No validar longitud, solo formato si aplica (URL, email)
+- ✅ Si muy largo en PDF: truncar/romper líneas, no error
+
+#### AC17: Placeholders Sin Límite
+- ✅ Usuario puede insertar múltiples placeholders por campo
+- ✅ Sin límite de cantidad (3, 5, 10, etc)
+- ✅ Sin límite de longitud total del campo
+- ✅ Validación: solo que placeholders existan en lista autorizada
+
+#### AC18: Error Cargando Afiliados - Graceful Degradation
+- ✅ API falla al cargar dropdown → Toast amarillo: "Error cargando afiliados..."
+- ✅ Dropdown deshabilitar (grisado)
+- ✅ Auto-fallback a datos ficticios
+- ✅ Preview y PDF funcionan normalmente (sin bloqueo)
+
+#### AC19: Recalculación Grilla - Automática 300ms
+- ✅ Change Bloque 5 (recibos_por_página, grilla_columnas) → preview recalcula
+- ✅ Algoritmo: filas = ceil(recibos / columnas)
+- ✅ Debounce 300ms en Zustand
+- ✅ Sin botón [Aplicar], completamente automático
+
 ### 5.6 Manejo de Errores y Edge Cases
 
 #### Error: Bloque 5 Obligatorio
@@ -1770,6 +1934,80 @@ Resultado:
 - Usuario debe hacer [Guardar] explícitamente para persistir
 
 Key: PDF nunca auto-guarda. Usuario es responsable de guardar.
+```
+
+#### Escenario: Template Vacío (sin contenido 1-4)
+```
+Escenario:
+- Usuario crea template
+- Bloque 1: vacío (sin logo, empresa)
+- Bloque 2: vacío (sin filas)
+- Bloque 3: vacío (sin tabla)
+- Bloque 4: vacío (sin pie)
+- Bloque 5: LLENO (A4, portrait, márgenes, etc)
+
+Comportamiento: Permitido. Template válido.
+- Guardar: OK, no hay error
+- Generar PDF: OK, PDF vacío (solo márgenes de página)
+- Usar caso: Plantilla base para llenar después
+```
+
+#### Error: API Falla Cargando Afiliados
+```
+Escenario:
+1. Usuario abre editor/preview
+2. Sistema intenta GET /api/admin/recibos/afiliados
+3. API falla (500, timeout, conexión perdida)
+
+Flujo:
+- Toast AMARILLO: "⚠️ Error cargando afiliados. Usando datos de ejemplo."
+- Dropdown grisado: "No disponible"
+- Preview muestra datos ficticios automáticamente
+- Usuario PUEDE generar PDF igual (sin error bloqueante)
+
+Resultado: Graceful degradation. Sistema funciona normalmente con ficticios.
+```
+
+#### Escenario: Recalculación Grilla Automática
+```
+Escenario:
+1. User abre Bloque 5
+2. Visto: "1 recibo por página" (layout vertical)
+3. Preview muestra: 1 recibo centrado
+
+User cambia:
+- "Recibos por página": 6
+- "Layout": Grilla
+- "Columnas": 2
+
+Flujo (debounce 300ms):
+- Sistema calcula: filas = ceil(6 / 2) = 3
+- Preview se recalcula automáticamente
+- Ahora muestra: grilla 2×3 (6 recibos distribuidos)
+- Sin necesidad de click [Aplicar]
+
+Cálculos en preview (debounce):
+- Ancho recibo = (210mm - 10*2 - gap_horiz*1) / 2
+- Alto recibo = (297mm - 10*2 - gap_vert*2) / 3
+- Resultado: 6 recibos en grilla, márgenes y gaps aplicados
+```
+
+#### Escenario: Múltiples Placeholders en Un Campo
+```
+Escenario:
+Usuario define en Bloque 2:
+- Etiqueta de fila: "{{numero_afiliado}} - {{titular_nombre}} {{titular_apellido}}"
+
+Resultado:
+- Múltiples placeholders en un mismo campo: permitido
+- Sin límite de cantidad
+- Sin límite de longitud total
+- Validación: que {{numero_afiliado}}, {{titular_nombre}}, {{titular_apellido}} existan
+
+Preview muestra:
+- "0001 - Juan Pérez"
+
+Sin restricción. User responsable de no crear campos muy largos que rompan layout.
 ```
 
 ---
