@@ -7,7 +7,7 @@ import useTemplateStore from '../../../hooks/useTemplateStore';
 const GenericBlock = ({ block, reciboSize, isSelected, onSelect, onUpdate, onDelete }) => {
   const [isEditingContent, setIsEditingContent] = useState(false);
 
-  // Calcular límites máximos basado en el tamaño disponible del recibo
+  // Límites máximos basados en el tamaño del recibo (no en la posición)
   const limits = useMemo(() => {
     if (!reciboSize) {
       return {
@@ -16,14 +16,11 @@ const GenericBlock = ({ block, reciboSize, isSelected, onSelect, onUpdate, onDel
       };
     }
 
-    const maxWidth = reciboSize.width - (block.x - reciboSize.x);
-    const maxHeight = reciboSize.height - (block.y - reciboSize.y);
-
     return {
-      maxWidth: Math.max(maxWidth, 30),
-      maxHeight: Math.max(maxHeight, 20)
+      maxWidth: reciboSize.width,
+      maxHeight: reciboSize.height
     };
-  }, [reciboSize, block]);
+  }, [reciboSize]);
 
   const handleDragStop = (e, d) => {
     let x = d.x;
