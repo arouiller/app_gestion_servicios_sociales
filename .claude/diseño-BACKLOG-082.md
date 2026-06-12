@@ -37,6 +37,242 @@ Interfaz visual especializada donde administradores diseñan templates mediante:
 
 ---
 
+## 2.1 Especificaciones Detalladas Críticas
+
+### F1: Estructura de Datos Ficticios
+
+**Cuando:** No hay afiliados reales en sistema, usuario abre preview o genera PDF de prueba.
+
+**Estructura fija predefinida:**
+```json
+{
+  "persona_id": null,
+  "numero_afiliado": "0001",
+  "tipo_documento": "DNI",
+  "numero_documento": "12345678",
+  "titular_apellido": "Pérez",
+  "titular_nombre": "Juan",
+  "fecha_nacimiento": "1985-05-15",
+  "obra_social_nombre": "OSDE",
+  "tipo_plan_nombre": "Plan Superior",
+  "tipo_de_grupo_nombre": "Familia",
+  "domicilio": "Calle 123, Piso 4",
+  "localidad_nombre": "Buenos Aires",
+  "fecha_cobertura": "2024-01-01",
+  "zona_codigo": "001",
+  
+  "valor_cuota": 250.50,
+  "cuota_social": 150.00,
+  "arancel_por_servicio": 100.50,
+  "numero_recibo": "REC-20260612-001",
+  "periodo": "2026-06",
+  "fecha_generacion": "2026-06-12 14:30:00"
+}
+```
+
+**UI Indicator:** "Usando datos de ejemplo (no hay afiliados reales)" - badge gris en preview
+
+### F2: Respuesta PDF - Siempre Binario
+
+**Decisión:** Endpoint `/generar-pdf` SIEMPRE responde con binario descargable.
+
+**No hay respuesta base64.** Simplificar implementación.
+
+**Response:**
+```
+HTTP/1.1 200 OK
+Content-Type: application/pdf
+Content-Disposition: attachment; filename="recibo_YYYYMMDD_HHMMSS.pdf"
+Content-Length: 45678
+
+[Binary PDF...]
+```
+
+**Frontend:** Usa `<a download>` o `window.open()` para manejar descarga.
+
+### F3: Bloque 5 - Inline Colapsible (Sin Modal)
+
+**Decisión:** Bloque 5 se edita inline, NO requiere modal separado como Bloques 1-4.
+
+**UI:**
+- `[▼ Bloque 5: Configuración de Página]` (expandido por defecto)
+- Campos visibles: tamaño, orientación, márgenes, recibos/página, layout, espaciado
+- Sin botón `[Editar]` adicional
+- `[▲ Bloque 5...]` cuando colapsado
+
+### F4: Layout Grilla - Usuario Define Columnas y Filas
+
+**Decisión:** No es algoritmo automático. Usuario define explícitamente.
+
+**Nuevo campo en bloque_pageconfig:**
+```json
+{
+  "recibos_por_pagina": 6,
+  "layout": "grilla",
+  "grilla_columnas": 2,      // ← NUEVO: user define columnas
+  "grilla_filas": 3,          // ← NUEVO: auto-calculado como ceil(recibos / columnas)
+  "espaciado": { "gap_vertical": 5, "gap_horizontal": 5 }
+}
+```
+
+**Algoritmo:**
+- User selecciona: 6 recibos/página
+- User selecciona: layout "grilla"
+- User selecciona: "2 columnas"
+- Sistema calcula: filas = ceil(6 / 2) = 3 filas
+- Resultado: grilla 2×3
+
+**Selector UI:**
+```
+Recibos por página: [1 | 2 | 3 | 4 | 6 | 8]
+Layout: [Vertical] [Grilla]
+
+Si Grilla:
+  Columnas: [1] [2] [3] [4]  (máximo = recibos_por_página)
+```
+
+### F5: Drag & Drop - React Beautiful DnD
+
+**Librería:** `react-beautiful-dnd`
+
+**Instalación:**
+```bash
+npm install react-beautiful-dnd
+npm install --save-dev @types/react-beautiful-dnd  # si TypeScript
+```
+
+**Características:**
+- ✅ Keyboard support (Tab, Enter, Space)
+- ✅ Mouse + touch
+- ⚠️ NO mobile (touch no completamente soportado en la versión stable; alternativa: dnd-kit si necesita mobile)
+- ✅ Reordena filas automáticamente
+- ✅ Persistencia: cambios se guardan al click [Guardar] template (manual, no auto-save)
+
+**Implementación en BloqueAfiliado.jsx:**
+```jsx
+import { DragDropContext, Droppable, Draggable } from 'react-beautiful-dnd';
+
+// Flujo: usuario reordena → onChange actualiza state → preview refleja cambios (debounce 300ms)
+```
+
+### F6: Validación Tamaño Personalizado - Error Bloqueante
+
+**Decisión:** Error 400 bloqueante. Input rechaza valores fuera de rango.
+
+**Rango:** 100-300mm ancho, 100-400mm alto
+
+**Validación Frontend:**
+```jsx
+if (ancho_custom < 100 || ancho_custom > 300) {
+  return "Ancho debe estar entre 100-300mm";  // Input deshabilitado hasta corregir
+}
+if (alto_custom < 100 || alto_custom > 400) {
+  return "Alto debe estar entre 100-400mm";
+}
+```
+
+**Validación Backend:** Same, error 400
+
+### F7: Auditoria - Solo Creador, Sin Edit Trail
+
+**Decisión:** Mantener solo `created_by` y `created_at`. NO agregar `modificado_por` ni historial.
+
+**Razón:** Simplificar, versión 1.0 no requiere auditoria completa.
+
+**Tabla:**
+```sql
+usuario_id INT  -- Creador (no cambia)
+created_at TIMESTAMP
+updated_at TIMESTAMP  -- Último cambio, pero SIN quién lo hizo
+```
+
+### F8: Control de Acceso - Todos Ven/Editan Todos
+
+**Decisión:** Transparencia total. Todos los admins ven y editan todos los templates.
+
+**Validación:** Solo `requireAdmin` middleware. NO restricciones de creador.
+
+**Endpoint:** `GET /api/admin/recibos/templates` retorna ALL templates (sin filter por usuario_id)
+
+### F9: Validación Márgenes - Fórmula Exacta
+
+**Decisión:** Ambas dimensiones. Validar verticales Y horizontales.
+
+**Fórmula:**
+```
+(margen_superior + margen_inferior) ≤ alto_pagina
+(margen_izquierdo + margen_derecho) ≤ ancho_pagina
+```
+
+**Ejemplo A4 (210×297mm):**
+```
+210mm - 10mm (izq) - 10mm (der) = 190mm disponible horizontalmente  ✓
+297mm - 10mm (sup) - 10mm (inf) = 277mm disponible verticalmente     ✓
+```
+
+**Error si viola:**
+```json
+{
+  "success": false,
+  "message": "Márgenes inválidos: suma de izquierdo+derecho (30mm) supera ancho disponible (210mm). Máximo permitido: 30mm."
+}
+```
+
+### F10: Placeholder No Encontrado - Dejar Literal
+
+**Decisión:** Si `{{campo_inexistente}}` no existe en datos, dejarlo literal en PDF.
+
+**Comportamiento:**
+- Usuario define: "Valor: {{monto_desconocido}}"
+- Datos no tienen `monto_desconocido`
+- PDF muestra: "Valor: {{monto_desconocido}}"
+
+**Razón:** Visible en PDF = fácil debug. No silenciar errores.
+
+### F12: Preview Auto-Update - Zustand Store
+
+**Arquitectura:** Estado compartido con Zustand.
+
+**Store structure:**
+```javascript
+// hooks/useTemplateStore.js
+import create from 'zustand';
+
+const useTemplateStore = create((set) => ({
+  currentTemplate: { /* full template JSON */ },
+  editingBlock: null,
+  updateTemplate: (updates) => set((state) => ({
+    currentTemplate: { ...state.currentTemplate, ...updates }
+  })),
+  updateBloque: (bloqueKey, updates) => set((state) => ({
+    currentTemplate: {
+      ...state.currentTemplate,
+      [bloqueKey]: { ...state.currentTemplate[bloqueKey], ...updates }
+    }
+  }))
+}));
+```
+
+**Flow:**
+1. TemplateEditor → `updateBloque('bloque_encabezado', { empresa_nombre: 'Nueva' })`
+2. Zustand store actualiza
+3. TemplatePreview suscrito a store, re-renderiza automáticamente
+4. Debounce 300ms para preview en vivo (no cada keystroke)
+
+### F13: CSS - Mismo en Preview y PDF
+
+**Decisión:** Mismo CSS en ambos (best-effort, algunas limitaciones en PDF).
+
+**Limitaciones Puppeteer a documentar:**
+- ✅ Soporta: color, font, margin, padding, border, background-color, text-align
+- ⚠️ Limitado: box-shadow (simple sí, complejo no), gradients (básicos)
+- ❌ No soporta: filter, transform, animation, @keyframes
+- ⚠️ Cuidado: media queries no funcionan en PDF headless
+
+**Documento a agregar:** "CSS Restrictions for PDF"
+
+---
+
 ## 3. Especificación Funcional
 
 ### 3.1 Acceso y Navegación
@@ -961,6 +1197,13 @@ frontend/src/services/
 ├── templateService.js                # API: POST/PUT/GET templates
 ├── previewService.js                 # API: preview HTML, PDF preview
 └── afiliados.js                      # API: listar afiliados para selector
+
+frontend/src/hooks/
+└── useTemplateStore.js               # Zustand store para estado compartido
+                                       # (template, editingBlock, updateTemplate)
+
+frontend/src/utils/
+└── ficticiousData.js                 # Datos ficticios predefinidos para preview
 ```
 
 **Detalles de componentes clave:**
@@ -975,38 +1218,86 @@ frontend/src/services/
   - Spinner durante generación
   - Error handling con reintentos
 
-### 4.4 Estado del Cliente (Zustand o Context)
+### 4.4 Estado del Cliente - Zustand Store
 
-**Estructura recomendada (useTemplateEditor hook):**
+**Librería:** Zustand (estado compartido entre Editor y Preview)
+
+**Instalación:**
+```bash
+npm install zustand
+```
+
+**Store (hooks/useTemplateStore.js):**
 
 ```javascript
-{
+import create from 'zustand';
+
+const useTemplateStore = create((set) => ({
   // Template actual
   currentTemplate: {
-    id: "uuid" | null,
-    nombre: "Recibos Estándar",
-    activo: false,
+    id: null,
+    nombre: "",
+    descripcion: "",
     bloque_encabezado: { /* ... */ },
     bloque_afiliado: { /* ... */ },
     bloque_detalles: { /* ... */ },
-    bloque_pie: { /* ... */ }
+    bloque_pie: { /* ... */ },
+    bloque_pageconfig: { /* ... */ },
+    activo: false,
+    usuario_id: null,
+    created_at: null,
+    updated_at: null
   },
   
   // Estado de edición
-  editingBlock: "encabezado" | "afiliado" | "detalles" | "pie" | null,
   isDirty: false,
   isSaving: false,
   
   // Preview
-  previewAfiliado: null,  // Persona seleccionada para preview
-  previewHtml: "",        // HTML renderizado
+  previewPersonaId: null,     // Afiliado seleccionado
+  usarFicticios: false,       // Si no hay afiliados
   
   // Listado
   templates: [],
   loading: false,
-  error: null
-}
+  error: null,
+  
+  // Actions
+  setCurrentTemplate: (template) => set({ currentTemplate: template }),
+  
+  updateBloque: (bloqueKey, updates) => set((state) => ({
+    currentTemplate: {
+      ...state.currentTemplate,
+      [bloqueKey]: { ...state.currentTemplate[bloqueKey], ...updates }
+    },
+    isDirty: true
+  })),
+  
+  setPreviewPersona: (personaId) => set({ previewPersonaId: personaId }),
+  
+  setTemplates: (templates) => set({ templates }),
+  setLoading: (loading) => set({ loading }),
+  setError: (error) => set({ error })
+}));
+
+export default useTemplateStore;
 ```
+
+**Uso en componentes:**
+
+```jsx
+// En TemplateEditor.jsx
+const { currentTemplate, updateBloque, isDirty } = useTemplateStore();
+
+// En TemplatePreview.jsx
+const { currentTemplate, previewPersonaId } = useTemplateStore();
+```
+
+**Flujo:**
+1. TemplateEditor modifica via `updateBloque()` → store actualiza
+2. Zustand notifica suscriptores automáticamente
+3. TemplatePreview re-renderiza con `currentTemplate` nuevo
+4. Debounce 300ms en preview (para evitar re-renderizar cada keystroke)
 
 ---
 
@@ -1023,11 +1314,15 @@ frontend/src/services/
 - Placeholders: validar que existan en lista autorizada
 - Página config:
   - Tamaño: debe estar en lista permitida (A4, A5, Letter, Personalizado)
-  - Personalizado: ancho 100-300mm, alto 100-400mm
+  - Personalizado: ancho 100-300mm, alto 100-400mm (error bloqueante si fuera de rango)
   - Orientación: portrait o landscape
   - Márgenes: valores 5-50mm cada uno
+    * Validación: (margen_sup + margen_inf) ≤ alto_página
+    * Validación: (margen_izq + margen_der) ≤ ancho_página
+    * Error 400 si viola: "Márgenes exceden dimensiones"
   - Recibos por página: 1, 2, 3, 4, 6 u 8
   - Layout: vertical o grilla
+    * Si grilla: usuario define columnas (1-4), sistema calcula filas
   - Espaciado: valores 5-20mm cada uno
 - Layout de bloques (todos los bloques):
   - Ancho: "100%" | "50%" | custom (validar formato: número + unidad)
@@ -1442,6 +1737,60 @@ En el editor del template:
 - ✅ No requiere guardar template (útil en drafts)
 - ✅ Rápido: 2-5 segundos por PDF
 - ✅ Personalizable: usuario elige qué afiliado usar
+
+### 6.6 Restricciones y Soporte CSS (Preview vs PDF)
+
+**Mismo CSS en ambos (best-effort)** — browser preview y PDF Puppeteer usan mismo stylesheet.
+
+**Propiedades CSS soportadas:**
+
+✅ **Completamente soportadas en PDF:**
+- `color`, `background-color`
+- `font-family`, `font-size`, `font-weight`, `font-style`
+- `margin`, `padding`, `border` (simples)
+- `text-align` (left, center, right, justify)
+- `width`, `height`
+- `line-height`
+- `display: block | inline | inline-block` (básico)
+- `table`, `thead`, `tbody`, `tr`, `td` (tablas)
+
+⚠️ **Limitadamente soportadas:**
+- `box-shadow`: solo sombras simples (sin blur complejos)
+- `border-radius`: sí funciona, pero evitar combinaciones complejas
+- `gradient`: solo lineales simples; no radiales
+- `transform`: NO funciona en PDF (evitar)
+- `opacity`: sí, pero puede afectar rendering
+
+❌ **NO soportadas en PDF (evitar):**
+- `animation`, `@keyframes`, `transition`
+- `filter` (blur, brightness, etc)
+- `clip-path`, `mask`
+- `@media` queries (Puppeteer headless ignora)
+- CSS variables `var(--color)` (limitado, no garantizado)
+- Pseudoelementos `:before`, `:after` (limitado)
+
+**Advertencia UI:** Si usuario utiliza estilos no soportados (transform, animation), UI muestra badge amarillo "⚠️ Este estilo podría no verse igual en PDF"
+
+**Ejemplo válido:**
+```css
+.bloque-encabezado {
+  background-color: #f0f0f0;
+  font-family: Arial, sans-serif;
+  font-size: 14px;
+  padding: 10px;
+  border-bottom: 1px solid #999;
+  text-align: center;
+}
+```
+
+**Ejemplo problemático (evitar):**
+```css
+.bloque-detalle {
+  box-shadow: 0 10px 30px rgba(0,0,0,0.3);  /* ⚠️ muy complejo */
+  transform: rotate(2deg);                   /* ❌ No funciona en PDF */
+  animation: fadeIn 1s;                      /* ❌ No funciona en PDF */
+}
+```
 
 ---
 
