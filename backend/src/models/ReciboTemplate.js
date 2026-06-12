@@ -23,23 +23,58 @@ const ReciboTemplate = sequelize.define('ReciboTemplate', {
   },
   bloque_encabezado: {
     type: DataTypes.JSON,
+    get() {
+      const value = this.getDataValue('bloque_encabezado');
+      return typeof value === 'string' ? JSON.parse(value) : value;
+    },
+    set(value) {
+      this.setDataValue('bloque_encabezado', value);
+    },
     comment: 'Bloque 1: Logo, empresa, contacto'
   },
   bloque_afiliado: {
     type: DataTypes.JSON,
+    get() {
+      const value = this.getDataValue('bloque_afiliado');
+      return typeof value === 'string' ? JSON.parse(value) : value;
+    },
+    set(value) {
+      this.setDataValue('bloque_afiliado', value);
+    },
     comment: 'Bloque 2: Datos del afiliado (filas editables)'
   },
   bloque_detalles: {
     type: DataTypes.JSON,
+    get() {
+      const value = this.getDataValue('bloque_detalles');
+      return typeof value === 'string' ? JSON.parse(value) : value;
+    },
+    set(value) {
+      this.setDataValue('bloque_detalles', value);
+    },
     comment: 'Bloque 3: Tabla de detalles (cuota, arancel, total)'
   },
   bloque_pie: {
     type: DataTypes.JSON,
+    get() {
+      const value = this.getDataValue('bloque_pie');
+      return typeof value === 'string' ? JSON.parse(value) : value;
+    },
+    set(value) {
+      this.setDataValue('bloque_pie', value);
+    },
     comment: 'Bloque 4: Pie de página, firma, aclaraciones'
   },
   bloque_pageconfig: {
     type: DataTypes.JSON,
     allowNull: false,
+    get() {
+      const value = this.getDataValue('bloque_pageconfig');
+      return typeof value === 'string' ? JSON.parse(value) : value;
+    },
+    set(value) {
+      this.setDataValue('bloque_pageconfig', value);
+    },
     validate: {
       notEmpty: { msg: 'Bloque 5 (Configuración de Página) es obligatorio' }
     },
@@ -52,6 +87,13 @@ const ReciboTemplate = sequelize.define('ReciboTemplate', {
       afiliado: { x: 10, y: 65, width: 190, height: 40 },
       detalles: { x: 10, y: 110, width: 190, height: 60 },
       pie: { x: 10, y: 175, width: 190, height: 30 }
+    },
+    get() {
+      const value = this.getDataValue('bloque_positions');
+      return typeof value === 'string' ? JSON.parse(value) : value;
+    },
+    set(value) {
+      this.setDataValue('bloque_positions', value);
     },
     comment: 'Posición (x, y) y tamaño (width, height) en mm de cada bloque'
   },
