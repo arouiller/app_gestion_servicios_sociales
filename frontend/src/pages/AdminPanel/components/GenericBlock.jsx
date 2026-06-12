@@ -4,10 +4,12 @@ import ReactQuill from 'react-quill';
 import 'react-quill/dist/quill.snow.css';
 import useTemplateStore from '../../../hooks/useTemplateStore';
 
+const MM_TO_PX = 3.7795; // Conversión: 1mm = 96/25.4 px a 96 DPI
+
 const GenericBlock = ({ block, reciboSize, isSelected, onSelect, onUpdate, onDelete }) => {
   const [isEditingContent, setIsEditingContent] = useState(false);
 
-  // Límites máximos basados en el tamaño del recibo (no en la posición)
+  // Límites máximos basados en el tamaño del recibo (en píxeles)
   const limits = useMemo(() => {
     if (!reciboSize) {
       return {
@@ -17,14 +19,15 @@ const GenericBlock = ({ block, reciboSize, isSelected, onSelect, onUpdate, onDel
     }
 
     return {
-      maxWidth: reciboSize.width,
-      maxHeight: reciboSize.height
+      maxWidth: reciboSize.width * MM_TO_PX,
+      maxHeight: reciboSize.height * MM_TO_PX
     };
   }, [reciboSize]);
 
   const handleDragStop = (e, d) => {
-    let x = d.x;
-    let y = d.y;
+    // Convertir píxeles a mm
+    let x = d.x / MM_TO_PX;
+    let y = d.y / MM_TO_PX;
 
     if (reciboSize) {
       x = Math.max(x, reciboSize.x);
@@ -33,14 +36,15 @@ const GenericBlock = ({ block, reciboSize, isSelected, onSelect, onUpdate, onDel
       y = Math.min(y, reciboSize.y + reciboSize.height - block.height);
     }
 
-    onUpdate({ ...block, x, y });
+    onUpdate({ ...block, x: Math.round(x * 100) / 100, y: Math.round(y * 100) / 100 });
   };
 
   const handleResizeStop = (e, direction, ref, delta, position) => {
-    let x = position.x;
-    let y = position.y;
-    let width = block.width + delta.width;
-    let height = block.height + delta.height;
+    // Convertir píxeles a mm
+    let x = position.x / MM_TO_PX;
+    let y = position.y / MM_TO_PX;
+    let width = block.width + (delta.width / MM_TO_PX);
+    let height = block.height + (delta.height / MM_TO_PX);
 
     if (reciboSize) {
       x = Math.max(x, reciboSize.x);
@@ -57,10 +61,10 @@ const GenericBlock = ({ block, reciboSize, isSelected, onSelect, onUpdate, onDel
 
     onUpdate({
       ...block,
-      x,
-      y,
-      width: Math.max(30, width),
-      height: Math.max(20, height)
+      x: Math.round(x * 100) / 100,
+      y: Math.round(y * 100) / 100,
+      width: Math.max(30, Math.round(width * 100) / 100),
+      height: Math.max(20, Math.round(height * 100) / 100)
     });
   };
 
@@ -72,15 +76,15 @@ const GenericBlock = ({ block, reciboSize, isSelected, onSelect, onUpdate, onDel
     <div>
       <Rnd
         default={{
-          x: block.x,
-          y: block.y,
-          width: block.width,
-          height: block.height
+          x: block.x * MM_TO_PX,
+          y: block.y * MM_TO_PX,
+          width: block.width * MM_TO_PX,
+          height: block.height * MM_TO_PX
         }}
         onDragStop={handleDragStop}
         onResizeStop={handleResizeStop}
-        minWidth={30}
-        minHeight={20}
+        minWidth={30 * MM_TO_PX}
+        minHeight={20 * MM_TO_PX}
         maxWidth={limits.maxWidth}
         maxHeight={limits.maxHeight}
         disableDragging={false}
