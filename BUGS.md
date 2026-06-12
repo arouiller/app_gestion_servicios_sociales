@@ -25,15 +25,13 @@ Un bug solo puede pasar a estado solucionado, Descartado a traves del pedido exp
 
 ## Registros Activos (En Progress + Reportados)
 
-| ID | Severidad | Fase | Descripción | Reportado | Estado |
-|----|-----------|------|-------------|-----------|--------|
-| BUG-052 | 🔴 CRÍTICO | Recibos PDF | Generación de PDF: Código HTML/CSS de plantilla aparece en primeras páginas | 2026-05-21 | 📋 Registrado |
+No hay bugs activos.
 
 ## Registros Recientemente Cerrados (Últimos 7 días)
 
-| ID | Severidad | Fase | Descripción | Reportado | Solucionado | Commit |
-|----|-----------|------|-------------|-----------|-------------|--------|
-| BUG-052 | 🔴 CRÍTICO | Recibos PDF | Generación de PDF: Código HTML/CSS aparece literal en primeras páginas | 2026-05-21 | - | - |
+| ID | Severidad | Fase | Descripción | Reportado | Descartado | Motivo |
+|----|-----------|------|-------------|-----------|------------|--------|
+| BUG-052 | 🔴 CRÍTICO | Recibos PDF | Generación de PDF: Código HTML/CSS aparece literal en primeras páginas | 2026-05-21 | 2026-06-12 | Funcionalidad del Diseñador de Recibos eliminada (BACKLOG-081) |
 | BUG-051 | 🔴 CRÍTICO | BACKLOG-074 | Selector de zona queda vacío al seleccionar opción (display personalizado falla) | 2026-05-15 | 2026-05-15 | `63c1aad` (BACKLOG-074) |
 | BUG-050 | 🟢 MENOR | HistorialAumentosModal | Porcentajes negativos mostrados como "+-X.XX %" en lugar de "-X.XX %" | 2026-05-15 | 2026-05-15 | `a651354` (BACKLOG-071) |
 | BUG-049 | 🟡 IMPORTANTE | UI | Botón de colapsar menú se mueve con el scroll (debe ser fixed) | 2026-05-15 | 2026-05-15 | `7d82852` |
@@ -3754,16 +3752,23 @@ doc.text(element.content, pageMargin, y);  // Imprime literalmente
 
 Resultado: El contenido completo del HTML (incluyendo `<style>` y tags) se imprime como texto plano.
 
-**Estado:** 📋 Registrado (2026-05-21)
+**Estado:** 🚫 Descartado (2026-06-12)
 
-**Diseño de solución:**
-Ver archivo [./diseño-BUG-052.md](./diseño-BUG-052.md)
+**Motivo del Descarte:**
+La funcionalidad del Diseñador de Recibos (BACKLOG-081) fue completamente eliminada del proyecto. Este bug era específico del flujo de generación de PDF desde templates personalizados del editor visual. Con la eliminación de:
+- Componente `ReciboDesigner` y `ReciboDesignerPage`
+- Modelo `ReciboTemplate` en BD
+- Controllers y routes de administración de templates
+- Tabla `recibo_templates` (migración 2.0.33)
 
-**Resumen de solución propuesta:**
-Reemplazar parser HTML manual con librería `html2pdf.js`:
-- Soporta CSS completo (flexbox, colores, borders)
-- Renderización idéntica a browser
-- Elimina ~200 líneas de código frágil
-- Escalable para templates futuros
+El bug se vuelve académico y no aplica al sistema actual.
+
+**Decisión:**
+El bug se marca como descartado porque la causa raíz (parser HTML manual para templates diseñados) fue eliminada junto con toda la funcionalidad del editor. La generación de recibos continúa funcionando (GenerarRecibosModal activo), pero sin personalización de templates visuales.
+
+**Commits relacionados:**
+- `26c6189` - refactor(frontend): remover diseñador de recibos
+- `e5ee255` - refactor(backend): remover diseñador de recibos
+- `f8aa050` - refactor(migrations): eliminar recibo_templates
 
 ---
