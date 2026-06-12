@@ -1,11 +1,12 @@
-import React, { useState, useEffect } from 'react';
-import templateService from '../../../services/templateService';
+import React, { useState, useEffect, useRef } from 'react';
+import html2pdf from 'html2pdf.js';
 import useTemplateStore from '../../../hooks/useTemplateStore';
 import AfililadoSelector from './AfililadoSelector';
 
 const TemplatePreview = () => {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
+  const previewRef = useRef(null);
 
   const currentTemplate = useTemplateStore((state) => state.currentTemplate);
   const previewAfiliado = useTemplateStore((state) => state.previewAfiliado);
@@ -24,33 +25,69 @@ const TemplatePreview = () => {
 
   const personaData = previewAfiliado || getDummyData();
 
-  const handleViewPdf = async () => {
+  const handleViewPdf = () => {
+    if (!previewRef.current) return;
+
     setLoading(true);
-    const result = await templateService.generatePdf(currentTemplate.id, null, true);
-    if (result.success) {
-      const url = window.URL.createObjectURL(new Blob([result.blob]));
-      window.open(url);
-    } else {
-      setError(result.message);
+    setError(null);
+
+    try {
+      const options = {
+        margin: 10,
+        filename: `recibo_${Date.now()}.pdf`,
+        image: { type: 'jpeg', quality: 0.98 },
+        html2canvas: { scale: 2 },
+        jsPDF: { orientation: 'portrait', unit: 'mm', format: 'a4' }
+      };
+
+      html2pdf()
+        .set(options)
+        .from(previewRef.current)
+        .outputPdf('dataurlstring')
+        .then((pdfDataUrl) => {
+          window.open(pdfDataUrl, '_blank');
+          setLoading(false);
+        })
+        .catch((err) => {
+          setError('Error generando PDF: ' + err.message);
+          setLoading(false);
+        });
+    } catch (err) {
+      setError('Error generando PDF: ' + err.message);
+      setLoading(false);
     }
-    setLoading(false);
   };
 
-  const handleDownloadPdf = async () => {
+  const handleDownloadPdf = () => {
+    if (!previewRef.current) return;
+
     setLoading(true);
-    const result = await templateService.generatePdf(currentTemplate.id, null, true);
-    if (result.success) {
-      const url = window.URL.createObjectURL(new Blob([result.blob]));
-      const link = document.createElement('a');
-      link.href = url;
-      link.setAttribute('download', `recibo_${Date.now()}.pdf`);
-      document.body.appendChild(link);
-      link.click();
-      link.parentNode.removeChild(link);
-    } else {
-      setError(result.message);
+    setError(null);
+
+    try {
+      const options = {
+        margin: 10,
+        filename: `recibo_${Date.now()}.pdf`,
+        image: { type: 'jpeg', quality: 0.98 },
+        html2canvas: { scale: 2 },
+        jsPDF: { orientation: 'portrait', unit: 'mm', format: 'a4' }
+      };
+
+      html2pdf()
+        .set(options)
+        .from(previewRef.current)
+        .save()
+        .then(() => {
+          setLoading(false);
+        })
+        .catch((err) => {
+          setError('Error descargando PDF: ' + err.message);
+          setLoading(false);
+        });
+    } catch (err) {
+      setError('Error descargando PDF: ' + err.message);
+      setLoading(false);
     }
-    setLoading(false);
   };
 
   return (
@@ -66,7 +103,7 @@ const TemplatePreview = () => {
         )}
       </div>
 
-      <div className="preview-content">
+      <div className="preview-content" ref={previewRef}>
         {currentTemplate.bloque_encabezado && (
           <div className="preview-section encabezado">
             {currentTemplate.bloque_encabezado.empresa_nombre && (
