@@ -97,6 +97,18 @@ const ReciboTemplate = sequelize.define('ReciboTemplate', {
     },
     comment: 'Posición (x, y) y tamaño (width, height) en mm de cada bloque'
   },
+  bloques: {
+    type: DataTypes.JSON,
+    defaultValue: [],
+    get() {
+      const value = this.getDataValue('bloques');
+      return typeof value === 'string' ? JSON.parse(value) : value;
+    },
+    set(value) {
+      this.setDataValue('bloques', value);
+    },
+    comment: 'Lista de bloques genéricos configurables por el usuario'
+  },
   activo: {
     type: DataTypes.BOOLEAN,
     defaultValue: false,

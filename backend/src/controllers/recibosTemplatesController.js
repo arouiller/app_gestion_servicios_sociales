@@ -179,6 +179,7 @@ exports.update = async (req, res, next) => {
     if (bloque_detalles !== undefined) template.bloque_detalles = bloque_detalles;
     if (bloque_pie !== undefined) template.bloque_pie = bloque_pie;
     if (bloque_pageconfig !== undefined) template.bloque_pageconfig = bloque_pageconfig;
+    if (req.body.bloques !== undefined) template.bloques = req.body.bloques;
 
     await template.save();
 
