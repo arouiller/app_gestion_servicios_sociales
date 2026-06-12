@@ -14,6 +14,8 @@ const TemplateEditor = ({ onBack }) => {
   const [error, setError] = useState(null);
   const [successMessage, setSuccessMessage] = useState(null);
   const [showConfirmModal, setShowConfirmModal] = useState(false);
+  const [showPlaceholders, setShowPlaceholders] = useState(false);
+  const [placeholders, setPlaceholders] = useState({});
   const [pendingAction, setPendingAction] = useState(null);
 
   const currentTemplate = useTemplateStore((state) => state.currentTemplate);
@@ -22,6 +24,17 @@ const TemplateEditor = ({ onBack }) => {
   const updateTemplate = useTemplateStore((state) => state.updateTemplate);
   const setIsSaving = useTemplateStore((state) => state.setIsSaving);
   const resetTemplate = useTemplateStore((state) => state.resetTemplate);
+
+  // Cargar placeholders disponibles
+  useEffect(() => {
+    const loadPlaceholders = async () => {
+      const result = await templateService.getPlaceholders();
+      if (result.success) {
+        setPlaceholders(result.placeholders);
+      }
+    };
+    loadPlaceholders();
+  }, []);
 
   const handleSave = async () => {
     // Validación: Bloque 5 obligatorio
@@ -114,6 +127,13 @@ const TemplateEditor = ({ onBack }) => {
         {currentTemplate.activo && (
           <span className="badge badge-active">✓ ACTIVO</span>
         )}
+        <button
+          className="btn btn-info btn-help"
+          onClick={() => setShowPlaceholders(!showPlaceholders)}
+          title="Ver placeholders disponibles"
+        >
+          ? Placeholders
+        </button>
       </div>
 
       {error && <div className="alert alert-error">{error}</div>}
@@ -168,6 +188,36 @@ const TemplateEditor = ({ onBack }) => {
           ⬇️ Descargar PDF
         </button>
       </div>
+
+      {/* Panel de placeholders disponibles */}
+      {showPlaceholders && (
+        <div className="placeholders-panel">
+          <div className="placeholders-header">
+            <h3>Placeholders Disponibles</h3>
+            <button
+              className="btn-close"
+              onClick={() => setShowPlaceholders(false)}
+              title="Cerrar"
+            >
+              ✕
+            </button>
+          </div>
+          <div className="placeholders-content">
+            {Object.entries(placeholders).map(([category, items]) => (
+              <div key={category} className="placeholder-category">
+                <h4>{category.charAt(0).toUpperCase() + category.slice(1)}</h4>
+                <div className="placeholder-list">
+                  {items.map((placeholder) => (
+                    <div key={placeholder} className="placeholder-item" title={placeholder}>
+                      <code>{placeholder}</code>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            ))}
+          </div>
+        </div>
+      )}
 
       {/* Modal de confirmación */}
       {showConfirmModal && (
