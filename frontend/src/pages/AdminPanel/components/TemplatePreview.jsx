@@ -25,6 +25,14 @@ const TemplatePreview = () => {
 
   const personaData = previewAfiliado || getDummyData();
 
+  const replacePlaceholder = (text) => {
+    if (!text) return '';
+    return text.replace(/\{\{(\w+)\}\}/g, (match, placeholder) => {
+      const value = personaData[placeholder];
+      return value !== undefined && value !== null ? String(value) : match;
+    });
+  };
+
   const handleViewPdf = () => {
     if (!previewRef.current) return;
 
@@ -122,7 +130,7 @@ const TemplatePreview = () => {
                 {currentTemplate.bloque_afiliado.filas?.map((fila, idx) => (
                   <tr key={idx}>
                     <td className="label">{fila.etiqueta}:</td>
-                    <td className="value">{personaData[fila.placeholder] || fila.placeholder}</td>
+                    <td className="value">{replacePlaceholder(fila.placeholder)}</td>
                   </tr>
                 ))}
               </tbody>
@@ -137,7 +145,7 @@ const TemplatePreview = () => {
                 {currentTemplate.bloque_detalles.filas?.map((fila, idx) => (
                   <tr key={idx}>
                     <td className="label">{fila.etiqueta}</td>
-                    <td className="value">{personaData[fila.placeholder] || fila.placeholder}</td>
+                    <td className="value">{replacePlaceholder(fila.placeholder)}</td>
                   </tr>
                 ))}
               </tbody>
