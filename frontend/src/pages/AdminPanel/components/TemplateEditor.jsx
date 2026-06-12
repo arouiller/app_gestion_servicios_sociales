@@ -17,7 +17,7 @@ const TemplateEditor = ({ onBack }) => {
   const [showPlaceholders, setShowPlaceholders] = useState(false);
   const [placeholders, setPlaceholders] = useState({});
   const [pendingAction, setPendingAction] = useState(null);
-  const [activeBlockEditor, setActiveBlockEditor] = useState(null);
+  const [selectedBlock, setSelectedBlock] = useState(null);
 
   const currentTemplate = useTemplateStore((state) => state.currentTemplate);
   const isDirty = useTemplateStore((state) => state.isDirty);
@@ -49,7 +49,7 @@ const TemplateEditor = ({ onBack }) => {
       }
     };
     loadData();
-  }, [currentTemplate.id]);
+  }, [currentTemplate.id, setCurrentTemplate]);
 
   const handleSave = async () => {
     if (!currentTemplate.bloque_pageconfig) {
@@ -129,6 +129,52 @@ const TemplateEditor = ({ onBack }) => {
     setPendingAction(null);
   };
 
+  // Agregar nuevo bloque vacío
+  const handleAddBlock = (blockName) => {
+    const blockConfigs = {
+      encabezado: {
+        empresa_nombre: '',
+        empresa_direccion: '',
+        empresa_telefono: '',
+        empresa_email: '',
+        empresa_sitio: '',
+        logo_url: ''
+      },
+      afiliado: { filas: [] },
+      detalles: {
+        preset: 'simple',
+        filas: [
+          { etiqueta: 'Total', placeholder: '{{valor_total}}' }
+        ]
+      },
+      pie: {
+        aclaracion: '',
+        texto_legal: '',
+        mostrar_linea_firma: false,
+        referencia: ''
+      }
+    };
+
+    updateTemplate({
+      [`bloque_${blockName}`]: blockConfigs[blockName],
+      isDirty: true
+    });
+    setSelectedBlock(blockName);
+  };
+
+  // Eliminar bloque
+  const handleDeleteBlock = (blockName) => {
+    if (window.confirm(`¿Eliminar bloque ${blockName.charAt(0).toUpperCase() + blockName.slice(1)}?`)) {
+      updateTemplate({
+        [`bloque_${blockName}`]: null,
+        isDirty: true
+      });
+      if (selectedBlock === blockName) {
+        setSelectedBlock(null);
+      }
+    }
+  };
+
   const blocks = ['encabezado', 'afiliado', 'detalles', 'pie'];
 
   const renderBlockContent = (blockName) => {
@@ -144,6 +190,16 @@ const TemplateEditor = ({ onBack }) => {
       default:
         return null;
     }
+  };
+
+  const getBlockLabel = (blockName) => {
+    const labels = {
+      encabezado: 'Encabezado',
+      afiliado: 'Afiliado',
+      detalles: 'Detalles',
+      pie: 'Pie de Página'
+    };
+    return labels[blockName];
   };
 
   return (
@@ -174,19 +230,77 @@ const TemplateEditor = ({ onBack }) => {
           <div className="a4-page">
             {blocks.map((blockName) => (
               currentTemplate[`bloque_${blockName}`] && (
-                <DraggableBlock key={blockName} blockName={blockName}>
-                  {renderBlockContent(blockName)}
-                </DraggableBlock>
+                <div
+                  key={blockName}
+                  onClick={() => setSelectedBlock(blockName)}
+                  style={{ cursor: 'pointer' }}
+                >
+                  <DraggableBlock blockName={blockName}>
+                    {renderBlockContent(blockName)}
+                  </DraggableBlock>
+                </div>
               )
             ))}
+            {blocks.every((b) => !currentTemplate[`bloque_${b}`]) && (
+              <div className="a4-empty-state">
+                <p>📋 No hay bloques. Agrega algunos en el panel derecho.</p>
+              </div>
+            )}
           </div>
         </div>
 
-        {/* Panel derecho: Editor de propiedades */}
+        {/* Panel derecho: Editor de propiedades y configuración */}
         <div className="editor-properties">
-          <h3>Configuración de Bloques</h3>
+          <h3>Configuración</h3>
           <div className="blocks-editor">
-            <BloquePageConfig />
+            {/* Botones para agregar bloques que no existen */}
+            <div className="add-blocks-section">
+              <h4>Bloques</h4>
+              {blocks.map((blockName) => (
+                <div key={blockName} className="block-control">
+                  {currentTemplate[`bloque_${blockName}`] ? (
+                    <>
+                      <button
+                        className={`btn btn-block-toggle ${selectedBlock === blockName ? 'active' : ''}`}
+                        onClick={() => setSelectedBlock(blockName)}
+                      >
+                        ✓ {getBlockLabel(blockName)}
+                      </button>
+                      <button
+                        className="btn btn-icon btn-delete-block"
+                        onClick={() => handleDeleteBlock(blockName)}
+                        title="Eliminar bloque"
+                      >
+                        🗑️
+                      </button>
+                    </>
+                  ) : (
+                    <button
+                      className="btn btn-block-add"
+                      onClick={() => handleAddBlock(blockName)}
+                    >
+                      + {getBlockLabel(blockName)}
+                    </button>
+                  )}
+                </div>
+              ))}
+            </div>
+
+            {/* Editor del bloque seleccionado */}
+            {selectedBlock && currentTemplate[`bloque_${selectedBlock}`] && (
+              <div className="selected-block-editor">
+                <hr />
+                <h4>Editar {getBlockLabel(selectedBlock)}</h4>
+                {renderBlockContent(selectedBlock)}
+              </div>
+            )}
+
+            {/* Configuración de página (siempre visible) */}
+            <div className="pageconfig-section">
+              <hr />
+              <h4>Configuración de Página</h4>
+              <BloquePageConfig />
+            </div>
           </div>
         </div>
       </div>
