@@ -125,6 +125,19 @@ Propósito: Logo y datos de la empresa
 - Fondo bloque: color picker / transparent
 - Padding: 0-20px
 
+**Layout y Espaciado:**
+- Ancho del bloque:
+  * 100% (full width - default)
+  * 50% (mitad de ancho)
+  * Personalizado (en mm o %)
+- Altura del bloque:
+  * Auto (ajusta al contenido - default)
+  * Fija (en mm)
+- Márgenes (espaciado con otros bloques):
+  * Margen superior: 0-20mm (espacio antes del bloque)
+  * Margen inferior: 0-20mm (espacio después del bloque)
+  * Default recomendado: superior=0, inferior=5mm
+
 #### **Bloque 2: Datos del Afiliado**
 Propósito: Información del afiliado actual
 
@@ -152,6 +165,14 @@ Propósito: Información del afiliado actual
 - Bordes (grosor, estilo, color)
 - Padding/margin
 
+**Layout y Espaciado:**
+- Ancho del bloque: 100% | 50% | Personalizado (mismas opciones que Bloque 1)
+- Altura del bloque: Auto | Fija (mm)
+- Márgenes:
+  * Margen superior: 0-20mm
+  * Margen inferior: 0-20mm
+  * Default recomendado: superior=0, inferior=5mm
+
 #### **Bloque 3: Tabla de Detalles**
 Propósito: Resumen de montos a pagar
 
@@ -178,6 +199,14 @@ TOTAL A PAGAR      | {{valor_cuota}}
 - Fondo encabezado tabla (color diferente)
 - Padding celdas
 
+**Layout y Espaciado:**
+- Ancho del bloque: 100% | 50% | Personalizado
+- Altura del bloque: Auto | Fija (mm)
+- Márgenes:
+  * Margen superior: 0-20mm
+  * Margen inferior: 0-20mm
+  * Default recomendado: superior=0, inferior=10mm (más espacio antes del pie)
+
 #### **Bloque 4: Pie/Firma**
 Propósito: Información legal y cierre
 
@@ -194,6 +223,14 @@ Propósito: Información legal y cierre
 - Font, tamaño, color
 - Alineación
 - Padding superior (espaciado respecto a tabla)
+
+**Layout y Espaciado:**
+- Ancho del bloque: 100% | 50% | Personalizado
+- Altura del bloque: Auto | Fija (mm)
+- Márgenes:
+  * Margen superior: 0-20mm
+  * Margen inferior: 0-20mm (generalmente 0, es el último bloque)
+  * Default recomendado: superior=0, inferior=0
 
 #### **Bloque 5: Configuración de Página**
 Propósito: Controlar tamaño, márgenes, orientación y distribución de recibos en la página
@@ -426,6 +463,7 @@ CREATE TABLE recibo_templates (
   "empresa_telefono": "+54...",
   "empresa_email": "info@...",
   "empresa_sitio": "www.example.com",
+  
   "estilos": {
     "fontFamily": "Arial",
     "fontSize": 14,
@@ -433,6 +471,13 @@ CREATE TABLE recibo_templates (
     "textAlign": "center",
     "backgroundColor": "#FFFFFF",
     "padding": 10
+  },
+  
+  "layout": {
+    "ancho": "100%",              // "100%" | "50%" | custom (ej: "150mm")
+    "alto": "auto",               // "auto" | custom (ej: "50mm")
+    "margen_superior": 0,         // mm (0-20)
+    "margen_inferior": 5          // mm (0-20)
   }
 }
 ```
@@ -456,6 +501,7 @@ CREATE TABLE recibo_templates (
     }
     // ... más filas
   ],
+  
   "estilos": {
     "fontFamily": "Arial",
     "fontSize": 11,
@@ -463,6 +509,13 @@ CREATE TABLE recibo_templates (
     "borderWidth": 1,
     "borderColor": "#CCCCCC",
     "padding": 5
+  },
+  
+  "layout": {
+    "ancho": "100%",              // "100%" | "50%" | custom
+    "alto": "auto",               // "auto" | custom
+    "margen_superior": 0,         // mm (0-20)
+    "margen_inferior": 5          // mm (0-20)
   }
 }
 ```
@@ -496,6 +549,13 @@ CREATE TABLE recibo_templates (
     "borderStyle": "solid",
     "borderColor": "#000000",
     "headerBgColor": "#F0F0F0"
+  },
+  
+  "layout": {
+    "ancho": "100%",              // "100%" | "50%" | custom
+    "alto": "auto",               // "auto" | custom
+    "margen_superior": 0,         // mm (0-20)
+    "margen_inferior": 10         // mm (0-20) - más espacio antes del pie
   }
 }
 ```
@@ -509,12 +569,20 @@ CREATE TABLE recibo_templates (
   "fecha_formato": "dd/mm/aaaa",
   "mostrar_linea_firma": true,
   "referencia": "Comprobante Nº {{numero_recibo}}",
+  
   "estilos": {
     "fontFamily": "Arial",
     "fontSize": 10,
     "color": "#666666",
     "textAlign": "center",
     "paddingTop": 20
+  },
+  
+  "layout": {
+    "ancho": "100%",              // "100%" | "50%" | custom
+    "alto": "auto",               // "auto" | custom
+    "margen_superior": 0,         // mm (0-20)
+    "margen_inferior": 0          // mm (0-20) - es el último bloque
   }
 }
 ```
@@ -828,6 +896,11 @@ frontend/src/services/
   - Recibos por página: 1, 2, 3, 4, 6 u 8
   - Layout: vertical o grilla
   - Espaciado: valores 5-20mm cada uno
+- Layout de bloques (todos los bloques):
+  - Ancho: "100%" | "50%" | custom (validar formato: número + unidad)
+  - Alto: "auto" | custom (validar formato: número + mm)
+  - Margen superior: 0-20mm (número)
+  - Margen inferior: 0-20mm (número)
 
 **Backend:**
 - Validar estructura JSON de bloques (incluyendo bloque_pageconfig)
@@ -838,6 +911,11 @@ frontend/src/services/
   - Si tamaño = "Personalizado", validar ancho_custom y alto_custom
   - Validar que margenes suma no exceda dimensiones disponibles
   - Validar que layout "grilla" solo se use con 4+ recibos por página
+- Validar layout de cada bloque:
+  - Ancho: "100%" | "50%" | formato válido (ej: "150mm", "200px")
+  - Alto: "auto" | formato válido (ej: "50mm", "100px")
+  - Márgenes: números entre 0-20
+  - Suma de márgenes no debe exceder alto total disponible
 
 ### 5.2 Restricciones
 
