@@ -1,14 +1,10 @@
 import React, { useState, useEffect, useRef } from 'react';
 import html2pdf from 'html2pdf.js';
+import { v4 as uuidv4 } from 'uuid';
 import templateService from '../../../services/templateService';
 import useTemplateStore from '../../../hooks/useTemplateStore';
-import DraggableBlock from './DraggableBlock';
+import GenericBlock from './GenericBlock';
 import PageGuides, { calculateRecibosPositions } from './PageGuides';
-import StaticBlockPreview from './StaticBlockPreview';
-import BloqueEncabezado from './BlockEditor/BloqueEncabezado';
-import BloqueAfiliado from './BlockEditor/BloqueAfiliado';
-import BloqueDetalles from './BlockEditor/BloqueDetalles';
-import BloquePie from './BlockEditor/BloquePie';
 import BloquePageConfig from './BlockEditor/BloquePageConfig';
 import '../RecibosTemplatesPage.scss';
 
@@ -20,7 +16,7 @@ const TemplateEditor = ({ onBack }) => {
   const [showPlaceholders, setShowPlaceholders] = useState(false);
   const [placeholders, setPlaceholders] = useState({});
   const [pendingAction, setPendingAction] = useState(null);
-  const [selectedBlock, setSelectedBlock] = useState(null);
+  const [selectedBlockId, setSelectedBlockId] = useState(null);
   const canvasRef = useRef(null);
 
   const currentTemplate = useTemplateStore((state) => state.currentTemplate);
@@ -31,17 +27,15 @@ const TemplateEditor = ({ onBack }) => {
   const resetTemplate = useTemplateStore((state) => state.resetTemplate);
   const setCurrentTemplate = useTemplateStore((state) => state.setCurrentTemplate);
 
-  // Cargar template completo del servidor y placeholders
+  // Cargar template y placeholders
   useEffect(() => {
     const loadData = async () => {
-      // Cargar placeholders
       const placeholderResult = await templateService.getPlaceholders();
       if (placeholderResult.success) {
         setPlaceholders(placeholderResult.placeholders);
       }
 
-      // Cargar template completo si no tiene datos
-      if (currentTemplate.id && !currentTemplate.bloque_encabezado) {
+      if (currentTemplate.id && !currentTemplate.bloque_pageconfig) {
         setLoading(true);
         const templateResult = await templateService.getTemplate(currentTemplate.id);
         if (templateResult.success) {
@@ -54,6 +48,12 @@ const TemplateEditor = ({ onBack }) => {
     };
     loadData();
   }, [currentTemplate.id, setCurrentTemplate]);
+
+  // Calcular posiciones del recibo
+  const reciboPositions = currentTemplate.bloque_pageconfig
+    ? calculateRecibosPositions(currentTemplate.bloque_pageconfig)
+    : null;
+  const reciboUnoSize = reciboPositions?.recibos[0] || null;
 
   const handleSave = async () => {
     if (!currentTemplate.bloque_pageconfig) {
@@ -165,98 +165,35 @@ const TemplateEditor = ({ onBack }) => {
     setPendingAction(null);
   };
 
-  // Agregar nuevo bloque vacío
-  const handleAddBlock = (blockName) => {
-    const blockConfigs = {
-      encabezado: {
-        empresa_nombre: '',
-        empresa_direccion: '',
-        empresa_telefono: '',
-        empresa_email: '',
-        empresa_sitio: '',
-        logo_url: ''
-      },
-      afiliado: { filas: [] },
-      detalles: {
-        preset: 'simple',
-        filas: [
-          { etiqueta: 'Total', placeholder: '{{valor_total}}' }
-        ]
-      },
-      pie: {
-        aclaracion: '',
-        texto_legal: '',
-        mostrar_linea_firma: false,
-        referencia: ''
-      }
+  // Agregar nuevo bloque
+  const handleAddBlock = () => {
+    const newBlock = {
+      id: uuidv4(),
+      x: (reciboUnoSize?.x || 10) + 10,
+      y: (reciboUnoSize?.y || 10) + 10,
+      width: 100,
+      height: 50,
+      contenido: '<p>Nuevo bloque</p>'
     };
 
-    updateTemplate({
-      [`bloque_${blockName}`]: blockConfigs[blockName],
-      isDirty: true
-    });
-    setSelectedBlock(blockName);
+    const bloques = [...(currentTemplate.bloques || []), newBlock];
+    updateTemplate({ bloques, isDirty: true });
+    setSelectedBlockId(newBlock.id);
+  };
+
+  // Actualizar bloque
+  const handleUpdateBlock = (updatedBlock) => {
+    const bloques = (currentTemplate.bloques || []).map(b =>
+      b.id === updatedBlock.id ? updatedBlock : b
+    );
+    updateTemplate({ bloques, isDirty: true });
   };
 
   // Eliminar bloque
-  const handleDeleteBlock = (blockName) => {
-    if (window.confirm(`¿Eliminar bloque ${blockName.charAt(0).toUpperCase() + blockName.slice(1)}?`)) {
-      updateTemplate({
-        [`bloque_${blockName}`]: null,
-        isDirty: true
-      });
-      if (selectedBlock === blockName) {
-        setSelectedBlock(null);
-      }
-    }
-  };
-
-  const blocks = ['encabezado', 'afiliado', 'detalles', 'pie'];
-
-  // Calcular posiciones de los recibos estáticos
-  const reciboPositions = currentTemplate.bloque_pageconfig
-    ? calculateRecibosPositions(currentTemplate.bloque_pageconfig)
-    : null;
-
-  // Obtener el tamaño del Recibo 1 para límites dinámicos de bloques
-  const reciboUnoSize = reciboPositions?.recibos[0] || null;
-
-  const getReciboPosStyle = (reciboNumber) => {
-    if (!reciboPositions || !reciboPositions.recibos[reciboNumber - 1]) {
-      return {};
-    }
-    const recibo = reciboPositions.recibos[reciboNumber - 1];
-    return {
-      left: `${recibo.x}mm`,
-      top: `${recibo.y}mm`,
-      width: `${recibo.width}mm`,
-      height: `${recibo.height}mm`
-    };
-  };
-
-  const renderBlockContent = (blockName) => {
-    switch (blockName) {
-      case 'encabezado':
-        return currentTemplate.bloque_encabezado ? <BloqueEncabezado /> : null;
-      case 'afiliado':
-        return currentTemplate.bloque_afiliado ? <BloqueAfiliado /> : null;
-      case 'detalles':
-        return currentTemplate.bloque_detalles ? <BloqueDetalles /> : null;
-      case 'pie':
-        return currentTemplate.bloque_pie ? <BloquePie /> : null;
-      default:
-        return null;
-    }
-  };
-
-  const getBlockLabel = (blockName) => {
-    const labels = {
-      encabezado: 'Encabezado',
-      afiliado: 'Afiliado',
-      detalles: 'Detalles',
-      pie: 'Pie de Página'
-    };
-    return labels[blockName];
+  const handleDeleteBlock = (blockId) => {
+    const bloques = (currentTemplate.bloques || []).filter(b => b.id !== blockId);
+    updateTemplate({ bloques, isDirty: true });
+    setSelectedBlockId(null);
   };
 
   return (
@@ -282,111 +219,48 @@ const TemplateEditor = ({ onBack }) => {
       {successMessage && <div className="alert alert-success">{successMessage}</div>}
 
       <div className="editor-container-new">
-        {/* Panel izquierdo: Canvas A4 con bloques draggables */}
+        {/* Canvas A4 */}
         <div className="editor-canvas">
           <div className="a4-page" ref={canvasRef}>
-            {/* Guías visuales: márgenes y límites de recibos */}
+            {/* Guías visuales */}
             {currentTemplate.bloque_pageconfig && (
               <PageGuides pageConfig={currentTemplate.bloque_pageconfig} />
             )}
 
-            {/* Recibo 1: Editable con DraggableBlock */}
-            <div className="recibo-container recibo-1">
-              {blocks.map((blockName) => (
-                currentTemplate[`bloque_${blockName}`] && (
-                  <div
-                    key={blockName}
-                    onClick={() => setSelectedBlock(blockName)}
-                    style={{ cursor: 'pointer' }}
-                  >
-                    <DraggableBlock
-                      blockName={blockName}
-                      reciboSize={reciboUnoSize}
-                    >
-                      {renderBlockContent(blockName)}
-                    </DraggableBlock>
-                  </div>
-                )
-              ))}
-              {blocks.every((b) => !currentTemplate[`bloque_${b}`]) && (
-                <div className="a4-empty-state">
-                  <p>📋 No hay bloques. Agrega algunos en el panel derecho.</p>
-                </div>
-              )}
-            </div>
+            {/* Bloques genéricos */}
+            {(currentTemplate.bloques || []).map(block => (
+              <GenericBlock
+                key={block.id}
+                block={block}
+                reciboSize={reciboUnoSize}
+                isSelected={selectedBlockId === block.id}
+                onSelect={() => setSelectedBlockId(block.id)}
+                onUpdate={handleUpdateBlock}
+                onDelete={() => handleDeleteBlock(block.id)}
+              />
+            ))}
 
-            {/* Recibos 2+: Estáticos (read-only) */}
-            {currentTemplate.bloque_pageconfig?.recibos_por_pagina > 1 && (
-              <div className="recibos-static-container">
-                {Array.from({ length: (currentTemplate.bloque_pageconfig?.recibos_por_pagina || 1) - 1 }).map((_, idx) => (
-                  <div
-                    key={idx + 2}
-                    className={`recibo-static recibo-${idx + 2}`}
-                    style={getReciboPosStyle(idx + 2)}
-                  >
-                    {blocks.map((blockName) => (
-                      currentTemplate[`bloque_${blockName}`] && (
-                        <StaticBlockPreview
-                          key={blockName}
-                          blockName={blockName}
-                          blockData={currentTemplate[`bloque_${blockName}`]}
-                        />
-                      )
-                    ))}
-                  </div>
-                ))}
+            {(!currentTemplate.bloques || currentTemplate.bloques.length === 0) && (
+              <div className="a4-empty-state">
+                <p>📋 No hay bloques. Usa el botón "+ Agregar Bloque" para comenzar.</p>
               </div>
             )}
           </div>
         </div>
 
-        {/* Panel derecho: Editor de propiedades y configuración */}
+        {/* Panel derecho */}
         <div className="editor-properties">
           <h3>Configuración</h3>
           <div className="blocks-editor">
-            {/* Botones para agregar bloques que no existen */}
             <div className="add-blocks-section">
-              <h4>Bloques</h4>
-              {blocks.map((blockName) => (
-                <div key={blockName} className="block-control">
-                  {currentTemplate[`bloque_${blockName}`] ? (
-                    <>
-                      <button
-                        className={`btn btn-block-toggle ${selectedBlock === blockName ? 'active' : ''}`}
-                        onClick={() => setSelectedBlock(blockName)}
-                      >
-                        ✓ {getBlockLabel(blockName)}
-                      </button>
-                      <button
-                        className="btn btn-icon btn-delete-block"
-                        onClick={() => handleDeleteBlock(blockName)}
-                        title="Eliminar bloque"
-                      >
-                        🗑️
-                      </button>
-                    </>
-                  ) : (
-                    <button
-                      className="btn btn-block-add"
-                      onClick={() => handleAddBlock(blockName)}
-                    >
-                      + {getBlockLabel(blockName)}
-                    </button>
-                  )}
-                </div>
-              ))}
+              <button className="btn btn-block-add" onClick={handleAddBlock}>
+                + Agregar Bloque
+              </button>
+              <small style={{ display: 'block', marginTop: '8px', color: '#666' }}>
+                {(currentTemplate.bloques || []).length} bloque(s) creado(s)
+              </small>
             </div>
 
-            {/* Editor del bloque seleccionado */}
-            {selectedBlock && currentTemplate[`bloque_${selectedBlock}`] && (
-              <div className="selected-block-editor">
-                <hr />
-                <h4>Editar {getBlockLabel(selectedBlock)}</h4>
-                {renderBlockContent(selectedBlock)}
-              </div>
-            )}
-
-            {/* Configuración de página (siempre visible) */}
             <div className="pageconfig-section">
               <hr />
               <h4>Configuración de Página</h4>
@@ -396,7 +270,7 @@ const TemplateEditor = ({ onBack }) => {
         </div>
       </div>
 
-      {/* Footer con acciones */}
+      {/* Footer */}
       <div className="editor-footer">
         <button
           className="btn btn-primary"
@@ -428,7 +302,7 @@ const TemplateEditor = ({ onBack }) => {
         </button>
       </div>
 
-      {/* Panel de placeholders */}
+      {/* Placeholders panel */}
       {showPlaceholders && (
         <div className="placeholders-panel">
           <div className="placeholders-header">
@@ -458,7 +332,7 @@ const TemplateEditor = ({ onBack }) => {
         </div>
       )}
 
-      {/* Modal de confirmación */}
+      {/* Confirm modal */}
       {showConfirmModal && (
         <div className="modal-overlay" onClick={() => setShowConfirmModal(false)}>
           <div className="modal-content" onClick={(e) => e.stopPropagation()}>
