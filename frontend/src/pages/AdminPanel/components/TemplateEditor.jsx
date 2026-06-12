@@ -299,7 +299,11 @@ const TemplateEditor = ({ onBack }) => {
                     onClick={() => setSelectedBlock(blockName)}
                     style={{ cursor: 'pointer' }}
                   >
-                    <DraggableBlock blockName={blockName} reciboSize={reciboUnoSize}>
+                    <DraggableBlock
+                      blockName={blockName}
+                      reciboSize={reciboUnoSize}
+                      reciboOffset={reciboUnoSize ? { x: reciboUnoSize.x, y: reciboUnoSize.y } : { x: 0, y: 0 }}
+                    >
                       {renderBlockContent(blockName)}
                     </DraggableBlock>
                   </div>
