@@ -21,6 +21,7 @@ import GestionProvinciasZonas from './components/GestionProvinciasZonas/GestionP
 import GestionAuditoria from './components/GestionAuditoria/GestionAuditoria';
 import QueryExecPage from './components/QueryExec/QueryExecPage';
 import ListadosPage from '../ListadosPage/ListadosPage';
+import RecibosTemplatesPage from '../AdminPanel/RecibosTemplatesPage';
 import './DashboardPage.scss';
 
 // Lazy load RecibosPage para demorar carga de periodos hasta que sea necesario
@@ -82,6 +83,7 @@ function buildMenu(isAdmin) {
         { key: 'gestion-usuarios', label: 'Gestión de Usuarios' },
         { key: 'configuracion-notificaciones', label: 'Configuración de la Aplicación' },
         { key: 'migraciones-bd', label: 'Migraciones BD' },
+        { key: 'templates-recibos', label: 'Templates de Recibos' },
       ],
     });
   }
@@ -304,6 +306,7 @@ function DashboardPageContent() {
           {activeModule === 'gestion-usuarios' && <GestionUsuarios />}
           {activeModule === 'configuracion-notificaciones' && <ConfiguracionNotificaciones />}
           {activeModule === 'migraciones-bd' && <MigrationsDashboard />}
+          {activeModule === 'templates-recibos' && <RecibosTemplatesPage />}
           {activeModule === 'provincias-zonas' && <GestionProvinciasZonas />}
           {activeModule === 'cobradores' && <Cobradores />}
           {activeModule === 'obras-sociales' && <ObrasSociales />}
