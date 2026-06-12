@@ -218,6 +218,9 @@ const TemplateEditor = ({ onBack }) => {
     ? calculateRecibosPositions(currentTemplate.bloque_pageconfig)
     : null;
 
+  // Obtener el tamaño del Recibo 1 para límites dinámicos de bloques
+  const reciboUnoSize = reciboPositions?.recibos[0] || null;
+
   const getReciboPosStyle = (reciboNumber) => {
     if (!reciboPositions || !reciboPositions.recibos[reciboNumber - 1]) {
       return {};
@@ -296,7 +299,7 @@ const TemplateEditor = ({ onBack }) => {
                     onClick={() => setSelectedBlock(blockName)}
                     style={{ cursor: 'pointer' }}
                   >
-                    <DraggableBlock blockName={blockName}>
+                    <DraggableBlock blockName={blockName} reciboSize={reciboUnoSize}>
                       {renderBlockContent(blockName)}
                     </DraggableBlock>
                   </div>

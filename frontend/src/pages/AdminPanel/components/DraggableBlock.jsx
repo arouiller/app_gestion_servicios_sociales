@@ -1,13 +1,25 @@
-import React from 'react';
+import React, { useMemo } from 'react';
 import { Rnd } from 'react-rnd';
 import useTemplateStore from '../../../hooks/useTemplateStore';
+import { calculateRecibosPositions } from './PageGuides';
 
-const DraggableBlock = ({ blockName, children }) => {
+const DraggableBlock = ({ blockName, children, reciboSize }) => {
   const currentTemplate = useTemplateStore((state) => state.currentTemplate);
   const updateTemplate = useTemplateStore((state) => state.updateTemplate);
 
   const positions = currentTemplate.bloque_positions || {};
   const blockPos = positions[blockName] || { x: 10, y: 10, width: 190, height: 50 };
+
+  // Calcular límites máximos basado en el tamaño disponible del recibo
+  const maxDimensions = useMemo(() => {
+    if (!reciboSize) {
+      return { maxWidth: Infinity, maxHeight: Infinity };
+    }
+    return {
+      maxWidth: reciboSize.width + (reciboSize.x - blockPos.x),
+      maxHeight: reciboSize.height + (reciboSize.y - blockPos.y)
+    };
+  }, [reciboSize, blockPos]);
 
   const handleDragStop = (e, d) => {
     const newPositions = {
@@ -44,10 +56,10 @@ const DraggableBlock = ({ blockName, children }) => {
       }}
       onDragStop={handleDragStop}
       onResizeStop={handleResizeStop}
-      minWidth={50}
-      minHeight={30}
-      maxWidth={210}
-      maxHeight={300}
+      minWidth={30}
+      minHeight={20}
+      maxWidth={maxDimensions.maxWidth}
+      maxHeight={maxDimensions.maxHeight}
       disableDragging={false}
       enableResizing={{
         top: true,
