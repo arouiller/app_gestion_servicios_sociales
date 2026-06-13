@@ -4,6 +4,7 @@ import { v4 as uuidv4 } from 'uuid';
 import templateService from '../../../services/templateService';
 import useTemplateStore from '../../../hooks/useTemplateStore';
 import GenericBlock from './GenericBlock';
+import ReadOnlyBlockPreview from './ReadOnlyBlockPreview';
 import PageGuides, { calculateRecibosPositions } from './PageGuides';
 import BloquePageConfig from './BlockEditor/BloquePageConfig';
 import '../RecibosTemplatesPage.scss';
@@ -196,6 +197,60 @@ const TemplateEditor = ({ onBack }) => {
     setSelectedBlockId(null);
   };
 
+  /**
+   * Renderiza bloques read-only para todos los recibos excepto el primero
+   */
+  const renderBlockPreviews = () => {
+    if (!reciboPositions || !reciboPositions.recibos || reciboPositions.recibos.length <= 1) {
+      return null;
+    }
+
+    const bloques = currentTemplate.bloques || [];
+    const recibos = reciboPositions.recibos;
+
+    return recibos.slice(1).map((recibo, index) => (
+      <div
+        key={`recibo-${recibo.number}`}
+        style={{
+          position: 'absolute',
+          left: `${recibo.x * 3.7795}px`,
+          top: `${recibo.y * 3.7795}px`,
+          width: `${recibo.width * 3.7795}px`,
+          height: `${recibo.height * 3.7795}px`,
+          border: '2px solid #4dabf7',
+          borderRadius: '2px',
+          overflow: 'hidden',
+          backgroundColor: 'white'
+        }}
+        className="preview-recibo"
+      >
+        {/* Número del recibo */}
+        <div
+          style={{
+            position: 'absolute',
+            top: '4px',
+            left: '4px',
+            fontSize: '10px',
+            color: '#4dabf7',
+            fontWeight: 'bold',
+            zIndex: 5
+          }}
+        >
+          {recibo.number}
+        </div>
+
+        {/* Bloques read-only */}
+        {bloques.map(block => (
+          <ReadOnlyBlockPreview
+            key={block.id}
+            block={block}
+            reciboSize={recibo}
+          />
+        ))}
+      </div>
+    ));
+  };
+
   return (
     <div className="template-editor-new">
       <div className="editor-header">
@@ -227,7 +282,7 @@ const TemplateEditor = ({ onBack }) => {
               <PageGuides pageConfig={currentTemplate.bloque_pageconfig} />
             )}
 
-            {/* Bloques genéricos */}
+            {/* Bloques genéricos - Recibo 1 (editable) */}
             {(currentTemplate.bloques || []).map(block => (
               <GenericBlock
                 key={block.id}
@@ -239,6 +294,9 @@ const TemplateEditor = ({ onBack }) => {
                 onDelete={() => handleDeleteBlock(block.id)}
               />
             ))}
+
+            {/* Previsualizaciones de bloques en otros recibos */}
+            {renderBlockPreviews()}
 
             {(!currentTemplate.bloques || currentTemplate.bloques.length === 0) && (
               <div className="a4-empty-state">
