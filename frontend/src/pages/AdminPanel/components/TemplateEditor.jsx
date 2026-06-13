@@ -18,6 +18,9 @@ const TemplateEditor = ({ onBack }) => {
   const [placeholders, setPlaceholders] = useState({});
   const [pendingAction, setPendingAction] = useState(null);
   const [selectedBlockId, setSelectedBlockId] = useState(null);
+  const [editingBlockId, setEditingBlockId] = useState(null);
+  const [editingContent, setEditingContent] = useState('');
+  const [pendingBlocks, setPendingBlocks] = useState({});
   const canvasRef = useRef(null);
 
   const currentTemplate = useTemplateStore((state) => state.currentTemplate);
@@ -62,13 +65,24 @@ const TemplateEditor = ({ onBack }) => {
       return;
     }
 
+    // Sincronizar pendingBlocks con bloques actuales
+    const syncedBloques = (currentTemplate.bloques || []).map(b =>
+      pendingBlocks[b.id] !== undefined
+        ? { ...b, contenido: pendingBlocks[b.id] }
+        : b
+    );
+
     setLoading(true);
     setIsSaving(true);
 
-    const result = await templateService.updateTemplate(currentTemplate.id, currentTemplate);
+    const result = await templateService.updateTemplate(currentTemplate.id, {
+      ...currentTemplate,
+      bloques: syncedBloques
+    });
 
     if (result.success) {
       setSuccessMessage('Template guardado exitosamente');
+      setPendingBlocks({});
       setTimeout(() => setSuccessMessage(null), 2000);
       updateTemplate({ isDirty: false });
     } else {
@@ -195,6 +209,37 @@ const TemplateEditor = ({ onBack }) => {
     const bloques = (currentTemplate.bloques || []).filter(b => b.id !== blockId);
     updateTemplate({ bloques, isDirty: true });
     setSelectedBlockId(null);
+  };
+
+  // Activar edición de bloque
+  const handleBlockDoubleClick = (blockId, content) => {
+    if (editingBlockId && editingBlockId !== blockId) {
+      setPendingBlocks(prev => ({
+        ...prev,
+        [editingBlockId]: editingContent
+      }));
+    }
+
+    setEditingBlockId(blockId);
+    setEditingContent(content);
+  };
+
+  // Desactivar edición de bloque
+  const handleBlockClickOutside = () => {
+    if (editingBlockId) {
+      setPendingBlocks(prev => ({
+        ...prev,
+        [editingBlockId]: editingContent
+      }));
+    }
+
+    setEditingBlockId(null);
+    setEditingContent('');
+  };
+
+  // Actualizar contenido desde barra Quill
+  const handleToolbarChange = (content) => {
+    setEditingContent(content);
   };
 
   /**
