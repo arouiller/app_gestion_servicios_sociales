@@ -3,12 +3,12 @@ import api from './api';
 const personasService = {
   /**
    * Buscar Personas por nombre/apellido
-   * GET /api/personas/search?q=searchTerm
+   * GET /api/personas?search=searchTerm
    */
   searchPersonas: async (searchTerm) => {
     try {
-      const response = await api.get('/personas/search', {
-        params: { q: searchTerm }
+      const response = await api.get('/personas', {
+        params: { search: searchTerm }
       });
       return {
         success: response.data.success,
