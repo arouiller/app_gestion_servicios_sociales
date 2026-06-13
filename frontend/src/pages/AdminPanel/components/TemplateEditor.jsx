@@ -244,6 +244,27 @@ const TemplateEditor = ({ onBack }) => {
     setEditingContent(content);
   };
 
+  // Guardar bloque actual
+  const handleSaveBlock = () => {
+    if (editingBlockId) {
+      // Actualizar el bloque en tiempo real
+      const updatedBloque = (currentTemplate.bloques || []).find(b => b.id === editingBlockId);
+      if (updatedBloque) {
+        handleUpdateBlock({ ...updatedBloque, contenido: editingContent });
+      }
+
+      // Guardar en pendingBlocks
+      setPendingBlocks(prev => ({
+        ...prev,
+        [editingBlockId]: editingContent
+      }));
+
+      // Desactivar edición
+      setEditingBlockId(null);
+      setEditingContent('');
+    }
+  };
+
   /**
    * Renderiza bloques read-only para todos los recibos excepto el primero
    */
@@ -322,24 +343,35 @@ const TemplateEditor = ({ onBack }) => {
 
       {/* Barra de edición Quill - PARTE SUPERIOR */}
       {currentTemplate.bloque_pageconfig && (
-        <div className="editor-toolbar">
-          <ReactQuill
-            value={editingContent}
-            onChange={handleToolbarChange}
-            readOnly={editingBlockId === null}
-            theme="snow"
-            modules={{
-              toolbar: [
-                ['bold', 'italic', 'underline'],
-                [{ 'size': ['small', false, 'large', 'huge'] }],
-                ['link', 'image']
-              ]
-            }}
-            style={{
-              opacity: editingBlockId === null ? 0.5 : 1,
-              pointerEvents: editingBlockId === null ? 'none' : 'auto'
-            }}
-          />
+        <div className="editor-toolbar-container">
+          <div className="editor-toolbar">
+            <ReactQuill
+              value={editingContent}
+              onChange={handleToolbarChange}
+              readOnly={editingBlockId === null}
+              theme="snow"
+              modules={{
+                toolbar: [
+                  ['bold', 'italic', 'underline'],
+                  [{ 'size': ['small', false, 'large', 'huge'] }],
+                  ['link', 'image']
+                ]
+              }}
+              style={{
+                opacity: editingBlockId === null ? 0.5 : 1,
+                pointerEvents: editingBlockId === null ? 'none' : 'auto'
+              }}
+            />
+          </div>
+          {editingBlockId && (
+            <button
+              className="btn btn-save-block"
+              onClick={handleSaveBlock}
+              title="Guardar cambios del bloque"
+            >
+              💾 Guardar Bloque
+            </button>
+          )}
         </div>
       )}
 
