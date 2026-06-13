@@ -52,9 +52,13 @@ const GenericBlock = ({
 
     const handleClickOutside = (e) => {
       const blockElement = document.querySelector(`[data-block-id="${block.id}"]`);
-      if (blockElement && !blockElement.contains(e.target)) {
-        onClickOutside();
-      }
+      const toolbarElement = document.querySelector('.editor-toolbar');
+
+      // No desactivar si se clickeó en el bloque o en la barra de edición
+      if (blockElement && blockElement.contains(e.target)) return;
+      if (toolbarElement && toolbarElement.contains(e.target)) return;
+
+      onClickOutside();
     };
 
     document.addEventListener('mousedown', handleClickOutside);

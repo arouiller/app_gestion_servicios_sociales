@@ -320,30 +320,30 @@ const TemplateEditor = ({ onBack }) => {
       {error && <div className="alert alert-error">{error}</div>}
       {successMessage && <div className="alert alert-success">{successMessage}</div>}
 
-      <div className="editor-container-new">
-        {/* Barra de edición Quill - NUEVA */}
-        {currentTemplate.bloque_pageconfig && (
-          <div className="editor-toolbar">
-            <ReactQuill
-              value={editingContent}
-              onChange={handleToolbarChange}
-              readOnly={editingBlockId === null}
-              theme="snow"
-              modules={{
-                toolbar: [
-                  ['bold', 'italic', 'underline'],
-                  [{ 'size': ['small', false, 'large', 'huge'] }],
-                  ['link', 'image']
-                ]
-              }}
-              style={{
-                opacity: editingBlockId === null ? 0.5 : 1,
-                pointerEvents: editingBlockId === null ? 'none' : 'auto'
-              }}
-            />
-          </div>
-        )}
+      {/* Barra de edición Quill - PARTE SUPERIOR */}
+      {currentTemplate.bloque_pageconfig && (
+        <div className="editor-toolbar">
+          <ReactQuill
+            value={editingContent}
+            onChange={handleToolbarChange}
+            readOnly={editingBlockId === null}
+            theme="snow"
+            modules={{
+              toolbar: [
+                ['bold', 'italic', 'underline'],
+                [{ 'size': ['small', false, 'large', 'huge'] }],
+                ['link', 'image']
+              ]
+            }}
+            style={{
+              opacity: editingBlockId === null ? 0.5 : 1,
+              pointerEvents: editingBlockId === null ? 'none' : 'auto'
+            }}
+          />
+        </div>
+      )}
 
+      <div className="editor-container-new">
         {/* Canvas A4 */}
         <div className="editor-canvas">
           <div className="a4-page" ref={canvasRef}>
