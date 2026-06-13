@@ -1,6 +1,8 @@
 import React, { useState, useEffect, useRef } from 'react';
 import html2pdf from 'html2pdf.js';
 import { v4 as uuidv4 } from 'uuid';
+import ReactQuill from 'react-quill';
+import 'react-quill/dist/quill.snow.css';
 import templateService from '../../../services/templateService';
 import useTemplateStore from '../../../hooks/useTemplateStore';
 import GenericBlock from './GenericBlock';
