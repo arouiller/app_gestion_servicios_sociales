@@ -3,8 +3,10 @@ import html2pdf from 'html2pdf.js';
 import { v4 as uuidv4 } from 'uuid';
 import ReactQuill from 'react-quill';
 import 'react-quill/dist/quill.snow.css';
+import personasService from '../../../services/personasService';
 import templateService from '../../../services/templateService';
 import useTemplateStore from '../../../hooks/useTemplateStore';
+import { replacePlaceholders } from '../../../utils/placeholderReplacer';
 import GenericBlock from './GenericBlock';
 import ReadOnlyBlockPreview from './ReadOnlyBlockPreview';
 import PageGuides, { calculateRecibosPositions } from './PageGuides';
@@ -23,6 +25,11 @@ const TemplateEditor = ({ onBack }) => {
   const [editingBlockId, setEditingBlockId] = useState(null);
   const [editingContent, setEditingContent] = useState('');
   const [pendingBlocks, setPendingBlocks] = useState({});
+  const [selectedPersonId, setSelectedPersonId] = useState(null);
+  const [selectedPersonData, setSelectedPersonData] = useState(null);
+  const [personSearchResults, setPersonSearchResults] = useState([]);
+  const [personSearchInput, setPersonSearchInput] = useState('');
+  const [personSearchOpen, setPersonSearchOpen] = useState(false);
   const canvasRef = useRef(null);
 
   const currentTemplate = useTemplateStore((state) => state.currentTemplate);
@@ -141,6 +148,23 @@ const TemplateEditor = ({ onBack }) => {
     setError(null);
 
     try {
+      // Crear copia del canvas con placeholders reemplazados
+      const canvasCopy = canvasRef.current.cloneNode(true);
+
+      // Reemplazar placeholders en todos los bloques
+      if (selectedPersonData) {
+        canvasCopy.querySelectorAll('[class*="generic-block"]').forEach(blockEl => {
+          const originalHTML = blockEl.innerHTML;
+          const replacedHTML = replacePlaceholders(originalHTML, selectedPersonData);
+          blockEl.innerHTML = replacedHTML;
+        });
+        canvasCopy.querySelectorAll('[class*="read-only-block"]').forEach(blockEl => {
+          const originalHTML = blockEl.innerHTML;
+          const replacedHTML = replacePlaceholders(originalHTML, selectedPersonData);
+          blockEl.innerHTML = replacedHTML;
+        });
+      }
+
       const options = {
         margin: 10,
         filename: `recibo_${Date.now()}.pdf`,
@@ -151,7 +175,7 @@ const TemplateEditor = ({ onBack }) => {
 
       const pdfGenerator = html2pdf()
         .set(options)
-        .from(canvasRef.current);
+        .from(canvasCopy);
 
       if (shouldDownload) {
         await pdfGenerator.save();
@@ -244,6 +268,33 @@ const TemplateEditor = ({ onBack }) => {
     setEditingContent(content);
   };
 
+  // Buscar Personas
+  const handleSearchPersonas = async (searchTerm) => {
+    setPersonSearchInput(searchTerm);
+
+    if (searchTerm.trim().length < 2) {
+      setPersonSearchResults([]);
+      return;
+    }
+
+    const result = await personasService.searchPersonas(searchTerm);
+    if (result.success) {
+      setPersonSearchResults(result.data);
+      setPersonSearchOpen(true);
+    }
+  };
+
+  // Seleccionar Persona
+  const handleSelectPersona = async (personId) => {
+    setSelectedPersonId(personId);
+    setPersonSearchOpen(false);
+
+    const result = await personasService.getPersona(personId);
+    if (result.success) {
+      setSelectedPersonData(result.data);
+    }
+  };
+
   // Guardar bloque actual
   const handleSaveBlock = () => {
     if (editingBlockId) {
@@ -313,6 +364,7 @@ const TemplateEditor = ({ onBack }) => {
             key={block.id}
             block={block}
             reciboSize={recibo}
+            personData={selectedPersonData}
           />
         ))}
       </div>
@@ -336,6 +388,64 @@ const TemplateEditor = ({ onBack }) => {
         >
           ? Placeholders
         </button>
+
+        {/* Dropdown Búsqueda de Personas */}
+        <div className="person-selector" style={{ position: 'relative', minWidth: '250px' }}>
+          <input
+            type="text"
+            placeholder="Buscar Persona..."
+            value={personSearchInput}
+            onChange={(e) => handleSearchPersonas(e.target.value)}
+            onFocus={() => personSearchInput && setPersonSearchOpen(true)}
+            className="person-search-input"
+            style={{
+              width: '100%',
+              padding: '8px',
+              borderRadius: '4px',
+              border: '1px solid #ccc'
+            }}
+          />
+          {selectedPersonData && (
+            <small style={{ display: 'block', color: '#666', marginTop: '4px' }}>
+              ✓ {selectedPersonData.nombre} {selectedPersonData.apellido}
+            </small>
+          )}
+          {personSearchOpen && personSearchResults.length > 0 && (
+            <div
+              className="person-dropdown"
+              style={{
+                position: 'absolute',
+                top: '100%',
+                left: 0,
+                right: 0,
+                maxHeight: '200px',
+                overflowY: 'auto',
+                background: 'white',
+                border: '1px solid #ccc',
+                borderRadius: '4px',
+                zIndex: 1000,
+                marginTop: '4px'
+              }}
+            >
+              {personSearchResults.map(person => (
+                <div
+                  key={person.id}
+                  onClick={() => handleSelectPersona(person.id)}
+                  style={{
+                    padding: '8px 12px',
+                    cursor: 'pointer',
+                    borderBottom: '1px solid #eee',
+                    transition: 'background 0.2s'
+                  }}
+                  onMouseEnter={(e) => e.target.style.background = '#f0f0f0'}
+                  onMouseLeave={(e) => e.target.style.background = 'white'}
+                >
+                  {person.nombre} {person.apellido} ({person.numero_documento})
+                </div>
+              ))}
+            </div>
+          )}
+        </div>
       </div>
 
       {error && <div className="alert alert-error">{error}</div>}
@@ -397,6 +507,7 @@ const TemplateEditor = ({ onBack }) => {
                 onClickOutside={handleBlockClickOutside}
                 onUpdate={handleUpdateBlock}
                 onDelete={() => handleDeleteBlock(block.id)}
+                personData={selectedPersonData}
               />
             ))}
 
