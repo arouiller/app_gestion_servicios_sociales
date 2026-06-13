@@ -34,7 +34,7 @@ export const replacePlaceholders = (content, personData) => {
   };
 
   Object.entries(placeholderMap).forEach(([placeholder, value]) => {
-    result = result.replace(new RegExp(placeholder.replace(/[.*+?^${}()|[\]\]/g, '\$&'), 'g'), value);
+    result = result.split(placeholder).join(value);
   });
 
   return result;
