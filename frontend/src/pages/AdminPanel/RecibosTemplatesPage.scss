@@ -1330,6 +1330,40 @@ $color-neutral-700: #374151;
   }
 }
 
+// Estados de Generic Block
+.generic-block {
+  border: 2px solid #4dabf7;
+  transition: border-color 0.2s, box-shadow 0.2s;
+
+  &.editing {
+    border: 3px solid #28a745;
+    box-shadow: 0 0 0 2px rgba(40, 167, 69, 0.1);
+  }
+}
+
+// Toolbar de edición
+.editor-toolbar {
+  margin-bottom: 12px;
+  padding: 8px;
+  background: #f8f9fa;
+  border-radius: 4px;
+
+  .ql-toolbar {
+    border: 1px solid #e0e0e0;
+    border-bottom: none;
+  }
+
+  .ql-container {
+    border: 1px solid #e0e0e0;
+  }
+
+  .ql-toolbar.ql-disabled {
+    opacity: 0.5;
+    pointer-events: none;
+    background-color: #f0f0f0;
+  }
+}
+
 @keyframes spin {
   from {
     transform: rotate(0deg);
