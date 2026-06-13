@@ -1,4 +1,5 @@
 import React from 'react';
+import { replacePlaceholders } from '../../../utils/placeholderReplacer';
 
 const MM_TO_PX = 3.7795;
 
@@ -9,7 +10,7 @@ const MM_TO_PX = 3.7795;
  * @param {Object} block - {id, x, y, width, height, contenido} en mm
  * @param {Object} reciboSize - {x, y, width, height} en mm (posición del recibo)
  */
-const ReadOnlyBlockPreview = ({ block, reciboSize }) => {
+const ReadOnlyBlockPreview = ({ block, reciboSize, personData }) => {
   if (!block || !reciboSize) {
     return null;
   }
@@ -40,7 +41,9 @@ const ReadOnlyBlockPreview = ({ block, reciboSize }) => {
     >
       <div
         style={{ height: '100%', overflow: 'hidden' }}
-        dangerouslySetInnerHTML={{ __html: block.contenido || '<p style="color: #999;">Sin contenido</p>' }}
+        dangerouslySetInnerHTML={{
+          __html: replacePlaceholders(block.contenido || '<p style="color: #999;">Sin contenido</p>', personData)
+        }}
       />
     </div>
   );
