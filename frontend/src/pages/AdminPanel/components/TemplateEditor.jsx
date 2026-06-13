@@ -319,6 +319,29 @@ const TemplateEditor = ({ onBack }) => {
       {successMessage && <div className="alert alert-success">{successMessage}</div>}
 
       <div className="editor-container-new">
+        {/* Barra de edición Quill - NUEVA */}
+        {currentTemplate.bloque_pageconfig && (
+          <div className="editor-toolbar">
+            <ReactQuill
+              value={editingContent}
+              onChange={handleToolbarChange}
+              readOnly={editingBlockId === null}
+              theme="snow"
+              modules={{
+                toolbar: [
+                  ['bold', 'italic', 'underline'],
+                  [{ 'size': ['small', false, 'large', 'huge'] }],
+                  ['link', 'image']
+                ]
+              }}
+              style={{
+                opacity: editingBlockId === null ? 0.5 : 1,
+                pointerEvents: editingBlockId === null ? 'none' : 'auto'
+              }}
+            />
+          </div>
+        )}
+
         {/* Canvas A4 */}
         <div className="editor-canvas">
           <div className="a4-page" ref={canvasRef}>
@@ -334,7 +357,10 @@ const TemplateEditor = ({ onBack }) => {
                 block={block}
                 reciboSize={reciboUnoSize}
                 isSelected={selectedBlockId === block.id}
+                isEditing={editingBlockId === block.id}
                 onSelect={() => setSelectedBlockId(block.id)}
+                onDoubleClick={handleBlockDoubleClick}
+                onClickOutside={handleBlockClickOutside}
                 onUpdate={handleUpdateBlock}
                 onDelete={() => handleDeleteBlock(block.id)}
               />
