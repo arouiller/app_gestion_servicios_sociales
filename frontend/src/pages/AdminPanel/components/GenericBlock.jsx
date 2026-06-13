@@ -6,6 +6,34 @@ import useTemplateStore from '../../../hooks/useTemplateStore';
 
 const MM_TO_PX = 3.7795; // Conversión: 1mm = 96/25.4 px a 96 DPI
 
+/**
+ * Calcula los límites (en mm) dentro de los cuales un bloque puede moverse/redimensionarse
+ * @param {Object} block - {x, y, width, height} en mm
+ * @param {Object} reciboSize - {x, y, width, height} en mm
+ * @returns {Object} - {minX, minY, maxX, maxY, maxWidth, maxHeight} en mm
+ */
+const calculateBlockLimits = (block, reciboSize) => {
+  if (!reciboSize) {
+    return {
+      minX: -Infinity,
+      minY: -Infinity,
+      maxX: Infinity,
+      maxY: Infinity,
+      maxWidth: Infinity,
+      maxHeight: Infinity
+    };
+  }
+
+  return {
+    minX: reciboSize.x,
+    minY: reciboSize.y,
+    maxX: reciboSize.x + reciboSize.width - block.width,
+    maxY: reciboSize.y + reciboSize.height - block.height,
+    maxWidth: reciboSize.width,
+    maxHeight: reciboSize.height
+  };
+};
+
 const GenericBlock = ({ block, reciboSize, isSelected, onSelect, onUpdate, onDelete }) => {
   const [isEditingContent, setIsEditingContent] = useState(false);
 
@@ -29,12 +57,13 @@ const GenericBlock = ({ block, reciboSize, isSelected, onSelect, onUpdate, onDel
     let x = d.x / MM_TO_PX;
     let y = d.y / MM_TO_PX;
 
-    if (reciboSize) {
-      x = Math.max(x, reciboSize.x);
-      x = Math.min(x, reciboSize.x + reciboSize.width - block.width);
-      y = Math.max(y, reciboSize.y);
-      y = Math.min(y, reciboSize.y + reciboSize.height - block.height);
-    }
+    const limits = calculateBlockLimits(block, reciboSize);
+
+    // Aplicar límites: el bloque nunca sale del recibo
+    x = Math.max(x, limits.minX);
+    x = Math.min(x, limits.maxX);
+    y = Math.max(y, limits.minY);
+    y = Math.min(y, limits.maxY);
 
     onUpdate({ ...block, x: Math.round(x * 100) / 100, y: Math.round(y * 100) / 100 });
   };
@@ -46,17 +75,22 @@ const GenericBlock = ({ block, reciboSize, isSelected, onSelect, onUpdate, onDel
     let width = block.width + (delta.width / MM_TO_PX);
     let height = block.height + (delta.height / MM_TO_PX);
 
-    if (reciboSize) {
-      x = Math.max(x, reciboSize.x);
-      y = Math.max(y, reciboSize.y);
+    const limits = calculateBlockLimits(block, reciboSize);
 
-      if (x + width > reciboSize.x + reciboSize.width) {
-        width = reciboSize.x + reciboSize.width - x;
-      }
+    // Aplicar límites: el bloque nunca sale del recibo
+    x = Math.max(x, limits.minX);
+    y = Math.max(y, limits.minY);
 
-      if (y + height > reciboSize.y + reciboSize.height) {
-        height = reciboSize.y + reciboSize.height - y;
-      }
+    // Asegurar que el bloque no crece más allá del borde derecho/inferior
+    width = Math.min(width, limits.maxWidth);
+    height = Math.min(height, limits.maxHeight);
+
+    // Si se acerca al borde, reducir ancho/alto
+    if (x + width > limits.minX + limits.maxWidth) {
+      width = limits.minX + limits.maxWidth - x;
+    }
+    if (y + height > limits.minY + limits.maxHeight) {
+      height = limits.minY + limits.maxHeight - y;
     }
 
     onUpdate({
