@@ -34,8 +34,32 @@ const calculateBlockLimits = (block, reciboSize) => {
   };
 };
 
-const GenericBlock = ({ block, reciboSize, isSelected, onSelect, onUpdate, onDelete }) => {
+const GenericBlock = ({
+  block,
+  reciboSize,
+  isSelected,
+  onSelect,
+  onUpdate,
+  onDelete,
+  isEditing,
+  onDoubleClick,
+  onClickOutside
+}) => {
   const [isEditingContent, setIsEditingContent] = useState(false);
+
+  useEffect(() => {
+    if (!isEditing) return;
+
+    const handleClickOutside = (e) => {
+      const blockElement = document.querySelector(`[data-block-id="${block.id}"]`);
+      if (blockElement && !blockElement.contains(e.target)) {
+        onClickOutside();
+      }
+    };
+
+    document.addEventListener('mousedown', handleClickOutside);
+    return () => document.removeEventListener('mousedown', handleClickOutside);
+  }, [isEditing, block.id, onClickOutside]);
 
   // Límites máximos basados en el tamaño del recibo (en píxeles)
   const limits = useMemo(() => {
@@ -132,41 +156,44 @@ const GenericBlock = ({ block, reciboSize, isSelected, onSelect, onUpdate, onDel
           bottomLeft: true,
           topLeft: true
         }}
-        className={`generic-block ${isSelected ? 'selected' : ''}`}
+        data-block-id={block.id}
+        className={`generic-block ${isSelected ? 'selected' : ''} ${isEditing ? 'editing' : ''}`}
         style={{
           position: 'absolute',
-          border: isSelected ? '2px solid #0066cc' : '2px solid #007bff',
+          border: isEditing ? '3px solid #28a745' : '2px solid #4dabf7',
           backgroundColor: 'white',
           borderRadius: '4px',
           padding: '8px',
           zIndex: isSelected ? 100 : 10,
           touchAction: 'none',
           overflow: 'hidden',
-          cursor: 'pointer'
+          cursor: 'pointer',
+          boxShadow: isEditing ? '0 0 0 2px rgba(40, 167, 69, 0.1)' : 'none'
         }}
-        onClick={onSelect}
+        onClick={(e) => {
+          onSelect();
+          if (e.detail === 2) {
+            onDoubleClick(block.id, block.contenido || '');
+          }
+        }}
       >
-        {isEditingContent ? (
-          <div style={{ height: '100%', display: 'flex', flexDirection: 'column' }}>
-            <ReactQuill
-              value={block.contenido || ''}
-              onChange={handleContentChange}
-              theme="snow"
-              style={{ flex: 1, height: '100%' }}
-              modules={{
-                toolbar: [
-                  ['bold', 'italic', 'underline'],
-                  [{ 'size': ['small', false, 'large', 'huge'] }],
-                  ['link', 'image']
-                ]
-              }}
-            />
+        {isEditing ? (
+          <div
+            style={{
+              height: '100%',
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+              color: '#999',
+              fontSize: '12px'
+            }}
+          >
+            👆 Editando en la barra superior
           </div>
         ) : (
           <div
             style={{ height: '100%', fontSize: '12px', overflow: 'hidden' }}
-            onClick={() => setIsEditingContent(true)}
-            dangerouslySetInnerHTML={{ __html: block.contenido || '<p style="color: #999;">Click para editar</p>' }}
+            dangerouslySetInnerHTML={{ __html: block.contenido || '<p style="color: #999;">Haz doble click para editar</p>' }}
           />
         )}
       </Rnd>
