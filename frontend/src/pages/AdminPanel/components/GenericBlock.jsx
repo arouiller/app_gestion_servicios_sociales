@@ -2,6 +2,7 @@ import React, { useState, useMemo, useEffect } from 'react';
 import { Rnd } from 'react-rnd';
 import ReactQuill from 'react-quill';
 import 'react-quill/dist/quill.snow.css';
+import { replacePlaceholders } from '../../../utils/placeholderReplacer';
 import useTemplateStore from '../../../hooks/useTemplateStore';
 
 const MM_TO_PX = 3.7795; // Conversión: 1mm = 96/25.4 px a 96 DPI
@@ -43,7 +44,8 @@ const GenericBlock = ({
   onDelete,
   isEditing,
   onDoubleClick,
-  onClickOutside
+  onClickOutside,
+  personData
 }) => {
   const [isEditingContent, setIsEditingContent] = useState(false);
 
@@ -197,7 +199,9 @@ const GenericBlock = ({
         ) : (
           <div
             style={{ height: '100%', fontSize: '12px', overflow: 'hidden' }}
-            dangerouslySetInnerHTML={{ __html: block.contenido || '<p style="color: #999;">Haz doble click para editar</p>' }}
+            dangerouslySetInnerHTML={{
+              __html: replacePlaceholders(block.contenido || '<p style="color: #999;">Haz doble click para editar</p>', personData)
+            }}
           />
         )}
       </Rnd>
