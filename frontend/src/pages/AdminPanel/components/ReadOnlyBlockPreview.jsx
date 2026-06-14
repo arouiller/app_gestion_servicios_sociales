@@ -8,17 +8,20 @@ const MM_TO_PX = 3.7795;
  * Renderiza un bloque de forma read-only en los recibos de vista previa (recibos 2+)
  *
  * @param {Object} block - {id, x, y, width, height, contenido} en mm
- * @param {Object} reciboSize - {x, y, width, height} en mm (posición del recibo)
+ * @param {Object} reciboSize - {x, y, width, height} en mm (posición del recibo actual)
+ * @param {Object} reciboUnoSize - {x, y, width, height} en mm (posición del primer recibo)
+ * @param {Object} personData - Datos de la persona para reemplazar placeholders
  */
-const ReadOnlyBlockPreview = ({ block, reciboSize, personData }) => {
-  if (!block || !reciboSize) {
+const ReadOnlyBlockPreview = ({ block, reciboSize, reciboUnoSize, personData }) => {
+  if (!block || !reciboSize || !reciboUnoSize) {
     return null;
   }
 
   // Convertir posición y tamaño de mm a píxeles
-  // Las coordenadas del bloque están en mm, las convertimos directamente a px
-  const posX = block.x * MM_TO_PX;
-  const posY = block.y * MM_TO_PX;
+  // Las coordenadas del bloque están en mm relativos al recibo 1
+  // Para renderizar en otro recibo, ajustamos por la diferencia de posición
+  const posX = (block.x + reciboUnoSize.x - reciboSize.x) * MM_TO_PX;
+  const posY = (block.y + reciboUnoSize.y - reciboSize.y) * MM_TO_PX;
   const width = block.width * MM_TO_PX;
   const height = block.height * MM_TO_PX;
 

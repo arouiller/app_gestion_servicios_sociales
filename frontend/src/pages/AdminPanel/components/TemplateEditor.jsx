@@ -364,6 +364,7 @@ const TemplateEditor = ({ onBack }) => {
             key={block.id}
             block={block}
             reciboSize={recibo}
+            reciboUnoSize={reciboUnoSize}
             personData={selectedPersonData}
           />
         ))}
