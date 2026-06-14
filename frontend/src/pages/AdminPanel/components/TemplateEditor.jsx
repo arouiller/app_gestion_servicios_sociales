@@ -338,7 +338,7 @@ const TemplateEditor = ({ onBack }) => {
           height: `${recibo.height * 3.7795}px`,
           border: '2px solid #4dabf7',
           borderRadius: '2px',
-          overflow: 'hidden',
+          overflow: 'visible',
           backgroundColor: 'white'
         }}
         className="preview-recibo"

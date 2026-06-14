@@ -16,10 +16,9 @@ const ReadOnlyBlockPreview = ({ block, reciboSize, personData }) => {
   }
 
   // Convertir posición y tamaño de mm a píxeles
-  // Las coordenadas del bloque son absolutas, necesito restarle la posición del recibo
-  // para que sean relativas al contenedor del recibo
-  const posX = (block.x - reciboSize.x) * MM_TO_PX;
-  const posY = (block.y - reciboSize.y) * MM_TO_PX;
+  // Las coordenadas del bloque están en mm, las convertimos directamente a px
+  const posX = block.x * MM_TO_PX;
+  const posY = block.y * MM_TO_PX;
   const width = block.width * MM_TO_PX;
   const height = block.height * MM_TO_PX;
 
