@@ -152,15 +152,15 @@ const TemplateEditor = ({ onBack }) => {
       const canvasCopy = canvasRef.current.cloneNode(true);
 
       // Reemplazar placeholders en todos los bloques
-      if (selectedPersonData) {
+      if (selectedPlanData) {
         canvasCopy.querySelectorAll('[class*="generic-block"]').forEach(blockEl => {
           const originalHTML = blockEl.innerHTML;
-          const replacedHTML = replacePlaceholders(originalHTML, selectedPersonData);
+          const replacedHTML = replacePlaceholders(originalHTML, selectedPlanData);
           blockEl.innerHTML = replacedHTML;
         });
         canvasCopy.querySelectorAll('[class*="read-only-block"]').forEach(blockEl => {
           const originalHTML = blockEl.innerHTML;
-          const replacedHTML = replacePlaceholders(originalHTML, selectedPersonData);
+          const replacedHTML = replacePlaceholders(originalHTML, selectedPlanData);
           blockEl.innerHTML = replacedHTML;
         });
       }
@@ -365,7 +365,7 @@ const TemplateEditor = ({ onBack }) => {
             block={block}
             reciboSize={recibo}
             reciboUnoSize={reciboUnoSize}
-            personData={selectedPersonData}
+            personData={selectedPlanData}
           />
         ))}
       </div>
@@ -508,7 +508,7 @@ const TemplateEditor = ({ onBack }) => {
                 onClickOutside={handleBlockClickOutside}
                 onUpdate={handleUpdateBlock}
                 onDelete={() => handleDeleteBlock(block.id)}
-                personData={selectedPersonData}
+                personData={selectedPlanData}
               />
             ))}
 
