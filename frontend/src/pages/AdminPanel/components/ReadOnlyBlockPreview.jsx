@@ -18,10 +18,10 @@ const ReadOnlyBlockPreview = ({ block, reciboSize, reciboUnoSize, personData }) 
   }
 
   // Convertir posición y tamaño de mm a píxeles
-  // Las coordenadas del bloque están en mm relativos al recibo 1
-  // Para renderizar en otro recibo, ajustamos por la diferencia de posición
-  const posX = (block.x + reciboUnoSize.x - reciboSize.x) * MM_TO_PX;
-  const posY = (block.y + reciboUnoSize.y - reciboSize.y) * MM_TO_PX;
+  // El bloque está dentro de un contenedor posicionado (preview-recibo)
+  // Calcular posición relativa al recibo usando coordenadas del recibo 1
+  const posX = (block.x - reciboUnoSize.x) * MM_TO_PX;
+  const posY = (block.y - reciboUnoSize.y) * MM_TO_PX;
   const width = block.width * MM_TO_PX;
   const height = block.height * MM_TO_PX;
 
