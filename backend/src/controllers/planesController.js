@@ -11,61 +11,98 @@ const { buildOrderByClause } = require('../utils/sortUtil');
 exports.list = async (req, res, next) => {
   try {
     const { search, estado = 'ACTIVO', limit = 10 } = req.query;
-    let where = {};
+    let where = { estado: estado.toUpperCase() };
 
-    if (estado) {
-      where.estado = estado.toUpperCase();
-    }
-
-    let searchWhere = {};
-    if (search && search.trim()) {
-      searchWhere = {
-        [Op.or]: [
-          { numero_afiliado: { [Op.like]: `%${search}%` } },
-          literal(`CONCAT(Persona.nombre, ' ', Persona.apellido) LIKE '%${search.replace(/'/g, "\\'")}%'`)
-        ]
-      };
-    }
-
-    const planes = await db.Plan.findAll({
-      where: { ...where, ...searchWhere },
+    const planes = await db.PlanV1.findAll({
+      where,
       include: [
         {
-          model: db.Persona,
-          as: 'persona',
-          attributes: ['id', 'nombre', 'apellido', 'numero_documento', 'tipo_documento', 'fecha_nacimiento', 'domicilio'],
-          required: false
+          model: db.PlanIntegrante,
+          include: [
+            {
+              model: db.Persona,
+              attributes: ['id', 'nombre', 'apellido', 'numero_documento', 'tipo_documento', 'fecha_nacimiento', 'domicilio', 'localidad_id'],
+              include: [
+                {
+                  model: db.Localidad,
+                  attributes: ['id', 'localidad_nombre'],
+                  required: false
+                }
+              ]
+            }
+          ],
+          order: [['orden', 'ASC']],
+          limit: 1
         },
         {
           model: db.ObraSocial,
-          attributes: ['id', 'os_numero', 'os_nombre'],
+          attributes: ['os_numero', 'os_nombre'],
           required: false
         },
         {
           model: db.TipoDePlan,
-          attributes: ['id', 'tipo_plan_numero', 'tipo_plan_nombre'],
+          attributes: ['tipo_plan_numero', 'tipo_plan_nombre'],
           required: false
         },
         {
           model: db.TipoDeGrupo,
-          attributes: ['id', 'tipo_de_grupo_numero', 'tipo_de_grupo_nombre'],
+          attributes: ['tipo_de_grupo_numero', 'tipo_de_grupo_nombre'],
           required: false
         },
         {
           model: db.Zona,
-          attributes: ['id', 'zona_codigo', 'zona_nombre'],
+          attributes: ['zona_codigo', 'zona_nombre'],
           required: false
         }
       ],
       limit: Math.min(parseInt(limit) || 10, 100),
-      order: [['numero_afiliado', 'ASC']]
+      order: [['numero_afiliado', 'ASC']],
+      raw: false
     });
+
+    // Filtrar por búsqueda en memoria (numero_afiliado o nombre del titular)
+    let filtered = planes;
+    if (search && search.trim()) {
+      const searchLower = search.toLowerCase();
+      filtered = planes.filter(plan => {
+        const match1 = plan.numero_afiliado.toLowerCase().includes(searchLower);
+        const titular = plan.plan_integrantes?.[0]?.Persona;
+        const match2 = titular && `${titular.nombre} ${titular.apellido}`.toLowerCase().includes(searchLower);
+        return match1 || match2;
+      });
+    }
+
+    // Formatear respuesta para que sea más clara
+    const formattedPlanes = filtered.map(plan => ({
+      id: plan.plan_numero,
+      numero_afiliado: plan.numero_afiliado,
+      valor_cuota: plan.valor_cuota,
+      cuota_social: plan.cuota_social || 0,
+      arancel_por_servicio: plan.arancel_por_servicio || 0,
+      estado: plan.estado,
+      zona_codigo: plan.Zona?.zona_codigo,
+      fecha_cobertura: plan.fecha_actualizacion,
+      persona: plan.plan_integrantes?.[0]?.Persona ? {
+        id: plan.plan_integrantes[0].Persona.id,
+        nombre: plan.plan_integrantes[0].Persona.nombre,
+        apellido: plan.plan_integrantes[0].Persona.apellido,
+        numero_documento: plan.plan_integrantes[0].Persona.numero_documento,
+        tipo_documento: plan.plan_integrantes[0].Persona.tipo_documento,
+        fecha_nacimiento: plan.plan_integrantes[0].Persona.fecha_nacimiento,
+        domicilio: plan.plan_integrantes[0].Persona.domicilio,
+        localidad_nombre: plan.plan_integrantes[0].Persona.Localidad?.localidad_nombre
+      } : null,
+      obra_social_nombre: plan.ObraSocial?.os_nombre,
+      tipo_plan_nombre: plan.TipoDePlan?.tipo_plan_nombre,
+      tipo_de_grupo_nombre: plan.TipoDeGrupo?.tipo_de_grupo_nombre
+    }));
 
     res.json({
       success: true,
-      data: planes
+      data: formattedPlanes.slice(0, Math.min(parseInt(limit) || 10, 100))
     });
   } catch (error) {
+    console.error('Error searching planes:', error);
     res.status(500).json({
       success: false,
       message: error.message
