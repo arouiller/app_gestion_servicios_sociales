@@ -390,15 +390,15 @@ const TemplateEditor = ({ onBack }) => {
           ? Placeholders
         </button>
 
-        {/* Dropdown Búsqueda de Personas */}
-        <div className="person-selector" style={{ position: 'relative', minWidth: '250px' }}>
+        {/* Dropdown Búsqueda de Planes */}
+        <div className="plan-selector" style={{ position: 'relative', minWidth: '250px' }}>
           <input
             type="text"
-            placeholder="Buscar Persona..."
-            value={personSearchInput}
-            onChange={(e) => handleSearchPersonas(e.target.value)}
-            onFocus={() => personSearchInput && setPersonSearchOpen(true)}
-            className="person-search-input"
+            placeholder="Buscar Plan (afiliado o titular)..."
+            value={planSearchInput}
+            onChange={(e) => handleSearchPlanes(e.target.value)}
+            onFocus={() => planSearchInput && setPlanSearchOpen(true)}
+            className="plan-search-input"
             style={{
               width: '100%',
               padding: '8px',
@@ -406,14 +406,14 @@ const TemplateEditor = ({ onBack }) => {
               border: '1px solid #ccc'
             }}
           />
-          {selectedPersonData && (
+          {selectedPlanData && (
             <small style={{ display: 'block', color: '#666', marginTop: '4px' }}>
-              ✓ {selectedPersonData.nombre} {selectedPersonData.apellido}
+              ✓ Plan {selectedPlanData.numero_afiliado} - {selectedPlanData.persona?.nombre} {selectedPlanData.persona?.apellido}
             </small>
           )}
-          {personSearchOpen && personSearchResults.length > 0 && (
+          {planSearchOpen && planSearchResults.length > 0 && (
             <div
-              className="person-dropdown"
+              className="plan-dropdown"
               style={{
                 position: 'absolute',
                 top: '100%',
@@ -428,10 +428,10 @@ const TemplateEditor = ({ onBack }) => {
                 marginTop: '4px'
               }}
             >
-              {personSearchResults.map(person => (
+              {planSearchResults.map(plan => (
                 <div
-                  key={person.id}
-                  onClick={() => handleSelectPersona(person.id)}
+                  key={plan.id}
+                  onClick={() => handleSelectPlan(plan.id)}
                   style={{
                     padding: '8px 12px',
                     cursor: 'pointer',
@@ -441,7 +441,7 @@ const TemplateEditor = ({ onBack }) => {
                   onMouseEnter={(e) => e.target.style.background = '#f0f0f0'}
                   onMouseLeave={(e) => e.target.style.background = 'white'}
                 >
-                  {person.nombre} {person.apellido} ({person.numero_documento})
+                  {plan.numero_afiliado} - {plan.persona?.nombre} {plan.persona?.apellido}
                 </div>
               ))}
             </div>
