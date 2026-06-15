@@ -295,6 +295,44 @@ const TemplateEditor = ({ onBack }) => {
     }
   };
 
+  /**
+   * Mapea datos del plan + titular a una estructura compatible con placeholderReplacer
+   * Combina datos del plan (cuota, obra social, zona) con datos del titular (nombre, documento)
+   */
+  const mapPlanToPersonData = (planData) => {
+    if (!planData) return null;
+
+    const persona = planData.persona || {};
+
+    return {
+      // Datos del titular (persona)
+      titular_nombre: persona.nombre || '',
+      titular_apellido: persona.apellido || '',
+      numero_documento: persona.numero_documento || '',
+      tipo_documento: persona.tipo_documento || '',
+      fecha_nacimiento: persona.fecha_nacimiento || '',
+      domicilio: persona.domicilio || '',
+      localidad_nombre: persona.localidad_nombre || '',
+
+      // Datos del plan
+      numero_afiliado: planData.numero_afiliado || '',
+      valor_cuota: planData.valor_cuota || 0,
+      cuota_social: planData.cuota_social || 0,
+      arancel_por_servicio: planData.arancel_por_servicio || 0,
+      fecha_cobertura: planData.fecha_cobertura || '',
+      zona_codigo: planData.zona_codigo || '',
+
+      // Datos de lookups
+      obra_social_nombre: planData.obra_social_nombre || '',
+      tipo_plan_nombre: planData.tipo_plan_nombre || '',
+      tipo_de_grupo_nombre: planData.tipo_de_grupo_nombre || '',
+
+      // Datos de empresa (si existen)
+      empresa_nombre: planData.empresa_nombre || '',
+      empresa_direccion: planData.empresa_direccion || ''
+    };
+  };
+
   // Guardar bloque actual
   const handleSaveBlock = () => {
     if (editingBlockId) {
@@ -365,7 +403,7 @@ const TemplateEditor = ({ onBack }) => {
             block={block}
             reciboSize={recibo}
             reciboUnoSize={reciboUnoSize}
-            personData={selectedPlanData}
+            personData={mapPlanToPersonData(selectedPlanData)}
           />
         ))}
       </div>
@@ -508,7 +546,7 @@ const TemplateEditor = ({ onBack }) => {
                 onClickOutside={handleBlockClickOutside}
                 onUpdate={handleUpdateBlock}
                 onDelete={() => handleDeleteBlock(block.id)}
-                personData={selectedPlanData}
+                personData={mapPlanToPersonData(selectedPlanData)}
               />
             ))}
 
