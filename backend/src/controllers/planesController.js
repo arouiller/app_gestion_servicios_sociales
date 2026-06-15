@@ -3,6 +3,77 @@ const { Op, literal } = require('sequelize');
 const { buildOrderByClause } = require('../utils/sortUtil');
 
 /**
+ * GET /api/planes?search=...&estado=ACTIVO&limit=10
+ * Búsqueda de planes por número de afiliado o nombre del titular
+ * Query params: search (texto), estado (ACTIVO|SUSPENDIDO), limit (default 10)
+ * Retorna: { success, data: [planes] }
+ */
+exports.list = async (req, res, next) => {
+  try {
+    const { search, estado = 'ACTIVO', limit = 10 } = req.query;
+    let where = {};
+
+    if (estado) {
+      where.estado = estado.toUpperCase();
+    }
+
+    let searchWhere = {};
+    if (search && search.trim()) {
+      searchWhere = {
+        [Op.or]: [
+          { numero_afiliado: { [Op.like]: `%${search}%` } },
+          literal(`CONCAT(Persona.nombre, ' ', Persona.apellido) LIKE '%${search.replace(/'/g, "\\'")}%'`)
+        ]
+      };
+    }
+
+    const planes = await db.Plan.findAll({
+      where: { ...where, ...searchWhere },
+      include: [
+        {
+          model: db.Persona,
+          as: 'persona',
+          attributes: ['id', 'nombre', 'apellido', 'numero_documento', 'tipo_documento', 'fecha_nacimiento', 'domicilio'],
+          required: false
+        },
+        {
+          model: db.ObraSocial,
+          attributes: ['id', 'os_numero', 'os_nombre'],
+          required: false
+        },
+        {
+          model: db.TipoDePlan,
+          attributes: ['id', 'tipo_plan_numero', 'tipo_plan_nombre'],
+          required: false
+        },
+        {
+          model: db.TipoDeGrupo,
+          attributes: ['id', 'tipo_de_grupo_numero', 'tipo_de_grupo_nombre'],
+          required: false
+        },
+        {
+          model: db.Zona,
+          attributes: ['id', 'zona_codigo', 'zona_nombre'],
+          required: false
+        }
+      ],
+      limit: Math.min(parseInt(limit) || 10, 100),
+      order: [['numero_afiliado', 'ASC']]
+    });
+
+    res.json({
+      success: true,
+      data: planes
+    });
+  } catch (error) {
+    res.status(500).json({
+      success: false,
+      message: error.message
+    });
+  }
+};
+
+/**
  * GET /api/planes/filter/:filtro
  * Obtiene planes filtrados por: todos, tipo_plan, cobrador, os, estado
  * Query params: sortBy, order (ASC|DESC), page, limit

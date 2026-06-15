@@ -3,6 +3,10 @@ const router = express.Router();
 const { verifyToken, requireAdmin } = require('../middleware/auth');
 const planesController = require('../controllers/planesController');
 
+// GET /api/planes?search=...&estado=ACTIVO&limit=10
+// Búsqueda de planes por número de afiliado o nombre del titular
+router.get('/', verifyToken, planesController.list);
+
 // GET /api/planes/historial-cuota
 // Historial global de cambios de cuota
 router.get('/historial-cuota', verifyToken, planesController.getHistorialCuota);
