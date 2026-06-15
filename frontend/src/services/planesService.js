@@ -83,6 +83,44 @@ const planesService = {
       };
     }
   },
+
+  /**
+   * GET /api/planes?search=...&estado=ACTIVO&limit=10
+   * Búsqueda de planes por número de afiliado o nombre del titular
+   * @param {string} searchTerm - texto a buscar (afiliado o nombre)
+   * @param {number} limit - máximo de resultados (default 10)
+   */
+  searchPlanes: async (searchTerm, limit = 10) => {
+    try {
+      const { data } = await api.get('/planes', {
+        params: {
+          search: searchTerm,
+          estado: 'ACTIVO',
+          limit: limit
+        }
+      });
+      // Si el backend retorna { data: [...] }, extraer el array
+      return Array.isArray(data) ? data : (data.data || []);
+    } catch (error) {
+      console.error('Error searching planes:', error);
+      return [];
+    }
+  },
+
+  /**
+   * GET /api/planes/:id
+   * Obtiene detalle completo de un plan
+   * @param {number} planId - ID del plan
+   */
+  getPlanDetail: async (planId) => {
+    try {
+      const { data } = await api.get(`/planes/${planId}`);
+      return data.data || data;
+    } catch (error) {
+      console.error('Error fetching plan detail:', error);
+      return null;
+    }
+  },
 };
 
 export default planesService;
