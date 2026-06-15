@@ -268,30 +268,30 @@ const TemplateEditor = ({ onBack }) => {
     setEditingContent(content);
   };
 
-  // Buscar Personas
-  const handleSearchPersonas = async (searchTerm) => {
-    setPersonSearchInput(searchTerm);
+  // Buscar Planes
+  const handleSearchPlanes = async (searchTerm) => {
+    setPlanSearchInput(searchTerm);
 
     if (searchTerm.trim().length < 2) {
-      setPersonSearchResults([]);
+      setPlanSearchResults([]);
       return;
     }
 
-    const result = await personasService.searchPersonas(searchTerm);
-    if (result.success) {
-      setPersonSearchResults(result.data);
-      setPersonSearchOpen(true);
+    const results = await planesService.searchPlanes(searchTerm, 10);
+    setPlanSearchResults(results);
+    if (results.length > 0) {
+      setPlanSearchOpen(true);
     }
   };
 
-  // Seleccionar Persona
-  const handleSelectPersona = async (personId) => {
-    setSelectedPersonId(personId);
-    setPersonSearchOpen(false);
+  // Seleccionar Plan
+  const handleSelectPlan = async (planId) => {
+    setSelectedPlanId(planId);
+    setPlanSearchOpen(false);
 
-    const result = await personasService.getPersona(personId);
-    if (result.success) {
-      setSelectedPersonData(result.data);
+    const planDetail = await planesService.getPlanDetail(planId);
+    if (planDetail) {
+      setSelectedPlanData(planDetail);
     }
   };
 
