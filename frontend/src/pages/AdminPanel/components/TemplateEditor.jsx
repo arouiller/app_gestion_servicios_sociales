@@ -4,6 +4,7 @@ import { v4 as uuidv4 } from 'uuid';
 import ReactQuill from 'react-quill';
 import 'react-quill/dist/quill.snow.css';
 import personasService from '../../../services/personasService';
+import planesService from '../../../services/planesService';
 import templateService from '../../../services/templateService';
 import useTemplateStore from '../../../hooks/useTemplateStore';
 import { replacePlaceholders } from '../../../utils/placeholderReplacer';
