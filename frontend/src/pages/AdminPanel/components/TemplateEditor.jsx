@@ -25,11 +25,11 @@ const TemplateEditor = ({ onBack }) => {
   const [editingBlockId, setEditingBlockId] = useState(null);
   const [editingContent, setEditingContent] = useState('');
   const [pendingBlocks, setPendingBlocks] = useState({});
-  const [selectedPersonId, setSelectedPersonId] = useState(null);
-  const [selectedPersonData, setSelectedPersonData] = useState(null);
-  const [personSearchResults, setPersonSearchResults] = useState([]);
-  const [personSearchInput, setPersonSearchInput] = useState('');
-  const [personSearchOpen, setPersonSearchOpen] = useState(false);
+  const [selectedPlanId, setSelectedPlanId] = useState(null);
+  const [selectedPlanData, setSelectedPlanData] = useState(null);
+  const [planSearchResults, setPlanSearchResults] = useState([]);
+  const [planSearchInput, setPlanSearchInput] = useState('');
+  const [planSearchOpen, setPlanSearchOpen] = useState(false);
   const canvasRef = useRef(null);
 
   const currentTemplate = useTemplateStore((state) => state.currentTemplate);
