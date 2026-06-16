@@ -29,9 +29,11 @@ No hay bugs activos.
 
 ## Registros Recientemente Cerrados (Últimos 7 días)
 
-| ID | Severidad | Fase | Descripción | Reportado | Descartado | Motivo |
+| ID | Severidad | Fase | Descripción | Reportado | Solucionado | Commit |
 |----|-----------|------|-------------|-----------|------------|--------|
-| BUG-052 | 🔴 CRÍTICO | Recibos PDF | Generación de PDF: Código HTML/CSS aparece literal en primeras páginas | 2026-05-21 | 2026-06-12 | Funcionalidad del Diseñador de Recibos eliminada (BACKLOG-081) |
+| BUG-054 | 🔴 CRÍTICO | Template Editor | PDF generation usa template por defecto en lugar de template activo guardado en BD | 2026-06-16 | 2026-06-16 | (próximo) |
+| BUG-053 | 🔴 CRÍTICO | BACKLOG-082 | Bloques en recibos inferiores aparecen superpuestos en recibo superior (posicionamiento incorrecto) | 2026-06-15 | 2026-06-15 | 0adc4d9 |
+| BUG-052 | 🔴 CRÍTICO | Recibos PDF | Generación de PDF: Código HTML/CSS aparece literal en primeras páginas | 2026-05-21 | 2026-06-12 | (descartado) |
 | BUG-051 | 🔴 CRÍTICO | BACKLOG-074 | Selector de zona queda vacío al seleccionar opción (display personalizado falla) | 2026-05-15 | 2026-05-15 | `63c1aad` (BACKLOG-074) |
 | BUG-050 | 🟢 MENOR | HistorialAumentosModal | Porcentajes negativos mostrados como "+-X.XX %" en lugar de "-X.XX %" | 2026-05-15 | 2026-05-15 | `a651354` (BACKLOG-071) |
 | BUG-049 | 🟡 IMPORTANTE | UI | Botón de colapsar menú se mueve con el scroll (debe ser fixed) | 2026-05-15 | 2026-05-15 | `7d82852` |
@@ -3770,5 +3772,124 @@ El bug se marca como descartado porque la causa raíz (parser HTML manual para t
 - `26c6189` - refactor(frontend): remover diseñador de recibos
 - `e5ee255` - refactor(backend): remover diseñador de recibos
 - `f8aa050` - refactor(migrations): eliminar recibo_templates
+
+---
+
+### BUG-053: Bloques en Recibos Inferiores Aparecen Superpuestos en Recibo Superior
+
+**Descripción:**
+En el editor de templates de recibos (BACKLOG-082), cuando se coloca un bloque en el recibo 1 (editable), su representación previa en el recibo 2 (inferior) aparece posicionada **superpuesta sobre el recibo superior** en lugar de estar dentro del recibo inferior.
+
+**Pasos para reproducir:**
+1. Ir a Dashboard → Administración → Recibos Templates
+2. Editar un template con 2 recibos por página
+3. Crear un nuevo bloque en el recibo superior (recibo 1)
+4. Observar el bloque previa en recibo 2
+5. **Resultado:** Bloque previa aparece en posición incorrecta (superpuesto sobre recibo 1) ❌
+6. **Esperado:** Bloque previa aparece en la posición correspondiente dentro del recibo 2 ✅
+
+**Configuración de prueba:**
+- Formato: 2 recibos por página, layout vertical
+- Márgenes: 10mm cada uno
+- Espaciado entre recibos: 5mm
+- Bloque colocado en: (20, 20) relativo a página global
+
+**Síntoma Visual:**
+```
+┌─ Página A4 ─────────────────────┐
+│ Margen 10mm                      │
+│ ┌─ Recibo 1 ──────────────────┐ │
+│ │ ┌──────────────────────┐    │ │  ← Bloque azul aparece aquí
+│ │ │ {{numero_afiliado}}  │    │ │     (debería estar en Recibo 2)
+│ │ └──────────────────────┘    │ │
+│ │                             │ │
+│ └─────────────────────────────┘ │
+│ Gap 5mm                         │
+│ ┌─ Recibo 2 ──────────────────┐ │  ← Debería estar aquí
+│ │                             │ │
+│ │  (vacío - bloque no renderizado) │
+│ │                             │ │
+│ └─────────────────────────────┘ │
+└─────────────────────────────────┘
+```
+
+**Causa Raíz Identificada:**
+
+En `ReadOnlyBlockPreview.jsx` (líneas 23-24), la fórmula de posicionamiento era incorrecta:
+
+```javascript
+// INCORRECTO:
+const posX = (block.x + reciboUnoSize.x - reciboSize.x) * MM_TO_PX;
+const posY = (block.y + reciboUnoSize.y - reciboSize.y) * MM_TO_PX;
+```
+
+**Análisis del problema:**
+
+Los bloques `ReadOnlyBlockPreview` se renderizan **dentro de un contenedor** que ya está posicionado absolutamente en la página:
+```javascript
+<div style={{
+  position: 'absolute',
+  left: `${recibo.x * MM_TO_PX}px`,      // Ej: 37.795px (para recibo 2 en x=10mm)
+  top: `${recibo.y * MM_TO_PX}px`,       // Ej: 624.13px (para recibo 2 en y=165mm)
+}}>
+  <ReadOnlyBlockPreview ... />           // Dentro del contenedor
+</div>
+```
+
+Cuando el bloque está dentro de un contenedor posicionado, sus coordenadas deben ser **relativas al contenedor**, no globales.
+
+**Ejemplo con números:**
+- Bloque global: (20mm, 20mm)
+- Recibo 1 en: (10mm, 10mm)
+- Recibo 2 en: (10mm, 165mm)
+- Contenedor Recibo 2 renderizado en: (37.795px, 624.13px)
+
+Fórmula incorrecta:
+- `posX = (20 + 10 - 10) * 3.7795 = 75.59px` → Global: 37.795 + 75.59 = **113.39px** ❌
+- `posY = (20 + 10 - 165) * 3.7795 = -510px` → Global: 624.13 - 510 = **114.13px** ❌
+
+Posición correcta esperada:
+- `posX = (20 - 10) * 3.7795 = 37.795px` → Global: 37.795 + 37.795 = **75.59px** ✓
+- `posY = (20 - 10) * 3.7795 = 37.795px` → Global: 624.13 + 37.795 = **661.93px** ✓
+
+**Severidad:** 🔴 CRÍTICO
+- Bloquea la funcionalidad de previsualización de bloques en múltiples recibos
+- El usuario no puede validar cómo se vería el template final
+- Afecta directamente BACKLOG-082
+
+**Reportado:** 2026-06-15
+**Asociado a:** BACKLOG-082 (Editor de Templates de Recibos)
+
+**Estado:** ✅ Solucionado (2026-06-15)
+
+**Solución Implementada:**
+
+Cambiar la fórmula de posicionamiento en `ReadOnlyBlockPreview.jsx` para calcular coordenadas **relativas al contenedor**:
+
+```javascript
+// CORRECTO:
+const posX = (block.x - reciboUnoSize.x) * MM_TO_PX;
+const posY = (block.y - reciboUnoSize.y) * MM_TO_PX;
+```
+
+Esta fórmula:
+1. Resta la posición del recibo 1 (donde se definió el bloque) de las coordenadas globales del bloque
+2. Obtiene la posición del bloque **relativa al recibo 1**
+3. Esta posición relativa es válida para cualquier recibo (1, 2, 3, etc.)
+4. El contenedor posicionado suma estas coordenadas relativas a su posición global
+
+**Cambios realizados:**
+- `frontend/src/pages/AdminPanel/components/ReadOnlyBlockPreview.jsx` (líneas 20-24)
+  - Actualizado comentario explicativo
+  - Cambio de fórmula: suma/resta → resta pura
+
+**Verificación Completada:**
+- ✅ Bloques renderizan en posición correcta en recibos inferiores
+- ✅ Posición visual coincide entre recibo 1 (editable) y recibos 2+ (preview)
+- ✅ Múltiples bloques se posicionan correctamente en cada recibo
+- ✅ No hay solapamiento ni desplazamientos
+
+**Commits:**
+- `0adc4d9` - fix(templates): corregir posicionamiento de bloques en recibos inferiores
 
 ---
