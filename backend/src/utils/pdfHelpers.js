@@ -80,6 +80,109 @@ function validateReciboInvariant(recibo) {
 }
 
 /**
+ * Retorna template HTML por defecto si no hay template en BD
+ */
+function getDefaultTemplateString() {
+  return `---
+pageSize: A4
+orientation: portrait
+margins: 10
+---
+
+<style>
+  body {
+    font-family: Arial, sans-serif;
+    font-size: 12px;
+  }
+
+  .recibo-container {
+    border: 1px solid #ccc;
+    padding: 15mm;
+    height: 190mm;
+    box-sizing: border-box;
+    position: relative;
+  }
+
+  .recibo-header {
+    display: flex;
+    justify-content: space-between;
+    margin-bottom: 10mm;
+    border-bottom: 1px solid #000;
+    padding-bottom: 5mm;
+  }
+
+  .recibo-info {
+    flex: 1;
+  }
+
+  .recibo-numero {
+    text-align: right;
+    font-weight: bold;
+    font-size: 14px;
+  }
+
+  .titular-info {
+    margin-bottom: 5mm;
+  }
+
+  .titular-info strong {
+    margin-right: 5mm;
+  }
+
+  .desglose {
+    margin-top: 20mm;
+    border-top: 1px solid #000;
+    padding-top: 5mm;
+  }
+
+  .desglose-row {
+    display: flex;
+    justify-content: space-between;
+    padding: 3mm 0;
+  }
+
+  .negativo {
+    background-color: #fff3cd;
+    color: #856404;
+    padding: 3mm;
+  }
+</style>
+
+<div class="recibo-container">
+  <div class="recibo-header">
+    <div class="recibo-info">
+      <div><strong>Afiliado:</strong> {{numero_afiliado}}</div>
+      <div><strong>O.S.:</strong> {{obra_social_nombre}}</div>
+    </div>
+    <div class="recibo-numero">
+      Recibo Nº {{numero_recibo}}
+    </div>
+  </div>
+
+  <div class="titular-info">
+    <div><strong>Titular:</strong> {{titular_apellido}}, {{titular_nombre}}</div>
+    <div><strong>Período:</strong> {{periodo}}</div>
+  </div>
+
+  <div class="desglose">
+    <div class="desglose-row">
+      <span>Valor Cuota:</span>
+      <span><strong>{{valor_cuota}}</strong></span>
+    </div>
+    <div class="desglose-row">
+      <span>Cuota Social:</span>
+      <span>{{cuota_social}}</span>
+    </div>
+    <div class="desglose-row {{arancel_negativo_class}}">
+      <span>Arancel por Servicio: {{arancel_warning_icon}}</span>
+      <span>{{arancel_por_servicio}}</span>
+    </div>
+  </div>
+</div>
+`;
+}
+
+/**
  * Reemplaza todos los placeholders en un string HTML con valores del recibo
  * Los valores ya vienen formateados desde renderRecibo(), no reformatear
  */
@@ -120,4 +223,5 @@ module.exports = {
   getArancelWarningIcon,
   groupRecibosInPairs,
   validateReciboInvariant,
+  getDefaultTemplateString,
 };
