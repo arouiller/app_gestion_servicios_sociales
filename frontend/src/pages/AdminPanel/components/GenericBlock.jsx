@@ -55,10 +55,12 @@ const GenericBlock = ({
     const handleClickOutside = (e) => {
       const blockElement = document.querySelector(`[data-block-id="${block.id}"]`);
       const toolbarContainerElement = document.querySelector('.editor-toolbar-container');
+      const placeholdersPanelElement = document.querySelector('.placeholders-panel');
 
-      // No desactivar si se clickeó en el bloque o en la barra de edición/botón guardar
+      // No desactivar si se clickeó en el bloque, barra de edición, o panel de placeholders
       if (blockElement && blockElement.contains(e.target)) return;
       if (toolbarContainerElement && toolbarContainerElement.contains(e.target)) return;
+      if (placeholdersPanelElement && placeholdersPanelElement.contains(e.target)) return;
 
       onClickOutside();
     };

@@ -1,6 +1,7 @@
 import React, { useState, useEffect, useRef } from 'react';
 import html2pdf from 'html2pdf.js';
 import { v4 as uuidv4 } from 'uuid';
+import { Rnd } from 'react-rnd';
 import ReactQuill from 'react-quill';
 import 'react-quill/dist/quill.snow.css';
 import personasService from '../../../services/personasService';
@@ -30,6 +31,7 @@ const TemplateEditor = ({ onBack }) => {
   const [selectedPlanData, setSelectedPlanData] = useState(null);
   const [plansList, setPlansList] = useState([]);
   const [plansLoading, setPlansLoading] = useState(false);
+  const [placeholdersPosition, setPlaceholdersPosition] = useState({ x: 20, y: 20 });
   const canvasRef = useRef(null);
 
   const currentTemplate = useTemplateStore((state) => state.currentTemplate);
@@ -590,34 +592,51 @@ const TemplateEditor = ({ onBack }) => {
         </button>
       </div>
 
-      {/* Placeholders panel */}
+      {/* Placeholders panel - draggable */}
       {showPlaceholders && (
-        <div className="placeholders-panel">
-          <div className="placeholders-header">
-            <h3>Placeholders Disponibles</h3>
-            <button
-              className="btn-close"
-              onClick={() => setShowPlaceholders(false)}
-              title="Cerrar"
-            >
-              ✕
-            </button>
-          </div>
-          <div className="placeholders-content">
-            {Object.entries(placeholders).map(([category, items]) => (
-              <div key={category} className="placeholder-category">
-                <h4>{category.charAt(0).toUpperCase() + category.slice(1)}</h4>
-                <div className="placeholder-list">
-                  {items.map((placeholder) => (
-                    <div key={placeholder} className="placeholder-item" title={placeholder}>
-                      <code>{placeholder}</code>
-                    </div>
-                  ))}
+        <Rnd
+          default={{
+            x: placeholdersPosition.x,
+            y: placeholdersPosition.y,
+            width: 350,
+            height: 'auto'
+          }}
+          onDragStop={(e, d) => setPlaceholdersPosition({ x: d.x, y: d.y })}
+          disableResizing
+          dragHandleClassName="placeholders-header"
+          style={{
+            position: 'fixed',
+            zIndex: 1000,
+            touchAction: 'none'
+          }}
+        >
+          <div className="placeholders-panel">
+            <div className="placeholders-header">
+              <h3>Placeholders Disponibles</h3>
+              <button
+                className="btn-close"
+                onClick={() => setShowPlaceholders(false)}
+                title="Cerrar"
+              >
+                ✕
+              </button>
+            </div>
+            <div className="placeholders-content">
+              {Object.entries(placeholders).map(([category, items]) => (
+                <div key={category} className="placeholder-category">
+                  <h4>{category.charAt(0).toUpperCase() + category.slice(1)}</h4>
+                  <div className="placeholder-list">
+                    {items.map((placeholder) => (
+                      <div key={placeholder} className="placeholder-item" title={placeholder}>
+                        <code>{placeholder}</code>
+                      </div>
+                    ))}
+                  </div>
                 </div>
-              </div>
-            ))}
+              ))}
+            </div>
           </div>
-        </div>
+        </Rnd>
       )}
 
       {/* Confirm modal */}
