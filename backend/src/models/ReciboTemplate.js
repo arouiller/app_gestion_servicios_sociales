@@ -70,10 +70,30 @@ const ReciboTemplate = sequelize.define('ReciboTemplate', {
     allowNull: false,
     get() {
       const value = this.getDataValue('bloque_pageconfig');
-      return typeof value === 'string' ? JSON.parse(value) : value;
+      if (typeof value === 'string') {
+        return JSON.parse(value);
+      }
+      // Si viene como objeto de caracteres (bug de guardado previo), intentar reconstruir
+      if (typeof value === 'object' && value !== null && !Array.isArray(value) && !value.tamaño) {
+        try {
+          let reconstructed = '';
+          for (let key in value) {
+            reconstructed += value[key];
+          }
+          return JSON.parse(reconstructed);
+        } catch (e) {
+          return value;
+        }
+      }
+      return value;
     },
     set(value) {
-      this.setDataValue('bloque_pageconfig', value);
+      // Asegurar que se guarde como JSON string válido, no como objeto
+      if (typeof value === 'object' && value !== null) {
+        this.setDataValue('bloque_pageconfig', JSON.stringify(value));
+      } else {
+        this.setDataValue('bloque_pageconfig', value);
+      }
     },
     validate: {
       notEmpty: { msg: 'Bloque 5 (Configuración de Página) es obligatorio' }

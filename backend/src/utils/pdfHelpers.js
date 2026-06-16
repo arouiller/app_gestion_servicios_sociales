@@ -185,6 +185,7 @@ margins: 10
 /**
  * Serializa bloques dinámicos de ReciboTemplate a string HTML con placeholders
  * Cada bloque está posicionado de forma absoluta usando coordenadas x, y, width, height
+ * Soporta múltiples recibos por página apilados verticalmente según recibos_por_pagina
  * Usado cuando se genera PDF de recibos con template personalizado
  */
 function serializeTemplateBlocks(template) {
@@ -192,10 +193,27 @@ function serializeTemplateBlocks(template) {
     return getDefaultTemplateString();
   }
 
-  const pageConfig = template.bloque_pageconfig || {};
+  let pageConfig = template.bloque_pageconfig || {};
+
+  // Manejar defensivamente pageConfig corrupto (array de caracteres)
+  if (typeof pageConfig === 'object' && pageConfig !== null && !pageConfig.tamaño) {
+    try {
+      if (Array.isArray(pageConfig)) {
+        // Si es array, es probablemente del objeto corrupto, skip
+        pageConfig = {};
+      } else if (typeof pageConfig === 'string') {
+        pageConfig = JSON.parse(pageConfig);
+      }
+    } catch (e) {
+      pageConfig = {};
+    }
+  }
+
   const pageSize = pageConfig.tamaño || 'A4';
   const orientation = pageConfig.orientacion || 'portrait';
   const margins = pageConfig.margen_superior_mm || 10;
+  const recibosPerPage = pageConfig.recibos_por_pagina || 1;
+  const layout = pageConfig.layout || 'vertical';
   const bloques = template.bloques || [];
 
   // Si no hay bloques dinámicos, retornar template por defecto
@@ -212,6 +230,9 @@ function serializeTemplateBlocks(template) {
 
   const dimensions = pageDimensions[pageSize] || pageDimensions['A4'];
 
+  // Altura disponible por recibo (dividir altura total entre cantidad de recibos)
+  const reciboHeight = dimensions.height / recibosPerPage;
+
   let html = `---
 pageSize: ${pageSize}
 orientation: ${orientation}
@@ -221,7 +242,7 @@ margins: ${margins}
 <style>
   body {
     font-family: Arial, sans-serif;
-    font-size: 12px;
+    font-size: 11px;
     margin: 0;
     padding: 0;
   }
@@ -235,6 +256,13 @@ margins: ${margins}
     page-break-after: always;
   }
 
+  .recibo-contenedor {
+    position: absolute;
+    width: 100%;
+    box-sizing: border-box;
+    overflow: hidden;
+  }
+
   .bloque-dinamico {
     position: absolute;
     overflow: hidden;
@@ -243,19 +271,20 @@ margins: ${margins}
 
   .bloque-dinamico p {
     margin: 0;
-    padding: 2mm;
+    padding: 1mm;
+    font-size: inherit;
   }
 
   .bloque-dinamico table {
     width: 100%;
     border-collapse: collapse;
-    font-size: 10px;
+    font-size: 9px;
   }
 
   .bloque-dinamico th,
   .bloque-dinamico td {
     border: 1px solid #ddd;
-    padding: 1mm;
+    padding: 0.5mm;
     text-align: left;
   }
 
@@ -268,19 +297,30 @@ margins: ${margins}
 <div class="recibo-page">
 `;
 
-  // Renderizar cada bloque dinámico con su posicionamiento
-  bloques.forEach(bloque => {
-    const left = bloque.x || 0;
-    const top = bloque.y || 0;
-    const width = bloque.width || 100;
-    const height = bloque.height || 50;
-    const contenido = bloque.contenido || '';
+  // Renderizar múltiples recibos por página
+  for (let reciboNum = 0; reciboNum < recibosPerPage; reciboNum++) {
+    const offsetY = reciboNum * reciboHeight;
 
-    html += `<div class="bloque-dinamico" style="left: ${left}mm; top: ${top}mm; width: ${width}mm; height: ${height}mm;">
-  ${contenido}
-</div>
+    html += `<div class="recibo-contenedor" style="top: ${offsetY}mm; height: ${reciboHeight}mm;">
 `;
-  });
+
+    // Renderizar cada bloque dinámico con su posicionamiento
+    bloques.forEach(bloque => {
+      const left = bloque.x || 0;
+      const top = bloque.y || 0;
+      const width = bloque.width || 100;
+      const height = bloque.height || 50;
+      const contenido = bloque.contenido || '';
+
+      html += `  <div class="bloque-dinamico" style="left: ${left}mm; top: ${top}mm; width: ${width}mm; height: ${height}mm;">
+    ${contenido}
+  </div>
+`;
+    });
+
+    html += `</div>
+`;
+  }
 
   html += `</div>`;
 
