@@ -21,14 +21,8 @@ exports.list = async (req, res, next) => {
           include: [
             {
               model: db.Persona,
-              attributes: ['id', 'nombre', 'apellido', 'numero_documento', 'tipo_documento', 'fecha_nacimiento', 'domicilio', 'localidad_id'],
-              include: [
-                {
-                  model: db.Localidad,
-                  attributes: ['id', 'localidad_nombre'],
-                  required: false
-                }
-              ]
+              attributes: ['id', 'nombre', 'apellido', 'numero_documento', 'tipo_documento', 'fecha_nacimiento'],
+              required: false
             }
           ],
           order: [['orden', 'ASC']],
@@ -80,6 +74,7 @@ exports.list = async (req, res, next) => {
       cuota_social: plan.cuota_social || 0,
       arancel_por_servicio: plan.arancel_por_servicio || 0,
       estado: plan.estado,
+      domicilio: plan.domicilio,
       zona_codigo: plan.Zona?.zona_codigo,
       fecha_cobertura: plan.fecha_actualizacion,
       persona: plan.plan_integrantes?.[0]?.Persona ? {
@@ -88,9 +83,7 @@ exports.list = async (req, res, next) => {
         apellido: plan.plan_integrantes[0].Persona.apellido,
         numero_documento: plan.plan_integrantes[0].Persona.numero_documento,
         tipo_documento: plan.plan_integrantes[0].Persona.tipo_documento,
-        fecha_nacimiento: plan.plan_integrantes[0].Persona.fecha_nacimiento,
-        domicilio: plan.plan_integrantes[0].Persona.domicilio,
-        localidad_nombre: plan.plan_integrantes[0].Persona.Localidad?.localidad_nombre
+        fecha_nacimiento: plan.plan_integrantes[0].Persona.fecha_nacimiento
       } : null,
       obra_social_nombre: plan.ObraSocial?.os_nombre,
       tipo_plan_nombre: plan.TipoDePlan?.tipo_plan_nombre,
