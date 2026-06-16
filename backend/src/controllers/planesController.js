@@ -22,11 +22,12 @@ exports.list = async (req, res, next) => {
             {
               model: db.Persona,
               attributes: ['id', 'nombre', 'apellido', 'numero_documento', 'tipo_documento', 'fecha_nacimiento'],
-              required: false
+              required: true  // Solo planes que tengan al menos una persona asignada
             }
           ],
           order: [['orden', 'ASC']],
-          limit: 1
+          limit: 1,
+          required: true  // PlanIntegrante es obligatorio (INNER JOIN)
         },
         {
           model: db.ObraSocial,
@@ -51,7 +52,8 @@ exports.list = async (req, res, next) => {
       ],
       limit: Math.min(parseInt(limit) || 10, 100),
       order: [['plan_numero', 'ASC']],
-      raw: false
+      raw: false,
+      subQuery: false  // Importante para evitar problemas con limit
     });
 
     // Filtrado ya hecho en la query WHERE
