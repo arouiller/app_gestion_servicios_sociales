@@ -57,19 +57,6 @@ exports.list = async (req, res, next) => {
     // Filtrado ya hecho en la query WHERE
     const filtered = planes;
 
-    // DEBUG: Log de la primera estructura de datos
-    if (filtered.length > 0) {
-      console.log('=== PLAN STRUCTURE DEBUG ===');
-      console.log('First plan keys:', Object.keys(filtered[0]));
-      console.log('plan_integrantes exists:', !!filtered[0].plan_integrantes);
-      console.log('plan_integrantes length:', filtered[0].plan_integrantes?.length);
-      if (filtered[0].plan_integrantes && filtered[0].plan_integrantes[0]) {
-        console.log('First integrante keys:', Object.keys(filtered[0].plan_integrantes[0]));
-        console.log('Persona exists:', !!filtered[0].plan_integrantes[0].Persona);
-        console.log('Persona data:', JSON.stringify(filtered[0].plan_integrantes[0].Persona, null, 2));
-      }
-    }
-
     // Formatear respuesta para que sea más clara
     const formattedPlanes = filtered.map(plan => ({
       id: plan.plan_numero,
@@ -81,13 +68,13 @@ exports.list = async (req, res, next) => {
       domicilio: plan.domicilio,
       zona_codigo: plan.Zona?.codigo,
       fecha_cobertura: plan.fecha_actualizacion,
-      persona: plan.plan_integrantes?.[0]?.Persona ? {
-        id: plan.plan_integrantes[0].Persona.id,
-        nombre: plan.plan_integrantes[0].Persona.nombre,
-        apellido: plan.plan_integrantes[0].Persona.apellido,
-        numero_documento: plan.plan_integrantes[0].Persona.numero_documento,
-        tipo_documento: plan.plan_integrantes[0].Persona.tipo_documento,
-        fecha_nacimiento: plan.plan_integrantes[0].Persona.fecha_nacimiento
+      persona: plan.PlanIntegrantes?.[0]?.Persona ? {
+        id: plan.PlanIntegrantes[0].Persona.id,
+        nombre: plan.PlanIntegrantes[0].Persona.nombre,
+        apellido: plan.PlanIntegrantes[0].Persona.apellido,
+        numero_documento: plan.PlanIntegrantes[0].Persona.numero_documento,
+        tipo_documento: plan.PlanIntegrantes[0].Persona.tipo_documento,
+        fecha_nacimiento: plan.PlanIntegrantes[0].Persona.fecha_nacimiento
       } : null,
       obra_social_nombre: plan.ObraSocial?.os_nombre,
       tipo_plan_nombre: plan.TipoDePlan?.tipo_plan_nombre,
@@ -172,13 +159,13 @@ exports.getById = async (req, res, next) => {
       domicilio: plan.domicilio,
       zona_codigo: plan.Zona?.codigo,
       fecha_cobertura: plan.fecha_actualizacion,
-      persona: plan.plan_integrantes?.[0]?.Persona ? {
-        id: plan.plan_integrantes[0].Persona.id,
-        nombre: plan.plan_integrantes[0].Persona.nombre,
-        apellido: plan.plan_integrantes[0].Persona.apellido,
-        numero_documento: plan.plan_integrantes[0].Persona.numero_documento,
-        tipo_documento: plan.plan_integrantes[0].Persona.tipo_documento,
-        fecha_nacimiento: plan.plan_integrantes[0].Persona.fecha_nacimiento
+      persona: plan.PlanIntegrantes?.[0]?.Persona ? {
+        id: plan.PlanIntegrantes[0].Persona.id,
+        nombre: plan.PlanIntegrantes[0].Persona.nombre,
+        apellido: plan.PlanIntegrantes[0].Persona.apellido,
+        numero_documento: plan.PlanIntegrantes[0].Persona.numero_documento,
+        tipo_documento: plan.PlanIntegrantes[0].Persona.tipo_documento,
+        fecha_nacimiento: plan.PlanIntegrantes[0].Persona.fecha_nacimiento
       } : null,
       obra_social_nombre: plan.ObraSocial?.os_nombre,
       tipo_plan_nombre: plan.TipoDePlan?.tipo_plan_nombre,
