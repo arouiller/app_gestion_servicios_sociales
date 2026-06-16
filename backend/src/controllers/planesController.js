@@ -4,14 +4,21 @@ const { buildOrderByClause } = require('../utils/sortUtil');
 
 /**
  * GET /api/planes?search=...&estado=ACTIVO&limit=10
- * Búsqueda de planes por número de afiliado o nombre del titular
- * Query params: search (texto), estado (ACTIVO|SUSPENDIDO), limit (default 10)
+ * Búsqueda de planes por identificador del plan (plan_numero)
+ * Query params: search (número del plan), estado (ACTIVO|SUSPENDIDO), limit (default 10)
  * Retorna: { success, data: [planes] }
  */
 exports.list = async (req, res, next) => {
   try {
     const { search, estado = 'ACTIVO', limit = 10 } = req.query;
     let where = { estado: estado.toUpperCase() };
+
+    // Si hay búsqueda, filtrar por plan_numero
+    if (search && search.trim()) {
+      where.plan_numero = {
+        [Op.like]: `%${search}%`
+      };
+    }
 
     const planes = await db.PlanV1.findAll({
       where,
@@ -50,21 +57,12 @@ exports.list = async (req, res, next) => {
         }
       ],
       limit: Math.min(parseInt(limit) || 10, 100),
-      order: [['numero_afiliado', 'ASC']],
+      order: [['plan_numero', 'ASC']],
       raw: false
     });
 
-    // Filtrar por búsqueda en memoria (numero_afiliado o nombre del titular)
-    let filtered = planes;
-    if (search && search.trim()) {
-      const searchLower = search.toLowerCase();
-      filtered = planes.filter(plan => {
-        const match1 = plan.numero_afiliado.toLowerCase().includes(searchLower);
-        const titular = plan.plan_integrantes?.[0]?.Persona;
-        const match2 = titular && `${titular.nombre} ${titular.apellido}`.toLowerCase().includes(searchLower);
-        return match1 || match2;
-      });
-    }
+    // Filtrado ya hecho en la query WHERE
+    const filtered = planes;
 
     // Formatear respuesta para que sea más clara
     const formattedPlanes = filtered.map(plan => ({
