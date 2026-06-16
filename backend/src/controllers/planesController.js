@@ -57,6 +57,19 @@ exports.list = async (req, res, next) => {
     // Filtrado ya hecho en la query WHERE
     const filtered = planes;
 
+    // DEBUG: Log de la primera estructura de datos
+    if (filtered.length > 0) {
+      console.log('=== PLAN STRUCTURE DEBUG ===');
+      console.log('First plan keys:', Object.keys(filtered[0]));
+      console.log('plan_integrantes exists:', !!filtered[0].plan_integrantes);
+      console.log('plan_integrantes length:', filtered[0].plan_integrantes?.length);
+      if (filtered[0].plan_integrantes && filtered[0].plan_integrantes[0]) {
+        console.log('First integrante keys:', Object.keys(filtered[0].plan_integrantes[0]));
+        console.log('Persona exists:', !!filtered[0].plan_integrantes[0].Persona);
+        console.log('Persona data:', JSON.stringify(filtered[0].plan_integrantes[0].Persona, null, 2));
+      }
+    }
+
     // Formatear respuesta para que sea más clara
     const formattedPlanes = filtered.map(plan => ({
       id: plan.plan_numero,
