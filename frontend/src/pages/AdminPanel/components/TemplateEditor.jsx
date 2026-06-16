@@ -311,9 +311,9 @@ const TemplateEditor = ({ onBack }) => {
     const persona = planData.persona || planData.Persona || {};
 
     return {
-      // Datos del titular (persona)
-      titular_nombre: persona.nombre || '',
-      titular_apellido: persona.apellido || '',
+      // Datos del titular (persona) - nombres deben coincidir con placeholderReplacer.js
+      nombre: persona.nombre || '',
+      apellido: persona.apellido || '',
       numero_documento: persona.numero_documento || '',
       tipo_documento: persona.tipo_documento || '',
       fecha_nacimiento: persona.fecha_nacimiento || '',
