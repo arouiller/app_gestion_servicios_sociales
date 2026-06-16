@@ -95,6 +95,97 @@ exports.list = async (req, res, next) => {
 };
 
 /**
+ * GET /api/planes/:id
+ * Obtiene detalle completo de un plan por ID (plan_numero)
+ * Retorna: { success, data: plan }
+ */
+exports.getById = async (req, res, next) => {
+  try {
+    const { id } = req.params;
+    const planId = parseInt(id);
+
+    const plan = await db.PlanV1.findByPk(planId, {
+      include: [
+        {
+          model: db.PlanIntegrante,
+          include: [
+            {
+              model: db.Persona,
+              attributes: ['id', 'nombre', 'apellido', 'numero_documento', 'tipo_documento', 'fecha_nacimiento'],
+              required: false
+            }
+          ],
+          order: [['orden', 'ASC']],
+          limit: 1
+        },
+        {
+          model: db.ObraSocial,
+          attributes: ['os_numero', 'os_nombre'],
+          required: false
+        },
+        {
+          model: db.TipoDePlan,
+          attributes: ['tipo_plan_numero', 'tipo_plan_nombre'],
+          required: false
+        },
+        {
+          model: db.TipoDeGrupo,
+          attributes: ['tipo_de_grupo_numero', 'tipo_de_grupo_nombre'],
+          required: false
+        },
+        {
+          model: db.Zona,
+          attributes: ['id', 'codigo', 'nombre'],
+          required: false
+        }
+      ]
+    });
+
+    if (!plan) {
+      return res.status(404).json({
+        success: false,
+        message: 'Plan no encontrado'
+      });
+    }
+
+    // Formatear respuesta
+    const formattedPlan = {
+      id: plan.plan_numero,
+      numero_afiliado: plan.numero_afiliado,
+      valor_cuota: plan.valor_cuota,
+      cuota_social: plan.cuota_social || 0,
+      arancel_por_servicio: plan.arancel_por_servicio || 0,
+      estado: plan.estado,
+      domicilio: plan.domicilio,
+      zona_codigo: plan.Zona?.codigo,
+      fecha_cobertura: plan.fecha_actualizacion,
+      persona: plan.plan_integrantes?.[0]?.Persona ? {
+        id: plan.plan_integrantes[0].Persona.id,
+        nombre: plan.plan_integrantes[0].Persona.nombre,
+        apellido: plan.plan_integrantes[0].Persona.apellido,
+        numero_documento: plan.plan_integrantes[0].Persona.numero_documento,
+        tipo_documento: plan.plan_integrantes[0].Persona.tipo_documento,
+        fecha_nacimiento: plan.plan_integrantes[0].Persona.fecha_nacimiento
+      } : null,
+      obra_social_nombre: plan.ObraSocial?.os_nombre,
+      tipo_plan_nombre: plan.TipoDePlan?.tipo_plan_nombre,
+      tipo_de_grupo_nombre: plan.TipoDeGrupo?.tipo_de_grupo_nombre
+    };
+
+    res.json({
+      success: true,
+      data: formattedPlan
+    });
+  } catch (error) {
+    console.error('Error fetching plan detail:', error);
+    res.status(500).json({
+      success: false,
+      message: error.message
+    });
+  }
+};
+
+/**
  * GET /api/planes/filter/:filtro
  * Obtiene planes filtrados por: todos, tipo_plan, cobrador, os, estado
  * Query params: sortBy, order (ASC|DESC), page, limit
