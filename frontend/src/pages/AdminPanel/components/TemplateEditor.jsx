@@ -28,9 +28,8 @@ const TemplateEditor = ({ onBack }) => {
   const [pendingBlocks, setPendingBlocks] = useState({});
   const [selectedPlanId, setSelectedPlanId] = useState(null);
   const [selectedPlanData, setSelectedPlanData] = useState(null);
-  const [planSearchResults, setPlanSearchResults] = useState([]);
-  const [planSearchInput, setPlanSearchInput] = useState('');
-  const [planSearchOpen, setPlanSearchOpen] = useState(false);
+  const [plansList, setPlansList] = useState([]);
+  const [plansLoading, setPlansLoading] = useState(false);
   const canvasRef = useRef(null);
 
   const currentTemplate = useTemplateStore((state) => state.currentTemplate);
@@ -269,27 +268,27 @@ const TemplateEditor = ({ onBack }) => {
     setEditingContent(content);
   };
 
-  // Buscar Planes
-  const handleSearchPlanes = async (searchTerm) => {
-    setPlanSearchInput(searchTerm);
+  // Cargar primeros 10 planes al abrir el editor
+  useEffect(() => {
+    const loadPlans = async () => {
+      setPlansLoading(true);
+      const results = await planesService.searchPlanes('', 10);
+      setPlansList(results);
+      setPlansLoading(false);
+    };
+    loadPlans();
+  }, []);
 
-    if (searchTerm.trim().length < 2) {
-      setPlanSearchResults([]);
+  // Seleccionar Plan del combo
+  const handleSelectPlan = async (e) => {
+    const planId = parseInt(e.target.value);
+    if (!planId) {
+      setSelectedPlanId(null);
+      setSelectedPlanData(null);
       return;
     }
 
-    const results = await planesService.searchPlanes(searchTerm, 10);
-    setPlanSearchResults(results);
-    if (results.length > 0) {
-      setPlanSearchOpen(true);
-    }
-  };
-
-  // Seleccionar Plan
-  const handleSelectPlan = async (planId) => {
     setSelectedPlanId(planId);
-    setPlanSearchOpen(false);
-
     const planDetail = await planesService.getPlanDetail(planId);
     if (planDetail) {
       setSelectedPlanData(planDetail);
@@ -429,62 +428,30 @@ const TemplateEditor = ({ onBack }) => {
           ? Placeholders
         </button>
 
-        {/* Dropdown Búsqueda de Planes */}
-        <div className="plan-selector" style={{ position: 'relative', minWidth: '250px' }}>
-          <input
-            type="text"
-            placeholder="Buscar Plan (afiliado o titular)..."
-            value={planSearchInput}
-            onChange={(e) => handleSearchPlanes(e.target.value)}
-            onFocus={() => planSearchInput && setPlanSearchOpen(true)}
-            className="plan-search-input"
+        {/* Combo de Planes Pre-cargado */}
+        <div className="plan-selector" style={{ minWidth: '300px' }}>
+          <select
+            value={selectedPlanId || ''}
+            onChange={handleSelectPlan}
+            className="plan-select"
             style={{
               width: '100%',
               padding: '8px',
               borderRadius: '4px',
-              border: '1px solid #ccc'
+              border: '1px solid #ccc',
+              fontFamily: 'monospace'
             }}
-          />
-          {selectedPlanData && (
-            <small style={{ display: 'block', color: '#666', marginTop: '4px' }}>
-              ✓ Plan {selectedPlanData.numero_afiliado} - {selectedPlanData.persona?.nombre} {selectedPlanData.persona?.apellido}
-            </small>
-          )}
-          {planSearchOpen && planSearchResults.length > 0 && (
-            <div
-              className="plan-dropdown"
-              style={{
-                position: 'absolute',
-                top: '100%',
-                left: 0,
-                right: 0,
-                maxHeight: '200px',
-                overflowY: 'auto',
-                background: 'white',
-                border: '1px solid #ccc',
-                borderRadius: '4px',
-                zIndex: 1000,
-                marginTop: '4px'
-              }}
-            >
-              {planSearchResults.map(plan => (
-                <div
-                  key={plan.id}
-                  onClick={() => handleSelectPlan(plan.id)}
-                  style={{
-                    padding: '8px 12px',
-                    cursor: 'pointer',
-                    borderBottom: '1px solid #eee',
-                    transition: 'background 0.2s'
-                  }}
-                  onMouseEnter={(e) => e.target.style.background = '#f0f0f0'}
-                  onMouseLeave={(e) => e.target.style.background = 'white'}
-                >
-                  {plan.numero_afiliado} - {plan.persona?.nombre} {plan.persona?.apellido}
-                </div>
-              ))}
-            </div>
-          )}
+            disabled={plansLoading || plansList.length === 0}
+          >
+            <option value="">
+              {plansLoading ? 'Cargando planes...' : 'Seleccionar un plan...'}
+            </option>
+            {plansList.map(plan => (
+              <option key={plan.id} value={plan.id}>
+                {plan.id} - {plan.numero_afiliado} - {plan.persona?.nombre} {plan.persona?.apellido}
+              </option>
+            ))}
+          </select>
         </div>
       </div>
 
