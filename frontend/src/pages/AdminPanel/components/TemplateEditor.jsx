@@ -291,6 +291,8 @@ const TemplateEditor = ({ onBack }) => {
     setSelectedPlanId(planId);
     const planDetail = await planesService.getPlanDetail(planId);
     if (planDetail) {
+      console.log('Plan detail received:', planDetail);
+      console.log('Mapped data:', mapPlanToPersonData(planDetail));
       setSelectedPlanData(planDetail);
     }
   };
@@ -302,7 +304,7 @@ const TemplateEditor = ({ onBack }) => {
   const mapPlanToPersonData = (planData) => {
     if (!planData) return null;
 
-    const persona = planData.persona || {};
+    const persona = planData.persona || planData.Persona || {};
 
     return {
       // Datos del titular (persona)
@@ -311,7 +313,7 @@ const TemplateEditor = ({ onBack }) => {
       numero_documento: persona.numero_documento || '',
       tipo_documento: persona.tipo_documento || '',
       fecha_nacimiento: persona.fecha_nacimiento || '',
-      domicilio: persona.domicilio || '',
+      domicilio: planData.domicilio || persona.domicilio || '',
       localidad_nombre: persona.localidad_nombre || '',
 
       // Datos del plan
