@@ -183,7 +183,8 @@ margins: 10
 }
 
 /**
- * Serializa bloques de ReciboTemplate a string HTML con placeholders
+ * Serializa bloques dinámicos de ReciboTemplate a string HTML con placeholders
+ * Cada bloque está posicionado de forma absoluta usando coordenadas x, y, width, height
  * Usado cuando se genera PDF de recibos con template personalizado
  */
 function serializeTemplateBlocks(template) {
@@ -195,6 +196,21 @@ function serializeTemplateBlocks(template) {
   const pageSize = pageConfig.tamaño || 'A4';
   const orientation = pageConfig.orientacion || 'portrait';
   const margins = pageConfig.margen_superior_mm || 10;
+  const bloques = template.bloques || [];
+
+  // Si no hay bloques dinámicos, retornar template por defecto
+  if (!Array.isArray(bloques) || bloques.length === 0) {
+    return getDefaultTemplateString();
+  }
+
+  // Dimensiones de página en mm
+  const pageDimensions = {
+    'A4': { width: 210, height: 297 },
+    'A5': { width: 148, height: 210 },
+    'Letter': { width: 215.9, height: 279.4 }
+  };
+
+  const dimensions = pageDimensions[pageSize] || pageDimensions['A4'];
 
   let html = `---
 pageSize: ${pageSize}
@@ -206,59 +222,67 @@ margins: ${margins}
   body {
     font-family: Arial, sans-serif;
     font-size: 12px;
+    margin: 0;
+    padding: 0;
   }
-  .recibo-container {
-    border: 1px solid #ccc;
-    padding: 10mm;
+
+  .recibo-page {
+    position: relative;
+    width: ${dimensions.width}mm;
+    height: ${dimensions.height}mm;
+    box-sizing: border-box;
+    overflow: hidden;
+    page-break-after: always;
+  }
+
+  .bloque-dinamico {
+    position: absolute;
+    overflow: hidden;
     box-sizing: border-box;
   }
-  table { width: 100%; border-collapse: collapse; }
-  th, td { border: 1px solid #ddd; padding: 3mm; text-align: left; }
-  .negativo { background-color: #fff3cd; color: #856404; }
+
+  .bloque-dinamico p {
+    margin: 0;
+    padding: 2mm;
+  }
+
+  .bloque-dinamico table {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: 10px;
+  }
+
+  .bloque-dinamico th,
+  .bloque-dinamico td {
+    border: 1px solid #ddd;
+    padding: 1mm;
+    text-align: left;
+  }
+
+  .negativo {
+    background-color: #fff3cd;
+    color: #856404;
+  }
 </style>
 
-<div class="recibo-container">
+<div class="recibo-page">
 `;
 
-  // Bloque 1: Encabezado
-  if (template.bloque_encabezado) {
-    html += '<div class="encabezado">';
-    const enc = template.bloque_encabezado;
-    if (enc.empresa_nombre) html += `<h2>${enc.empresa_nombre}</h2>`;
-    if (enc.empresa_direccion) html += `<p>${enc.empresa_direccion}</p>`;
-    html += '</div>';
-  }
+  // Renderizar cada bloque dinámico con su posicionamiento
+  bloques.forEach(bloque => {
+    const left = bloque.x || 0;
+    const top = bloque.y || 0;
+    const width = bloque.width || 100;
+    const height = bloque.height || 50;
+    const contenido = bloque.contenido || '';
 
-  // Bloque 2: Afiliado
-  if (template.bloque_afiliado && Array.isArray(template.bloque_afiliado.filas)) {
-    html += '<table><thead><tr><th>Dato</th><th>Valor</th></tr></thead><tbody>';
-    template.bloque_afiliado.filas.forEach(fila => {
-      if (fila.visible !== false) {
-        html += `<tr><td>${fila.etiqueta}</td><td>${fila.placeholder}</td></tr>`;
-      }
-    });
-    html += '</tbody></table>';
-  }
+    html += `<div class="bloque-dinamico" style="left: ${left}mm; top: ${top}mm; width: ${width}mm; height: ${height}mm;">
+  ${contenido}
+</div>
+`;
+  });
 
-  // Bloque 3: Detalles
-  if (template.bloque_detalles && Array.isArray(template.bloque_detalles.filas)) {
-    html += '<table><thead><tr><th>Concepto</th><th>Monto</th></tr></thead><tbody>';
-    template.bloque_detalles.filas.forEach(fila => {
-      html += `<tr><td>${fila.etiqueta}</td><td>${fila.placeholder}</td></tr>`;
-    });
-    html += '</tbody></table>';
-  }
-
-  // Bloque 4: Pie
-  if (template.bloque_pie) {
-    html += '<div class="pie">';
-    if (template.bloque_pie.aclaracion) html += `<p><em>${template.bloque_pie.aclaracion}</em></p>`;
-    if (template.bloque_pie.texto_legal) html += `<p><small>${template.bloque_pie.texto_legal}</small></p>`;
-    if (template.bloque_pie.mostrar_linea_firma) html += '<div style="margin-top: 20px; border-top: 1px solid #000; width: 200px;"></div>';
-    html += '</div>';
-  }
-
-  html += '</div>';
+  html += `</div>`;
 
   return html;
 }
