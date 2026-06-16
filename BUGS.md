@@ -31,7 +31,7 @@ No hay bugs activos.
 
 | ID | Severidad | Fase | Descripción | Reportado | Solucionado | Commit |
 |----|-----------|------|-------------|-----------|------------|--------|
-| BUG-054 | 🔴 CRÍTICO | Template Editor | PDF generation usa template por defecto en lugar de template activo guardado en BD | 2026-06-16 | 2026-06-16 | (próximo) |
+| BUG-054 | 🔴 CRÍTICO | Template Editor | PDF generation usa template por defecto en lugar de template activo guardado en BD + soporte múltiples recibos por página | 2026-06-16 | 2026-06-16 | 7a2054b, eddc3e2, 201d951 |
 | BUG-053 | 🔴 CRÍTICO | BACKLOG-082 | Bloques en recibos inferiores aparecen superpuestos en recibo superior (posicionamiento incorrecto) | 2026-06-15 | 2026-06-15 | 0adc4d9 |
 | BUG-052 | 🔴 CRÍTICO | Recibos PDF | Generación de PDF: Código HTML/CSS aparece literal en primeras páginas | 2026-05-21 | 2026-06-12 | (descartado) |
 | BUG-051 | 🔴 CRÍTICO | BACKLOG-074 | Selector de zona queda vacío al seleccionar opción (display personalizado falla) | 2026-05-15 | 2026-05-15 | `63c1aad` (BACKLOG-074) |
