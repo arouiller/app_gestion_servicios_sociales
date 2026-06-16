@@ -3,22 +3,15 @@ const { Op, literal } = require('sequelize');
 const { buildOrderByClause } = require('../utils/sortUtil');
 
 /**
- * GET /api/planes?search=...&estado=ACTIVO&limit=10
- * Búsqueda de planes por identificador del plan (plan_numero)
- * Query params: search (número del plan), estado (ACTIVO|SUSPENDIDO), limit (default 10)
+ * GET /api/planes?estado=ACTIVO&limit=10
+ * Obtiene listado de planes (pre-cargado o sin búsqueda)
+ * Query params: estado (ACTIVO|SUSPENDIDO), limit (default 10)
  * Retorna: { success, data: [planes] }
  */
 exports.list = async (req, res, next) => {
   try {
-    const { search, estado = 'ACTIVO', limit = 10 } = req.query;
+    const { estado = 'ACTIVO', limit = 10 } = req.query;
     let where = { estado: estado.toUpperCase() };
-
-    // Si hay búsqueda, filtrar por plan_numero
-    if (search && search.trim()) {
-      where.plan_numero = {
-        [Op.like]: `%${search}%`
-      };
-    }
 
     const planes = await db.PlanV1.findAll({
       where,
