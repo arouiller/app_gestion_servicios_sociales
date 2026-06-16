@@ -45,7 +45,7 @@ exports.list = async (req, res, next) => {
         },
         {
           model: db.Zona,
-          attributes: ['zona_codigo', 'zona_nombre'],
+          attributes: ['id', 'codigo', 'nombre'],
           required: false
         }
       ],
@@ -75,7 +75,7 @@ exports.list = async (req, res, next) => {
       arancel_por_servicio: plan.arancel_por_servicio || 0,
       estado: plan.estado,
       domicilio: plan.domicilio,
-      zona_codigo: plan.Zona?.zona_codigo,
+      zona_codigo: plan.Zona?.codigo,
       fecha_cobertura: plan.fecha_actualizacion,
       persona: plan.plan_integrantes?.[0]?.Persona ? {
         id: plan.plan_integrantes[0].Persona.id,
