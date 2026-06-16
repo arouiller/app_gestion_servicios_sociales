@@ -268,12 +268,16 @@ const TemplateEditor = ({ onBack }) => {
     setEditingContent(content);
   };
 
-  // Cargar primeros 10 planes al abrir el editor
+  // Cargar primeros 10 planes con persona asignada al abrir el editor
   useEffect(() => {
     const loadPlans = async () => {
       setPlansLoading(true);
-      const results = await planesService.searchPlanes('', 10);
-      setPlansList(results);
+      // Obtener más planes para poder filtrar los que tengan persona
+      const results = await planesService.searchPlanes('', 50);
+      // Filtrar solo planes que tengan persona asignada
+      const plansWithPerson = results.filter(plan => plan.persona && plan.persona.nombre);
+      // Tomar solo los primeros 10
+      setPlansList(plansWithPerson.slice(0, 10));
       setPlansLoading(false);
     };
     loadPlans();
