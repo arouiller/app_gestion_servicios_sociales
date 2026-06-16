@@ -9,6 +9,7 @@ const {
   getArancelWarningIcon,
   groupRecibosInPairs,
   getDefaultTemplateString,
+  serializeTemplateBlocks,
 } = require('../../utils/pdfHelpers');
 
 /**
@@ -585,7 +586,8 @@ exports.generarPDF = async (req, res, next) => {
       where: { activo: true },
     });
 
-    const fullTemplate = templateDB?.html || getDefaultTemplateString();
+    // Serializar bloques del template a string HTML con placeholders
+    const fullTemplate = serializeTemplateBlocks(templateDB);
     const { config, content } = parseTemplate(fullTemplate);
 
     // Construir HTML completo agrupando recibos en pares con tabla (2 recibos por página, apilados verticalmente)

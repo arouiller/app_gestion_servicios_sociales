@@ -183,6 +183,87 @@ margins: 10
 }
 
 /**
+ * Serializa bloques de ReciboTemplate a string HTML con placeholders
+ * Usado cuando se genera PDF de recibos con template personalizado
+ */
+function serializeTemplateBlocks(template) {
+  if (!template) {
+    return getDefaultTemplateString();
+  }
+
+  const pageConfig = template.bloque_pageconfig || {};
+  const pageSize = pageConfig.tamaño || 'A4';
+  const orientation = pageConfig.orientacion || 'portrait';
+  const margins = pageConfig.margen_superior_mm || 10;
+
+  let html = `---
+pageSize: ${pageSize}
+orientation: ${orientation}
+margins: ${margins}
+---
+
+<style>
+  body {
+    font-family: Arial, sans-serif;
+    font-size: 12px;
+  }
+  .recibo-container {
+    border: 1px solid #ccc;
+    padding: 10mm;
+    box-sizing: border-box;
+  }
+  table { width: 100%; border-collapse: collapse; }
+  th, td { border: 1px solid #ddd; padding: 3mm; text-align: left; }
+  .negativo { background-color: #fff3cd; color: #856404; }
+</style>
+
+<div class="recibo-container">
+`;
+
+  // Bloque 1: Encabezado
+  if (template.bloque_encabezado) {
+    html += '<div class="encabezado">';
+    const enc = template.bloque_encabezado;
+    if (enc.empresa_nombre) html += `<h2>${enc.empresa_nombre}</h2>`;
+    if (enc.empresa_direccion) html += `<p>${enc.empresa_direccion}</p>`;
+    html += '</div>';
+  }
+
+  // Bloque 2: Afiliado
+  if (template.bloque_afiliado && Array.isArray(template.bloque_afiliado.filas)) {
+    html += '<table><thead><tr><th>Dato</th><th>Valor</th></tr></thead><tbody>';
+    template.bloque_afiliado.filas.forEach(fila => {
+      if (fila.visible !== false) {
+        html += `<tr><td>${fila.etiqueta}</td><td>${fila.placeholder}</td></tr>`;
+      }
+    });
+    html += '</tbody></table>';
+  }
+
+  // Bloque 3: Detalles
+  if (template.bloque_detalles && Array.isArray(template.bloque_detalles.filas)) {
+    html += '<table><thead><tr><th>Concepto</th><th>Monto</th></tr></thead><tbody>';
+    template.bloque_detalles.filas.forEach(fila => {
+      html += `<tr><td>${fila.etiqueta}</td><td>${fila.placeholder}</td></tr>`;
+    });
+    html += '</tbody></table>';
+  }
+
+  // Bloque 4: Pie
+  if (template.bloque_pie) {
+    html += '<div class="pie">';
+    if (template.bloque_pie.aclaracion) html += `<p><em>${template.bloque_pie.aclaracion}</em></p>`;
+    if (template.bloque_pie.texto_legal) html += `<p><small>${template.bloque_pie.texto_legal}</small></p>`;
+    if (template.bloque_pie.mostrar_linea_firma) html += '<div style="margin-top: 20px; border-top: 1px solid #000; width: 200px;"></div>';
+    html += '</div>';
+  }
+
+  html += '</div>';
+
+  return html;
+}
+
+/**
  * Reemplaza todos los placeholders en un string HTML con valores del recibo
  * Los valores ya vienen formateados desde renderRecibo(), no reformatear
  */
@@ -224,4 +305,5 @@ module.exports = {
   groupRecibosInPairs,
   validateReciboInvariant,
   getDefaultTemplateString,
+  serializeTemplateBlocks,
 };
