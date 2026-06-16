@@ -184,8 +184,8 @@ margins: 10
 
 /**
  * Serializa bloques dinámicos de ReciboTemplate a string HTML con placeholders
- * Cada bloque está posicionado de forma absoluta usando coordenadas x, y, width, height
- * Soporta múltiples recibos por página apilados verticalmente según recibos_por_pagina
+ * Renderiza UN SOLO recibo con posicionamiento absoluto de bloques
+ * Múltiples recibos por página se manejan en recibosController.js
  * Usado cuando se genera PDF de recibos con template personalizado
  */
 function serializeTemplateBlocks(template) {
@@ -199,7 +199,6 @@ function serializeTemplateBlocks(template) {
   if (typeof pageConfig === 'object' && pageConfig !== null && !pageConfig.tamaño) {
     try {
       if (Array.isArray(pageConfig)) {
-        // Si es array, es probablemente del objeto corrupto, skip
         pageConfig = {};
       } else if (typeof pageConfig === 'string') {
         pageConfig = JSON.parse(pageConfig);
@@ -212,8 +211,6 @@ function serializeTemplateBlocks(template) {
   const pageSize = pageConfig.tamaño || 'A4';
   const orientation = pageConfig.orientacion || 'portrait';
   const margins = pageConfig.margen_superior_mm || 10;
-  const recibosPerPage = pageConfig.recibos_por_pagina || 1;
-  const layout = pageConfig.layout || 'vertical';
   const bloques = template.bloques || [];
 
   // Si no hay bloques dinámicos, retornar template por defecto
@@ -229,9 +226,6 @@ function serializeTemplateBlocks(template) {
   };
 
   const dimensions = pageDimensions[pageSize] || pageDimensions['A4'];
-
-  // Altura disponible por recibo (dividir altura total entre cantidad de recibos)
-  const reciboHeight = dimensions.height / recibosPerPage;
 
   let html = `---
 pageSize: ${pageSize}
@@ -251,14 +245,6 @@ margins: ${margins}
     position: relative;
     width: ${dimensions.width}mm;
     height: ${dimensions.height}mm;
-    box-sizing: border-box;
-    overflow: hidden;
-    page-break-after: always;
-  }
-
-  .recibo-contenedor {
-    position: absolute;
-    width: 100%;
     box-sizing: border-box;
     overflow: hidden;
   }
@@ -297,30 +283,19 @@ margins: ${margins}
 <div class="recibo-page">
 `;
 
-  // Renderizar múltiples recibos por página
-  for (let reciboNum = 0; reciboNum < recibosPerPage; reciboNum++) {
-    const offsetY = reciboNum * reciboHeight;
+  // Renderizar cada bloque dinámico con su posicionamiento
+  bloques.forEach(bloque => {
+    const left = bloque.x || 0;
+    const top = bloque.y || 0;
+    const width = bloque.width || 100;
+    const height = bloque.height || 50;
+    const contenido = bloque.contenido || '';
 
-    html += `<div class="recibo-contenedor" style="top: ${offsetY}mm; height: ${reciboHeight}mm;">
+    html += `<div class="bloque-dinamico" style="left: ${left}mm; top: ${top}mm; width: ${width}mm; height: ${height}mm;">
+  ${contenido}
+</div>
 `;
-
-    // Renderizar cada bloque dinámico con su posicionamiento
-    bloques.forEach(bloque => {
-      const left = bloque.x || 0;
-      const top = bloque.y || 0;
-      const width = bloque.width || 100;
-      const height = bloque.height || 50;
-      const contenido = bloque.contenido || '';
-
-      html += `  <div class="bloque-dinamico" style="left: ${left}mm; top: ${top}mm; width: ${width}mm; height: ${height}mm;">
-    ${contenido}
-  </div>
-`;
-    });
-
-    html += `</div>
-`;
-  }
+  });
 
   html += `</div>`;
 

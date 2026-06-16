@@ -590,22 +590,49 @@ exports.generarPDF = async (req, res, next) => {
     const fullTemplate = serializeTemplateBlocks(templateDB);
     const { config, content } = parseTemplate(fullTemplate);
 
-    // Construir HTML completo agrupando recibos en pares con tabla (2 recibos por página, apilados verticalmente)
+    // Obtener recibos_por_pagina desde bloque_pageconfig
+    let pageConfig = templateDB?.bloque_pageconfig || {};
+    if (typeof pageConfig === 'string') {
+      try {
+        pageConfig = JSON.parse(pageConfig);
+      } catch (e) {
+        pageConfig = {};
+      }
+    }
+    const recibosPerPage = pageConfig.recibos_por_pagina || 1;
+
+    // Dimensiones de página en mm
+    const pageDimensions = {
+      'A4': { width: 210, height: 297 },
+      'A5': { width: 148, height: 210 },
+      'Letter': { width: 215.9, height: 279.4 }
+    };
+    const pageSize = pageConfig.tamaño || 'A4';
+    const dimensions = pageDimensions[pageSize] || pageDimensions['A4'];
+    const reciboHeight = dimensions.height / recibosPerPage;
+
+    // Construir HTML completo agrupando recibos (N recibos por página, apilados verticalmente)
     let fullHTML = '';
-    for (let i = 0; i < recibos.length; i += 2) {
-      fullHTML += '<table class="recibos-table">';
+    for (let i = 0; i < recibos.length; i += recibosPerPage) {
+      fullHTML += '<div class="recibos-pagina" style="page-break-inside: avoid;">';
 
-      // Primer recibo del par en primera fila
-      const reciboHTML1 = renderRecibo(recibos[i], content);
-      fullHTML += '<tr><td class="recibo-cell">' + reciboHTML1 + '</td></tr>';
+      // Renderizar N recibos en esta página
+      for (let j = 0; j < recibosPerPage && i + j < recibos.length; j++) {
+        const reciboHTML = renderRecibo(recibos[i + j], content);
 
-      // Segundo recibo del par en segunda fila (si existe)
-      if (i + 1 < recibos.length) {
-        const reciboHTML2 = renderRecibo(recibos[i + 1], content);
-        fullHTML += '<tr><td class="recibo-cell">' + reciboHTML2 + '</td></tr>';
+        // Ajustar altura del contenedor .recibo-page para que quepa en la página
+        const reciboHTMLAdjustado = reciboHTML.replace(
+          /class="recibo-page" style="/,
+          `class="recibo-page" style="height: ${reciboHeight}mm !important; "`
+        );
+
+        fullHTML += `<div class="recibo-wrapper" style="height: ${reciboHeight}mm; overflow: hidden;">
+  ${reciboHTMLAdjustado}
+</div>
+`;
       }
 
-      fullHTML += '</table>';
+      fullHTML += '</div>';
     }
 
     // Extraer estilos del template
@@ -620,31 +647,29 @@ exports.generarPDF = async (req, res, next) => {
   <style>
     ${templateStyles}
 
-    .recibos-table {
+    .recibos-pagina {
       width: 100%;
-      border-collapse: collapse;
       margin: 0;
       padding: 0;
       page-break-inside: avoid;
     }
 
-    .recibos-table tr {
-      display: table-row;
-    }
-
-    .recibo-cell {
+    .recibo-wrapper {
       width: 100%;
+      margin: 0;
       padding: 0;
-      vertical-align: top;
-      border: none;
+      box-sizing: border-box;
+      overflow: hidden;
     }
 
-    .recibo-cell .recibo-container {
+    .recibo-page {
+      margin: 0;
+      padding: 0;
       width: 100%;
     }
   </style>
 </head>
-<body style="padding: ${config.margins}mm; margin: 0;">
+<body style="margin: 0; padding: 0;">
   ${fullHTML}
 </body>
 </html>`;
