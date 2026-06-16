@@ -127,8 +127,8 @@ const GenericBlock = ({
       ...block,
       x: Math.round(x * 100) / 100,
       y: Math.round(y * 100) / 100,
-      width: Math.max(30, Math.round(width * 100) / 100),
-      height: Math.max(20, Math.round(height * 100) / 100)
+      width: Math.max(5, Math.round(width * 100) / 100),
+      height: Math.max(5, Math.round(height * 100) / 100)
     });
   };
 
@@ -147,7 +147,7 @@ const GenericBlock = ({
         }}
         onDragStop={handleDragStop}
         onResizeStop={handleResizeStop}
-        minWidth={30 * MM_TO_PX}
+        minWidth={5 * MM_TO_PX}
         minHeight={20 * MM_TO_PX}
         maxWidth={limits.maxWidth}
         maxHeight={limits.maxHeight}
