@@ -153,14 +153,15 @@ const TemplateEditor = ({ onBack }) => {
 
       // Reemplazar placeholders en todos los bloques
       if (selectedPlanData) {
+        const mappedPersonData = mapPlanToPersonData(selectedPlanData);
         canvasCopy.querySelectorAll('[class*="generic-block"]').forEach(blockEl => {
           const originalHTML = blockEl.innerHTML;
-          const replacedHTML = replacePlaceholders(originalHTML, selectedPlanData);
+          const replacedHTML = replacePlaceholders(originalHTML, mappedPersonData);
           blockEl.innerHTML = replacedHTML;
         });
         canvasCopy.querySelectorAll('[class*="read-only-block"]').forEach(blockEl => {
           const originalHTML = blockEl.innerHTML;
-          const replacedHTML = replacePlaceholders(originalHTML, selectedPlanData);
+          const replacedHTML = replacePlaceholders(originalHTML, mappedPersonData);
           blockEl.innerHTML = replacedHTML;
         });
       }
