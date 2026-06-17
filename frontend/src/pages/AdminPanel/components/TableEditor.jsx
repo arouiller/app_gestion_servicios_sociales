@@ -8,6 +8,7 @@ const initTabla = () => ({
   filas: [
     {
       id: uuidv4(),
+      altura: 15,
       celdas: [
         { id: uuidv4(), contenido: '<strong>Afiliado</strong>', ancho: 40 },
         { id: uuidv4(), contenido: '{{numero_afiliado}}', ancho: 60 }
@@ -15,6 +16,7 @@ const initTabla = () => ({
     },
     {
       id: uuidv4(),
+      altura: 15,
       celdas: [
         { id: uuidv4(), contenido: '<strong>Titular</strong>', ancho: 40 },
         { id: uuidv4(), contenido: '{{titular_apellido}}, {{titular_nombre}}', ancho: 60 }
@@ -22,6 +24,7 @@ const initTabla = () => ({
     },
     {
       id: uuidv4(),
+      altura: 15,
       celdas: [
         { id: uuidv4(), contenido: '<strong>O.S.</strong>', ancho: 40 },
         { id: uuidv4(), contenido: '{{obra_social_nombre}}', ancho: 60 }
@@ -105,6 +108,32 @@ const updateCelda = (tabla, rowId, cellId, campo, valor) => {
           ...fila,
           celdas: fila.celdas.map(celda =>
             celda.id === cellId ? { ...celda, [campo]: valor } : celda
+          )
+        };
+      }
+      return fila;
+    })
+  };
+};
+
+const updateFilaAltura = (tabla, rowId, altura) => {
+  return {
+    ...tabla,
+    filas: tabla.filas.map(fila =>
+      fila.id === rowId ? { ...fila, altura: Math.max(5, altura) } : fila
+    )
+  };
+};
+
+const updateCeldaAncho = (tabla, rowId, cellId, ancho) => {
+  return {
+    ...tabla,
+    filas: tabla.filas.map(fila => {
+      if (fila.id === rowId) {
+        return {
+          ...fila,
+          celdas: fila.celdas.map(celda =>
+            celda.id === cellId ? { ...celda, ancho: Math.max(10, ancho) } : celda
           )
         };
       }
@@ -376,4 +405,4 @@ const TableEditor = ({ placeholders = {} }) => {
 };
 
 export default TableEditor;
-export { initTabla, addFila, deleteFila, addColumna, deleteColumna, updateCelda };
+export { initTabla, addFila, deleteFila, addColumna, deleteColumna, updateCelda, updateFilaAltura, updateCeldaAncho };
