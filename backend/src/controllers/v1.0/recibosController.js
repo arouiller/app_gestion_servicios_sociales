@@ -685,6 +685,11 @@ exports.generarPDF = async (req, res, next) => {
       margin: `${config.margins}mm`,
     };
 
+    // DEBUG: Log de primeros 2000 caracteres del HTML
+    console.log('[PDF DEBUG] Primeros 2000 caracteres del HTML:');
+    console.log(htmlConEstilos.substring(0, 2000));
+    console.log('[PDF DEBUG] Opciones de html-pdf:', options);
+
     // Generar PDF con html-pdf
     pdf.create(htmlConEstilos, options).toStream((err, stream) => {
       if (err) {
