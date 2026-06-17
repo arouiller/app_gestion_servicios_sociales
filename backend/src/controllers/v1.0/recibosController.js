@@ -695,7 +695,24 @@ exports.generarPDF = async (req, res, next) => {
       margin: `${config.margins}mm`,
     };
 
-    // DEBUG: Log de primeros 2000 caracteres del HTML
+    // DEBUG: Exportar HTML a archivo para inspección
+    const fs = require('fs');
+    const path = require('path');
+    const debugDir = path.join(__dirname, '../../logs/pdf-debug');
+
+    // Crear directorio si no existe
+    if (!fs.existsSync(debugDir)) {
+      fs.mkdirSync(debugDir, { recursive: true });
+    }
+
+    const timestamp = new Date().toISOString().replace(/[:.]/g, '-');
+    const htmlFile = path.join(debugDir, `pdf-debug-${timestamp}.html`);
+    fs.writeFileSync(htmlFile, htmlConEstilos);
+
+    console.log('[PDF DEBUG] HTML exportado a:', htmlFile);
+    console.log('[PDF DEBUG] Tamaño del HTML:', htmlConEstilos.length, 'bytes');
+    console.log('[PDF DEBUG] Número de ".recibo-wrapper":', (htmlConEstilos.match(/class="recibo-wrapper"/g) || []).length);
+    console.log('[PDF DEBUG] Número de ".recibos-pagina":', (htmlConEstilos.match(/class="recibos-pagina"/g) || []).length);
     console.log('[PDF DEBUG] Primeros 2000 caracteres del HTML:');
     console.log(htmlConEstilos.substring(0, 2000));
     console.log('[PDF DEBUG] Opciones de html-pdf:', options);
