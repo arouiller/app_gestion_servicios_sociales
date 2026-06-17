@@ -342,17 +342,16 @@ function replaceAllPlaceholders(html, recibo) {
 }
 
 /**
- * Genera un buffer PDF de un recibo individual
- * Se usa para generar PDFs por recibo que luego se combinan
- * @param {String} reciboHTML - HTML del recibo con placeholders reemplazados
- * @param {Number} reciboHeightMm - Altura del recibo en mm
- * @param {Number} pageWidthMm - Ancho de página en mm (ej: 210 para A4)
+ * Genera un buffer PDF de una página con N recibos
+ * @param {String} pageHTML - HTML de la página con N recibos posicionados
+ * @param {String} pageSize - Tamaño de página (A4, A5, Letter)
+ * @param {String} orientation - Orientación (portrait, landscape)
+ * @param {Number} margins - Márgenes en mm
  * @returns {Promise<Buffer>} - Buffer del PDF
  */
-async function generateReceiptPDFBuffer(reciboHTML, reciboHeightMm, pageWidthMm) {
+async function generatePagePDF(pageHTML, pageSize, orientation, margins) {
   const pdf = require('html-pdf');
 
-  // Crear HTML completo del recibo con dimensiones específicas
   const htmlCompleto = `<!DOCTYPE html>
 <html>
 <head>
@@ -364,39 +363,23 @@ async function generateReceiptPDFBuffer(reciboHTML, reciboHeightMm, pageWidthMm)
       font-family: Arial, sans-serif;
       font-size: 11px;
     }
-    .recibo-wrapper {
-      width: ${pageWidthMm}mm;
-      height: ${reciboHeightMm}mm;
+    .page-wrapper {
       margin: 0;
       padding: 0;
       box-sizing: border-box;
-      position: relative;
-      overflow: hidden;
-    }
-    .bloque-dinamico {
-      position: absolute;
-      overflow: hidden;
-      box-sizing: border-box;
-    }
-    .bloque-dinamico p {
-      margin: 0;
-      padding: 1mm;
-      font-size: inherit;
     }
   </style>
 </head>
 <body style="margin: 0; padding: 0;">
-  <div class="recibo-wrapper">
-    ${reciboHTML}
-  </div>
+  ${pageHTML}
 </body>
 </html>`;
 
   return new Promise((resolve, reject) => {
     const options = {
-      format: [pageWidthMm, reciboHeightMm],
-      orientation: 'Portrait',
-      margin: '0mm',
+      format: pageSize.toUpperCase(),
+      orientation: orientation || 'portrait',
+      margin: `${margins || 0}mm`,
     };
 
     pdf.create(htmlCompleto, options).toBuffer((err, buffer) => {
@@ -410,62 +393,22 @@ async function generateReceiptPDFBuffer(reciboHTML, reciboHeightMm, pageWidthMm)
 }
 
 /**
- * Combina múltiples buffers de PDF en una página A4 respetando configuración
- * @param {Array<Buffer>} pdfBuffers - Array de buffers PDF (uno por recibo)
- * @param {Object} pageConfig - Configuración de página (tamaño, márgenes, etc)
- * @param {Number} recibosPerPage - Cantidad de recibos por página
+ * Combina múltiples buffers de PDF en un solo PDF
+ * @param {Array<Buffer>} pdfBuffers - Array de buffers PDF (uno por página)
  * @returns {Promise<Buffer>} - Buffer del PDF combinado
  */
-async function combinePDFBuffers(pdfBuffers, pageConfig, recibosPerPage) {
-  const { PDFDocument, PDFPage, degrees } = require('pdf-lib');
+async function concatenatePDFs(pdfBuffers) {
+  const concat = require('pdf-concat');
 
-  // Dimensiones de página
-  const pageDimensions = {
-    'A4': { width: 210, height: 297 },
-    'A5': { width: 148, height: 210 },
-    'Letter': { width: 215.9, height: 279.4 }
-  };
-
-  const pageSize = pageConfig.tamaño || 'A4';
-  const dimensions = pageDimensions[pageSize] || pageDimensions['A4'];
-  const margins = pageConfig.margen_superior_mm || 0;
-  const gap = pageConfig.gap_entre_recibos_mm || 0;
-
-  // Crear documento PDF
-  const pdfDoc = await PDFDocument.create();
-
-  // Procesar recibos en grupos
-  for (let i = 0; i < pdfBuffers.length; i += recibosPerPage) {
-    // Crear página nueva
-    const page = pdfDoc.addPage([dimensions.width * 2.834, dimensions.height * 2.834]); // Convertir mm a puntos (1mm = 2.834pt)
-    const pageHeight = page.getHeight();
-    const pageWidth = page.getWidth();
-
-    // Convertir dimensiones a puntos
-    const marginPt = margins * 2.834;
-    const gapPt = gap * 2.834;
-    const reciboHeightPt = (dimensions.height / recibosPerPage) * 2.834;
-
-    // Insertar recibos en esta página
-    for (let j = 0; j < recibosPerPage && i + j < pdfBuffers.length; j++) {
-      const reciboBuffer = pdfBuffers[i + j];
-      const reciboDoc = await PDFDocument.load(reciboBuffer);
-      const [reciboPage] = await pdfDoc.copyPages(reciboDoc, [0]);
-
-      // Calcular posición Y
-      const yPosition = pageHeight - marginPt - (j + 1) * reciboHeightPt - (j * gapPt);
-
-      // Insertar página en posición
-      page.drawPage(reciboPage, {
-        x: marginPt,
-        y: yPosition,
-        width: pageWidth - 2 * marginPt,
-        height: reciboHeightPt,
-      });
-    }
-  }
-
-  return Buffer.from(await pdfDoc.save());
+  return new Promise((resolve, reject) => {
+    concat(pdfBuffers, (err, result) => {
+      if (err) {
+        reject(err);
+      } else {
+        resolve(result);
+      }
+    });
+  });
 }
 
 module.exports = {
@@ -479,6 +422,6 @@ module.exports = {
   validateReciboInvariant,
   getDefaultTemplateString,
   serializeTemplateBlocks,
-  generateReceiptPDFBuffer,
-  combinePDFBuffers,
+  generatePagePDF,
+  concatenatePDFs,
 };

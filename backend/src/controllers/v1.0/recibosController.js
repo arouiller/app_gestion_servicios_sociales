@@ -9,8 +9,8 @@ const {
   groupRecibosInPairs,
   getDefaultTemplateString,
   serializeTemplateBlocks,
-  generateReceiptPDFBuffer,
-  combinePDFBuffers,
+  generatePagePDF,
+  concatenatePDFs,
 } = require('../../utils/pdfHelpers');
 
 /**
@@ -609,7 +609,7 @@ exports.generarPDF = async (req, res, next) => {
     const dimensions = pageDimensions[pageSize] || pageDimensions['A4'];
     const reciboHeight = dimensions.height * scaleFactor;
 
-    console.log('[PDF] Iniciando generación de PDFs por recibo');
+    console.log('[PDF] Iniciando generación de PDFs por página');
     console.log('[PDF] Recibos por página:', recibosPerPage);
     console.log('[PDF] Altura de cada recibo:', reciboHeight, 'mm');
     console.log('[PDF] Total de recibos:', recibos.length);
@@ -619,29 +619,40 @@ exports.generarPDF = async (req, res, next) => {
     const { config, content } = parseTemplate(fullTemplate);
     const contentWithoutStyles = content.replace(/<style[^>]*>[\s\S]*?<\/style>/gi, '');
 
-    // NUEVO ENFOQUE: Generar un PDF por cada recibo
+    // NUEVO ENFOQUE: Generar un PDF por PÁGINA (con N recibos cada una)
     const pdfBuffers = [];
-    for (let i = 0; i < recibos.length; i++) {
+    for (let i = 0; i < recibos.length; i += recibosPerPage) {
       try {
-        const reciboHTML = renderRecibo(recibos[i], contentWithoutStyles);
-        console.log('[PDF] Generando PDF del recibo', i + 1, 'de', recibos.length);
+        // Construir HTML de la página con N recibos
+        let pageHTML = '<div style="margin: 0; padding: 0;">';
 
-        const pdfBuffer = await generateReceiptPDFBuffer(reciboHTML, reciboHeight, dimensions.width);
+        for (let j = 0; j < recibosPerPage && i + j < recibos.length; j++) {
+          const reciboHTML = renderRecibo(recibos[i + j], contentWithoutStyles);
+          pageHTML += `<div style="height: ${reciboHeight}mm; margin: 0; padding: 0; overflow: hidden;">
+${reciboHTML}
+</div>`;
+        }
+
+        pageHTML += '</div>';
+
+        console.log('[PDF] Generando PDF de página', Math.floor(i / recibosPerPage) + 1, 'con recibos', i + 1, '-', Math.min(i + recibosPerPage, recibos.length));
+
+        const pdfBuffer = await generatePagePDF(pageHTML, pageSize, config.orientation, config.margins || 0);
         pdfBuffers.push(pdfBuffer);
       } catch (err) {
-        console.error('[PDF] Error generando PDF del recibo', i, ':', err);
+        console.error('[PDF] Error generando PDF de página:', err);
         return res.status(500).json({
-          error: 'Error al generar PDF del recibo ' + (i + 1) + ': ' + err.message,
+          error: 'Error al generar PDF de página: ' + err.message,
         });
       }
     }
 
-    console.log('[PDF] PDFs individuales generados:', pdfBuffers.length);
+    console.log('[PDF] PDFs de páginas generados:', pdfBuffers.length);
     console.log('[PDF] Combinando PDFs...');
 
-    // Combinar todos los PDFs respetando la configuración
+    // Combinar todos los PDFs
     try {
-      const finalPDFBuffer = await combinePDFBuffers(pdfBuffers, pageConfig, recibosPerPage);
+      const finalPDFBuffer = await concatenatePDFs(pdfBuffers);
 
       console.log('[PDF] PDF combinado generado, tamaño:', finalPDFBuffer.length, 'bytes');
 
