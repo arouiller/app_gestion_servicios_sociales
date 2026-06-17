@@ -588,6 +588,8 @@ exports.generarPDF = async (req, res, next) => {
 
     // Obtener recibos_por_pagina desde bloque_pageconfig
     let pageConfig = templateDB?.bloque_pageconfig || {};
+    console.log('[PDF DEBUG] templateDB.bloque_pageconfig tipo:', typeof pageConfig);
+    console.log('[PDF DEBUG] templateDB.bloque_pageconfig valor:', JSON.stringify(pageConfig));
     if (typeof pageConfig === 'string') {
       try {
         pageConfig = JSON.parse(pageConfig);
@@ -596,6 +598,7 @@ exports.generarPDF = async (req, res, next) => {
       }
     }
     const recibosPerPage = pageConfig.recibos_por_pagina || 1;
+    console.log('[PDF DEBUG] recibosPerPage:', recibosPerPage);
     const scaleFactor = 1 / recibosPerPage;
 
     // Dimensiones de página en mm
