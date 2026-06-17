@@ -628,7 +628,7 @@ exports.generarPDF = async (req, res, next) => {
 
     if (isTabla) {
       // Para tabla: serializar una sola tabla y replicarla con datos de cada recibo
-      const fullTemplate = serializeTemplateTable(templateDB, scaleFactor);
+      const fullTemplate = serializeTemplateTable(templateDB);
       const parsed = parseTemplate(fullTemplate);
       config = parsed.config;
       content = parsed.content;
@@ -646,10 +646,15 @@ exports.generarPDF = async (req, res, next) => {
           fullHTML += `<div style="height: ${reciboHeight}mm; margin: 0; padding: 0; overflow: hidden;">
 ${reciboContentHTML}
 </div>`;
+
+          // Agregar gap entre recibos (excepto el último de la página)
+          if (j < recibosPerPage - 1 && i + j + 1 < recibos.length) {
+            fullHTML += `<div style="height: ${gapVertical}mm; margin: 0; padding: 0;"></div>`;
+          }
         }
 
         fullHTML += '</div>';
-        console.log('[PDF] Agregada página (tabla)', Math.floor(i / recibosPerPage) + 1);
+        console.log('[PDF] Agregada página (tabla)', Math.floor(i / recibosPerPage) + 1, 'con', Math.min(recibosPerPage, recibos.length - i), 'recibos');
       }
     } else {
       // Para bloques: usar lógica legacy

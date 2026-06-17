@@ -398,12 +398,39 @@ async function generateMultiPagePDF(fullHTML, pageSize, orientation, margins) {
 }
 
 /**
- * Serializa un template de tabla (type: 'tabla') a HTML con posicionamiento correcto
- * La tabla se renderiza en bloques de altura calculada según recibos_por_pagina y gap
- * @param {Object} template - ReciboTemplate con bloques[0].type === 'tabla'
- * @param {Number} scaleFactor - Factor de escala (1.0 = sin escala)
+ * Genera HTML de tabla con placeholders (sin estructura de página)
+ * El controlador maneja la iteración y paginación
+ * @param {Object} tablaData - Objeto tabla con filas y celdas
  */
-function serializeTemplateTable(template, scaleFactor = 1.0) {
+function generateTableHTML(tablaData) {
+  if (!tablaData) return '';
+
+  const borderStyle = tablaData.bordeTabla ? '1px solid #000' : 'none';
+  const filasHTML = tablaData.filas
+    .map(fila => {
+      const celdas = fila.celdas
+        .map(celda => {
+          const ancho = celda.ancho || 50;
+          return `<td style="width: ${ancho}%; padding: 4px; border: ${borderStyle}; vertical-align: top; font-size: inherit;">${celda.contenido || ''}</td>`;
+        })
+        .join('');
+      return `<tr>${celdas}</tr>`;
+    })
+    .join('');
+
+  return `<table style="width: 100%; height: 100%; border-collapse: collapse; font-size: ${tablaData.tamanoFuente || 11}px; font-family: Arial, sans-serif;">
+<tbody>
+${filasHTML}
+</tbody>
+</table>`;
+}
+
+/**
+ * Serializa un template de tabla (type: 'tabla') a HTML con header de config
+ * Devuelve UN SOLO template de tabla que se replica para cada recibo
+ * @param {Object} template - ReciboTemplate con bloques[0].type === 'tabla'
+ */
+function serializeTemplateTable(template) {
   if (!template) {
     return getDefaultTemplateString();
   }
@@ -412,7 +439,7 @@ function serializeTemplateTable(template, scaleFactor = 1.0) {
   const tablaData = bloques[0]?.type === 'tabla' ? bloques[0] : null;
 
   if (!tablaData) {
-    return serializeTemplateBlocks(template, scaleFactor);
+    return serializeTemplateBlocks(template, 1);
   }
 
   let pageConfig = template.bloque_pageconfig || {};
@@ -432,47 +459,9 @@ function serializeTemplateTable(template, scaleFactor = 1.0) {
 
   const pageSize = pageConfig.tamaño || 'A4';
   const orientation = pageConfig.orientacion || 'portrait';
-  const marginTop = pageConfig.margen_superior_mm || 10;
-  const marginBottom = pageConfig.margen_inferior_mm || 10;
-  const marginLeft = pageConfig.margen_izquierdo_mm || 10;
-  const marginRight = pageConfig.margen_derecho_mm || 10;
-  const recibosPerPage = pageConfig.recibos_por_pagina || 1;
-  const gapVertical = pageConfig.gap_vertical_mm || 0;
+  const tableHTML = generateTableHTML(tablaData);
 
-  const pageDimensions = {
-    'A4': { width: 210, height: 297 },
-    'A5': { width: 148, height: 210 },
-    'Letter': { width: 215.9, height: 279.4 }
-  };
-
-  const dim = pageDimensions[pageSize] || pageDimensions['A4'];
-  const contentWidth = dim.width - marginLeft - marginRight;
-  const contentHeight = dim.height - marginTop - marginBottom;
-  const reciboHeight = (contentHeight - (recibosPerPage - 1) * gapVertical) / recibosPerPage;
-
-  // Generar HTML de la tabla
-  const generarFilasHTML = () => {
-    const borderStyle = tablaData.bordeTabla ? '1px solid #000' : 'none';
-    return tablaData.filas
-      .map(fila => {
-        const celdas = fila.celdas
-          .map(celda => {
-            const ancho = celda.ancho || 50;
-            return `<td style="width: ${ancho}%; padding: 4px; border: ${borderStyle}; vertical-align: middle; font-size: inherit;">${celda.contenido || ''}</td>`;
-          })
-          .join('');
-        return `<tr>${celdas}</tr>`;
-      })
-      .join('');
-  };
-
-  const tableHTML = `<table style="width: 100%; border-collapse: collapse; font-size: ${tablaData.tamanoFuente || 11}px; font-family: Arial, sans-serif;">
-<tbody>
-${generarFilasHTML()}
-</tbody>
-</table>`;
-
-  let html = `---
+  const html = `---
 pageSize: ${pageSize}
 orientation: ${orientation}
 margins: 0
@@ -495,30 +484,9 @@ margins: 0
   .page:last-child {
     page-break-after: avoid;
   }
-  .recibo-slot {
-    height: ${reciboHeight}mm;
-    width: ${contentWidth}mm;
-    overflow: hidden;
-    box-sizing: border-box;
-    page-break-inside: avoid;
-  }
-  .recibo-gap {
-    height: ${gapVertical}mm;
-  }
 </style>
 
-<div style="padding: ${marginTop}mm ${marginRight}mm ${marginBottom}mm ${marginLeft}mm;">
-`;
-
-  // Generar una página con múltiples slots de recibo
-  for (let i = 0; i < recibosPerPage; i++) {
-    html += `<div class="recibo-slot">${tableHTML}</div>`;
-    if (i < recibosPerPage - 1) {
-      html += `<div class="recibo-gap"></div>`;
-    }
-  }
-
-  html += `</div>`;
+${tableHTML}`;
 
   return html;
 }
