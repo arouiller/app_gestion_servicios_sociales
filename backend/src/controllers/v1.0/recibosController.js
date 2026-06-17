@@ -598,6 +598,16 @@ exports.generarPDF = async (req, res, next) => {
     const recibosPerPage = pageConfig.recibos_por_pagina || 1;
     const scaleFactor = 1 / recibosPerPage;
 
+    // Dimensiones de página en mm
+    const pageDimensions = {
+      'A4': { width: 210, height: 297 },
+      'A5': { width: 148, height: 210 },
+      'Letter': { width: 215.9, height: 279.4 }
+    };
+    const pageSize = pageConfig.tamaño || 'A4';
+    const dimensions = pageDimensions[pageSize] || pageDimensions['A4'];
+    const reciboHeight = dimensions.height * scaleFactor;
+
     // Serializar bloques del template a string HTML con placeholders, aplicando escala
     const fullTemplate = serializeTemplateBlocks(templateDB, scaleFactor);
     const { config, content } = parseTemplate(fullTemplate);
@@ -611,7 +621,7 @@ exports.generarPDF = async (req, res, next) => {
       for (let j = 0; j < recibosPerPage && i + j < recibos.length; j++) {
         const reciboHTML = renderRecibo(recibos[i + j], content);
 
-        fullHTML += `<div class="recibo-wrapper">
+        fullHTML += `<div class="recibo-wrapper" style="height: ${reciboHeight}mm; margin: 0; padding: 0; overflow: hidden;">
   ${reciboHTML}
 </div>
 `;
