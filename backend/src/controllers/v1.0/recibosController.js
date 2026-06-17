@@ -610,8 +610,9 @@ exports.generarPDF = async (req, res, next) => {
     const dimensions = pageDimensions[pageSize] || pageDimensions['A4'];
     const marginTop = pageConfig.margen_superior_mm || 10;
     const marginBottom = pageConfig.margen_inferior_mm || 10;
-    const contentHeight = dimensions.height - marginTop - marginBottom;
-    const reciboHeight = (contentHeight - (recibosPerPage - 1) * gapVertical) / recibosPerPage;
+    const marginLeft = pageConfig.margen_izquierdo_mm || 10;
+    const marginRight = pageConfig.margen_derecho_mm || 10;
+    const reciboHeight = (dimensions.height - (recibosPerPage - 1) * gapVertical) / recibosPerPage;
 
     console.log('[PDF] Iniciando generación de PDF');
     console.log('[PDF] Recibos por página:', recibosPerPage);
@@ -634,7 +635,7 @@ exports.generarPDF = async (req, res, next) => {
       content = parsed.content;
 
       for (let i = 0; i < recibos.length; i += recibosPerPage) {
-        fullHTML += '<div class="page" style="page-break-after: always; margin: 0; padding: 0;">';
+        fullHTML += `<div class="page" style="page-break-after: always; margin: 0; padding: ${marginTop}mm ${marginRight}mm ${marginBottom}mm ${marginLeft}mm;">`;
 
         for (let j = 0; j < recibosPerPage && i + j < recibos.length; j++) {
           const recibo = recibos[i + j];
@@ -665,7 +666,7 @@ ${reciboContentHTML}
       const contentWithoutStyles = content.replace(/<style[^>]*>[\s\S]*?<\/style>/gi, '');
 
       for (let i = 0; i < recibos.length; i += recibosPerPage) {
-        fullHTML += '<div class="page" style="page-break-after: always; margin: 0; padding: 0;">';
+        fullHTML += `<div class="page" style="page-break-after: always; margin: 0; padding: ${marginTop}mm ${marginRight}mm ${marginBottom}mm ${marginLeft}mm;">`;
 
         for (let j = 0; j < recibosPerPage && i + j < recibos.length; j++) {
           const reciboHTML = renderRecibo(recibos[i + j], contentWithoutStyles);
