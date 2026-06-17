@@ -1,7 +1,6 @@
 const db = require('../../models');
 const sequelize = require('../../config/database');
 const { Op, literal } = require('sequelize');
-const wkhtmltopdf = require('wkhtmltopdf');
 const {
   formatCurrency,
   replaceAllPlaceholders,
@@ -10,6 +9,8 @@ const {
   groupRecibosInPairs,
   getDefaultTemplateString,
   serializeTemplateBlocks,
+  generateReceiptPDFBuffer,
+  combinePDFBuffers,
 } = require('../../utils/pdfHelpers');
 
 /**
@@ -588,8 +589,6 @@ exports.generarPDF = async (req, res, next) => {
 
     // Obtener recibos_por_pagina desde bloque_pageconfig
     let pageConfig = templateDB?.bloque_pageconfig || {};
-    console.log('[PDF DEBUG] templateDB.bloque_pageconfig tipo:', typeof pageConfig);
-    console.log('[PDF DEBUG] templateDB.bloque_pageconfig valor:', JSON.stringify(pageConfig));
     if (typeof pageConfig === 'string') {
       try {
         pageConfig = JSON.parse(pageConfig);
@@ -598,7 +597,6 @@ exports.generarPDF = async (req, res, next) => {
       }
     }
     const recibosPerPage = pageConfig.recibos_por_pagina || 1;
-    console.log('[PDF DEBUG] recibosPerPage:', recibosPerPage);
     const scaleFactor = 1 / recibosPerPage;
 
     // Dimensiones de página en mm
@@ -611,119 +609,49 @@ exports.generarPDF = async (req, res, next) => {
     const dimensions = pageDimensions[pageSize] || pageDimensions['A4'];
     const reciboHeight = dimensions.height * scaleFactor;
 
+    console.log('[PDF] Iniciando generación de PDFs por recibo');
+    console.log('[PDF] Recibos por página:', recibosPerPage);
+    console.log('[PDF] Altura de cada recibo:', reciboHeight, 'mm');
+    console.log('[PDF] Total de recibos:', recibos.length);
+
     // Serializar bloques del template a string HTML con placeholders, aplicando escala
     const fullTemplate = serializeTemplateBlocks(templateDB, scaleFactor);
     const { config, content } = parseTemplate(fullTemplate);
-
-    // Remover <style> tags del contenido (ya están en el <head>)
     const contentWithoutStyles = content.replace(/<style[^>]*>[\s\S]*?<\/style>/gi, '');
 
-    // Construir HTML completo agrupando recibos (N recibos por página, apilados verticalmente)
-    let fullHTML = '';
-    console.log('[PDF DEBUG] reciboHeight (mm):', reciboHeight);
-    console.log('[PDF DEBUG] Total recibos:', recibos.length);
-    let totalRecibosGenerados = 0;
-    for (let i = 0; i < recibos.length; i += recibosPerPage) {
-      console.log('[PDF DEBUG] Generando página con recibos desde índice:', i);
-      fullHTML += `<div class="recibos-pagina" style="height: ${dimensions.height}mm; page-break-inside: avoid; margin: 0; padding: 0;">`;
+    // NUEVO ENFOQUE: Generar un PDF por cada recibo
+    const pdfBuffers = [];
+    for (let i = 0; i < recibos.length; i++) {
+      try {
+        const reciboHTML = renderRecibo(recibos[i], contentWithoutStyles);
+        console.log('[PDF] Generando PDF del recibo', i + 1, 'de', recibos.length);
 
-      // Renderizar N recibos en esta página
-      for (let j = 0; j < recibosPerPage && i + j < recibos.length; j++) {
-        const reciboHTML = renderRecibo(recibos[i + j], contentWithoutStyles);
-        totalRecibosGenerados++;
-        console.log('[PDF DEBUG] Renderizando recibo', i + j);
-
-        fullHTML += `<div class="recibo-wrapper" style="height: ${reciboHeight}mm; margin: 0; padding: 0; overflow: hidden; display: block;">`;
-        fullHTML += reciboHTML;
-        fullHTML += `</div>`;
+        const pdfBuffer = await generateReceiptPDFBuffer(reciboHTML, reciboHeight, dimensions.width);
+        pdfBuffers.push(pdfBuffer);
+      } catch (err) {
+        console.error('[PDF] Error generando PDF del recibo', i, ':', err);
+        return res.status(500).json({
+          error: 'Error al generar PDF del recibo ' + (i + 1) + ': ' + err.message,
+        });
       }
-
-      fullHTML += '</div>';
-    }
-    console.log('[PDF DEBUG] Total recibos generados en HTML:', totalRecibosGenerados);
-
-    // Extraer estilos del template
-    const templateStyles = extractStylesFromTemplate(content);
-
-    // Construir HTML completo con estilos y DOCTYPE
-    const htmlConEstilos = `<!DOCTYPE html>
-<html lang="es-AR">
-<head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <style>
-    ${templateStyles}
-
-    .recibos-pagina {
-      width: 100%;
-      margin: 0 !important;
-      padding: 0 !important;
-      page-break-inside: avoid;
-      display: block !important;
-      box-sizing: border-box;
     }
 
-    .recibo-wrapper {
-      width: 100%;
-      margin: 0 !important;
-      padding: 0 !important;
-      box-sizing: border-box;
-      display: block !important;
-      overflow: hidden;
-      border: 2px solid #ff0000;
-      background-color: rgba(255, 200, 200, 0.2);
-    }
+    console.log('[PDF] PDFs individuales generados:', pdfBuffers.length);
+    console.log('[PDF] Combinando PDFs...');
 
-    .recibo-page {
-      margin: 0 !important;
-      padding: 0 !important;
-      width: 100%;
-      display: block !important;
-      box-sizing: border-box;
-    }
-  </style>
-</head>
-<body style="margin: 0; padding: 0;">
-  ${fullHTML}
-</body>
-</html>`;
-
-    // Configuración para wkhtmltopdf
-    const pageSize = config.pageSize.toUpperCase();
-    const orientation = config.orientation.charAt(0).toUpperCase() + config.orientation.slice(1);
-    const marginMm = config.margins || 0;
-
-    const options = {
-      pageSize: pageSize,
-      orientation: orientation,
-      marginTop: marginMm,
-      marginBottom: marginMm,
-      marginLeft: marginMm,
-      marginRight: marginMm,
-    };
-
-    console.log('[PDF] Generando PDF con wkhtmltopdf');
-    console.log('[PDF] Tamaño total del HTML:', htmlConEstilos.length, 'bytes');
-    console.log('[PDF] Opciones:', JSON.stringify(options, null, 2));
-
-    // Generar PDF con wkhtmltopdf
+    // Combinar todos los PDFs respetando la configuración
     try {
-      wkhtmltopdf(htmlConEstilos, options, (err, stream) => {
-        if (err) {
-          console.error('[PDF] Error generating PDF:', err);
-          return res.status(500).json({
-            error: err.message || 'Error al generar PDF',
-          });
-        }
+      const finalPDFBuffer = await combinePDFBuffers(pdfBuffers, pageConfig, recibosPerPage);
 
-        res.setHeader('Content-Type', 'application/pdf');
-        res.setHeader('Content-Disposition', `attachment; filename="recibos_${periodo}.pdf"`);
-        stream.pipe(res);
-      });
+      console.log('[PDF] PDF combinado generado, tamaño:', finalPDFBuffer.length, 'bytes');
+
+      res.setHeader('Content-Type', 'application/pdf');
+      res.setHeader('Content-Disposition', `attachment; filename="recibos_${periodo}.pdf"`);
+      res.send(finalPDFBuffer);
     } catch (err) {
-      console.error('[PDF] Error al invocar wkhtmltopdf:', err);
+      console.error('[PDF] Error combinando PDFs:', err);
       return res.status(500).json({
-        error: 'Error al generar PDF: ' + err.message,
+        error: 'Error al combinar PDFs: ' + err.message,
       });
     }
   } catch (error) {
