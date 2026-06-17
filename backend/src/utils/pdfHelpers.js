@@ -342,14 +342,14 @@ function replaceAllPlaceholders(html, recibo) {
 }
 
 /**
- * Genera un buffer PDF de una página con N recibos
- * @param {String} pageHTML - HTML de la página con N recibos posicionados
+ * Genera un PDF con múltiples páginas (cada página con N recibos)
+ * @param {String} fullHTML - HTML completo con todas las páginas
  * @param {String} pageSize - Tamaño de página (A4, A5, Letter)
  * @param {String} orientation - Orientación (portrait, landscape)
  * @param {Number} margins - Márgenes en mm
- * @returns {Promise<Buffer>} - Buffer del PDF
+ * @returns {Promise<Buffer>} - Buffer del PDF completo
  */
-async function generatePagePDF(pageHTML, pageSize, orientation, margins) {
+async function generateMultiPagePDF(fullHTML, pageSize, orientation, margins) {
   const pdf = require('html-pdf');
 
   const htmlCompleto = `<!DOCTYPE html>
@@ -357,21 +357,26 @@ async function generatePagePDF(pageHTML, pageSize, orientation, margins) {
 <head>
   <meta charset="UTF-8">
   <style>
-    body {
+    * {
       margin: 0;
       padding: 0;
+    }
+    body {
       font-family: Arial, sans-serif;
       font-size: 11px;
     }
-    .page-wrapper {
+    .page {
+      page-break-after: always;
       margin: 0;
       padding: 0;
-      box-sizing: border-box;
+    }
+    .page:last-child {
+      page-break-after: avoid;
     }
   </style>
 </head>
-<body style="margin: 0; padding: 0;">
-  ${pageHTML}
+<body>
+  ${fullHTML}
 </body>
 </html>`;
 
@@ -392,25 +397,6 @@ async function generatePagePDF(pageHTML, pageSize, orientation, margins) {
   });
 }
 
-/**
- * Combina múltiples buffers de PDF en un solo PDF
- * @param {Array<Buffer>} pdfBuffers - Array de buffers PDF (uno por página)
- * @returns {Promise<Buffer>} - Buffer del PDF combinado
- */
-async function concatenatePDFs(pdfBuffers) {
-  const concat = require('pdf-concat');
-
-  return new Promise((resolve, reject) => {
-    concat(pdfBuffers, (err, result) => {
-      if (err) {
-        reject(err);
-      } else {
-        resolve(result);
-      }
-    });
-  });
-}
-
 module.exports = {
   formatCurrency,
   replacePlaceholder,
@@ -422,6 +408,5 @@ module.exports = {
   validateReciboInvariant,
   getDefaultTemplateString,
   serializeTemplateBlocks,
-  generatePagePDF,
-  concatenatePDFs,
+  generateMultiPagePDF,
 };
