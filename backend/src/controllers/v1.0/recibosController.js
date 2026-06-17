@@ -611,6 +611,9 @@ exports.generarPDF = async (req, res, next) => {
     const dimensions = pageDimensions[pageSize] || pageDimensions['A4'];
     const reciboHeight = dimensions.height / recibosPerPage;
 
+    // Calcular factor de escala si hay múltiples recibos por página
+    const scaleFactor = 1 / recibosPerPage;
+
     // Construir HTML completo agrupando recibos (N recibos por página, apilados verticalmente)
     let fullHTML = '';
     for (let i = 0; i < recibos.length; i += recibosPerPage) {
@@ -626,7 +629,12 @@ exports.generarPDF = async (req, res, next) => {
           `class="recibo-page" style="height: ${reciboHeight}mm !important; "`
         );
 
-        fullHTML += `<div class="recibo-wrapper" style="height: ${reciboHeight}mm; overflow: hidden;">
+        // Aplicar escala si hay múltiples recibos por página
+        const scaleStyle = recibosPerPage > 1
+          ? `transform: scale(${scaleFactor}); transform-origin: top left;`
+          : '';
+
+        fullHTML += `<div class="recibo-wrapper" style="height: ${reciboHeight}mm; overflow: visible; ${scaleStyle}">
   ${reciboHTMLAdjustado}
 </div>
 `;
@@ -659,7 +667,7 @@ exports.generarPDF = async (req, res, next) => {
       margin: 0;
       padding: 0;
       box-sizing: border-box;
-      overflow: hidden;
+      overflow: visible;
     }
 
     .recibo-page {
