@@ -612,7 +612,9 @@ exports.generarPDF = async (req, res, next) => {
     const marginBottom = pageConfig.margen_inferior_mm || 10;
     const marginLeft = pageConfig.margen_izquierdo_mm || 10;
     const marginRight = pageConfig.margen_derecho_mm || 10;
-    const reciboHeight = (dimensions.height - (recibosPerPage - 1) * gapVertical) / recibosPerPage;
+    const verticalPadding = marginTop + marginBottom;
+    const availableHeight = dimensions.height - verticalPadding;
+    const reciboHeight = (availableHeight - (recibosPerPage - 1) * gapVertical) / recibosPerPage;
 
     console.log('[PDF] Iniciando generación de PDF');
     console.log('[PDF] Recibos por página:', recibosPerPage);
