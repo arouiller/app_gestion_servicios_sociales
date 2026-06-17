@@ -643,7 +643,7 @@ exports.generarPDF = async (req, res, next) => {
           // Reemplazar placeholders usando replaceAllPlaceholders
           const reciboContentHTML = replaceAllPlaceholders(content, reciboData);
 
-          fullHTML += `<div style="height: ${reciboHeight}mm; margin: 0; padding: 0; overflow: hidden;">
+          fullHTML += `<div style="height: ${reciboHeight}mm; margin: 0; padding: 0; overflow: hidden; page-break-inside: avoid; box-sizing: border-box;">
 ${reciboContentHTML}
 </div>`;
 
