@@ -185,10 +185,14 @@ margins: 10
 /**
  * Serializa bloques dinámicos de ReciboTemplate a string HTML con placeholders
  * Renderiza UN SOLO recibo con posicionamiento absoluto de bloques
+ * Aplica scaleFactor a coordenadas cuando hay múltiples recibos por página
  * Múltiples recibos por página se manejan en recibosController.js
  * Usado cuando se genera PDF de recibos con template personalizado
+ *
+ * @param {Object} template - ReciboTemplate con bloques dinámicos
+ * @param {Number} scaleFactor - Factor de escala (1.0 = sin escala, 0.5 = mitad de tamaño)
  */
-function serializeTemplateBlocks(template) {
+function serializeTemplateBlocks(template, scaleFactor = 1.0) {
   if (!template) {
     return getDefaultTemplateString();
   }
@@ -227,6 +231,9 @@ function serializeTemplateBlocks(template) {
 
   const dimensions = pageDimensions[pageSize] || pageDimensions['A4'];
 
+  // Aplicar escala a dimensiones de página
+  const scaledHeight = dimensions.height * scaleFactor;
+
   let html = `---
 pageSize: ${pageSize}
 orientation: ${orientation}
@@ -244,7 +251,7 @@ margins: ${margins}
   .recibo-page {
     position: relative;
     width: ${dimensions.width}mm;
-    height: ${dimensions.height}mm;
+    height: ${scaledHeight}mm;
     box-sizing: border-box;
     overflow: hidden;
   }
@@ -283,12 +290,12 @@ margins: ${margins}
 <div class="recibo-page">
 `;
 
-  // Renderizar cada bloque dinámico con su posicionamiento
+  // Renderizar cada bloque dinámico con su posicionamiento escalado
   bloques.forEach(bloque => {
-    const left = bloque.x || 0;
-    const top = bloque.y || 0;
-    const width = bloque.width || 100;
-    const height = bloque.height || 50;
+    const left = (bloque.x || 0) * scaleFactor;
+    const top = (bloque.y || 0) * scaleFactor;
+    const width = (bloque.width || 100) * scaleFactor;
+    const height = (bloque.height || 50) * scaleFactor;
     const contenido = bloque.contenido || '';
 
     html += `<div class="bloque-dinamico" style="left: ${left}mm; top: ${top}mm; width: ${width}mm; height: ${height}mm;">

@@ -586,10 +586,6 @@ exports.generarPDF = async (req, res, next) => {
       where: { activo: true },
     });
 
-    // Serializar bloques del template a string HTML con placeholders
-    const fullTemplate = serializeTemplateBlocks(templateDB);
-    const { config, content } = parseTemplate(fullTemplate);
-
     // Obtener recibos_por_pagina desde bloque_pageconfig
     let pageConfig = templateDB?.bloque_pageconfig || {};
     if (typeof pageConfig === 'string') {
@@ -600,19 +596,11 @@ exports.generarPDF = async (req, res, next) => {
       }
     }
     const recibosPerPage = pageConfig.recibos_por_pagina || 1;
-
-    // Dimensiones de página en mm
-    const pageDimensions = {
-      'A4': { width: 210, height: 297 },
-      'A5': { width: 148, height: 210 },
-      'Letter': { width: 215.9, height: 279.4 }
-    };
-    const pageSize = pageConfig.tamaño || 'A4';
-    const dimensions = pageDimensions[pageSize] || pageDimensions['A4'];
-    const reciboHeight = dimensions.height / recibosPerPage;
-
-    // Calcular factor de escala si hay múltiples recibos por página
     const scaleFactor = 1 / recibosPerPage;
+
+    // Serializar bloques del template a string HTML con placeholders, aplicando escala
+    const fullTemplate = serializeTemplateBlocks(templateDB, scaleFactor);
+    const { config, content } = parseTemplate(fullTemplate);
 
     // Construir HTML completo agrupando recibos (N recibos por página, apilados verticalmente)
     let fullHTML = '';
@@ -623,19 +611,8 @@ exports.generarPDF = async (req, res, next) => {
       for (let j = 0; j < recibosPerPage && i + j < recibos.length; j++) {
         const reciboHTML = renderRecibo(recibos[i + j], content);
 
-        // Ajustar altura del contenedor .recibo-page para que quepa en la página
-        const reciboHTMLAdjustado = reciboHTML.replace(
-          /class="recibo-page" style="/,
-          `class="recibo-page" style="height: ${reciboHeight}mm !important; "`
-        );
-
-        // Aplicar escala si hay múltiples recibos por página
-        const scaleStyle = recibosPerPage > 1
-          ? `transform: scale(${scaleFactor}); transform-origin: top left;`
-          : '';
-
-        fullHTML += `<div class="recibo-wrapper" style="height: ${reciboHeight}mm; overflow: visible; ${scaleStyle}">
-  ${reciboHTMLAdjustado}
+        fullHTML += `<div class="recibo-wrapper">
+  ${reciboHTML}
 </div>
 `;
       }
@@ -667,7 +644,6 @@ exports.generarPDF = async (req, res, next) => {
       margin: 0;
       padding: 0;
       box-sizing: border-box;
-      overflow: visible;
     }
 
     .recibo-page {
