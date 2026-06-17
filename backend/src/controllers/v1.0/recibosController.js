@@ -670,6 +670,8 @@ exports.generarPDF = async (req, res, next) => {
       box-sizing: border-box;
       display: block !important;
       overflow: hidden;
+      border: 2px solid #ff0000;
+      background-color: rgba(255, 200, 200, 0.2);
     }
 
     .recibo-page {
