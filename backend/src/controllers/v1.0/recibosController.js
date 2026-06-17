@@ -1,7 +1,7 @@
 const db = require('../../models');
 const sequelize = require('../../config/database');
 const { Op, literal } = require('sequelize');
-const pdf = require('html-pdf');
+const wkhtmltopdf = require('wkhtmltopdf');
 const {
   formatCurrency,
   replaceAllPlaceholders,
@@ -688,42 +688,44 @@ exports.generarPDF = async (req, res, next) => {
 </body>
 </html>`;
 
-    // Configuración para html-pdf
+    // Configuración para wkhtmltopdf
+    const pageSize = config.pageSize.toUpperCase();
+    const orientation = config.orientation.charAt(0).toUpperCase() + config.orientation.slice(1);
+    const marginMm = config.margins || 0;
+
     const options = {
-      format: config.pageSize.toUpperCase(),
-      orientation: config.orientation,
-      margin: `${config.margins}mm`,
+      pageSize: pageSize,
+      orientation: orientation,
+      marginTop: marginMm,
+      marginBottom: marginMm,
+      marginLeft: marginMm,
+      marginRight: marginMm,
     };
 
-    // DEBUG: Dump del HTML a logs
-    console.log('\n========== [PDF DEBUG] INICIO DUMP HTML ==========');
-    console.log('[PDF DEBUG] Tamaño total del HTML:', htmlConEstilos.length, 'bytes');
-    console.log('[PDF DEBUG] Número de ".recibo-wrapper":', (htmlConEstilos.match(/class="recibo-wrapper"/g) || []).length);
-    console.log('[PDF DEBUG] Número de ".recibos-pagina":', (htmlConEstilos.match(/class="recibos-pagina"/g) || []).length);
-    console.log('[PDF DEBUG] Opciones de html-pdf:', JSON.stringify(options, null, 2));
+    console.log('[PDF] Generando PDF con wkhtmltopdf');
+    console.log('[PDF] Tamaño total del HTML:', htmlConEstilos.length, 'bytes');
+    console.log('[PDF] Opciones:', JSON.stringify(options, null, 2));
 
-    console.log('\n[PDF DEBUG] === HTML COMPLETO ===');
-    // Dividir el HTML en chunks para evitar truncamiento
-    const chunkSize = 5000;
-    for (let i = 0; i < htmlConEstilos.length; i += chunkSize) {
-      const chunk = htmlConEstilos.substring(i, i + chunkSize);
-      console.log(`[PDF DEBUG CHUNK ${Math.floor(i / chunkSize)}]`, chunk);
+    // Generar PDF con wkhtmltopdf
+    try {
+      wkhtmltopdf(htmlConEstilos, options, (err, stream) => {
+        if (err) {
+          console.error('[PDF] Error generating PDF:', err);
+          return res.status(500).json({
+            error: err.message || 'Error al generar PDF',
+          });
+        }
+
+        res.setHeader('Content-Type', 'application/pdf');
+        res.setHeader('Content-Disposition', `attachment; filename="recibos_${periodo}.pdf"`);
+        stream.pipe(res);
+      });
+    } catch (err) {
+      console.error('[PDF] Error al invocar wkhtmltopdf:', err);
+      return res.status(500).json({
+        error: 'Error al generar PDF: ' + err.message,
+      });
     }
-    console.log('\n========== [PDF DEBUG] FIN DUMP HTML ==========\n');
-
-    // Generar PDF con html-pdf
-    pdf.create(htmlConEstilos, options).toStream((err, stream) => {
-      if (err) {
-        console.error('Error generating PDF:', err);
-        return res.status(500).json({
-          error: err.message || 'Error al generar PDF',
-        });
-      }
-
-      res.setHeader('Content-Type', 'application/pdf');
-      res.setHeader('Content-Disposition', `attachment; filename="recibos_${periodo}.pdf"`);
-      stream.pipe(res);
-    });
   } catch (error) {
     console.error('Error generating PDF:', error);
     res.status(500).json({
