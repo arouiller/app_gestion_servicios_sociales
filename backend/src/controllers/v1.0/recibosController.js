@@ -623,11 +623,15 @@ exports.generarPDF = async (req, res, next) => {
     console.log('[PDF] Template type:', isTabla ? 'tabla' : 'bloques');
 
     let fullHTML = '';
+    let config = { pageSize: 'A4', orientation: 'portrait', margins: 0 };
+    let content = '';
 
     if (isTabla) {
       // Para tabla: serializar una sola tabla y replicarla con datos de cada recibo
       const fullTemplate = serializeTemplateTable(templateDB, scaleFactor);
-      const { config, content } = parseTemplate(fullTemplate);
+      const parsed = parseTemplate(fullTemplate);
+      config = parsed.config;
+      content = parsed.content;
 
       for (let i = 0; i < recibos.length; i += recibosPerPage) {
         fullHTML += '<div class="page" style="page-break-after: always; margin: 0; padding: 0;">';
@@ -650,7 +654,9 @@ ${reciboContentHTML}
     } else {
       // Para bloques: usar lógica legacy
       const fullTemplate = serializeTemplateBlocks(templateDB, scaleFactor);
-      const { config, content } = parseTemplate(fullTemplate);
+      const parsed = parseTemplate(fullTemplate);
+      config = parsed.config;
+      content = parsed.content;
       const contentWithoutStyles = content.replace(/<style[^>]*>[\s\S]*?<\/style>/gi, '');
 
       for (let i = 0; i < recibos.length; i += recibosPerPage) {
