@@ -1,18 +1,15 @@
 import React, { useState, useEffect, useRef } from 'react';
 import html2pdf from 'html2pdf.js';
-import { v4 as uuidv4 } from 'uuid';
 import { Rnd } from 'react-rnd';
-import ReactQuill from 'react-quill';
-import 'react-quill/dist/quill.snow.css';
 import personasService from '../../../services/personasService';
 import planesService from '../../../services/planesService';
 import templateService from '../../../services/templateService';
 import useTemplateStore from '../../../hooks/useTemplateStore';
 import { replacePlaceholders } from '../../../utils/placeholderReplacer';
-import GenericBlock from './GenericBlock';
-import ReadOnlyBlockPreview from './ReadOnlyBlockPreview';
 import PageGuides, { calculateRecibosPositions } from './PageGuides';
 import BloquePageConfig from './BlockEditor/BloquePageConfig';
+import TableEditor from './TableEditor';
+import TablePreview from './TablePreview';
 import '../RecibosTemplatesPage.scss';
 
 const TemplateEditor = ({ onBack }) => {
@@ -23,10 +20,6 @@ const TemplateEditor = ({ onBack }) => {
   const [showPlaceholders, setShowPlaceholders] = useState(false);
   const [placeholders, setPlaceholders] = useState({});
   const [pendingAction, setPendingAction] = useState(null);
-  const [selectedBlockId, setSelectedBlockId] = useState(null);
-  const [editingBlockId, setEditingBlockId] = useState(null);
-  const [editingContent, setEditingContent] = useState('');
-  const [pendingBlocks, setPendingBlocks] = useState({});
   const [selectedPlanId, setSelectedPlanId] = useState(null);
   const [selectedPlanData, setSelectedPlanData] = useState(null);
   const [plansList, setPlansList] = useState([]);
@@ -76,24 +69,13 @@ const TemplateEditor = ({ onBack }) => {
       return;
     }
 
-    // Sincronizar pendingBlocks con bloques actuales
-    const syncedBloques = (currentTemplate.bloques || []).map(b =>
-      pendingBlocks[b.id] !== undefined
-        ? { ...b, contenido: pendingBlocks[b.id] }
-        : b
-    );
-
     setLoading(true);
     setIsSaving(true);
 
-    const result = await templateService.updateTemplate(currentTemplate.id, {
-      ...currentTemplate,
-      bloques: syncedBloques
-    });
+    const result = await templateService.updateTemplate(currentTemplate.id, currentTemplate);
 
     if (result.success) {
       setSuccessMessage('Template guardado exitosamente');
-      setPendingBlocks({});
       setTimeout(() => setSuccessMessage(null), 2000);
       updateTemplate({ isDirty: false });
     } else {
@@ -150,30 +132,24 @@ const TemplateEditor = ({ onBack }) => {
     setError(null);
 
     try {
-      // Crear copia del canvas con placeholders reemplazados
       const canvasCopy = canvasRef.current.cloneNode(true);
-
-      // Reemplazar placeholders en todos los bloques
-      if (selectedPlanData) {
-        const mappedPersonData = mapPlanToPersonData(selectedPlanData);
-        canvasCopy.querySelectorAll('[class*="generic-block"]').forEach(blockEl => {
-          const originalHTML = blockEl.innerHTML;
-          const replacedHTML = replacePlaceholders(originalHTML, mappedPersonData);
-          blockEl.innerHTML = replacedHTML;
-        });
-        canvasCopy.querySelectorAll('[class*="read-only-block"]').forEach(blockEl => {
-          const originalHTML = blockEl.innerHTML;
-          const replacedHTML = replacePlaceholders(originalHTML, mappedPersonData);
-          blockEl.innerHTML = replacedHTML;
-        });
-      }
+      const pageConfig = currentTemplate.bloque_pageconfig || {};
 
       const options = {
-        margin: 10,
+        margin: [
+          pageConfig.margen_superior_mm || 10,
+          pageConfig.margen_derecho_mm || 10,
+          pageConfig.margen_inferior_mm || 10,
+          pageConfig.margen_izquierdo_mm || 10
+        ],
         filename: `recibo_${Date.now()}.pdf`,
         image: { type: 'jpeg', quality: 0.98 },
         html2canvas: { scale: 2 },
-        jsPDF: { orientation: 'portrait', unit: 'mm', format: 'a4' }
+        jsPDF: {
+          orientation: pageConfig.orientacion || 'portrait',
+          unit: 'mm',
+          format: pageConfig.tamaño?.toLowerCase() || 'a4'
+        }
       };
 
       const pdfGenerator = html2pdf()
@@ -209,67 +185,6 @@ const TemplateEditor = ({ onBack }) => {
     setPendingAction(null);
   };
 
-  // Agregar nuevo bloque
-  const handleAddBlock = () => {
-    const newBlock = {
-      id: uuidv4(),
-      x: (reciboUnoSize?.x || 10) + 10,
-      y: (reciboUnoSize?.y || 10) + 10,
-      width: 100,
-      height: 50,
-      contenido: '<p>Nuevo bloque</p>'
-    };
-
-    const bloques = [...(currentTemplate.bloques || []), newBlock];
-    updateTemplate({ bloques, isDirty: true });
-    setSelectedBlockId(newBlock.id);
-  };
-
-  // Actualizar bloque
-  const handleUpdateBlock = (updatedBlock) => {
-    const bloques = (currentTemplate.bloques || []).map(b =>
-      b.id === updatedBlock.id ? updatedBlock : b
-    );
-    updateTemplate({ bloques, isDirty: true });
-  };
-
-  // Eliminar bloque
-  const handleDeleteBlock = (blockId) => {
-    const bloques = (currentTemplate.bloques || []).filter(b => b.id !== blockId);
-    updateTemplate({ bloques, isDirty: true });
-    setSelectedBlockId(null);
-  };
-
-  // Activar edición de bloque
-  const handleBlockDoubleClick = (blockId, content) => {
-    if (editingBlockId && editingBlockId !== blockId) {
-      setPendingBlocks(prev => ({
-        ...prev,
-        [editingBlockId]: editingContent
-      }));
-    }
-
-    setEditingBlockId(blockId);
-    setEditingContent(content);
-  };
-
-  // Desactivar edición de bloque
-  const handleBlockClickOutside = () => {
-    if (editingBlockId) {
-      setPendingBlocks(prev => ({
-        ...prev,
-        [editingBlockId]: editingContent
-      }));
-    }
-
-    setEditingBlockId(null);
-    setEditingContent('');
-  };
-
-  // Actualizar contenido desde barra Quill
-  const handleToolbarChange = (content) => {
-    setEditingContent(content);
-  };
 
   // Cargar primeros 10 planes con persona asignada al abrir el editor
   useEffect(() => {
@@ -363,61 +278,6 @@ const TemplateEditor = ({ onBack }) => {
     }
   };
 
-  /**
-   * Renderiza bloques read-only para todos los recibos excepto el primero
-   */
-  const renderBlockPreviews = () => {
-    if (!reciboPositions || !reciboPositions.recibos || reciboPositions.recibos.length <= 1) {
-      return null;
-    }
-
-    const bloques = currentTemplate.bloques || [];
-    const recibos = reciboPositions.recibos;
-
-    return recibos.slice(1).map((recibo, index) => (
-      <div
-        key={`recibo-${recibo.number}`}
-        style={{
-          position: 'absolute',
-          left: `${recibo.x * 3.7795}px`,
-          top: `${recibo.y * 3.7795}px`,
-          width: `${recibo.width * 3.7795}px`,
-          height: `${recibo.height * 3.7795}px`,
-          border: '2px solid #4dabf7',
-          borderRadius: '2px',
-          overflow: 'visible',
-          backgroundColor: 'white'
-        }}
-        className="preview-recibo"
-      >
-        {/* Número del recibo */}
-        <div
-          style={{
-            position: 'absolute',
-            top: '4px',
-            left: '4px',
-            fontSize: '10px',
-            color: '#4dabf7',
-            fontWeight: 'bold',
-            zIndex: 5
-          }}
-        >
-          {recibo.number}
-        </div>
-
-        {/* Bloques read-only */}
-        {bloques.map(block => (
-          <ReadOnlyBlockPreview
-            key={block.id}
-            block={block}
-            reciboSize={recibo}
-            reciboUnoSize={reciboUnoSize}
-            personData={mapPlanToPersonData(selectedPlanData)}
-          />
-        ))}
-      </div>
-    ));
-  };
 
   return (
     <div className="template-editor-new">
@@ -467,40 +327,6 @@ const TemplateEditor = ({ onBack }) => {
       {error && <div className="alert alert-error">{error}</div>}
       {successMessage && <div className="alert alert-success">{successMessage}</div>}
 
-      {/* Barra de edición Quill - PARTE SUPERIOR */}
-      {currentTemplate.bloque_pageconfig && (
-        <div className="editor-toolbar-container">
-          <div className="editor-toolbar">
-            <ReactQuill
-              value={editingContent}
-              onChange={handleToolbarChange}
-              readOnly={editingBlockId === null}
-              theme="snow"
-              modules={{
-                toolbar: [
-                  ['bold', 'italic', 'underline'],
-                  [{ 'size': ['small', false, 'large', 'huge'] }],
-                  ['link', 'image']
-                ]
-              }}
-              style={{
-                opacity: editingBlockId === null ? 0.5 : 1,
-                pointerEvents: editingBlockId === null ? 'none' : 'auto'
-              }}
-            />
-          </div>
-          {editingBlockId && (
-            <button
-              className="btn btn-save-block"
-              onClick={handleSaveBlock}
-              title="Guardar cambios del bloque"
-            >
-              💾 Guardar Bloque
-            </button>
-          )}
-        </div>
-      )}
-
       <div className="editor-container-new">
         {/* Canvas A4 */}
         <div className="editor-canvas">
@@ -510,31 +336,12 @@ const TemplateEditor = ({ onBack }) => {
               <PageGuides pageConfig={currentTemplate.bloque_pageconfig} />
             )}
 
-            {/* Bloques genéricos - Recibo 1 (editable) */}
-            {(currentTemplate.bloques || []).map(block => (
-              <GenericBlock
-                key={block.id}
-                block={block}
-                reciboSize={reciboUnoSize}
-                isSelected={selectedBlockId === block.id}
-                isEditing={editingBlockId === block.id}
-                onSelect={() => setSelectedBlockId(block.id)}
-                onDoubleClick={handleBlockDoubleClick}
-                onClickOutside={handleBlockClickOutside}
-                onUpdate={handleUpdateBlock}
-                onDelete={() => handleDeleteBlock(block.id)}
-                personData={mapPlanToPersonData(selectedPlanData)}
-              />
-            ))}
-
-            {/* Previsualizaciones de bloques en otros recibos */}
-            {renderBlockPreviews()}
-
-            {(!currentTemplate.bloques || currentTemplate.bloques.length === 0) && (
-              <div className="a4-empty-state">
-                <p>📋 No hay bloques. Usa el botón "+ Agregar Bloque" para comenzar.</p>
-              </div>
-            )}
+            {/* Tabla en canvas */}
+            <TablePreview
+              tabla={currentTemplate.bloques?.[0]}
+              reciboPositions={reciboPositions}
+              personData={mapPlanToPersonData(selectedPlanData)}
+            />
           </div>
         </div>
 
@@ -542,16 +349,9 @@ const TemplateEditor = ({ onBack }) => {
         <div className="editor-properties">
           <h3>Configuración</h3>
           <div className="blocks-editor">
-            <div className="add-blocks-section">
-              <button className="btn btn-block-add" onClick={handleAddBlock}>
-                + Agregar Bloque
-              </button>
-              <small style={{ display: 'block', marginTop: '8px', color: '#666' }}>
-                {(currentTemplate.bloques || []).length} bloque(s) creado(s)
-              </small>
-            </div>
+            <TableEditor placeholders={placeholders} />
 
-            <div className="pageconfig-section">
+            <div className="pageconfig-section" style={{ marginTop: '20px' }}>
               <hr />
               <h4>Configuración de Página</h4>
               <BloquePageConfig />

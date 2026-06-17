@@ -397,6 +397,131 @@ async function generateMultiPagePDF(fullHTML, pageSize, orientation, margins) {
   });
 }
 
+/**
+ * Serializa un template de tabla (type: 'tabla') a HTML con posicionamiento correcto
+ * La tabla se renderiza en bloques de altura calculada según recibos_por_pagina y gap
+ * @param {Object} template - ReciboTemplate con bloques[0].type === 'tabla'
+ * @param {Number} scaleFactor - Factor de escala (1.0 = sin escala)
+ */
+function serializeTemplateTable(template, scaleFactor = 1.0) {
+  if (!template) {
+    return getDefaultTemplateString();
+  }
+
+  const bloques = template.bloques || [];
+  const tablaData = bloques[0]?.type === 'tabla' ? bloques[0] : null;
+
+  if (!tablaData) {
+    return serializeTemplateBlocks(template, scaleFactor);
+  }
+
+  let pageConfig = template.bloque_pageconfig || {};
+
+  // Manejar defensivamente pageConfig corrupto
+  if (typeof pageConfig === 'object' && pageConfig !== null && !pageConfig.tamaño) {
+    try {
+      if (Array.isArray(pageConfig)) {
+        pageConfig = {};
+      } else if (typeof pageConfig === 'string') {
+        pageConfig = JSON.parse(pageConfig);
+      }
+    } catch (e) {
+      pageConfig = {};
+    }
+  }
+
+  const pageSize = pageConfig.tamaño || 'A4';
+  const orientation = pageConfig.orientacion || 'portrait';
+  const marginTop = pageConfig.margen_superior_mm || 10;
+  const marginBottom = pageConfig.margen_inferior_mm || 10;
+  const marginLeft = pageConfig.margen_izquierdo_mm || 10;
+  const marginRight = pageConfig.margen_derecho_mm || 10;
+  const recibosPerPage = pageConfig.recibos_por_pagina || 1;
+  const gapVertical = pageConfig.gap_vertical_mm || 0;
+
+  const pageDimensions = {
+    'A4': { width: 210, height: 297 },
+    'A5': { width: 148, height: 210 },
+    'Letter': { width: 215.9, height: 279.4 }
+  };
+
+  const dim = pageDimensions[pageSize] || pageDimensions['A4'];
+  const contentWidth = dim.width - marginLeft - marginRight;
+  const contentHeight = dim.height - marginTop - marginBottom;
+  const reciboHeight = (contentHeight - (recibosPerPage - 1) * gapVertical) / recibosPerPage;
+
+  // Generar HTML de la tabla
+  const generarFilasHTML = () => {
+    return tablaData.filas
+      .map(fila => {
+        const celdas = fila.celdas
+          .map(celda => {
+            const ancho = celda.ancho || 50;
+            return `<td style="width: ${ancho}%; padding: 4px; border: 1px solid #000; vertical-align: middle;">${celda.contenido || ''}</td>`;
+          })
+          .join('');
+        return `<tr>${celdas}</tr>`;
+      })
+      .join('');
+  };
+
+  const tableHTML = `<table style="width: 100%; height: 100%; border-collapse: collapse; font-size: ${tablaData.tamanoFuente || 11}px; font-family: Arial, sans-serif;">
+<tbody>
+${generarFilasHTML()}
+</tbody>
+</table>`;
+
+  let html = `---
+pageSize: ${pageSize}
+orientation: ${orientation}
+margins: 0
+---
+
+<style>
+  * {
+    margin: 0;
+    padding: 0;
+  }
+  body {
+    font-family: Arial, sans-serif;
+    font-size: 11px;
+  }
+  .page {
+    page-break-after: always;
+    margin: 0;
+    padding: 0;
+  }
+  .page:last-child {
+    page-break-after: avoid;
+  }
+  .recibo-slot {
+    height: ${reciboHeight}mm;
+    width: ${contentWidth}mm;
+    overflow: hidden;
+    box-sizing: border-box;
+    page-break-inside: avoid;
+  }
+  .recibo-gap {
+    height: ${gapVertical}mm;
+  }
+</style>
+
+<div style="padding: ${marginTop}mm ${marginRight}mm ${marginBottom}mm ${marginLeft}mm;">
+`;
+
+  // Generar una página con múltiples slots de recibo
+  for (let i = 0; i < recibosPerPage; i++) {
+    html += `<div class="recibo-slot">${tableHTML}</div>`;
+    if (i < recibosPerPage - 1) {
+      html += `<div class="recibo-gap"></div>`;
+    }
+  }
+
+  html += `</div>`;
+
+  return html;
+}
+
 module.exports = {
   formatCurrency,
   replacePlaceholder,
@@ -408,5 +533,6 @@ module.exports = {
   validateReciboInvariant,
   getDefaultTemplateString,
   serializeTemplateBlocks,
+  serializeTemplateTable,
   generateMultiPagePDF,
 };

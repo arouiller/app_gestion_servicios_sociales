@@ -9,6 +9,7 @@ const {
   groupRecibosInPairs,
   getDefaultTemplateString,
   serializeTemplateBlocks,
+  serializeTemplateTable,
   generateMultiPagePDF,
 } = require('../../utils/pdfHelpers');
 
@@ -596,6 +597,7 @@ exports.generarPDF = async (req, res, next) => {
       }
     }
     const recibosPerPage = pageConfig.recibos_por_pagina || 1;
+    const gapVertical = pageConfig.gap_vertical_mm || 0;
     const scaleFactor = 1 / recibosPerPage;
 
     // Dimensiones de página en mm
@@ -606,34 +608,67 @@ exports.generarPDF = async (req, res, next) => {
     };
     const pageSize = pageConfig.tamaño || 'A4';
     const dimensions = pageDimensions[pageSize] || pageDimensions['A4'];
-    const reciboHeight = dimensions.height * scaleFactor;
+    const marginTop = pageConfig.margen_superior_mm || 10;
+    const marginBottom = pageConfig.margen_inferior_mm || 10;
+    const contentHeight = dimensions.height - marginTop - marginBottom;
+    const reciboHeight = (contentHeight - (recibosPerPage - 1) * gapVertical) / recibosPerPage;
 
     console.log('[PDF] Iniciando generación de PDF');
     console.log('[PDF] Recibos por página:', recibosPerPage);
     console.log('[PDF] Altura de cada recibo:', reciboHeight, 'mm');
     console.log('[PDF] Total de recibos:', recibos.length);
 
-    // Serializar bloques del template a string HTML con placeholders, aplicando escala
-    const fullTemplate = serializeTemplateBlocks(templateDB, scaleFactor);
-    const { config, content } = parseTemplate(fullTemplate);
-    const contentWithoutStyles = content.replace(/<style[^>]*>[\s\S]*?<\/style>/gi, '');
+    // Detectar si es tabla o bloques
+    const isTabla = Array.isArray(templateDB?.bloques) && templateDB.bloques[0]?.type === 'tabla';
+    console.log('[PDF] Template type:', isTabla ? 'tabla' : 'bloques');
 
-    // Construir HTML completo con todas las páginas
     let fullHTML = '';
-    for (let i = 0; i < recibos.length; i += recibosPerPage) {
-      // Cada página es un div con page-break-after
-      fullHTML += '<div class="page" style="page-break-after: always; margin: 0; padding: 0;">';
 
-      // Agregar N recibos en esta página
-      for (let j = 0; j < recibosPerPage && i + j < recibos.length; j++) {
-        const reciboHTML = renderRecibo(recibos[i + j], contentWithoutStyles);
-        fullHTML += `<div style="height: ${reciboHeight}mm; margin: 0; padding: 0; overflow: hidden;">
+    if (isTabla) {
+      // Para tabla: serializar una sola tabla y replicarla con datos de cada recibo
+      const fullTemplate = serializeTemplateTable(templateDB, scaleFactor);
+      const { config, content } = parseTemplate(fullTemplate);
+
+      for (let i = 0; i < recibos.length; i += recibosPerPage) {
+        fullHTML += '<div class="page" style="page-break-after: always; margin: 0; padding: 0;">';
+
+        for (let j = 0; j < recibosPerPage && i + j < recibos.length; j++) {
+          // Reemplazar placeholders en el template de tabla
+          let reciboContentHTML = content;
+          const recibo = recibos[i + j];
+
+          // Reemplazar todos los placeholders {{...}} con datos del recibo
+          reciboContentHTML = reciboContentHTML.replace(/\{\{([^}]+)\}\}/g, (match, key) => {
+            return String(recibo[key] || '');
+          });
+
+          fullHTML += `<div style="height: ${reciboHeight}mm; margin: 0; padding: 0; overflow: hidden;">
+${reciboContentHTML}
+</div>`;
+        }
+
+        fullHTML += '</div>';
+        console.log('[PDF] Agregada página (tabla)', Math.floor(i / recibosPerPage) + 1);
+      }
+    } else {
+      // Para bloques: usar lógica legacy
+      const fullTemplate = serializeTemplateBlocks(templateDB, scaleFactor);
+      const { config, content } = parseTemplate(fullTemplate);
+      const contentWithoutStyles = content.replace(/<style[^>]*>[\s\S]*?<\/style>/gi, '');
+
+      for (let i = 0; i < recibos.length; i += recibosPerPage) {
+        fullHTML += '<div class="page" style="page-break-after: always; margin: 0; padding: 0;">';
+
+        for (let j = 0; j < recibosPerPage && i + j < recibos.length; j++) {
+          const reciboHTML = renderRecibo(recibos[i + j], contentWithoutStyles);
+          fullHTML += `<div style="height: ${reciboHeight}mm; margin: 0; padding: 0; overflow: hidden;">
 ${reciboHTML}
 </div>`;
-      }
+        }
 
-      fullHTML += '</div>';
-      console.log('[PDF] Agregada página', Math.floor(i / recibosPerPage) + 1, 'con recibos', i + 1, '-', Math.min(i + recibosPerPage, recibos.length));
+        fullHTML += '</div>';
+        console.log('[PDF] Agregada página (bloques)', Math.floor(i / recibosPerPage) + 1, 'con recibos', i + 1, '-', Math.min(i + recibosPerPage, recibos.length));
+      }
     }
 
     console.log('[PDF] Generando PDF único con todas las páginas...');
