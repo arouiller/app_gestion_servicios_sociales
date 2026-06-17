@@ -369,7 +369,7 @@ const TableEditor = ({ placeholders = {} }) => {
 
       <div style={{ marginTop: '12px', fontSize: '11px', color: '#999' }}>
         <p>💡 Haz click en una celda para editar. Usa &lt;strong&gt;, &lt;em&gt;, etc. para HTML.</p>
-        <p>💡 Inserta placeholders como {{'{{'}}numero_afiliado{{'}}'}}, {{'{{'}}obra_social_nombre{{'}}'}}, etc.</p>
+        <p>💡 Inserta placeholders entre dobles llaves: {'{{numero_afiliado}}'}, {'{{obra_social_nombre}}'}, etc.</p>
       </div>
     </div>
   );

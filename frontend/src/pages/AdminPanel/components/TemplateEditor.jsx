@@ -259,26 +259,6 @@ const TemplateEditor = ({ onBack }) => {
     };
   };
 
-  // Guardar bloque actual
-  const handleSaveBlock = () => {
-    if (editingBlockId) {
-      // Actualizar el bloque en tiempo real
-      const updatedBloque = (currentTemplate.bloques || []).find(b => b.id === editingBlockId);
-      if (updatedBloque) {
-        handleUpdateBlock({ ...updatedBloque, contenido: editingContent });
-      }
-
-      // Guardar en pendingBlocks
-      setPendingBlocks(prev => ({
-        ...prev,
-        [editingBlockId]: editingContent
-      }));
-
-      // Desactivar edición
-      setEditingBlockId(null);
-      setEditingContent('');
-    }
-  };
 
 
   return (
