@@ -408,17 +408,18 @@ function generateTableHTML(tablaData) {
   const borderStyle = tablaData.bordeTabla ? '1px solid #000' : 'none';
   const filasHTML = tablaData.filas
     .map(fila => {
+      const altura = fila.altura || 15;
       const celdas = fila.celdas
         .map(celda => {
           const ancho = celda.ancho || 50;
-          return `<td style="width: ${ancho}%; padding: 4px; border: ${borderStyle}; vertical-align: top; font-size: inherit;">${celda.contenido || ''}</td>`;
+          return `<td style="width: ${ancho}%; padding: 4px; border: ${borderStyle}; vertical-align: top; font-size: inherit; height: ${altura}mm;">${celda.contenido || ''}</td>`;
         })
         .join('');
-      return `<tr>${celdas}</tr>`;
+      return `<tr style="height: ${altura}mm;">${celdas}</tr>`;
     })
     .join('');
 
-  return `<table style="width: 100%; height: 100%; border-collapse: collapse; font-size: ${tablaData.tamanoFuente || 11}px; font-family: Arial, sans-serif;">
+  return `<table style="width: 100%; border-collapse: collapse; font-size: ${tablaData.tamanoFuente || 11}px; font-family: Arial, sans-serif; table-layout: fixed;">
 <tbody>
 ${filasHTML}
 </tbody>
