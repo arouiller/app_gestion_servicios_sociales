@@ -620,15 +620,8 @@ exports.generarPDF = async (req, res, next) => {
     console.log('[PDF DEBUG] reciboHeight (mm):', reciboHeight);
     console.log('[PDF DEBUG] Total recibos:', recibos.length);
     let totalRecibosGenerados = 0;
-    let pageIndex = 0;
     for (let i = 0; i < recibos.length; i += recibosPerPage) {
       console.log('[PDF DEBUG] Generando página con recibos desde índice:', i);
-
-      // Agregar page-break antes de cada página EXCEPTO la primera
-      if (pageIndex > 0) {
-        fullHTML += '<div style="page-break-before: always;"></div>';
-      }
-
       fullHTML += `<div class="recibos-pagina" style="height: ${dimensions.height}mm; page-break-inside: avoid; margin: 0; padding: 0;">`;
 
       // Renderizar N recibos en esta página
@@ -637,14 +630,12 @@ exports.generarPDF = async (req, res, next) => {
         totalRecibosGenerados++;
         console.log('[PDF DEBUG] Renderizando recibo', i + j);
 
-        fullHTML += `<div class="recibo-wrapper" style="height: ${reciboHeight}mm; margin: 0; padding: 0; overflow: hidden;">
-  ${reciboHTML}
-</div>
-`;
+        fullHTML += `<div class="recibo-wrapper" style="height: ${reciboHeight}mm; margin: 0; padding: 0; overflow: hidden;">`;
+        fullHTML += reciboHTML;
+        fullHTML += `</div>`;
       }
 
       fullHTML += '</div>';
-      pageIndex++;
     }
     console.log('[PDF DEBUG] Total recibos generados en HTML:', totalRecibosGenerados);
 
