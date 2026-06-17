@@ -615,6 +615,9 @@ exports.generarPDF = async (req, res, next) => {
     const fullTemplate = serializeTemplateBlocks(templateDB, scaleFactor);
     const { config, content } = parseTemplate(fullTemplate);
 
+    // Remover <style> tags del contenido (ya están en el <head>)
+    const contentWithoutStyles = content.replace(/<style[^>]*>[\s\S]*?<\/style>/gi, '');
+
     // Construir HTML completo agrupando recibos (N recibos por página, apilados verticalmente)
     let fullHTML = '';
     console.log('[PDF DEBUG] reciboHeight (mm):', reciboHeight);
@@ -626,11 +629,11 @@ exports.generarPDF = async (req, res, next) => {
 
       // Renderizar N recibos en esta página
       for (let j = 0; j < recibosPerPage && i + j < recibos.length; j++) {
-        const reciboHTML = renderRecibo(recibos[i + j], content);
+        const reciboHTML = renderRecibo(recibos[i + j], contentWithoutStyles);
         totalRecibosGenerados++;
         console.log('[PDF DEBUG] Renderizando recibo', i + j);
 
-        fullHTML += `<div class="recibo-wrapper" style="height: ${reciboHeight}mm; margin: 0; padding: 0; overflow: hidden;">`;
+        fullHTML += `<div class="recibo-wrapper" style="height: ${reciboHeight}mm; margin: 0; padding: 0; overflow: hidden; display: block;">`;
         fullHTML += reciboHTML;
         fullHTML += `</div>`;
       }
@@ -653,22 +656,28 @@ exports.generarPDF = async (req, res, next) => {
 
     .recibos-pagina {
       width: 100%;
-      margin: 0;
-      padding: 0;
+      margin: 0 !important;
+      padding: 0 !important;
       page-break-inside: avoid;
+      display: block !important;
+      box-sizing: border-box;
     }
 
     .recibo-wrapper {
       width: 100%;
-      margin: 0;
-      padding: 0;
+      margin: 0 !important;
+      padding: 0 !important;
       box-sizing: border-box;
+      display: block !important;
+      overflow: hidden;
     }
 
     .recibo-page {
-      margin: 0;
-      padding: 0;
+      margin: 0 !important;
+      padding: 0 !important;
       width: 100%;
+      display: block !important;
+      box-sizing: border-box;
     }
   </style>
 </head>
