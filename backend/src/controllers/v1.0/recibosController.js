@@ -633,14 +633,11 @@ exports.generarPDF = async (req, res, next) => {
         fullHTML += '<div class="page" style="page-break-after: always; margin: 0; padding: 0;">';
 
         for (let j = 0; j < recibosPerPage && i + j < recibos.length; j++) {
-          // Reemplazar placeholders en el template de tabla
-          let reciboContentHTML = content;
           const recibo = recibos[i + j];
+          const reciboData = prepareReciboData(recibo);
 
-          // Reemplazar todos los placeholders {{...}} con datos del recibo
-          reciboContentHTML = reciboContentHTML.replace(/\{\{([^}]+)\}\}/g, (match, key) => {
-            return String(recibo[key] || '');
-          });
+          // Reemplazar placeholders usando replaceAllPlaceholders
+          const reciboContentHTML = replaceAllPlaceholders(content, reciboData);
 
           fullHTML += `<div style="height: ${reciboHeight}mm; margin: 0; padding: 0; overflow: hidden;">
 ${reciboContentHTML}
@@ -707,7 +704,8 @@ function extractStylesFromTemplate(templateContent) {
 /**
  * BACKLOG-080: Renderiza un recibo individual reemplazando todos los placeholders
  */
-function renderRecibo(recibo, template) {
+// Preparar datos del recibo para reemplazar placeholders
+function prepareReciboData(recibo) {
   const numeroRecibo = recibo.numero_recibo ?? recibo.id;
   const numeroAfiliado = String(recibo.numero_afiliado).padStart(5, '0');
   const zonaCodigo = recibo.zona_codigo || '-';
@@ -716,13 +714,11 @@ function renderRecibo(recibo, template) {
   const arancelPorServicio = parseFloat(recibo.arancel_por_servicio || 0);
   const valorCuota = formatCurrency(recibo.valor_cuota || 0);
 
-  // BACKLOG-080: Colores dinámicos para arancel negativo
   const isArancelNegative = arancelPorServicio < 0;
   const arancelBg = isArancelNegative ? '#fff3cd' : '#f9f9f9';
   const arancelColor = isArancelNegative ? '#856404' : '#27ae60';
 
-  // BACKLOG-080: Preparar datos para placeholders de desglose
-  const reciboData = {
+  return {
     numero_recibo: numeroRecibo,
     numero_afiliado: numeroAfiliado,
     zona_codigo: zonaCodigo,
@@ -745,8 +741,10 @@ function renderRecibo(recibo, template) {
     numero_documento: recibo.numero_documento || '-',
     periodo: recibo.periodo || '-',
   };
+}
 
-  // Usar helper para reemplazar todos los placeholders
+function renderRecibo(recibo, template) {
+  const reciboData = prepareReciboData(recibo);
   return replaceAllPlaceholders(template, reciboData);
 }
 
