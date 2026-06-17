@@ -452,12 +452,13 @@ function serializeTemplateTable(template, scaleFactor = 1.0) {
 
   // Generar HTML de la tabla
   const generarFilasHTML = () => {
+    const borderStyle = tablaData.bordeTabla ? '1px solid #000' : 'none';
     return tablaData.filas
       .map(fila => {
         const celdas = fila.celdas
           .map(celda => {
             const ancho = celda.ancho || 50;
-            return `<td style="width: ${ancho}%; padding: 4px; border: 1px solid #000; vertical-align: middle;">${celda.contenido || ''}</td>`;
+            return `<td style="width: ${ancho}%; padding: 4px; border: ${borderStyle}; vertical-align: middle; font-size: inherit;">${celda.contenido || ''}</td>`;
           })
           .join('');
         return `<tr>${celdas}</tr>`;
@@ -465,7 +466,7 @@ function serializeTemplateTable(template, scaleFactor = 1.0) {
       .join('');
   };
 
-  const tableHTML = `<table style="width: 100%; height: 100%; border-collapse: collapse; font-size: ${tablaData.tamanoFuente || 11}px; font-family: Arial, sans-serif;">
+  const tableHTML = `<table style="width: 100%; border-collapse: collapse; font-size: ${tablaData.tamanoFuente || 11}px; font-family: Arial, sans-serif;">
 <tbody>
 ${generarFilasHTML()}
 </tbody>

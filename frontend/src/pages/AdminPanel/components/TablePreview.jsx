@@ -3,56 +3,35 @@ import { replacePlaceholders } from '../../../utils/placeholderReplacer';
 
 const MM_TO_PX = 3.7795;
 
+const renderTablaHTML = (tabla, personData) => {
+  const borderStyle = tabla.bordeTabla ? '1px solid #000' : 'none';
+
+  const filasHTML = tabla.filas
+    .map((fila) => {
+      const celdasHTML = fila.celdas
+        .map((celda) => {
+          let contenido = celda.contenido || '';
+          if (personData) {
+            contenido = replacePlaceholders(contenido, personData);
+          }
+          return `<td style="width: ${celda.ancho}%; padding: 4px; border: ${borderStyle}; vertical-align: top; font-size: inherit;">${contenido}</td>`;
+        })
+        .join('');
+      return `<tr>${celdasHTML}</tr>`;
+    })
+    .join('');
+
+  return `<table style="width: 100%; border-collapse: collapse; font-size: ${tabla.tamanoFuente || 11}px; font-family: Arial, sans-serif; table-layout: fixed;">
+<tbody>
+${filasHTML}
+</tbody>
+</table>`;
+};
+
 const TablePreview = ({ tabla, reciboPositions, personData }) => {
-  if (!tabla || tabla.type !== 'tabla' || !reciboPositions) {
+  if (!tabla || tabla.type !== 'tabla' || !reciboPositions || !reciboPositions.recibos) {
     return null;
   }
-
-  const renderTabla = (tabla, personData) => {
-    return (
-      <table
-        style={{
-          width: '100%',
-          height: '100%',
-          borderCollapse: 'collapse',
-          fontSize: `${tabla.tamanoFuente || 11}px`,
-          fontFamily: 'Arial, sans-serif',
-          tableLayout: 'fixed'
-        }}
-      >
-        <tbody>
-          {tabla.filas.map((fila) => (
-            <tr key={fila.id}>
-              {fila.celdas.map((celda) => {
-                let contenido = celda.contenido || '';
-                if (personData) {
-                  contenido = replacePlaceholders(contenido, personData);
-                }
-                return (
-                  <td
-                    key={celda.id}
-                    style={{
-                      width: `${celda.ancho}%`,
-                      padding: '4px',
-                      verticalAlign: 'top',
-                      wordBreak: 'break-word',
-                      border: tabla.bordeTabla ? '1px solid #000' : '1px solid #ccc',
-                      fontSize: 'inherit'
-                    }}
-                  >
-                    <div
-                      style={{ fontSize: 'inherit' }}
-                      dangerouslySetInnerHTML={{ __html: contenido }}
-                    />
-                  </td>
-                );
-              })}
-            </tr>
-          ))}
-        </tbody>
-      </table>
-    );
-  };
 
   return (
     <>
@@ -67,12 +46,20 @@ const TablePreview = ({ tabla, reciboPositions, personData }) => {
             height: `${recibo.height * MM_TO_PX}px`,
             overflow: 'hidden',
             backgroundColor: 'white',
-            border: `1px solid ${recibo.number === 1 ? '#333' : '#ccc'}`,
+            border: `2px solid ${recibo.number === 1 ? '#333' : '#999'}`,
             boxSizing: 'border-box'
           }}
           className={`tabla-preview recibo-${recibo.number}`}
         >
-          {renderTabla(tabla, personData)}
+          <div
+            style={{
+              width: '100%',
+              height: '100%',
+              fontSize: '11px',
+              lineHeight: '1.2'
+            }}
+            dangerouslySetInnerHTML={{ __html: renderTablaHTML(tabla, personData) }}
+          />
         </div>
       ))}
     </>

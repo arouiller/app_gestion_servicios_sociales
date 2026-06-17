@@ -331,10 +331,16 @@ const TableEditor = ({ placeholders = {} }) => {
                       textOverflow: 'ellipsis',
                       display: '-webkit-box',
                       WebkitLineClamp: 3,
-                      WebkitBoxOrient: 'vertical'
+                      WebkitBoxOrient: 'vertical',
+                      lineHeight: '1.3'
                     }}
-                    dangerouslySetInnerHTML={{ __html: celda.contenido || '<em>vacío</em>' }}
-                  />
+                  >
+                    {celda.contenido ? (
+                      <div dangerouslySetInnerHTML={{ __html: celda.contenido }} />
+                    ) : (
+                      <em style={{ color: '#999' }}>vacío</em>
+                    )}
+                  </div>
                 )}
               </div>
             ))}

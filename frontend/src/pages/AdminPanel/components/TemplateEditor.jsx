@@ -229,7 +229,7 @@ const TemplateEditor = ({ onBack }) => {
     const persona = planData.persona || planData.Persona || {};
 
     return {
-      // Datos del titular (persona) - nombres deben coincidir con placeholderReplacer.js
+      // Datos del titular (persona)
       nombre: persona.nombre || '',
       apellido: persona.apellido || '',
       numero_documento: persona.numero_documento || '',
@@ -245,6 +245,8 @@ const TemplateEditor = ({ onBack }) => {
       arancel_por_servicio: planData.arancel_por_servicio || 0,
       fecha_cobertura: planData.fecha_cobertura || '',
       zona_codigo: planData.zona_codigo || '',
+      numero_recibo: '',
+      periodo: '',
 
       // Datos de lookups
       obra_social_nombre: planData.obra_social_nombre || '',
