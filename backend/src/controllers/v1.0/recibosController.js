@@ -617,12 +617,18 @@ exports.generarPDF = async (req, res, next) => {
 
     // Construir HTML completo agrupando recibos (N recibos por página, apilados verticalmente)
     let fullHTML = '';
+    console.log('[PDF DEBUG] reciboHeight (mm):', reciboHeight);
+    console.log('[PDF DEBUG] Total recibos:', recibos.length);
+    let totalRecibosGenerados = 0;
     for (let i = 0; i < recibos.length; i += recibosPerPage) {
+      console.log('[PDF DEBUG] Generando página con recibos desde índice:', i);
       fullHTML += '<div class="recibos-pagina" style="page-break-inside: avoid;">';
 
       // Renderizar N recibos en esta página
       for (let j = 0; j < recibosPerPage && i + j < recibos.length; j++) {
         const reciboHTML = renderRecibo(recibos[i + j], content);
+        totalRecibosGenerados++;
+        console.log('[PDF DEBUG] Renderizando recibo', i + j);
 
         fullHTML += `<div class="recibo-wrapper" style="height: ${reciboHeight}mm; margin: 0; padding: 0; overflow: hidden;">
   ${reciboHTML}
@@ -632,6 +638,7 @@ exports.generarPDF = async (req, res, next) => {
 
       fullHTML += '</div>';
     }
+    console.log('[PDF DEBUG] Total recibos generados en HTML:', totalRecibosGenerados);
 
     // Extraer estilos del template
     const templateStyles = extractStylesFromTemplate(content);
