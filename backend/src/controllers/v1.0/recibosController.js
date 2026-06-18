@@ -679,22 +679,23 @@ exports.generarPDF = async (req, res, next) => {
         fullHTML += `<div class="page" style="page-break-after: always; margin: 0; padding: ${marginTop}mm ${marginRight}mm ${marginBottom}mm ${marginLeft}mm;">`;
 
         // Contenedor con todos los recibos de la página para mantenerlos juntos
+        // page-break-inside: avoid evita que los recibos se corten entre páginas
         const recibosEnPagina = Math.min(recibosPerPage, recibos.length - i);
-        const alturaContenedor = reciboHeight * recibosEnPagina + gapVertical * Math.max(0, recibosEnPagina - 1);
-        fullHTML += `<div style="height: ${alturaContenedor}mm; margin: 0; padding: 0; page-break-inside: avoid; box-sizing: border-box;">`;
+        fullHTML += `<div style="margin: 0; padding: 0; page-break-inside: avoid; box-sizing: border-box;">`;
 
         for (let j = 0; j < recibosPerPage && i + j < recibos.length; j++) {
           const recibo = recibos[i + j];
           const reciboData = prepareReciboData(recibo);
           const tableHTMLFilled = replaceAllPlaceholders(tableHTMLWithPlaceholders, reciboData);
 
-          fullHTML += `<div style="height: ${reciboHeight}mm; margin: 0; padding: 0; overflow: hidden; box-sizing: border-box;">
+          // Recibo sin altura fija - ocupa solo lo que la tabla necesita
+          fullHTML += `<div style="margin: 0; padding: 0; box-sizing: border-box;">
 ${tableHTMLFilled}
 </div>`;
 
           // Agregar gap entre recibos (excepto el último de la página)
           if (j < recibosPerPage - 1 && i + j + 1 < recibos.length) {
-            fullHTML += `<div style="height: ${gapVertical}mm; margin: 0; padding: 0; display: block;">&nbsp;</div>`;
+            fullHTML += `<div style="height: ${gapVertical}mm; margin: 0; padding: 0;">&nbsp;</div>`;
           }
         }
 
