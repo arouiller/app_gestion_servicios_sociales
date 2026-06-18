@@ -655,7 +655,7 @@ Recibo ${recibo.numero_afiliado}
 
           // Agregar gap entre recibos (excepto el último de la página)
           if (j < recibosPerPage - 1 && i + j + 1 < recibos.length) {
-            fullHTML += `<div style="height: ${gapVertical}mm; margin: 0; padding: 0;"></div>`;
+            fullHTML += `<div style="height: ${gapVertical}mm; margin: 0; padding: 0; display: block;">&nbsp;</div>`;
           }
         }
 
