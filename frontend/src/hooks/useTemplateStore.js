@@ -69,10 +69,21 @@ const useTemplateStore = create((set) => {
 
     updateBloque: (bloqueKey, updates) =>
       set((state) => {
+        // Parsear bloque si es string (especialmente para bloque_pageconfig)
+        let bloqueValue = state.currentTemplate[bloqueKey];
+        if (typeof bloqueValue === 'string') {
+          try {
+            bloqueValue = JSON.parse(bloqueValue);
+          } catch (e) {
+            console.error(`Error parsing ${bloqueKey}:`, e);
+            bloqueValue = {};
+          }
+        }
+
         const updated = {
           ...state.currentTemplate,
           [bloqueKey]: {
-            ...state.currentTemplate[bloqueKey],
+            ...bloqueValue,
             ...updates
           }
         };
