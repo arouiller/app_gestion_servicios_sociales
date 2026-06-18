@@ -49,12 +49,23 @@ const useTemplateStore = create((set) => {
     error: null,
 
     // Actions
-    setCurrentTemplate: (template) =>
-      set(() => ({
-        currentTemplate: template,
+    setCurrentTemplate: (template) => {
+      // Parsear bloque_pageconfig si es string (viene así del API)
+      let parsedTemplate = { ...template };
+      if (typeof parsedTemplate.bloque_pageconfig === 'string') {
+        try {
+          parsedTemplate.bloque_pageconfig = JSON.parse(parsedTemplate.bloque_pageconfig);
+        } catch (e) {
+          console.error('Error parsing bloque_pageconfig:', e);
+          parsedTemplate.bloque_pageconfig = {};
+        }
+      }
+      return set(() => ({
+        currentTemplate: parsedTemplate,
         isDirty: false,
         editingBlock: null
-      })),
+      }));
+    },
 
     updateBloque: (bloqueKey, updates) =>
       set((state) => {
