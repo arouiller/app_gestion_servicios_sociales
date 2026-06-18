@@ -597,15 +597,27 @@ exports.generarPDF = async (req, res, next) => {
       }
     }
     // Sobrescribir pageConfig con valores de templateDB.bloque_pageconfig si existen
-    if (templateDB.bloque_pageconfig) {
-      pageConfig.gap_vertical_mm = templateDB.bloque_pageconfig.gap_vertical_mm;
-      pageConfig.recibos_por_pagina = templateDB.bloque_pageconfig.recibos_por_pagina;
-      pageConfig.margen_superior_mm = templateDB.bloque_pageconfig.margen_superior_mm;
-      pageConfig.margen_inferior_mm = templateDB.bloque_pageconfig.margen_inferior_mm;
-      pageConfig.margen_izquierdo_mm = templateDB.bloque_pageconfig.margen_izquierdo_mm;
-      pageConfig.margen_derecho_mm = templateDB.bloque_pageconfig.margen_derecho_mm;
-      pageConfig.tamaño = templateDB.bloque_pageconfig.tamaño;
-      pageConfig.orientacion = templateDB.bloque_pageconfig.orientacion;
+    let bloquePageConfig = templateDB.bloque_pageconfig || {};
+
+    // Si es string, parsear como JSON
+    if (typeof bloquePageConfig === 'string') {
+      try {
+        bloquePageConfig = JSON.parse(bloquePageConfig);
+      } catch (e) {
+        console.error('[PDF] Error parseando bloque_pageconfig:', e);
+        bloquePageConfig = {};
+      }
+    }
+
+    if (bloquePageConfig && Object.keys(bloquePageConfig).length > 0) {
+      pageConfig.gap_vertical_mm = bloquePageConfig.gap_vertical_mm;
+      pageConfig.recibos_por_pagina = bloquePageConfig.recibos_por_pagina;
+      pageConfig.margen_superior_mm = bloquePageConfig.margen_superior_mm;
+      pageConfig.margen_inferior_mm = bloquePageConfig.margen_inferior_mm;
+      pageConfig.margen_izquierdo_mm = bloquePageConfig.margen_izquierdo_mm;
+      pageConfig.margen_derecho_mm = bloquePageConfig.margen_derecho_mm;
+      pageConfig.tamaño = bloquePageConfig.tamaño;
+      pageConfig.orientacion = bloquePageConfig.orientacion;
     }
 
     const recibosPerPage = pageConfig.recibos_por_pagina || 1;
