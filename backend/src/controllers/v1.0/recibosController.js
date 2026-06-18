@@ -596,6 +596,18 @@ exports.generarPDF = async (req, res, next) => {
         pageConfig = {};
       }
     }
+    // Sobrescribir pageConfig con valores de templateDB.bloque_pageconfig si existen
+    if (templateDB.bloque_pageconfig) {
+      pageConfig.gap_vertical_mm = templateDB.bloque_pageconfig.gap_vertical_mm;
+      pageConfig.recibos_por_pagina = templateDB.bloque_pageconfig.recibos_por_pagina;
+      pageConfig.margen_superior_mm = templateDB.bloque_pageconfig.margen_superior_mm;
+      pageConfig.margen_inferior_mm = templateDB.bloque_pageconfig.margen_inferior_mm;
+      pageConfig.margen_izquierdo_mm = templateDB.bloque_pageconfig.margen_izquierdo_mm;
+      pageConfig.margen_derecho_mm = templateDB.bloque_pageconfig.margen_derecho_mm;
+      pageConfig.tamaño = templateDB.bloque_pageconfig.tamaño;
+      pageConfig.orientacion = templateDB.bloque_pageconfig.orientacion;
+    }
+
     const recibosPerPage = pageConfig.recibos_por_pagina || 1;
     const gapVertical = pageConfig.gap_vertical_mm || 0;
     const scaleFactor = 1 / recibosPerPage;
@@ -636,16 +648,6 @@ exports.generarPDF = async (req, res, next) => {
       const parsed = parseTemplate(fullTemplate);
       config = parsed.config;
       content = parsed.content;
-
-      // Sobrescribir config con valores de templateDB.bloque_pageconfig para valores específicos
-      if (templateDB.bloque_pageconfig) {
-        config.gap_vertical_mm = templateDB.bloque_pageconfig.gap_vertical_mm;
-        config.recibos_por_pagina = templateDB.bloque_pageconfig.recibos_por_pagina;
-        config.margen_superior_mm = templateDB.bloque_pageconfig.margen_superior_mm;
-        config.margen_inferior_mm = templateDB.bloque_pageconfig.margen_inferior_mm;
-        config.margen_izquierdo_mm = templateDB.bloque_pageconfig.margen_izquierdo_mm;
-        config.margen_derecho_mm = templateDB.bloque_pageconfig.margen_derecho_mm;
-      }
 
       for (let i = 0; i < recibos.length; i += recibosPerPage) {
         fullHTML += `<div class="page" style="page-break-after: always; margin: 0; padding: ${marginTop}mm ${marginRight}mm ${marginBottom}mm ${marginLeft}mm;">`;
