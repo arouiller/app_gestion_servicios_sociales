@@ -583,45 +583,45 @@ exports.generarPDF = async (req, res, next) => {
       });
     }
 
-    // Obtener template activo de la BD o usar template por defecto
+    // Obtener template activo de la BD
     let templateDB = await db.ReciboTemplate.findOne({
       where: { activo: true },
     });
 
-    // Obtener recibos_por_pagina desde bloque_pageconfig
-    let pageConfig = templateDB?.bloque_pageconfig || {};
-    if (typeof pageConfig === 'string') {
-      try {
-        pageConfig = JSON.parse(pageConfig);
-      } catch (e) {
-        pageConfig = {};
+    // Leer y parsear bloque_pageconfig con una sola lectura
+    let pageConfig = {};
+    if (templateDB?.bloque_pageconfig) {
+      let rawConfig = templateDB.bloque_pageconfig;
+
+      // Si viene como string JSON, parsear
+      if (typeof rawConfig === 'string') {
+        try {
+          pageConfig = JSON.parse(rawConfig);
+          console.log('[PDF] bloque_pageconfig parseado desde string:', JSON.stringify(pageConfig));
+        } catch (e) {
+          console.error('[PDF] Error parseando bloque_pageconfig (string):', e.message);
+          pageConfig = {};
+        }
+      } else if (typeof rawConfig === 'object' && rawConfig !== null) {
+        // Ya es objeto, usar directamente
+        pageConfig = rawConfig;
+        console.log('[PDF] bloque_pageconfig leído como objeto:', JSON.stringify(pageConfig));
       }
     }
-    // Sobrescribir pageConfig con valores de templateDB.bloque_pageconfig si existen
-    let bloquePageConfig = templateDB.bloque_pageconfig || {};
 
-    // Si es string, parsear como JSON
-    if (typeof bloquePageConfig === 'string') {
-      try {
-        bloquePageConfig = JSON.parse(bloquePageConfig);
-      } catch (e) {
-        console.error('[PDF] Error parseando bloque_pageconfig:', e);
-        bloquePageConfig = {};
-      }
+    // Si pageConfig sigue vacío, usar defaults
+    if (!pageConfig || Object.keys(pageConfig).length === 0) {
+      console.log('[PDF] bloque_pageconfig vacío o no disponible, usando defaults');
+      pageConfig = {};
     }
 
-    if (bloquePageConfig && Object.keys(bloquePageConfig).length > 0) {
-      pageConfig.gap_vertical_mm = bloquePageConfig.gap_vertical_mm;
-      pageConfig.recibos_por_pagina = bloquePageConfig.recibos_por_pagina;
-      pageConfig.margen_superior_mm = bloquePageConfig.margen_superior_mm;
-      pageConfig.margen_inferior_mm = bloquePageConfig.margen_inferior_mm;
-      pageConfig.margen_izquierdo_mm = bloquePageConfig.margen_izquierdo_mm;
-      pageConfig.margen_derecho_mm = bloquePageConfig.margen_derecho_mm;
-      pageConfig.tamaño = bloquePageConfig.tamaño;
-      pageConfig.orientacion = bloquePageConfig.orientacion;
+    // Validar recibos_por_pagina es un número válido
+    let recibosPerPage = pageConfig.recibos_por_pagina;
+    if (!Number.isInteger(recibosPerPage) || recibosPerPage < 1) {
+      console.warn('[PDF] recibos_por_pagina inválido:', recibosPerPage, '→ usando default 1');
+      recibosPerPage = 1;
     }
 
-    const recibosPerPage = pageConfig.recibos_por_pagina || 1;
     const gapVertical = pageConfig.gap_vertical_mm || 0;
     const scaleFactor = 1 / recibosPerPage;
 
@@ -642,14 +642,18 @@ exports.generarPDF = async (req, res, next) => {
     const buffer = 2; // 2mm de buffer para evitar divisiones en html-pdf
     const reciboHeight = (availableHeight - (recibosPerPage - 1) * gapVertical - buffer) / recibosPerPage;
 
-    console.log('[PDF] Iniciando generación de PDF');
-    console.log('[PDF] pageConfig:', JSON.stringify(pageConfig));
-    console.log('[PDF] Recibos por página:', recibosPerPage);
+    console.log('\n=== [PDF] DIAGNÓSTICO DE GENERACIÓN ===');
+    console.log('[PDF] Recibos por página (FROM pageConfig):', pageConfig.recibos_por_pagina);
+    console.log('[PDF] Recibos por página (USADO EN CÁLCULO):', recibosPerPage);
     console.log('[PDF] Gap vertical:', gapVertical, 'mm');
-    console.log('[PDF] Márgenes:', marginTop, marginBottom, marginLeft, marginRight);
-    console.log('[PDF] Available height:', availableHeight, 'mm');
-    console.log('[PDF] Altura de cada recibo:', reciboHeight, 'mm');
-    console.log('[PDF] Total de recibos:', recibos.length);
+    console.log('[PDF] Márgenes - Top/Bottom/Left/Right:', marginTop, marginBottom, marginLeft, marginRight);
+    console.log('[PDF] Tamaño página:', pageSize);
+    console.log('[PDF] Dimensiones página:', dimensions.width, 'x', dimensions.height, 'mm');
+    console.log('[PDF] Espacio disponible (altura total - márgenes):', availableHeight, 'mm');
+    console.log('[PDF] FÓRMULA: reciboHeight = (', availableHeight, '-', (recibosPerPage - 1) * gapVertical, '-', 2, ') /', recibosPerPage);
+    console.log('[PDF] Altura de cada recibo (CALCULADA):', reciboHeight.toFixed(2), 'mm');
+    console.log('[PDF] Total recibos a generar:', recibos.length);
+    console.log('=== FIN DIAGNÓSTICO ===\n');
 
     // Detectar si es tabla o bloques
     const isTabla = Array.isArray(templateDB?.bloques) && templateDB.bloques[0]?.type === 'tabla';

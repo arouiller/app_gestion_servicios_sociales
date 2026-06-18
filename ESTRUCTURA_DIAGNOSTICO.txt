@@ -1,0 +1,188 @@
+ESTRUCTURA DEL PLAN DE DIAGNÓSTICO
+═══════════════════════════════════════════════════════════════════════════════
+
+PLAN DE DIAGNÓSTICO: PDF NO RESPETA RECIBOS_POR_PAGINA DEL TEMPLATE
+
+Generado: 2026-06-18
+Duración: 60-90 minutos (diagnóstico + correcciones)
+Riesgo: BAJO (cambios simples y revertibles)
+
+═══════════════════════════════════════════════════════════════════════════════
+DOCUMENTOS GENERADOS (7 ARCHIVOS)
+═══════════════════════════════════════════════════════════════════════════════
+
+NIVEL 0: COMENZAR (1 minuto)
+  LEER_PRIMERO.txt
+    - Visión general 2 minutos
+    - Flujo rápido (elige tu camino)
+    - Variables críticas a monitorear
+    - PRE-REQUISITOS para ejecutar
+
+NIVEL 1: ENTENDIMIENTO RÁPIDO (5 minutos)
+  DIAGNOSTICO_RESUMEN.md ⭐ EMPIEZA AQUÍ
+    - El problema en una oración
+    - Cadena de datos: Dónde puede fallar
+    - 5 pasos simples de diagnóstico
+    - Causas probables (ordenadas por probabilidad)
+    - Tabla de decisión rápida
+
+  README_DIAGNOSTICO.txt
+    - Resumen ejecutivo
+    - 5 documentos generados
+    - 3 opciones de cómo empezar
+    - Puntos críticos a monitorear
+
+NIVEL 2: ANÁLISIS TÉCNICO PROFUNDO (20 minutos)
+  PLAN_DIAGNOSTICO_RECIBOS_PDF.md
+    - Arquitectura de cadena de datos (diagrama)
+    - 5 PUNTOS DE RUPTURA IDENTIFICADOS:
+      * Punto 1: Lectura desde BD (líneas 586-622)
+      * Punto 2: Modelo ReciboTemplate (líneas 71-89)
+      * Punto 3: Cálculo de Altura (línea 643)
+      * Punto 4: Logs Insuficientes (línea 645-652)
+      * Punto 5: html-pdf (pdfHelpers.js)
+    - 5 PASOS DE DIAGNÓSTICO DETALLADO (15 min cada)
+    - 4 CORRECCIONES PROPUESTAS (A, B, C, D)
+    - Cronograma y matriz de riesgo
+
+NIVEL 3: REFERENCIA VISUAL Y ARQUITECTURA (15 minutos)
+  ARQUITECTURA_SOLUCION_RECIBOS_PDF.md
+    - Diagrama: Cómo DEBERÍA funcionar
+    - Especificación Técnica con ejemplo
+    - Diagrama: Puntos de Fallo
+    - Tabla: Síntomas vs Causa
+    - Checklist de Validación (10 items)
+    - Fórmula de Cálculo de Altura
+    - Valores Aceptables por Propiedad
+
+NIVEL 4: GUÍA DE EJECUCIÓN PASO A PASO (60 minutos)
+  EJECUTAR_DIAGNOSTICO.md
+    - PRE-REQUISITOS
+    - FASE 1: Recopilación de Evidencia (BD) (15 min)
+    - FASE 2: Instrumentar Código (Agregar Logs) (10 min)
+    - FASE 3: Generar PDF con Logs (10 min)
+    - FASE 4: Analizar Evidencia (15 min)
+    - FASE 5: Aplicar Correcciones Rápidas (10 min)
+    - FASE 6: Validar Solución (10 min)
+    - Rollback (si algo se daña)
+
+NIVEL 5: ÍNDICE Y REFERENCIA COMPLETA
+  INDICE_DIAGNOSTICO_RECIBOS.md
+    - Documentos de este diagnóstico (tabla)
+    - Flujo de lectura recomendado
+    - Checklist de ejecución
+    - Puntos de ruptura: Mapa rápido
+    - Archivos del proyecto a revisar
+    - Variables críticas a monitorear
+    - Preguntas frecuentes
+    - Próximos pasos después diagnóstico
+
+  ESTRUCTURA_DIAGNOSTICO.txt (este archivo)
+    - Visualización completa de la estructura
+    - Organización por niveles
+    - Navegación entre documentos
+
+═══════════════════════════════════════════════════════════════════════════════
+ARCHIVOS A CREAR DURANTE EJECUCIÓN
+═══════════════════════════════════════════════════════════════════════════════
+
+DIAGNOSTICO_EVIDENCIA.txt
+  - Sección 1: Consulta BD (resultado SQL)
+  - Sección 2: JSON Validado (bloque_pageconfig parseado)
+  - Sección 3: Logs Controller ([PDF-DIAG-*] logs)
+  - Sección 4: Análisis (hallazgos + conclusión)
+
+DIAGNOSTICO_RESULTADOS.md
+  - Causa raíz identificada
+  - Solución aplicada
+  - Evidencia (logs, PDF)
+  - Recomendaciones
+
+═══════════════════════════════════════════════════════════════════════════════
+FLUJO DE LECTURA RECOMENDADO
+═══════════════════════════════════════════════════════════════════════════════
+
+Flujo A: RÁPIDO (10 minutos)
+  1. LEER_PRIMERO.txt (2 min)
+  2. DIAGNOSTICO_RESUMEN.md (5 min)
+  3. README_DIAGNOSTICO.txt (3 min)
+  Resultado: Entiendes el problema
+
+Flujo B: ANÁLISIS (40 minutos)
+  1. LEER_PRIMERO.txt (2 min)
+  2. DIAGNOSTICO_RESUMEN.md (5 min)
+  3. PLAN_DIAGNOSTICO_RECIBOS_PDF.md (15 min)
+  4. ARQUITECTURA_SOLUCION_RECIBOS_PDF.md (10 min)
+  5. INDICE_DIAGNOSTICO_RECIBOS.md (8 min)
+  Resultado: Entiendes profundamente
+
+Flujo C: EJECUCIÓN (75 minutos)
+  1. LEER_PRIMERO.txt (2 min)
+  2. DIAGNOSTICO_RESUMEN.md (5 min)
+  3. EJECUTAR_DIAGNOSTICO.md COMPLETO (60 min)
+  4. Crear DIAGNOSTICO_EVIDENCIA.txt (8 min)
+  Resultado: Diagnóstico + causa raíz + solución
+
+═══════════════════════════════════════════════════════════════════════════════
+NAVEGACIÓN RÁPIDA
+═══════════════════════════════════════════════════════════════════════════════
+
+¿No entiendo dónde empezar?
+  → Lee: LEER_PRIMERO.txt (2 min)
+
+¿Necesito entender el problema?
+  → Lee: DIAGNOSTICO_RESUMEN.md (5 min)
+
+¿Necesito análisis técnico?
+  → Lee: PLAN_DIAGNOSTICO_RECIBOS_PDF.md (20 min)
+
+¿Necesito ver cómo debería funcionar?
+  → Lee: ARQUITECTURA_SOLUCION_RECIBOS_PDF.md (15 min)
+
+¿Necesito ejecutar el diagnóstico?
+  → Sigue: EJECUTAR_DIAGNOSTICO.md (60 min)
+
+¿Necesito referencia rápida?
+  → Usa: INDICE_DIAGNOSTICO_RECIBOS.md
+
+¿Necesito rollback?
+  → Ver: EJECUTAR_DIAGNOSTICO.md → "Rollback"
+
+═══════════════════════════════════════════════════════════════════════════════
+RESUMEN TÉCNICO
+═══════════════════════════════════════════════════════════════════════════════
+
+Documentos:           7 archivos (5 MD + 2 TXT)
+Puntos de ruptura:    5 ubicaciones exactas en código
+Causas probables:     4 (probabilidades: 40%, 25%, 25%, 10%)
+Pasos diagnóstico:    6 fases (FASE 1-6 en EJECUTAR_DIAGNOSTICO)
+Correcciones:         4 (A, B, C, D - 5 min cada una)
+Variables monitorear: 5 (BD, Controller, Cálculo, HTML, PDF)
+Flujos de lectura:    3 opciones (rápido/análisis/ejecución)
+
+═══════════════════════════════════════════════════════════════════════════════
+TIEMPO TOTAL
+═══════════════════════════════════════════════════════════════════════════════
+
+Lectura solamente:     ~40-50 minutos
+Ejecución diagnóstico: ~60 minutos
+Correcciones:          ~10 minutos
+Validación final:      ~15 minutos
+
+TOTAL SIN FALLOS:      ~85-90 minutos (1.5 horas)
+
+Si html-pdf es limitación: +2-4 horas (refactor librería)
+
+═══════════════════════════════════════════════════════════════════════════════
+ESTADO DEL PLAN
+═══════════════════════════════════════════════════════════════════════════════
+
+Generado: 2026-06-18
+Categoría: Diagnóstico de problema (PDF recibos)
+Riesgo: BAJO (cambios simples y revertibles)
+Duración: 60-90 minutos
+Estado: LISTO PARA EJECUTAR
+
+Próximo paso: Abre LEER_PRIMERO.txt o DIAGNOSTICO_RESUMEN.md
+
+═══════════════════════════════════════════════════════════════════════════════

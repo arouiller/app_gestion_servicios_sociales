@@ -1,0 +1,223 @@
+╔════════════════════════════════════════════════════════════════════════════╗
+║                                                                            ║
+║   PLAN DE DIAGNÓSTICO: PDF NO RESPETA RECIBOS_POR_PAGINA                 ║
+║                                                                            ║
+║   Problema: PDF genera con 1 recibo/página en lugar de 2                 ║
+║   Archivos generados: 6 documentos de diagnóstico y guía                  ║
+║                                                                            ║
+╚════════════════════════════════════════════════════════════════════════════╝
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+  ARCHIVOS CREADOS (orden de lectura recomendado)
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+1️⃣  README_DIAGNOSTICO.txt (ESTE ARCHIVO)
+    └─ Visión general 2 minutos
+    └─ Comienza aquí para entender qué leer
+
+2️⃣  DIAGNOSTICO_RESUMEN.md ⭐ EMPIEZA AQUÍ
+    └─ Lectura: 5 minutos
+    └─ El problema en una oración
+    └─ Cadena de datos visual
+    └─ 5 pasos simples de diagnóstico
+    └─ Causas ordenadas por probabilidad
+    └─ Tabla de decisión rápida
+
+3️⃣  PLAN_DIAGNOSTICO_RECIBOS_PDF.md
+    └─ Lectura: 20 minutos (o solo referencias cuando necesites)
+    └─ Plan técnico detallado
+    └─ 5 pasos de diagnóstico con instrucciones código
+    └─ Correcciones A/B/C/D específicas
+    └─ Cronograma y matriz de riesgo
+
+4️⃣  ARQUITECTURA_SOLUCION_RECIBOS_PDF.md
+    └─ Lectura: 15 minutos
+    └─ Cómo DEBERÍA funcionar (correctamente)
+    └─ Diagramas de flujo y fallos
+    └─ Checklist de validación
+    └─ Fórmula de cálculo de alturas
+
+5️⃣  EJECUTAR_DIAGNOSTICO.md
+    └─ Ejecución: 60 minutos
+    └─ Guía paso a paso (FASE 1-6)
+    └─ Instrucciones para agregar logs
+    └─ Cómo analizar evidencia
+    └─ Cómo aplicar correcciones
+
+6️⃣  INDICE_DIAGNOSTICO_RECIBOS.md
+    └─ Referencia: índice completo
+    └─ Flujo de lectura por caso
+    └─ Checklist de ejecución
+    └─ Mapa de puntos de ruptura
+    └─ Preguntas frecuentes
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+  FLUJO RÁPIDO (ELEGIR TU CAMINO)
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+┌─ ¿Tienes 5 minutos?
+│  → Lee: DIAGNOSTICO_RESUMEN.md
+│  → Entiende: El problema
+│  └─ Siguiente: Elige camino abajo
+
+├─ ¿Tienes 30 minutos? (análisis antes de ejecutar)
+│  1. Lee: DIAGNOSTICO_RESUMEN.md (5 min)
+│  2. Lee: PLAN_DIAGNOSTICO_RECIBOS_PDF.md (15 min)
+│  3. Lee: ARQUITECTURA_SOLUCION_RECIBOS_PDF.md (10 min)
+│  └─ Luego: Ejecuta EJECUTAR_DIAGNOSTICO.md
+
+├─ ¿Tienes 90 minutos? (ejecutar diagnóstico completo)
+│  1. Lee: DIAGNOSTICO_RESUMEN.md (5 min)
+│  2. Sigue: EJECUTAR_DIAGNOSTICO.md (FASE 1-6) (60 min)
+│  3. Crea: DIAGNOSTICO_EVIDENCIA.txt (15 min)
+│  4. Aplica: Correcciones A/B/C (10 min)
+│  └─ Resultado: PDF funciona (o identifica causa raíz)
+
+└─ ¿No tienes tiempo ahora?
+   → Lee: DIAGNOSTICO_RESUMEN.md cuando puedas
+   → Agenda: EJECUTAR_DIAGNOSTICO.md para cuando haya tiempo
+   → Referencia: Todos los docs estarán aquí
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+  EL PROBLEMA (EN UNA ORACIÓN)
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+El PDF generado no respeta el valor de recibos_por_pagina (2) configurado en
+el template, por lo que genera 1 recibo por página en lugar de 2.
+
+Síntoma visible: 4 recibos = 4 páginas en lugar de 2 páginas
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+  CAUSAS PROBABLES (ORDENADAS POR PROBABILIDAD)
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+40% PROBABLE → Código confuso en lectura de pageConfig (líneas 586-622)
+              FIX: CORRECCIÓN A (5 min)
+
+25% PROBABLE → BD contiene NULL o JSON inválido
+              FIX: Repoblar BD o revisar setter (10 min)
+
+25% PROBABLE → html-pdf ignora alturas en <div> (limitación librería)
+              FIX: Migrar a librería moderna (2-4 horas)
+
+10% PROBABLE → Getter del modelo devuelve string en lugar de objeto
+              FIX: CORRECCIÓN D (revisar getter)
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+  VARIABLES CRÍTICAS A MONITOREAR (cuando ejecutes diagnóstico)
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+✓ BD: ¿bloque_pageconfig tiene {"recibos_por_pagina": 2}?
+✓ Controller: ¿Log muestra recibos_por_pagina: 2?
+✓ Cálculo: ¿reciboHeight ≈ 134.5 mm (no 270 mm)?
+✓ HTML: ¿Contiene <div style="height: 134.5mm">?
+✓ PDF: ¿2 recibos por página (no 1)?
+
+(Si cualquiera de estas es incorrecta, detuviste el diagnóstico)
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+  ARCHIVOS QUE NECESITARÁS MODIFICAR
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+CRÍTICO (probablemente necesite cambio):
+  backend/src/controllers/v1.0/recibosController.js (líneas 586-622)
+
+IMPORTANTE (revisar si falla):
+  backend/src/models/ReciboTemplate.js (líneas 71-97)
+
+SOLO SI FALLA TODO LO ANTERIOR:
+  backend/src/utils/pdfHelpers.js (generateMultiPagePDF)
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+  DURACIÓN ESTIMADA
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+Entender el problema:        5 minutos (DIAGNOSTICO_RESUMEN.md)
+Análisis técnico:            20 minutos (PLAN + ARQUITECTURA)
+Ejecutar diagnóstico:        60 minutos (EJECUTAR_DIAGNOSTICO.md)
+Aplicar correcciones:        10 minutos (CORRECCIÓN A/B/C)
+Validar solución:            15 minutos
+
+TOTAL SIN FALLOS:            ~90 minutos
+
+Si html-pdf es limitación:   +2-4 horas (refactor librería)
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+  CÓMO COMENZAR AHORA
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+OPCIÓN 1: Entender primero (recomendado)
+  1. Abre: DIAGNOSTICO_RESUMEN.md
+  2. Lee: El problema y la cadena de datos
+  3. Entiende: Por qué puede fallar
+  4. Decide: Ejecutas diagnóstico o lees más
+
+OPCIÓN 2: Ejecutar ya
+  1. Abre: EJECUTAR_DIAGNOSTICO.md
+  2. Sigue: FASE 1 (conecta a BD)
+  3. Continúa: FASE 2-6 (diagnóstico completo)
+  4. Crea: DIAGNOSTICO_EVIDENCIA.txt
+  5. Aplica: Correcciones
+
+OPCIÓN 3: Análisis profundo primero
+  1. Lee: DIAGNOSTICO_RESUMEN.md (5 min)
+  2. Lee: PLAN_DIAGNOSTICO_RECIBOS_PDF.md (20 min)
+  3. Lee: ARQUITECTURA_SOLUCION_RECIBOS_PDF.md (15 min)
+  4. Luego: EJECUTAR_DIAGNOSTICO.md
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+  PRE-REQUISITOS PARA EJECUTAR DIAGNÓSTICO
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+✓ Acceso a MySQL (BD del proyecto)
+✓ Node.js instalado (npm run dev funciona)
+✓ Template configurado con 2 recibos/página en BD
+✓ Al menos 2 recibos generados para un período
+✓ Editor de código (VS Code o similar)
+✓ 60 minutos libres
+
+Si te falta algo, leer los documentos primero es más útil.
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+  ¿ESTANCADO? LEE ESTO
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+Si no entiendes dónde empezar:
+  → Abre DIAGNOSTICO_RESUMEN.md (5 min clarifica todo)
+
+Si no sabes qué corregir:
+  → Abre PLAN_DIAGNOSTICO_RECIBOS_PDF.md y busca tu síntoma
+
+Si necesitas pasos exactos:
+  → Abre EJECUTAR_DIAGNOSTICO.md y sigue FASE 1-6
+
+Si necesitas referencia rápida:
+  → Abre INDICE_DIAGNOSTICO_RECIBOS.md (índice completo)
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+  RESUMEN FINAL
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+Se ha generado un plan de diagnóstico COMPLETO en 6 documentos:
+
+✓ DIAGNOSTICO_RESUMEN.md        → Empieza aquí (5 min)
+✓ PLAN_DIAGNOSTICO_...pdf.md    → Técnica (20 min referencia)
+✓ ARQUITECTURA_SOLUCION_...pdf.md → Visual (15 min)
+✓ EJECUTAR_DIAGNOSTICO.md       → Paso a paso (60 min)
+✓ INDICE_DIAGNOSTICO_RECIBOS.md → Índice completo
+✓ README_DIAGNOSTICO.txt        → Visión general
+
+El plan identifica:
+• 5 puntos exactos donde puede fallar
+• 4 causas probables ordenadas por probabilidad (40%, 25%, 25%, 10%)
+• 5 variables críticas a monitorear
+• Correcciones específicas (A, B, C, D)
+• Cronograma detallado (60-90 minutos)
+
+Próximo paso: Abre DIAGNOSTICO_RESUMEN.md
+
+═══════════════════════════════════════════════════════════════════════════════
+Generado: 2026-06-18
+Tiempo de lectura este archivo: 3 minutos
+Tiempo de lectura DIAGNOSTICO_RESUMEN.md: 5 minutos
+═══════════════════════════════════════════════════════════════════════════════
