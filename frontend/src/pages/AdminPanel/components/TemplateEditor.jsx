@@ -58,8 +58,22 @@ const TemplateEditor = ({ onBack }) => {
   }, [currentTemplate.id, setCurrentTemplate]);
 
   // Calcular posiciones del recibo
-  const reciboPositions = currentTemplate.bloque_pageconfig
-    ? calculateRecibosPositions(currentTemplate.bloque_pageconfig)
+  const parsePageConfig = (config) => {
+    if (!config) return null;
+    if (typeof config === 'string') {
+      try {
+        return JSON.parse(config);
+      } catch (e) {
+        console.error('Error parseando bloque_pageconfig:', e);
+        return null;
+      }
+    }
+    return config;
+  };
+
+  const pageConfigObj = parsePageConfig(currentTemplate.bloque_pageconfig);
+  const reciboPositions = pageConfigObj
+    ? calculateRecibosPositions(pageConfigObj)
     : null;
   const reciboUnoSize = reciboPositions?.recibos[0] || null;
 
