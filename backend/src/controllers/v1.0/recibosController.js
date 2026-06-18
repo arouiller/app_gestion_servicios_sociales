@@ -646,13 +646,10 @@ exports.generarPDF = async (req, res, next) => {
 
         for (let j = 0; j < recibosPerPage && i + j < recibos.length; j++) {
           const recibo = recibos[i + j];
-          const reciboData = prepareReciboData(recibo);
 
-          // Reemplazar placeholders usando replaceAllPlaceholders
-          const reciboContentHTML = replaceAllPlaceholders(content, reciboData);
-
-          fullHTML += `<div style="height: ${reciboHeight}mm; margin: 0; padding: 0; overflow: hidden; box-sizing: border-box;">
-${reciboContentHTML}
+          // PRUEBA: Solo marco con borde negro (sin contenido)
+          fullHTML += `<div style="height: ${reciboHeight}mm; margin: 0; padding: 0; border: 2px solid black; box-sizing: border-box; display: flex; align-items: center; justify-content: center; font-size: 12px;">
+Recibo ${recibo.numero_afiliado}
 </div>`;
 
           // Agregar gap entre recibos (excepto el último de la página)
