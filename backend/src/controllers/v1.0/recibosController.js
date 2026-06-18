@@ -639,6 +639,11 @@ exports.generarPDF = async (req, res, next) => {
       for (let i = 0; i < recibos.length; i += recibosPerPage) {
         fullHTML += `<div class="page" style="page-break-after: always; margin: 0; padding: ${marginTop}mm ${marginRight}mm ${marginBottom}mm ${marginLeft}mm;">`;
 
+        // Contenedor con todos los recibos de la página para mantenerlos juntos
+        const recibosEnPagina = Math.min(recibosPerPage, recibos.length - i);
+        const alturaContenedor = reciboHeight * recibosEnPagina + gapVertical * Math.max(0, recibosEnPagina - 1);
+        fullHTML += `<div style="height: ${alturaContenedor}mm; margin: 0; padding: 0; page-break-inside: avoid; box-sizing: border-box;">`;
+
         for (let j = 0; j < recibosPerPage && i + j < recibos.length; j++) {
           const recibo = recibos[i + j];
           const reciboData = prepareReciboData(recibo);
@@ -646,7 +651,7 @@ exports.generarPDF = async (req, res, next) => {
           // Reemplazar placeholders usando replaceAllPlaceholders
           const reciboContentHTML = replaceAllPlaceholders(content, reciboData);
 
-          fullHTML += `<div style="height: ${reciboHeight}mm; margin: 0; padding: 0; overflow: hidden; page-break-inside: avoid; box-sizing: border-box;">
+          fullHTML += `<div style="height: ${reciboHeight}mm; margin: 0; padding: 0; overflow: hidden; box-sizing: border-box;">
 ${reciboContentHTML}
 </div>`;
 
@@ -656,8 +661,8 @@ ${reciboContentHTML}
           }
         }
 
-        fullHTML += '</div>';
-        console.log('[PDF] Agregada página (tabla)', Math.floor(i / recibosPerPage) + 1, 'con', Math.min(recibosPerPage, recibos.length - i), 'recibos');
+        fullHTML += '</div></div>';
+        console.log('[PDF] Agregada página (tabla)', Math.floor(i / recibosPerPage) + 1, 'con', recibosEnPagina, 'recibos');
       }
     } else {
       // Para bloques: usar lógica legacy
@@ -670,14 +675,19 @@ ${reciboContentHTML}
       for (let i = 0; i < recibos.length; i += recibosPerPage) {
         fullHTML += `<div class="page" style="page-break-after: always; margin: 0; padding: ${marginTop}mm ${marginRight}mm ${marginBottom}mm ${marginLeft}mm;">`;
 
+        // Contenedor con todos los recibos de la página para mantenerlos juntos
+        const recibosEnPagina = Math.min(recibosPerPage, recibos.length - i);
+        const alturaContenedor = reciboHeight * recibosEnPagina + gapVertical * Math.max(0, recibosEnPagina - 1);
+        fullHTML += `<div style="height: ${alturaContenedor}mm; margin: 0; padding: 0; page-break-inside: avoid; box-sizing: border-box;">`;
+
         for (let j = 0; j < recibosPerPage && i + j < recibos.length; j++) {
           const reciboHTML = renderRecibo(recibos[i + j], contentWithoutStyles);
-          fullHTML += `<div style="height: ${reciboHeight}mm; margin: 0; padding: 0; overflow: hidden;">
+          fullHTML += `<div style="height: ${reciboHeight}mm; margin: 0; padding: 0; overflow: hidden; box-sizing: border-box;">
 ${reciboHTML}
 </div>`;
         }
 
-        fullHTML += '</div>';
+        fullHTML += '</div></div>';
         console.log('[PDF] Agregada página (bloques)', Math.floor(i / recibosPerPage) + 1, 'con recibos', i + 1, '-', Math.min(i + recibosPerPage, recibos.length));
       }
     }
