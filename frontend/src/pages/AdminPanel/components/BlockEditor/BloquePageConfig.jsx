@@ -7,7 +7,18 @@ const BloquePageConfig = () => {
   const currentTemplate = useTemplateStore((state) => state.currentTemplate);
   const updateBloque = useTemplateStore((state) => state.updateBloque);
 
-  const pageConfig = currentTemplate.bloque_pageconfig || {};
+  // Limpiar claves numéricas corruptas del objeto
+  const cleanPageConfig = (config) => {
+    if (!config || typeof config !== 'object') return {};
+    return Object.keys(config)
+      .filter(key => isNaN(key)) // Solo mantener claves NO numéricas
+      .reduce((clean, key) => {
+        clean[key] = config[key];
+        return clean;
+      }, {});
+  };
+
+  const pageConfig = cleanPageConfig(currentTemplate.bloque_pageconfig || {});
 
   const handleChange = (field, value) => {
     updateBloque('bloque_pageconfig', { ...pageConfig, [field]: value });
