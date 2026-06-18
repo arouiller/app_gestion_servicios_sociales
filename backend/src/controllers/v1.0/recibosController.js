@@ -663,8 +663,9 @@ exports.generarPDF = async (req, res, next) => {
       content = parsed.content;
 
       // Obtener tabla plantilla una sola vez (con placeholders)
+      // Pasar reciboHeight para distribuir las alturas de las filas
       const tablaData = templateDB.bloques[0];
-      const tableHTMLWithPlaceholders = generateTableHTML(tablaData);
+      const tableHTMLWithPlaceholders = generateTableHTML(tablaData, reciboHeight);
 
       for (let i = 0; i < recibos.length; i += recibosPerPage) {
         fullHTML += `<div class="page" style="page-break-after: always; margin: 0; padding: ${marginTop}mm ${marginRight}mm ${marginBottom}mm ${marginLeft}mm;">`;

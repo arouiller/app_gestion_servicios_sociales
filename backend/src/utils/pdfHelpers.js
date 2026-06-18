@@ -399,16 +399,24 @@ async function generateMultiPagePDF(fullHTML, pageSize, orientation, margins) {
 
 /**
  * Genera HTML de tabla con placeholders (sin estructura de página)
- * El controlador maneja la iteración y paginación
+ * Distribuye el reciboHeight equitativamente entre las filas
  * @param {Object} tablaData - Objeto tabla con filas y celdas
+ * @param {Number} reciboHeight - Altura disponible en mm para el recibo (opcional)
  */
-function generateTableHTML(tablaData) {
+function generateTableHTML(tablaData, reciboHeight = null) {
   if (!tablaData) return '';
 
   const borderStyle = tablaData.bordeTabla ? '1px solid #000' : 'none';
+  const numFilas = tablaData.filas ? tablaData.filas.length : 1;
+
+  // Si reciboHeight está disponible, distribuir equitativamente entre filas
+  // Si no, usar las alturas configuradas en el template
+  const filaHeight = reciboHeight ? (reciboHeight / numFilas) : null;
+
   const filasHTML = tablaData.filas
     .map(fila => {
-      const altura = fila.altura || 15;
+      // Usar altura calculada si está disponible, sino usar la del template
+      const altura = filaHeight || fila.altura || 15;
       const celdas = fila.celdas
         .map(celda => {
           const ancho = celda.ancho || 50;
