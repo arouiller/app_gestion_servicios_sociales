@@ -421,16 +421,13 @@ function generateTableHTML(tablaData) {
     })
     .join('');
 
-  const tableHTML = `<table style="width: 100%; border-collapse: collapse; font-size: ${tablaData.tamanoFuente || 11}px; font-family: Arial, sans-serif; table-layout: fixed;">
+  const tableHTML = `<table style="width: 100%; border-collapse: collapse; font-size: ${tablaData.tamanoFuente || 11}px; font-family: Arial, sans-serif; table-layout: fixed; border: 1px solid #000;">
 <tbody>
 ${filasHTML}
 </tbody>
 </table>`;
 
-  // Envolver la tabla en un div con borde externo para delimitar el recibo
-  return `<div style="border: 1px solid #000; box-sizing: border-box; width: 100%; height: 100%;">
-${tableHTML}
-</div>`;
+  return tableHTML;
 }
 
 /**
