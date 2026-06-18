@@ -10,6 +10,17 @@ const useTemplateStore = create((set) => {
     };
   };
 
+  // Limpiar claves numéricas corruptas de un objeto
+  const cleanNumericKeys = (obj) => {
+    if (!obj || typeof obj !== 'object') return obj;
+    return Object.keys(obj)
+      .filter(key => isNaN(key)) // Solo claves NO numéricas
+      .reduce((clean, key) => {
+        clean[key] = obj[key];
+        return clean;
+      }, {});
+  };
+
   return {
     // State
     currentTemplate: {
@@ -60,6 +71,9 @@ const useTemplateStore = create((set) => {
           parsedTemplate.bloque_pageconfig = {};
         }
       }
+      // Limpiar claves numéricas corruptas
+      parsedTemplate.bloque_pageconfig = cleanNumericKeys(parsedTemplate.bloque_pageconfig);
+
       return set(() => ({
         currentTemplate: parsedTemplate,
         isDirty: false,
@@ -79,6 +93,9 @@ const useTemplateStore = create((set) => {
             bloqueValue = {};
           }
         }
+
+        // Limpiar claves numéricas corruptas
+        bloqueValue = cleanNumericKeys(bloqueValue);
 
         const updated = {
           ...state.currentTemplate,
