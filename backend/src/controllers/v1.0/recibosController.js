@@ -10,6 +10,7 @@ const {
   getDefaultTemplateString,
   serializeTemplateBlocks,
   serializeTemplateTable,
+  generateTableHTML,
   generateMultiPagePDF,
 } = require('../../utils/pdfHelpers');
 
@@ -661,6 +662,10 @@ exports.generarPDF = async (req, res, next) => {
       config = parsed.config;
       content = parsed.content;
 
+      // Obtener tabla plantilla una sola vez (con placeholders)
+      const tablaData = templateDB.bloques[0];
+      const tableHTMLWithPlaceholders = generateTableHTML(tablaData);
+
       for (let i = 0; i < recibos.length; i += recibosPerPage) {
         fullHTML += `<div class="page" style="page-break-after: always; margin: 0; padding: ${marginTop}mm ${marginRight}mm ${marginBottom}mm ${marginLeft}mm;">`;
 
@@ -671,15 +676,16 @@ exports.generarPDF = async (req, res, next) => {
 
         for (let j = 0; j < recibosPerPage && i + j < recibos.length; j++) {
           const recibo = recibos[i + j];
+          const reciboData = prepareReciboData(recibo);
+          const tableHTMLFilled = replaceAllPlaceholders(tableHTMLWithPlaceholders, reciboData);
 
-          // PRUEBA: Solo marco con borde negro (sin contenido)
-          fullHTML += `<div style="height: ${reciboHeight}mm; margin: 0; padding: 0; border: 2px solid black; box-sizing: border-box; display: flex; align-items: center; justify-content: center; font-size: 12px;">
-Recibo ${recibo.numero_afiliado}
+          fullHTML += `<div style="height: ${reciboHeight}mm; margin: 0; padding: 0; overflow: hidden; box-sizing: border-box;">
+${tableHTMLFilled}
 </div>`;
 
           // Agregar gap entre recibos (excepto el último de la página)
           if (j < recibosPerPage - 1 && i + j + 1 < recibos.length) {
-            fullHTML += `<div style="height: ${gapVertical}mm; margin: 0; padding: 0; display: block; background-color: #cccccc;">GAP ${gapVertical}mm</div>`;
+            fullHTML += `<div style="height: ${gapVertical}mm; margin: 0; padding: 0; display: block;">&nbsp;</div>`;
           }
         }
 

@@ -504,5 +504,6 @@ module.exports = {
   getDefaultTemplateString,
   serializeTemplateBlocks,
   serializeTemplateTable,
+  generateTableHTML,
   generateMultiPagePDF,
 };
