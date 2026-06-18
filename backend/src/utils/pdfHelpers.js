@@ -400,6 +400,7 @@ async function generateMultiPagePDF(fullHTML, pageSize, orientation, margins) {
 /**
  * Genera HTML de tabla con placeholders (sin estructura de página)
  * Respeta las alturas configuradas en el template
+ * Envuelve la tabla en un borde externo para delimitar el recibo
  * @param {Object} tablaData - Objeto tabla con filas y celdas
  */
 function generateTableHTML(tablaData) {
@@ -420,11 +421,16 @@ function generateTableHTML(tablaData) {
     })
     .join('');
 
-  return `<table style="width: 100%; border-collapse: collapse; font-size: ${tablaData.tamanoFuente || 11}px; font-family: Arial, sans-serif; table-layout: fixed;">
+  const tableHTML = `<table style="width: 100%; border-collapse: collapse; font-size: ${tablaData.tamanoFuente || 11}px; font-family: Arial, sans-serif; table-layout: fixed;">
 <tbody>
 ${filasHTML}
 </tbody>
 </table>`;
+
+  // Envolver la tabla en un div con borde externo para delimitar el recibo
+  return `<div style="border: 1px solid #000; box-sizing: border-box; width: 100%; height: 100%;">
+${tableHTML}
+</div>`;
 }
 
 /**
