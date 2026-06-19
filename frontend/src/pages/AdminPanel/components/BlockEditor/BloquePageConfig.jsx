@@ -48,7 +48,28 @@ const BloquePageConfig = () => {
   const alturaCalculada = calcularAlturaRecibo();
 
   const handleChange = (field, value) => {
-    updateBloque('bloque_pageconfig', { ...pageConfig, [field]: value });
+    const updatedConfig = { ...pageConfig, [field]: value };
+
+    // Calcular y guardar altura_recibo_mm automáticamente
+    const tamaños = {
+      'A4': { width: 210, height: 297 },
+      'A5': { width: 148, height: 210 },
+      'Letter': { width: 215.9, height: 279.4 }
+    };
+
+    const pageSize = updatedConfig.tamaño || 'A4';
+    const dimensions = tamaños[pageSize] || tamaños['A4'];
+    const margenTop = updatedConfig.margen_superior_mm || 10;
+    const margenBottom = updatedConfig.margen_inferior_mm || 10;
+    const recibosPerPage = updatedConfig.recibos_por_pagina || 1;
+    const gapVertical = updatedConfig.gap_vertical_mm || 0;
+
+    const alturaDisponible = dimensions.height - margenTop - margenBottom;
+    const alturaRecibo = (alturaDisponible - (recibosPerPage - 1) * gapVertical) / recibosPerPage;
+
+    updatedConfig.altura_recibo_mm = Math.round(alturaRecibo * 100) / 100; // Redondear a 2 decimales
+
+    updateBloque('bloque_pageconfig', updatedConfig);
   };
 
   const tamaños = [

@@ -688,8 +688,10 @@ exports.generarPDF = async (req, res, next) => {
           const reciboData = prepareReciboData(recibo);
           const tableHTMLFilled = replaceAllPlaceholders(tableHTMLWithPlaceholders, reciboData);
 
-          // Recibo sin altura fija - ocupa solo lo que la tabla necesita
-          fullHTML += `<div style="margin: 0; padding: 0; box-sizing: border-box;">
+          // Envolver tabla en div con altura calculada
+          // altura_recibo_mm viene del template y se calcula automáticamente en el frontend
+          const alturaRecibo = pageConfig.altura_recibo_mm || reciboHeight;
+          fullHTML += `<div style="height: ${alturaRecibo}mm; margin: 0; padding: 0; overflow: hidden; box-sizing: border-box;">
 ${tableHTMLFilled}
 </div>`;
 
@@ -700,7 +702,7 @@ ${tableHTMLFilled}
         }
 
         fullHTML += '</div></div>';
-        console.log('[PDF] Agregada página (tabla)', Math.floor(i / recibosPerPage) + 1, 'con', recibosEnPagina, 'recibos');
+        console.log('[PDF] Agregada página (tabla)', Math.floor(i / recibosPerPage) + 1, 'con', recibosEnPagina, 'recibos', 'altura=', alturaRecibo, 'mm');
       }
     } else {
       // Para bloques: usar lógica legacy
