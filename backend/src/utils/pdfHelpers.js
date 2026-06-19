@@ -414,7 +414,7 @@ function generateTableHTML(tablaData) {
       const celdas = fila.celdas
         .map(celda => {
           const ancho = celda.ancho || 50;
-          return `<td style="width: ${ancho}%; padding: 4px; border: ${borderStyle}; vertical-align: top; font-size: inherit; height: ${altura}mm;">${celda.contenido || ''}</td>`;
+          return `<td style="width: ${ancho}%; border: ${borderStyle}; vertical-align: middle; font-size: inherit; height: ${altura}mm;">${celda.contenido || ''}</td>`;
         })
         .join('');
       return `<tr style="height: ${altura}mm;">${celdas}</tr>`;
