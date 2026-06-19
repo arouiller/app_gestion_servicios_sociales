@@ -691,8 +691,8 @@ exports.generarPDF = async (req, res, next) => {
           const reciboData = prepareReciboData(recibo);
           const tableHTMLFilled = replaceAllPlaceholders(tableHTMLWithPlaceholders, reciboData);
 
-          // Cada recibo con page-break-inside: avoid para no cortarse entre páginas
-          fullHTML += `<div style="height: ${alturaRecibo}mm; margin: 0; padding: 0; overflow: hidden; box-sizing: border-box; page-break-inside: avoid;">
+          // Recibo sin page-break-inside para permitir distribución natural en html-pdf
+          fullHTML += `<div style="height: ${alturaRecibo}mm; margin: 0; padding: 0; overflow: hidden; box-sizing: border-box;">
 ${tableHTMLFilled}
 </div>`;
 
