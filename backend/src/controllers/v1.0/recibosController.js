@@ -673,7 +673,9 @@ exports.generarPDF = async (req, res, next) => {
       // Obtener tabla plantilla una sola vez (con placeholders)
       // Las alturas de filas se respetan como se diseñaron en el template
       const tablaData = templateDB.bloques[0];
-      const tableHTMLWithPlaceholders = generateTableHTML(tablaData);
+      const tablaAncho = pageConfig.tabla_ancho_mm;
+      const tablaAlto = pageConfig.tabla_alto_mm;
+      const tableHTMLWithPlaceholders = generateTableHTML(tablaData, tablaAncho, tablaAlto);
 
       for (let i = 0; i < recibos.length; i += recibosPerPage) {
         // Usar position: absolute para posicionamiento exacto de recibos

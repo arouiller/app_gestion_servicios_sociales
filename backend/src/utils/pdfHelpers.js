@@ -400,10 +400,12 @@ async function generateMultiPagePDF(fullHTML, pageSize, orientation, margins) {
 /**
  * Genera HTML de tabla con placeholders (sin estructura de página)
  * Respeta las alturas configuradas en el template
- * Envuelve la tabla en un borde externo para delimitar el recibo
+ * Envuelve la tabla en un borde externo con dimensiones explícitas
  * @param {Object} tablaData - Objeto tabla con filas y celdas
+ * @param {Number} tablaAncho - Ancho de tabla en mm (opcional)
+ * @param {Number} tablaAlto - Alto de tabla en mm (opcional)
  */
-function generateTableHTML(tablaData) {
+function generateTableHTML(tablaData, tablaAncho = null, tablaAlto = null) {
   if (!tablaData) return '';
 
   const borderStyle = tablaData.bordeTabla ? '1px solid #000' : 'none';
@@ -427,8 +429,11 @@ ${filasHTML}
 </tbody>
 </table>`;
 
-  // Envolver la tabla en un div con borde externo (sin height para no expandir)
-  return `<div style="border: 1px solid #000; box-sizing: border-box; width: 100%; display: inline-block;">
+  // Envolver la tabla en un div con dimensiones explícitas
+  const wrapperWidth = tablaAncho ? `${tablaAncho}mm` : '100%';
+  const wrapperHeight = tablaAlto ? `${tablaAlto}mm` : 'auto';
+
+  return `<div style="border: 1px solid #000; box-sizing: border-box; width: ${wrapperWidth}; height: ${wrapperHeight}; overflow: hidden;">
 ${tableHTML}
 </div>`;
 }
