@@ -639,7 +639,7 @@ exports.generarPDF = async (req, res, next) => {
     const marginRight = pageConfig.margen_derecho_mm || 10;
     const verticalPadding = marginTop + marginBottom;
     const availableHeight = dimensions.height - verticalPadding;
-    const buffer = 2; // 2mm de buffer para evitar divisiones en html-pdf
+    const buffer = 5; // 5mm de buffer para evitar divisiones en html-pdf
     const reciboHeight = (availableHeight - (recibosPerPage - 1) * gapVertical - buffer) / recibosPerPage;
 
     console.log('\n=== [PDF] DIAGNÓSTICO DE GENERACIÓN ===');
@@ -650,7 +650,7 @@ exports.generarPDF = async (req, res, next) => {
     console.log('[PDF] Tamaño página:', pageSize);
     console.log('[PDF] Dimensiones página:', dimensions.width, 'x', dimensions.height, 'mm');
     console.log('[PDF] Espacio disponible (altura total - márgenes):', availableHeight, 'mm');
-    console.log('[PDF] FÓRMULA: reciboHeight = (', availableHeight, '-', (recibosPerPage - 1) * gapVertical, '-', 2, ') /', recibosPerPage);
+    console.log('[PDF] FÓRMULA: reciboHeight = (', availableHeight, '-', (recibosPerPage - 1) * gapVertical, '-', 5, ') /', recibosPerPage);
     console.log('[PDF] Altura de cada recibo (CALCULADA):', reciboHeight.toFixed(2), 'mm');
     console.log('[PDF] Total recibos a generar:', recibos.length);
     console.log('=== FIN DIAGNÓSTICO ===\n');
