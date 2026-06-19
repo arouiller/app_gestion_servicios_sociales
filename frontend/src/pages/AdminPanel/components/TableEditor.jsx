@@ -125,17 +125,29 @@ const updateFilaAltura = (tabla, rowId, altura) => {
   };
 };
 
-const updateCeldaAncho = (tabla, rowId, cellId, ancho) => {
+const updateCeldaAncho = (tabla, rowId, cellId, nuevoAncho) => {
   return {
     ...tabla,
     filas: tabla.filas.map(fila => {
       if (fila.id === rowId) {
-        return {
-          ...fila,
-          celdas: fila.celdas.map(celda =>
-            celda.id === cellId ? { ...celda, ancho: Math.max(10, ancho) } : celda
-          )
-        };
+        // Encontrar índice de la celda siendo resizeada
+        const celdaIdx = fila.celdas.findIndex(c => c.id === cellId);
+        if (celdaIdx === -1) return fila;
+
+        const oldAncho = fila.celdas[celdaIdx].ancho;
+        const anchoDiff = nuevoAncho - oldAncho;
+
+        // Ajustar la siguiente celda para mantener suma = 100
+        const newCeldas = [...fila.celdas];
+        newCeldas[celdaIdx] = { ...newCeldas[celdaIdx], ancho: Math.max(10, nuevoAncho) };
+
+        // Si hay siguiente celda, restarle el cambio
+        if (celdaIdx + 1 < newCeldas.length) {
+          const siguienteCelda = newCeldas[celdaIdx + 1];
+          newCeldas[celdaIdx + 1] = { ...siguienteCelda, ancho: Math.max(10, siguienteCelda.ancho - anchoDiff) };
+        }
+
+        return { ...fila, celdas: newCeldas };
       }
       return fila;
     })
