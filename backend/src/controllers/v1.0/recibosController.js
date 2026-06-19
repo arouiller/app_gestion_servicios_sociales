@@ -676,33 +676,33 @@ exports.generarPDF = async (req, res, next) => {
       const tableHTMLWithPlaceholders = generateTableHTML(tablaData);
 
       for (let i = 0; i < recibos.length; i += recibosPerPage) {
-        fullHTML += `<div class="page" style="page-break-after: always; margin: 0; padding: ${marginTop}mm ${marginRight}mm ${marginBottom}mm ${marginLeft}mm;">`;
-
-        // Contenedor con todos los recibos de la página
-        const recibosEnPagina = Math.min(recibosPerPage, recibos.length - i);
+        // Usar position: absolute para posicionamiento exacto de recibos
+        const pageWidth = dimensions.width;
+        const pageHeight = dimensions.height;
+        const contentWidth = pageWidth - marginLeft - marginRight;
 
         // Altura de cada recibo (viene del template o fallback al cálculo)
         const alturaRecibo = pageConfig.altura_recibo_mm || reciboHeight;
 
-        fullHTML += `<div style="margin: 0; padding: 0; box-sizing: border-box;">`;
+        fullHTML += `<div class="page" style="position: relative; page-break-after: always; margin: 0; padding: 0; width: ${pageWidth}mm; height: ${pageHeight}mm; box-sizing: border-box;">`;
+
+        const recibosEnPagina = Math.min(recibosPerPage, recibos.length - i);
 
         for (let j = 0; j < recibosPerPage && i + j < recibos.length; j++) {
           const recibo = recibos[i + j];
           const reciboData = prepareReciboData(recibo);
           const tableHTMLFilled = replaceAllPlaceholders(tableHTMLWithPlaceholders, reciboData);
 
-          // Recibo sin page-break-inside para permitir distribución natural en html-pdf
-          fullHTML += `<div style="height: ${alturaRecibo}mm; margin: 0; padding: 0; overflow: hidden; box-sizing: border-box;">
+          // Calcular posición top absoluta para cada recibo
+          const topPosition = marginTop + j * (alturaRecibo + gapVertical);
+
+          // Recibo posicionado absolutamente
+          fullHTML += `<div style="position: absolute; top: ${topPosition}mm; left: ${marginLeft}mm; width: ${contentWidth}mm; height: ${alturaRecibo}mm; margin: 0; padding: 0; overflow: hidden; box-sizing: border-box;">
 ${tableHTMLFilled}
 </div>`;
-
-          // Agregar gap entre recibos (excepto el último de la página)
-          if (j < recibosPerPage - 1 && i + j + 1 < recibos.length) {
-            fullHTML += `<div style="height: ${gapVertical}mm; margin: 0; padding: 0;">&nbsp;</div>`;
-          }
         }
 
-        fullHTML += '</div></div>';
+        fullHTML += '</div>';
         console.log('[PDF] Agregada página (tabla)', Math.floor(i / recibosPerPage) + 1, 'con', recibosEnPagina, 'recibos, altura=', alturaRecibo.toFixed(2), 'mm');
       }
     } else {
