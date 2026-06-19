@@ -30,7 +30,7 @@ ${filasHTML}
 </table>`;
 };
 
-const TablePreviewRecibo = ({ tabla, recibo, personData }) => {
+const TablePreviewRecibo = ({ tabla, recibo, pageConfig, personData }) => {
   const updateTemplate = useTemplateStore((state) => state.updateTemplate);
   const [resizingFila, setResizingFila] = useState(null);
   const [resizingCelda, setResizingCelda] = useState(null);
@@ -100,8 +100,13 @@ ${filasHTML}
 </tbody>
 </table>`;
 
-  // Reducir width 7.5px (2mm) para dejar espacio al borde sin cortarlo
-  const containerWidth = recibo.width * MM_TO_PX - 7.5;
+  // Usar tabla_ancho_mm y tabla_alto_mm del pageConfig si están disponibles
+  const tablaAncho = pageConfig?.tabla_ancho_mm;
+  const tablaAlto = pageConfig?.tabla_alto_mm;
+
+  // Convertir de mm a píxeles
+  const containerWidth = tablaAncho ? tablaAncho * MM_TO_PX : recibo.width * MM_TO_PX - 7.5;
+  const containerHeight = tablaAlto ? tablaAlto * MM_TO_PX : recibo.height * MM_TO_PX;
 
   return (
     <div
@@ -111,7 +116,7 @@ ${filasHTML}
         left: `${recibo.x * MM_TO_PX}px`,
         top: `${recibo.y * MM_TO_PX}px`,
         width: `${containerWidth}px`,
-        height: `${recibo.height * MM_TO_PX}px`,
+        height: `${containerHeight}px`,
         backgroundColor: 'white',
         border: `2px solid ${recibo.number === 1 ? '#333' : '#999'}`,
         boxSizing: 'border-box',
@@ -213,7 +218,7 @@ ${filasHTML}
   );
 };
 
-const TablePreview = ({ tabla, reciboPositions, personData }) => {
+const TablePreview = ({ tabla, reciboPositions, pageConfig, personData }) => {
   if (!tabla || tabla.type !== 'tabla' || !reciboPositions || !reciboPositions.recibos) {
     return null;
   }
@@ -225,6 +230,7 @@ const TablePreview = ({ tabla, reciboPositions, personData }) => {
           key={`tabla-recibo-${recibo.number}`}
           tabla={tabla}
           recibo={recibo}
+          pageConfig={pageConfig}
           personData={personData}
         />
       ))}

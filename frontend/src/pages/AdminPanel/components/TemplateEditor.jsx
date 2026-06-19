@@ -336,6 +336,7 @@ const TemplateEditor = ({ onBack }) => {
             <TablePreview
               tabla={currentTemplate.bloques?.[0]}
               reciboPositions={reciboPositions}
+              pageConfig={pageConfigObj}
               personData={mapPlanToPersonData(selectedPlanData)}
             />
           </div>
