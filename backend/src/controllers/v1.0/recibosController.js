@@ -681,6 +681,10 @@ exports.generarPDF = async (req, res, next) => {
         // Contenedor con todos los recibos de la página para mantenerlos juntos
         // page-break-inside: avoid evita que los recibos se corten entre páginas
         const recibosEnPagina = Math.min(recibosPerPage, recibos.length - i);
+
+        // Altura de cada recibo (viene del template o fallback al cálculo)
+        const alturaRecibo = pageConfig.altura_recibo_mm || reciboHeight;
+
         fullHTML += `<div style="margin: 0; padding: 0; page-break-inside: avoid; box-sizing: border-box;">`;
 
         for (let j = 0; j < recibosPerPage && i + j < recibos.length; j++) {
@@ -689,8 +693,6 @@ exports.generarPDF = async (req, res, next) => {
           const tableHTMLFilled = replaceAllPlaceholders(tableHTMLWithPlaceholders, reciboData);
 
           // Envolver tabla en div con altura calculada
-          // altura_recibo_mm viene del template y se calcula automáticamente en el frontend
-          const alturaRecibo = pageConfig.altura_recibo_mm || reciboHeight;
           fullHTML += `<div style="height: ${alturaRecibo}mm; margin: 0; padding: 0; overflow: hidden; box-sizing: border-box;">
 ${tableHTMLFilled}
 </div>`;
@@ -702,7 +704,7 @@ ${tableHTMLFilled}
         }
 
         fullHTML += '</div></div>';
-        console.log('[PDF] Agregada página (tabla)', Math.floor(i / recibosPerPage) + 1, 'con', recibosEnPagina, 'recibos', 'altura=', alturaRecibo, 'mm');
+        console.log('[PDF] Agregada página (tabla)', Math.floor(i / recibosPerPage) + 1, 'con', recibosEnPagina, 'recibos, altura=', alturaRecibo.toFixed(2), 'mm');
       }
     } else {
       // Para bloques: usar lógica legacy
