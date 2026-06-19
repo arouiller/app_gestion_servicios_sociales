@@ -56,7 +56,8 @@ const TablePreviewRecibo = ({ tabla, recibo, personData }) => {
       }
 
       if (resizingCelda) {
-        const nuevoAncho = startPos.originalAncho + (deltaX / (recibo.width * MM_TO_PX)) * 100;
+        const containerWidth = recibo.width * MM_TO_PX - 7.5;
+        const nuevoAncho = startPos.originalAncho + (deltaX / containerWidth) * 100;
         const nuevaTabla = updateCeldaAncho(tabla, resizingCelda.rowId, resizingCelda.id, nuevoAncho);
         updateTemplate({ bloques: [nuevaTabla] });
       }
@@ -99,6 +100,9 @@ ${filasHTML}
 </tbody>
 </table>`;
 
+  // Reducir width 7.5px (2mm) para dejar espacio al borde sin cortarlo
+  const containerWidth = recibo.width * MM_TO_PX - 7.5;
+
   return (
     <div
       key={`tabla-recibo-${recibo.number}`}
@@ -107,7 +111,7 @@ ${filasHTML}
         position: 'absolute',
         left: `${recibo.x * MM_TO_PX}px`,
         top: `${recibo.y * MM_TO_PX}px`,
-        width: `${recibo.width * MM_TO_PX}px`,
+        width: `${containerWidth}px`,
         height: `${recibo.height * MM_TO_PX}px`,
         overflow: 'hidden',
         backgroundColor: 'white',
@@ -159,7 +163,8 @@ ${filasHTML}
             const anchoAcumulado = tabla.filas[0].celdas
               .slice(0, celdaIdx + 1)
               .reduce((sum, c) => sum + (c.ancho || 50), 0);
-            const posX = (anchoAcumulado / 100) * (recibo.width * MM_TO_PX);
+            const containerWidth = recibo.width * MM_TO_PX - 7.5;
+            const posX = (anchoAcumulado / 100) * containerWidth;
 
             return (
               <div

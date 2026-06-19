@@ -430,10 +430,12 @@ ${filasHTML}
 </table>`;
 
   // Envolver la tabla en un div con dimensiones explícitas
-  const wrapperWidth = tablaAncho ? `${tablaAncho}mm` : '100%';
+  // Reducir ancho 2mm para dejar espacio al borde y evitar corte
+  const finalAncho = tablaAncho ? (tablaAncho - 2) : null;
+  const wrapperWidth = finalAncho ? `${finalAncho}mm` : '100%';
   const wrapperHeight = tablaAlto ? `${tablaAlto}mm` : 'auto';
 
-  return `<div style="border: 1px solid #000; box-sizing: border-box; width: ${wrapperWidth}; height: ${wrapperHeight}; overflow: hidden;">
+  return `<div style="border: 1px solid #000; box-sizing: border-box; width: ${wrapperWidth}; height: ${wrapperHeight}; margin-left: 1mm; margin-right: 1mm; overflow: hidden;">
 ${tableHTML}
 </div>`;
 }
