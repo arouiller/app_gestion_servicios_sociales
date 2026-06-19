@@ -20,64 +20,8 @@ const BloquePageConfig = () => {
 
   const pageConfig = cleanPageConfig(currentTemplate.bloque_pageconfig || {});
 
-  // Calcular altura automática del recibo
-  const calcularAlturaRecibo = () => {
-    const tamaños = {
-      'A4': { width: 210, height: 297 },
-      'A5': { width: 148, height: 210 },
-      'Letter': { width: 215.9, height: 279.4 }
-    };
-
-    const pageSize = pageConfig.tamaño || 'A4';
-    const dimensions = tamaños[pageSize] || tamaños['A4'];
-    const margenTop = pageConfig.margen_superior_mm || 10;
-    const margenBottom = pageConfig.margen_inferior_mm || 10;
-    const recibosPerPage = pageConfig.recibos_por_pagina || 1;
-    const gapVertical = pageConfig.gap_vertical_mm || 0;
-
-    // Fórmula: (altura_página - margen_top - margen_bottom - (recibos - 1) * gap) / recibos
-    const alturaDisponible = dimensions.height - margenTop - margenBottom;
-    const alturaRecibo = (alturaDisponible - (recibosPerPage - 1) * gapVertical) / recibosPerPage;
-
-    return {
-      alturaDisponible: alturaDisponible.toFixed(2),
-      alturaRecibo: alturaRecibo.toFixed(2)
-    };
-  };
-
-  const alturaCalculada = calcularAlturaRecibo();
-
   const handleChange = (field, value) => {
     const updatedConfig = { ...pageConfig, [field]: value };
-
-    // Calcular dimensiones automáticamente
-    const tamaños = {
-      'A4': { width: 210, height: 297 },
-      'A5': { width: 148, height: 210 },
-      'Letter': { width: 215.9, height: 279.4 }
-    };
-
-    const pageSize = updatedConfig.tamaño || 'A4';
-    const dimensions = tamaños[pageSize] || tamaños['A4'];
-    const margenTop = updatedConfig.margen_superior_mm || 10;
-    const margenBottom = updatedConfig.margen_inferior_mm || 10;
-    const margenLeft = updatedConfig.margen_izquierdo_mm || 10;
-    const margenRight = updatedConfig.margen_derecho_mm || 10;
-    const recibosPerPage = updatedConfig.recibos_por_pagina || 1;
-    const gapVertical = updatedConfig.gap_vertical_mm || 0;
-
-    // Altura del recibo
-    const alturaDisponible = dimensions.height - margenTop - margenBottom;
-    const alturaRecibo = (alturaDisponible - (recibosPerPage - 1) * gapVertical - 5) / recibosPerPage;
-
-    // Dimensiones de tabla (ancho y alto explícitos)
-    const tablaAncho = dimensions.width - margenLeft - margenRight;
-    const tablaAlto = alturaRecibo;
-
-    updatedConfig.altura_recibo_mm = Math.round(alturaRecibo * 100) / 100;
-    updatedConfig.tabla_ancho_mm = Math.round(tablaAncho * 100) / 100;
-    updatedConfig.tabla_alto_mm = Math.round(tablaAlto * 100) / 100;
-
     updateBloque('bloque_pageconfig', updatedConfig);
   };
 
@@ -231,26 +175,39 @@ const BloquePageConfig = () => {
             </select>
           </div>
 
-          {/* Mostrar dimensiones calculadas automáticamente */}
+          {/* Dimensiones de tabla - entrada manual */}
           <div className="config-group" style={{ backgroundColor: '#f0f8ff', padding: '10px', borderRadius: '4px', marginTop: '15px' }}>
-            <label style={{ fontWeight: 'bold', color: '#0066cc' }}>📐 Dimensiones Automáticas</label>
-            <div style={{ marginTop: '8px', fontSize: '12px', lineHeight: '1.8' }}>
-              <div>Altura disponible: <strong>{alturaCalculada.alturaDisponible} mm</strong></div>
-              <div style={{ marginTop: '5px' }}>
-                Altura por recibo: <strong style={{ fontSize: '14px', color: '#d9534f' }}>{alturaCalculada.alturaRecibo} mm</strong>
+            <label style={{ fontWeight: 'bold', color: '#0066cc' }}>📐 Dimensiones de Tabla</label>
+            <div style={{ marginTop: '10px', display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '10px' }}>
+              <div>
+                <label style={{ fontSize: '12px', color: '#666' }}>Ancho (mm)</label>
+                <input
+                  type="number"
+                  min="50"
+                  max="300"
+                  step="0.5"
+                  value={pageConfig.tabla_ancho_mm || 190}
+                  onChange={(e) => handleChange('tabla_ancho_mm', Number(e.target.value))}
+                  className="input"
+                  style={{ width: '100%', marginTop: '4px' }}
+                />
               </div>
-              <div style={{ marginTop: '8px', paddingTop: '8px', borderTop: '1px solid #ddd' }}>
-                <strong>Tabla:</strong>
+              <div>
+                <label style={{ fontSize: '12px', color: '#666' }}>Alto (mm)</label>
+                <input
+                  type="number"
+                  min="10"
+                  max="300"
+                  step="0.5"
+                  value={pageConfig.tabla_alto_mm || 100}
+                  onChange={(e) => handleChange('tabla_alto_mm', Number(e.target.value))}
+                  className="input"
+                  style={{ width: '100%', marginTop: '4px' }}
+                />
               </div>
-              <div style={{ marginTop: '5px' }}>
-                Ancho: <strong>{pageConfig.tabla_ancho_mm || 'calculando...'} mm</strong>
-              </div>
-              <div style={{ marginTop: '3px' }}>
-                Alto: <strong>{pageConfig.tabla_alto_mm || 'calculando...'} mm</strong>
-              </div>
-              <div style={{ marginTop: '8px', fontSize: '11px', color: '#666', fontStyle: 'italic' }}>
-                Estos valores se aplican automáticamente en el PDF
-              </div>
+            </div>
+            <div style={{ marginTop: '8px', fontSize: '11px', color: '#666', fontStyle: 'italic' }}>
+              Ingresa el ancho y alto que desees para la tabla en el recibo
             </div>
           </div>
 
