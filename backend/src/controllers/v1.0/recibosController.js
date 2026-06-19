@@ -678,22 +678,21 @@ exports.generarPDF = async (req, res, next) => {
       for (let i = 0; i < recibos.length; i += recibosPerPage) {
         fullHTML += `<div class="page" style="page-break-after: always; margin: 0; padding: ${marginTop}mm ${marginRight}mm ${marginBottom}mm ${marginLeft}mm;">`;
 
-        // Contenedor con todos los recibos de la página para mantenerlos juntos
-        // page-break-inside: avoid evita que los recibos se corten entre páginas
+        // Contenedor con todos los recibos de la página
         const recibosEnPagina = Math.min(recibosPerPage, recibos.length - i);
 
         // Altura de cada recibo (viene del template o fallback al cálculo)
         const alturaRecibo = pageConfig.altura_recibo_mm || reciboHeight;
 
-        fullHTML += `<div style="margin: 0; padding: 0; page-break-inside: avoid; box-sizing: border-box;">`;
+        fullHTML += `<div style="margin: 0; padding: 0; box-sizing: border-box;">`;
 
         for (let j = 0; j < recibosPerPage && i + j < recibos.length; j++) {
           const recibo = recibos[i + j];
           const reciboData = prepareReciboData(recibo);
           const tableHTMLFilled = replaceAllPlaceholders(tableHTMLWithPlaceholders, reciboData);
 
-          // Envolver tabla en div con altura calculada
-          fullHTML += `<div style="height: ${alturaRecibo}mm; margin: 0; padding: 0; overflow: hidden; box-sizing: border-box;">
+          // Cada recibo con page-break-inside: avoid para no cortarse entre páginas
+          fullHTML += `<div style="height: ${alturaRecibo}mm; margin: 0; padding: 0; overflow: hidden; box-sizing: border-box; page-break-inside: avoid;">
 ${tableHTMLFilled}
 </div>`;
 
