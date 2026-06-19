@@ -106,29 +106,44 @@ ${filasHTML}
   return (
     <div
       key={`tabla-recibo-${recibo.number}`}
-      ref={containerRef}
       style={{
         position: 'absolute',
         left: `${recibo.x * MM_TO_PX}px`,
         top: `${recibo.y * MM_TO_PX}px`,
         width: `${containerWidth}px`,
         height: `${recibo.height * MM_TO_PX}px`,
-        overflow: 'hidden',
         backgroundColor: 'white',
         border: `2px solid ${recibo.number === 1 ? '#333' : '#999'}`,
-        boxSizing: 'border-box'
+        boxSizing: 'border-box',
+        overflow: 'visible'
       }}
       className={`tabla-preview recibo-${recibo.number}`}
     >
+      {/* Contenedor interno con overflow hidden solo para la tabla */}
       <div
+        ref={containerRef}
         style={{
+          position: 'absolute',
+          top: 0,
+          left: 0,
           width: '100%',
           height: '100%',
-          fontSize: '11px',
-          lineHeight: '1.2'
+          overflow: 'hidden',
+          boxSizing: 'border-box'
         }}
-        dangerouslySetInnerHTML={{ __html: tableHTML }}
-      />
+      >
+        <div
+          style={{
+            width: '100%',
+            height: '100%',
+            fontSize: '11px',
+            lineHeight: '1.2'
+          }}
+          dangerouslySetInnerHTML={{ __html: tableHTML }}
+        />
+      </div>
+
+      {/* Handles de resize FUERA del overflow: hidden */}
       {recibo.number === 1 && (
         <>
           {/* Handles de resize para FILAS */}
@@ -143,7 +158,8 @@ ${filasHTML}
                 height: '8px',
                 cursor: 'row-resize',
                 backgroundColor: resizingFila?.id === fila.id ? '#4dabf7' : 'transparent',
-                zIndex: 10
+                zIndex: 10,
+                pointerEvents: 'auto'
               }}
               onMouseDown={(e) => {
                 setResizingFila({ id: fila.id, index: filaIdx });
@@ -163,7 +179,6 @@ ${filasHTML}
             const anchoAcumulado = tabla.filas[0].celdas
               .slice(0, celdaIdx + 1)
               .reduce((sum, c) => sum + (c.ancho || 50), 0);
-            const containerWidth = recibo.width * MM_TO_PX - 7.5;
             const posX = (anchoAcumulado / 100) * containerWidth;
 
             return (
@@ -177,7 +192,8 @@ ${filasHTML}
                   height: '100%',
                   cursor: 'col-resize',
                   backgroundColor: resizingCelda?.id === celda.id ? '#4dabf7' : 'transparent',
-                  zIndex: 10
+                  zIndex: 10,
+                  pointerEvents: 'auto'
                 }}
                 onMouseDown={(e) => {
                   setResizingCelda({ id: celda.id, rowId: tabla.filas[0].id, celdaIdx });
