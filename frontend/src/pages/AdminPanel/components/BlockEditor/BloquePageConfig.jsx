@@ -20,6 +20,33 @@ const BloquePageConfig = () => {
 
   const pageConfig = cleanPageConfig(currentTemplate.bloque_pageconfig || {});
 
+  // Calcular altura automática del recibo
+  const calcularAlturaRecibo = () => {
+    const tamaños = {
+      'A4': { width: 210, height: 297 },
+      'A5': { width: 148, height: 210 },
+      'Letter': { width: 215.9, height: 279.4 }
+    };
+
+    const pageSize = pageConfig.tamaño || 'A4';
+    const dimensions = tamaños[pageSize] || tamaños['A4'];
+    const margenTop = pageConfig.margen_superior_mm || 10;
+    const margenBottom = pageConfig.margen_inferior_mm || 10;
+    const recibosPerPage = pageConfig.recibos_por_pagina || 1;
+    const gapVertical = pageConfig.gap_vertical_mm || 0;
+
+    // Fórmula: (altura_página - margen_top - margen_bottom - (recibos - 1) * gap) / recibos
+    const alturaDisponible = dimensions.height - margenTop - margenBottom;
+    const alturaRecibo = (alturaDisponible - (recibosPerPage - 1) * gapVertical) / recibosPerPage;
+
+    return {
+      alturaDisponible: alturaDisponible.toFixed(2),
+      alturaRecibo: alturaRecibo.toFixed(2)
+    };
+  };
+
+  const alturaCalculada = calcularAlturaRecibo();
+
   const handleChange = (field, value) => {
     updateBloque('bloque_pageconfig', { ...pageConfig, [field]: value });
   };
@@ -172,6 +199,20 @@ const BloquePageConfig = () => {
                 </option>
               ))}
             </select>
+          </div>
+
+          {/* Mostrar altura calculada automáticamente */}
+          <div className="config-group" style={{ backgroundColor: '#f0f8ff', padding: '10px', borderRadius: '4px', marginTop: '15px' }}>
+            <label style={{ fontWeight: 'bold', color: '#0066cc' }}>📐 Altura Automática del Recibo</label>
+            <div style={{ marginTop: '8px', fontSize: '12px', lineHeight: '1.6' }}>
+              <div>Altura disponible: <strong>{alturaCalculada.alturaDisponible} mm</strong></div>
+              <div style={{ marginTop: '5px' }}>
+                Altura por recibo: <strong style={{ fontSize: '14px', color: '#d9534f' }}>{alturaCalculada.alturaRecibo} mm</strong>
+              </div>
+              <div style={{ marginTop: '8px', fontSize: '11px', color: '#666', fontStyle: 'italic' }}>
+                Fórmula: ({alturaCalculada.alturaDisponible} - {(pageConfig.recibos_por_pagina - 1) * (pageConfig.gap_vertical_mm || 0)}mm gap) ÷ {pageConfig.recibos_por_pagina}
+              </div>
+            </div>
           </div>
 
           {pageConfig.recibos_por_pagina > 1 && (
