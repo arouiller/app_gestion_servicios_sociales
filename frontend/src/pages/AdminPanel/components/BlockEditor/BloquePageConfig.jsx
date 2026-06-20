@@ -282,6 +282,42 @@ const BloquePageConfig = () => {
               </div>
             </>
           )}
+
+          {/* Factores de escalamiento para PDF */}
+          <div className="config-group" style={{ backgroundColor: '#fff8e1', padding: '10px', borderRadius: '4px', marginTop: '15px' }}>
+            <label style={{ fontWeight: 'bold', color: '#856404' }}>🔍 Factores de Escalamiento PDF</label>
+            <div style={{ marginTop: '10px', display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '10px' }}>
+              <div>
+                <label style={{ fontSize: '12px', color: '#666' }}>Factor X (Horizontal)</label>
+                <input
+                  type="number"
+                  min="0.5"
+                  max="2"
+                  step="0.1"
+                  value={pageConfig.scale_x || 1}
+                  onChange={(e) => handleChange('scale_x', Number(e.target.value))}
+                  className="input"
+                  style={{ width: '100%', marginTop: '4px' }}
+                />
+              </div>
+              <div>
+                <label style={{ fontSize: '12px', color: '#666' }}>Factor Y (Vertical)</label>
+                <input
+                  type="number"
+                  min="0.5"
+                  max="2"
+                  step="0.1"
+                  value={pageConfig.scale_y || 1}
+                  onChange={(e) => handleChange('scale_y', Number(e.target.value))}
+                  className="input"
+                  style={{ width: '100%', marginTop: '4px' }}
+                />
+              </div>
+            </div>
+            <div style={{ marginTop: '8px', fontSize: '11px', color: '#666', fontStyle: 'italic' }}>
+              Solo afecta PDF (no afecta vista previa). Ej: 1.3 si el PDF se imprime 30% más grande.
+            </div>
+          </div>
         </div>
       )}
     </div>

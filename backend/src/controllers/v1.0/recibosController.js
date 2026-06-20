@@ -690,6 +690,10 @@ exports.generarPDF = async (req, res, next) => {
         const pageWidth = dimensions.width;
         const pageHeight = dimensions.height;
 
+        // Factores de escala (si existen)
+        const scaleX = pageConfig.scale_x || 1;
+        const scaleY = pageConfig.scale_y || 1;
+
         // Usar tabla_ancho_mm si está configurado, sino usar contentWidth calculado
         const reciboAncho = pageConfig.tabla_ancho_mm || (pageWidth - marginLeft - marginRight);
 
@@ -741,15 +745,24 @@ exports.generarPDF = async (req, res, next) => {
           const reciboData = prepareReciboData(recibo);
           const tableHTMLFilled = replaceAllPlaceholders(tableHTMLWithPlaceholders, reciboData);
 
-          // Calcular posición Y usando fórmula: marginTop + (reciboHeight CALCULADA + gapVertical) * j
-          const topPosition = marginTop + (reciboHeight + gapVertical) * j;
-          const leftPosition = marginLeft;
+          // Calcular posiciones y dimensiones
+          const topPositionCalculated = marginTop + (reciboHeight + gapVertical) * j;
+          const leftPositionCalculated = marginLeft;
+          const reciboAnchoCalculated = reciboAncho;
+          const alturaReciboCalculated = alturaRecibo;
+
+          // Aplicar factores de escala
+          const topPosition = topPositionCalculated * scaleY;
+          const leftPosition = leftPositionCalculated * scaleX;
+          const finalAncho = reciboAnchoCalculated * scaleX;
+          const finalAlto = alturaReciboCalculated * scaleY;
+
           const reciboNumero = i + j + 1;
 
-          console.log(`[PDF] Recibo ${reciboNumero}: Y = ${marginTop} + (${reciboHeight} [Altura de cada recibo (CALCULADA)] + ${gapVertical}) * ${j} = ${topPosition}mm | X=${leftPosition}mm, Ancho=${reciboAncho}mm, Alto=${alturaRecibo}mm`);
+          console.log(`[PDF] Recibo ${reciboNumero}: Y_calc=${topPositionCalculated}mm * ${scaleY} = ${topPosition}mm | X_calc=${leftPositionCalculated}mm * ${scaleX} = ${leftPosition}mm | Ancho=${finalAncho}mm, Alto=${finalAlto}mm`);
 
-          // Recibo posicionado absolutamente
-          fullHTML += `<div style="position: absolute; top: ${topPosition}mm; left: ${leftPosition}mm; width: ${reciboAncho}mm; height: ${alturaRecibo}mm; margin: 0; padding: 0; overflow: hidden; box-sizing: border-box;">
+          // Recibo posicionado absolutamente con escala aplicada
+          fullHTML += `<div style="position: absolute; top: ${topPosition}mm; left: ${leftPosition}mm; width: ${finalAncho}mm; height: ${finalAlto}mm; margin: 0; padding: 0; overflow: hidden; box-sizing: border-box;">
 ${tableHTMLFilled}
 </div>`;
         }
