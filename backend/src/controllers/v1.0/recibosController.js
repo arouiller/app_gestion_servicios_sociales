@@ -700,16 +700,29 @@ exports.generarPDF = async (req, res, next) => {
 
         const recibosEnPagina = Math.min(recibosPerPage, recibos.length - i);
 
+        // Log de configuración en la primera página
+        if (i === 0) {
+          console.log('[PDF] ========== CÁLCULO DE POSICIONES Y ==========');
+          console.log('[PDF] Configuración para cálculo de posiciones:');
+          console.log('[PDF]   - Margen superior: ', marginTop, 'mm');
+          console.log('[PDF]   - Alto individual recibo (tabla_alto_mm): ', alturaRecibo, 'mm');
+          console.log('[PDF]   - Gap vertical entre recibos: ', gapVertical, 'mm');
+          console.log('[PDF]   - Recibos por página: ', recibosPerPage);
+          console.log('[PDF] Fórmula: posicion_Y = marginTop + (alturaRecibo + gapVertical) * j');
+          console.log('[PDF] =============================================');
+        }
+
         for (let j = 0; j < recibosPerPage && i + j < recibos.length; j++) {
           const recibo = recibos[i + j];
           const reciboData = prepareReciboData(recibo);
           const tableHTMLFilled = replaceAllPlaceholders(tableHTMLWithPlaceholders, reciboData);
 
-          // Calcular posición top absoluta para cada recibo
-          const topPosition = marginTop + j * (alturaRecibo + gapVertical);
+          // Calcular posición Y usando fórmula: marginTop + (alturaRecibo + gapVertical) * j
+          const topPosition = marginTop + (alturaRecibo + gapVertical) * j;
           const leftPosition = marginLeft;
+          const reciboNumero = i + j + 1;
 
-          console.log(`[PDF] Recibo ${i + j + 1}: Posición X=${leftPosition}mm, Y=${topPosition}mm, Ancho=${reciboAncho}mm, Alto=${alturaRecibo}mm`);
+          console.log(`[PDF] Recibo ${reciboNumero}: Y = ${marginTop} + (${alturaRecibo} + ${gapVertical}) * ${j} = ${topPosition}mm | X=${leftPosition}mm, Ancho=${reciboAncho}mm, Alto=${alturaRecibo}mm`);
 
           // Recibo posicionado absolutamente
           fullHTML += `<div style="position: absolute; top: ${topPosition}mm; left: ${leftPosition}mm; width: ${reciboAncho}mm; height: ${alturaRecibo}mm; margin: 0; padding: 0; overflow: hidden; box-sizing: border-box;">
