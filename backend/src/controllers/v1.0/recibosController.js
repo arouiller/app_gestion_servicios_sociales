@@ -705,10 +705,11 @@ exports.generarPDF = async (req, res, next) => {
           console.log('[PDF] ========== CÁLCULO DE POSICIONES Y ==========');
           console.log('[PDF] Configuración para cálculo de posiciones:');
           console.log('[PDF]   - Margen superior: ', marginTop, 'mm');
-          console.log('[PDF]   - Alto individual recibo (tabla_alto_mm): ', alturaRecibo, 'mm');
+          console.log('[PDF]   - Altura de cada recibo (CALCULADA): ', reciboHeight, 'mm');
+          console.log('[PDF]   - Altura visual de tabla (tabla_alto_mm): ', alturaRecibo, 'mm');
           console.log('[PDF]   - Gap vertical entre recibos: ', gapVertical, 'mm');
           console.log('[PDF]   - Recibos por página: ', recibosPerPage);
-          console.log('[PDF] Fórmula: posicion_Y = marginTop + (alturaRecibo + gapVertical) * j');
+          console.log('[PDF] Fórmula: posicion_Y = marginTop + (Altura de cada recibo (CALCULADA) + gapVertical) * j');
           console.log('[PDF] =============================================');
         }
 
@@ -722,7 +723,7 @@ exports.generarPDF = async (req, res, next) => {
           const leftPosition = marginLeft;
           const reciboNumero = i + j + 1;
 
-          console.log(`[PDF] Recibo ${reciboNumero}: Y = ${marginTop} + (${alturaRecibo} + ${gapVertical}) * ${j} = ${topPosition}mm | X=${leftPosition}mm, Ancho=${reciboAncho}mm, Alto=${alturaRecibo}mm`);
+          console.log(`[PDF] Recibo ${reciboNumero}: Y = ${marginTop} + (${alturaRecibo} [tabla_alto_mm] + ${gapVertical}) * ${j} = ${topPosition}mm | X=${leftPosition}mm, Ancho=${reciboAncho}mm, Alto=${alturaRecibo}mm`);
 
           // Recibo posicionado absolutamente
           fullHTML += `<div style="position: absolute; top: ${topPosition}mm; left: ${leftPosition}mm; width: ${reciboAncho}mm; height: ${alturaRecibo}mm; margin: 0; padding: 0; overflow: hidden; box-sizing: border-box;">
