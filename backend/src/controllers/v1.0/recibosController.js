@@ -647,8 +647,16 @@ exports.generarPDF = async (req, res, next) => {
     console.log('[PDF] Recibos por página (USADO EN CÁLCULO):', recibosPerPage);
     console.log('[PDF] Gap vertical:', gapVertical, 'mm');
     console.log('[PDF] Márgenes - Top/Bottom/Left/Right:', marginTop, marginBottom, marginLeft, marginRight);
+    console.log('[PDF] ========== CONFIG DEL TEMPLATE ==========');
+    console.log('[PDF] pageConfig:', JSON.stringify(pageConfig, null, 2));
+    console.log('[PDF] tabla_ancho_mm:', pageConfig.tabla_ancho_mm);
+    console.log('[PDF] tabla_alto_mm:', pageConfig.tabla_alto_mm);
+    console.log('[PDF] ==========================================');
     console.log('[PDF] Tamaño página:', pageSize);
     console.log('[PDF] Dimensiones página:', dimensions.width, 'x', dimensions.height, 'mm');
+    console.log('[PDF] Márgenes - Superior:', marginTop, '| Derecho:', marginRight, '| Inferior:', marginBottom, '| Izquierdo:', marginLeft, 'mm');
+    console.log('[PDF] Gap vertical:', gapVertical, 'mm');
+    console.log('[PDF] Recibos por página:', recibosPerPage);
     console.log('[PDF] Espacio disponible (altura total - márgenes):', availableHeight, 'mm');
     console.log('[PDF] FÓRMULA: reciboHeight = (', availableHeight, '-', (recibosPerPage - 1) * gapVertical, '-', 5, ') /', recibosPerPage);
     console.log('[PDF] Altura de cada recibo (CALCULADA):', reciboHeight.toFixed(2), 'mm');
@@ -697,9 +705,12 @@ exports.generarPDF = async (req, res, next) => {
 
           // Calcular posición top absoluta para cada recibo
           const topPosition = marginTop + j * (alturaRecibo + gapVertical);
+          const leftPosition = marginLeft;
+
+          console.log(`[PDF] Recibo ${i + j + 1}: Posición X=${leftPosition}mm, Y=${topPosition}mm, Ancho=${contentWidth}mm, Alto=${alturaRecibo}mm`);
 
           // Recibo posicionado absolutamente
-          fullHTML += `<div style="position: absolute; top: ${topPosition}mm; left: ${marginLeft}mm; width: ${contentWidth}mm; height: ${alturaRecibo}mm; margin: 0; padding: 0; overflow: hidden; box-sizing: border-box;">
+          fullHTML += `<div style="position: absolute; top: ${topPosition}mm; left: ${leftPosition}mm; width: ${contentWidth}mm; height: ${alturaRecibo}mm; margin: 0; padding: 0; overflow: hidden; box-sizing: border-box;">
 ${tableHTMLFilled}
 </div>`;
         }
