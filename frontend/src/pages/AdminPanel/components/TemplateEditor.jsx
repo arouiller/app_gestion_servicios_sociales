@@ -71,11 +71,22 @@ const TemplateEditor = ({ onBack }) => {
     return config;
   };
 
+  const getPageDimensions = (pageSize) => {
+    const sizes = {
+      'A4': { width: 210, height: 297 },
+      'A5': { width: 148, height: 210 },
+      'Letter': { width: 215.9, height: 279.4 },
+      'Personalizado': { width: 210, height: 297 }
+    };
+    return sizes[pageSize] || sizes['A4'];
+  };
+
   const pageConfigObj = parsePageConfig(currentTemplate.bloque_pageconfig);
   const reciboPositions = pageConfigObj
     ? calculateRecibosPositions(pageConfigObj)
     : null;
   const reciboUnoSize = reciboPositions?.recibos[0] || null;
+  const pageDimensions = pageConfigObj ? getPageDimensions(pageConfigObj.tamaño || 'A4') : { width: 210, height: 297 };
 
   const handleSave = async () => {
     if (!currentTemplate.bloque_pageconfig) {
@@ -326,7 +337,14 @@ const TemplateEditor = ({ onBack }) => {
       <div className="editor-container-new">
         {/* Canvas A4 */}
         <div className="editor-canvas">
-          <div className="a4-page" ref={canvasRef}>
+          <div
+            className="a4-page"
+            ref={canvasRef}
+            style={{
+              width: `${pageDimensions.width}mm`,
+              height: `${pageDimensions.height}mm`
+            }}
+          >
             {/* Guías visuales */}
             {currentTemplate.bloque_pageconfig && (
               <PageGuides pageConfig={currentTemplate.bloque_pageconfig} />
