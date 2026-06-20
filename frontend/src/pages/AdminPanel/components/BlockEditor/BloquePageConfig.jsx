@@ -317,6 +317,21 @@ const BloquePageConfig = () => {
             <div style={{ marginTop: '8px', fontSize: '11px', color: '#666', fontStyle: 'italic' }}>
               Solo afecta PDF (no afecta vista previa). Ej: 1.3 si el PDF se imprime 30% más grande.
             </div>
+
+            {/* Checkbox para grilla */}
+            <div style={{ marginTop: '12px', paddingTop: '12px', borderTop: '1px solid #ddd' }}>
+              <label style={{ display: 'flex', alignItems: 'center', gap: '8px', cursor: 'pointer' }}>
+                <input
+                  type="checkbox"
+                  checked={pageConfig.show_grid || false}
+                  onChange={(e) => handleChange('show_grid', e.target.checked)}
+                />
+                <span style={{ fontSize: '12px', color: '#666' }}>Mostrar grilla de referencia 1cm×1cm en PDF</span>
+              </label>
+              <div style={{ marginTop: '4px', fontSize: '10px', color: '#999', marginLeft: '24px' }}>
+                La grilla se escalará automáticamente con los factores X/Y
+              </div>
+            </div>
           </div>
         </div>
       )}

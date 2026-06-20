@@ -702,28 +702,33 @@ exports.generarPDF = async (req, res, next) => {
 
         fullHTML += `<div class="page" style="position: relative; page-break-after: always; margin: 0; padding: 0; width: ${pageWidth}mm; height: ${pageHeight}mm; box-sizing: border-box;">`;
 
-        // Agregar grilla de 1cm x 1cm (10mm x 10mm) como referencia
-        const cellSize = 10; // mm
-        const numCellsX = Math.ceil(pageWidth / cellSize);
-        const numCellsY = Math.ceil(pageHeight / cellSize);
+        // Agregar grilla de 1cm x 1cm (10mm x 10mm) como referencia si está habilitada
+        if (pageConfig.show_grid) {
+          const cellSize = 10; // mm
+          const cellSizeX = cellSize * scaleX;
+          const cellSizeY = cellSize * scaleY;
+          const numCellsX = Math.ceil((pageWidth * scaleX) / cellSizeX);
+          const numCellsY = Math.ceil((pageHeight * scaleY) / cellSizeY);
 
-        let gridHTML = `<div style="position: absolute; top: 0; left: 0; width: 100%; height: 100%; z-index: 0; pointer-events: none;">
-          <table style="width: 100%; height: 100%; border-collapse: collapse; margin: 0; padding: 0;">
-            <tbody>`;
+          let gridHTML = `<div style="position: absolute; top: 0; left: 0; width: 100%; height: 100%; z-index: 0; pointer-events: none;">
+            <table style="width: 100%; height: 100%; border-collapse: collapse; margin: 0; padding: 0;">
+              <tbody>`;
 
-        for (let y = 0; y < numCellsY; y++) {
-          gridHTML += `<tr style="height: ${cellSize}mm;">`;
-          for (let x = 0; x < numCellsX; x++) {
-            gridHTML += `<td style="width: ${cellSize}mm; border: 1px solid #e0e0e0; margin: 0; padding: 0; box-sizing: border-box;"></td>`;
+          for (let y = 0; y < numCellsY; y++) {
+            gridHTML += `<tr style="height: ${cellSizeY}mm;">`;
+            for (let x = 0; x < numCellsX; x++) {
+              gridHTML += `<td style="width: ${cellSizeX}mm; border: 1px solid #e0e0e0; margin: 0; padding: 0; box-sizing: border-box;"></td>`;
+            }
+            gridHTML += `</tr>`;
           }
-          gridHTML += `</tr>`;
+
+          gridHTML += `</tbody>
+            </table>
+          </div>`;
+
+          fullHTML += gridHTML;
+          console.log(`[PDF] Grilla agregada: celdas ${cellSizeX}mm x ${cellSizeY}mm (escala: X=${scaleX}, Y=${scaleY})`);
         }
-
-        gridHTML += `</tbody>
-          </table>
-        </div>`;
-
-        fullHTML += gridHTML;
 
         const recibosEnPagina = Math.min(recibosPerPage, recibos.length - i);
 
