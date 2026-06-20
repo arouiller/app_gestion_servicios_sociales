@@ -705,8 +705,8 @@ exports.generarPDF = async (req, res, next) => {
         // Agregar grilla de 1cm x 1cm (10mm x 10mm) como referencia si está habilitada
         if (pageConfig.show_grid) {
           const cellSize = 10; // mm
-          const cellSizeX = cellSize * scaleX;
-          const cellSizeY = cellSize * scaleY;
+          const cellSizeX = cellSize / scaleX;
+          const cellSizeY = cellSize / scaleY;
           const numCellsX = Math.ceil((pageWidth * scaleX) / cellSizeX);
           const numCellsY = Math.ceil((pageHeight * scaleY) / cellSizeY);
 
@@ -745,6 +745,8 @@ exports.generarPDF = async (req, res, next) => {
           console.log('[PDF] =============================================');
         }
 
+        // TEMPORALMENTE: Renderizado de recibos deshabilitado para testing de grilla
+        /*
         for (let j = 0; j < recibosPerPage && i + j < recibos.length; j++) {
           const recibo = recibos[i + j];
           const reciboData = prepareReciboData(recibo);
@@ -759,7 +761,7 @@ exports.generarPDF = async (req, res, next) => {
           // Aplicar factores de escala
           const topPosition = topPositionCalculated * scaleY;
           const leftPosition = leftPositionCalculated * scaleX;
-          const finalAncho = reciboAnchoCalculated * scaleX;
+          const finalAncho = reciboAnchoCalculado * scaleX;
           const finalAlto = alturaReciboCalculated * scaleY;
 
           const reciboNumero = i + j + 1;
@@ -771,6 +773,8 @@ exports.generarPDF = async (req, res, next) => {
 ${tableHTMLFilled}
 </div>`;
         }
+        */
+        console.log('[PDF] Recibos deshabilitados temporalmente para testing de grilla');
 
         fullHTML += '</div>';
         console.log('[PDF] Agregada página (tabla)', Math.floor(i / recibosPerPage) + 1, 'con', recibosEnPagina, 'recibos, altura=', alturaRecibo.toFixed(2), 'mm');
