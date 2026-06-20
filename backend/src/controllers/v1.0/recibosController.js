@@ -597,23 +597,23 @@ exports.generarPDF = async (req, res, next) => {
       if (typeof rawConfig === 'string') {
         try {
           pageConfig = JSON.parse(rawConfig);
-          console.log('[PDF] bloque_pageconfig parseado desde string:', JSON.stringify(pageConfig));
         } catch (e) {
           console.error('[PDF] Error parseando bloque_pageconfig (string):', e.message);
           pageConfig = {};
         }
       } else if (typeof rawConfig === 'object' && rawConfig !== null) {
-        // Ya es objeto, usar directamente
         pageConfig = rawConfig;
-        console.log('[PDF] bloque_pageconfig leído como objeto:', JSON.stringify(pageConfig));
       }
     }
 
-    // Si pageConfig sigue vacío, usar defaults
     if (!pageConfig || Object.keys(pageConfig).length === 0) {
-      console.log('[PDF] bloque_pageconfig vacío o no disponible, usando defaults');
       pageConfig = {};
     }
+
+    // Log al leer template
+    const scaleX = pageConfig.scale_x || 1;
+    const scaleY = pageConfig.scale_y || 1;
+    console.log('[PDF] Template leído - scaleX:', scaleX, '| scaleY:', scaleY);
 
     // Validar recibos_por_pagina es un número válido
     let recibosPerPage = pageConfig.recibos_por_pagina;
@@ -642,30 +642,8 @@ exports.generarPDF = async (req, res, next) => {
     const buffer = 5; // 5mm de buffer para evitar divisiones en html-pdf
     const reciboHeight = (availableHeight - (recibosPerPage - 1) * gapVertical - buffer) / recibosPerPage;
 
-    console.log('\n=== [PDF] DIAGNÓSTICO DE GENERACIÓN ===');
-    console.log('[PDF] Recibos por página (FROM pageConfig):', pageConfig.recibos_por_pagina);
-    console.log('[PDF] Recibos por página (USADO EN CÁLCULO):', recibosPerPage);
-    console.log('[PDF] Gap vertical:', gapVertical, 'mm');
-    console.log('[PDF] Márgenes - Top/Bottom/Left/Right:', marginTop, marginBottom, marginLeft, marginRight);
-    console.log('[PDF] ========== CONFIG DEL TEMPLATE ==========');
-    console.log('[PDF] pageConfig:', JSON.stringify(pageConfig, null, 2));
-    console.log('[PDF] tabla_ancho_mm:', pageConfig.tabla_ancho_mm);
-    console.log('[PDF] tabla_alto_mm:', pageConfig.tabla_alto_mm);
-    console.log('[PDF] ==========================================');
-    console.log('[PDF] Tamaño página:', pageSize);
-    console.log('[PDF] Dimensiones página:', dimensions.width, 'x', dimensions.height, 'mm');
-    console.log('[PDF] Márgenes - Superior:', marginTop, '| Derecho:', marginRight, '| Inferior:', marginBottom, '| Izquierdo:', marginLeft, 'mm');
-    console.log('[PDF] Gap vertical:', gapVertical, 'mm');
-    console.log('[PDF] Recibos por página:', recibosPerPage);
-    console.log('[PDF] Espacio disponible (altura total - márgenes):', availableHeight, 'mm');
-    console.log('[PDF] FÓRMULA: reciboHeight = (', availableHeight, '-', (recibosPerPage - 1) * gapVertical, '-', 5, ') /', recibosPerPage);
-    console.log('[PDF] Altura de cada recibo (CALCULADA):', reciboHeight.toFixed(2), 'mm');
-    console.log('[PDF] Total recibos a generar:', recibos.length);
-    console.log('=== FIN DIAGNÓSTICO ===\n');
-
     // Detectar si es tabla o bloques
     const isTabla = Array.isArray(templateDB?.bloques) && templateDB.bloques[0]?.type === 'tabla';
-    console.log('[PDF] Template type:', isTabla ? 'tabla' : 'bloques');
 
     let fullHTML = '';
     let config = { pageSize: 'A4', orientation: 'portrait', margins: 0 };
@@ -727,23 +705,11 @@ exports.generarPDF = async (req, res, next) => {
           </div>`;
 
           fullHTML += gridHTML;
-          console.log(`[PDF] Grilla agregada: celdas ${cellSizeX}mm x ${cellSizeY}mm (escala: X=${scaleX}, Y=${scaleY})`);
+          console.log(`[PDF] Grilla - cellSize: ${cellSize}mm | cellSizeX: ${cellSizeX}mm | cellSizeY: ${cellSizeY}mm`);
         }
 
         const recibosEnPagina = Math.min(recibosPerPage, recibos.length - i);
 
-        // Log de configuración en la primera página
-        if (i === 0) {
-          console.log('[PDF] ========== CÁLCULO DE POSICIONES Y ==========');
-          console.log('[PDF] Configuración para cálculo de posiciones:');
-          console.log('[PDF]   - Margen superior: ', marginTop, 'mm');
-          console.log('[PDF]   - Altura de cada recibo (CALCULADA): ', reciboHeight, 'mm');
-          console.log('[PDF]   - Altura visual de tabla (tabla_alto_mm): ', alturaRecibo, 'mm');
-          console.log('[PDF]   - Gap vertical entre recibos: ', gapVertical, 'mm');
-          console.log('[PDF]   - Recibos por página: ', recibosPerPage);
-          console.log('[PDF] Fórmula: posicion_Y = marginTop + (Altura de cada recibo (CALCULADA) + gapVertical) * j');
-          console.log('[PDF] =============================================');
-        }
 
         // TEMPORALMENTE: Renderizado de recibos deshabilitado para testing de grilla
         /*
@@ -766,18 +732,14 @@ exports.generarPDF = async (req, res, next) => {
 
           const reciboNumero = i + j + 1;
 
-          console.log(`[PDF] Recibo ${reciboNumero}: Y_calc=${topPositionCalculated}mm * ${scaleY} = ${topPosition}mm | X_calc=${leftPositionCalculated}mm * ${scaleX} = ${leftPosition}mm | Ancho=${finalAncho}mm, Alto=${finalAlto}mm`);
-
           // Recibo posicionado absolutamente con escala aplicada
           fullHTML += `<div style="position: absolute; top: ${topPosition}mm; left: ${leftPosition}mm; width: ${finalAncho}mm; height: ${finalAlto}mm; margin: 0; padding: 0; overflow: hidden; box-sizing: border-box;">
 ${tableHTMLFilled}
 </div>`;
         }
         */
-        console.log('[PDF] Recibos deshabilitados temporalmente para testing de grilla');
 
         fullHTML += '</div>';
-        console.log('[PDF] Agregada página (tabla)', Math.floor(i / recibosPerPage) + 1, 'con', recibosEnPagina, 'recibos, altura=', alturaRecibo.toFixed(2), 'mm');
       }
     } else {
       // Para bloques: usar lógica legacy
@@ -803,17 +765,12 @@ ${reciboHTML}
         }
 
         fullHTML += '</div></div>';
-        console.log('[PDF] Agregada página (bloques)', Math.floor(i / recibosPerPage) + 1, 'con recibos', i + 1, '-', Math.min(i + recibosPerPage, recibos.length));
       }
     }
-
-    console.log('[PDF] Generando PDF único con todas las páginas...');
 
     // Generar PDF único con todas las páginas
     try {
       const pdfBuffer = await generateMultiPagePDF(fullHTML, pageSize, config.orientation, config.margins || 0);
-
-      console.log('[PDF] PDF generado correctamente, tamaño:', pdfBuffer.length, 'bytes');
 
       res.setHeader('Content-Type', 'application/pdf');
       res.setHeader('Content-Disposition', `attachment; filename="recibos_${periodo}.pdf"`);
