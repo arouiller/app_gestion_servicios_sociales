@@ -678,9 +678,26 @@ exports.generarPDF = async (req, res, next) => {
         // Usar tabla_alto_mm si está configurado, sino usar altura calculada
         const alturaRecibo = pageConfig.tabla_alto_mm || pageConfig.altura_recibo_mm || reciboHeight;
 
+        // PROBLEMA RAÍZ IDENTIFICADO:
+        // 1. Page div siempre tiene tamaño fijo: width: 210mm; height: 297mm (sin escala aplicada)
+        // 2. numCellsX/Y SE CALCULAN CON ESCALA: (pageWidth * scaleX) / cellSizeX
+        //    - Con scale=0.7: numCells = (210*0.7) / (10*0.7) = 147/7 = 21 celdas
+        //    - Con scale=1.3: numCells = (210*1.3) / (10*1.3) = 273/13 = 21 celdas
+        //    - Resultado: SIEMPRE 21 celdas
+        // 3. cellSizeX/Y SE MULTIPLICAN POR ESCALA: cellSize * scaleX
+        //    - Con scale=0.7: cellSizeX = 10 * 0.7 = 7mm
+        //    - Con scale=1.3: cellSizeX = 10 * 1.3 = 13mm
+        // 4. Tabla dentro de page div con width: 100% (siempre 210mm)
+        //    - Con scale=0.7: tabla = 21 celdas * 7mm = 147mm (más pequeña que contenedor 210mm)
+        //    - Con scale=1.3: tabla = 21 celdas * 13mm = 273mm (más grande que contenedor 210mm)
+        // 5. html-pdf RECALCULA tamaño de celda: pageWidth / numCellsX = 210 / 21 = 10mm
+        //    - Ignora el cellSizeX especificado (7mm o 13mm)
+        //    - Aplica factor adicional ~1.3: 10mm * 1.3 = 13mm
+        //    - RESULTADO: Siempre 13mm × 13mm, sin importar la escala
+        // CAUSA: numCellsX/Y usa (pageWidth * scaleX) pero pageWidth en CSS no se escala
+
         fullHTML += `<div class="page" style="position: relative; page-break-after: always; margin: 0; padding: 0; width: ${pageWidth}mm; height: ${pageHeight}mm; box-sizing: border-box;">`;
 
-        // Agregar grilla de 1cm x 1cm (10mm x 10mm) como referencia si está habilitada
         if (pageConfig.show_grid) {
           const cellSize = 10; // mm
           const cellSizeX = cellSize * scaleX;
