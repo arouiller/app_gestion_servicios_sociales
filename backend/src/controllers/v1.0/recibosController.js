@@ -731,12 +731,8 @@ exports.generarPDF = async (req, res, next) => {
 
 
         // TEMPORALMENTE: Renderizado de recibos deshabilitado para testing de grilla
-        /*
+        // Pero mostrar el límite/borde de cada recibo para visualizar posiciones
         for (let j = 0; j < recibosPerPage && i + j < recibos.length; j++) {
-          const recibo = recibos[i + j];
-          const reciboData = prepareReciboData(recibo);
-          const tableHTMLFilled = replaceAllPlaceholders(tableHTMLWithPlaceholders, reciboData);
-
           // Calcular posiciones y dimensiones
           const topPositionCalculated = marginTop + (reciboHeight + gapVertical) * j;
           const leftPositionCalculated = marginLeft;
@@ -746,17 +742,12 @@ exports.generarPDF = async (req, res, next) => {
           // Aplicar factores de escala
           const topPosition = topPositionCalculated * scaleY;
           const leftPosition = leftPositionCalculated * scaleX;
-          const finalAncho = reciboAnchoCalculado * scaleX;
+          const finalAncho = reciboAnchoCalculated * scaleX;
           const finalAlto = alturaReciboCalculated * scaleY;
 
-          const reciboNumero = i + j + 1;
-
-          // Recibo posicionado absolutamente con escala aplicada
-          fullHTML += `<div style="position: absolute; top: ${topPosition}mm; left: ${leftPosition}mm; width: ${finalAncho}mm; height: ${finalAlto}mm; margin: 0; padding: 0; overflow: hidden; box-sizing: border-box;">
-${tableHTMLFilled}
-</div>`;
+          // Mostrar solo el borde/límite del recibo (sin contenido)
+          fullHTML += `<div style="position: absolute; top: ${topPosition}mm; left: ${leftPosition}mm; width: ${finalAncho}mm; height: ${finalAlto}mm; margin: 0; padding: 0; box-sizing: border-box; border: 1px solid #000;"></div>`;
         }
-        */
 
         fullHTML += '</div>';
       }
