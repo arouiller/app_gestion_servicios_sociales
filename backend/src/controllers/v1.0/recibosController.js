@@ -705,8 +705,8 @@ exports.generarPDF = async (req, res, next) => {
         // Agregar grilla de 1cm x 1cm (10mm x 10mm) como referencia si está habilitada
         if (pageConfig.show_grid) {
           const cellSize = 10; // mm
-          const cellSizeX = cellSize / scaleX;
-          const cellSizeY = cellSize / scaleY;
+          const cellSizeX = cellSize * scaleX;
+          const cellSizeY = cellSize * scaleY;
           const numCellsX = Math.ceil((pageWidth * scaleX) / cellSizeX);
           const numCellsY = Math.ceil((pageHeight * scaleY) / cellSizeY);
 
