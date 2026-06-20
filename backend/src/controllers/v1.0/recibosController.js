@@ -718,12 +718,12 @@ exports.generarPDF = async (req, res, next) => {
           const reciboData = prepareReciboData(recibo);
           const tableHTMLFilled = replaceAllPlaceholders(tableHTMLWithPlaceholders, reciboData);
 
-          // Calcular posición Y usando fórmula: marginTop + (alturaRecibo + gapVertical) * j
-          const topPosition = marginTop + (alturaRecibo + gapVertical) * j;
+          // Calcular posición Y usando fórmula: marginTop + (reciboHeight CALCULADA + gapVertical) * j
+          const topPosition = marginTop + (reciboHeight + gapVertical) * j;
           const leftPosition = marginLeft;
           const reciboNumero = i + j + 1;
 
-          console.log(`[PDF] Recibo ${reciboNumero}: Y = ${marginTop} + (${alturaRecibo} [tabla_alto_mm] + ${gapVertical}) * ${j} = ${topPosition}mm | X=${leftPosition}mm, Ancho=${reciboAncho}mm, Alto=${alturaRecibo}mm`);
+          console.log(`[PDF] Recibo ${reciboNumero}: Y = ${marginTop} + (${reciboHeight} [Altura de cada recibo (CALCULADA)] + ${gapVertical}) * ${j} = ${topPosition}mm | X=${leftPosition}mm, Ancho=${reciboAncho}mm, Alto=${alturaRecibo}mm`);
 
           // Recibo posicionado absolutamente
           fullHTML += `<div style="position: absolute; top: ${topPosition}mm; left: ${leftPosition}mm; width: ${reciboAncho}mm; height: ${alturaRecibo}mm; margin: 0; padding: 0; overflow: hidden; box-sizing: border-box;">
