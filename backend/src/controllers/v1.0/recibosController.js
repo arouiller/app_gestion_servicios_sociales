@@ -689,10 +689,12 @@ exports.generarPDF = async (req, res, next) => {
         // Usar position: absolute para posicionamiento exacto de recibos
         const pageWidth = dimensions.width;
         const pageHeight = dimensions.height;
-        const contentWidth = pageWidth - marginLeft - marginRight;
 
-        // Altura de cada recibo (viene del template o fallback al cálculo)
-        const alturaRecibo = pageConfig.altura_recibo_mm || reciboHeight;
+        // Usar tabla_ancho_mm si está configurado, sino usar contentWidth calculado
+        const reciboAncho = pageConfig.tabla_ancho_mm || (pageWidth - marginLeft - marginRight);
+
+        // Usar tabla_alto_mm si está configurado, sino usar altura calculada
+        const alturaRecibo = pageConfig.tabla_alto_mm || pageConfig.altura_recibo_mm || reciboHeight;
 
         fullHTML += `<div class="page" style="position: relative; page-break-after: always; margin: 0; padding: 0; width: ${pageWidth}mm; height: ${pageHeight}mm; box-sizing: border-box;">`;
 
@@ -707,10 +709,10 @@ exports.generarPDF = async (req, res, next) => {
           const topPosition = marginTop + j * (alturaRecibo + gapVertical);
           const leftPosition = marginLeft;
 
-          console.log(`[PDF] Recibo ${i + j + 1}: Posición X=${leftPosition}mm, Y=${topPosition}mm, Ancho=${contentWidth}mm, Alto=${alturaRecibo}mm`);
+          console.log(`[PDF] Recibo ${i + j + 1}: Posición X=${leftPosition}mm, Y=${topPosition}mm, Ancho=${reciboAncho}mm, Alto=${alturaRecibo}mm`);
 
           // Recibo posicionado absolutamente
-          fullHTML += `<div style="position: absolute; top: ${topPosition}mm; left: ${leftPosition}mm; width: ${contentWidth}mm; height: ${alturaRecibo}mm; margin: 0; padding: 0; overflow: hidden; box-sizing: border-box;">
+          fullHTML += `<div style="position: absolute; top: ${topPosition}mm; left: ${leftPosition}mm; width: ${reciboAncho}mm; height: ${alturaRecibo}mm; margin: 0; padding: 0; overflow: hidden; box-sizing: border-box;">
 ${tableHTMLFilled}
 </div>`;
         }
