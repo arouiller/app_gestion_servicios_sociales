@@ -689,11 +689,7 @@ exports.generarPDF = async (req, res, next) => {
         const scaleX = pageConfig.scale_x || 1;
         const scaleY = pageConfig.scale_y || 1;
 
-        // Usar tabla_ancho_mm y tabla_alto_mm si están configurados, sino usar calculados
-        const tablaAncho = pageConfig.tabla_ancho_mm;
-        const tablaAlto = pageConfig.tabla_alto_mm;
-        const anchoReciboFinal = tablaAncho || reciboWidth;
-        const altoReciboFinal = tablaAlto || reciboHeight;
+        // El borde del recibo siempre usa las dimensiones calculadas (no tabla_ancho_mm/tabla_alto_mm)
         const mostrarBordeRecibo = pageConfig.mostrar_borde_recibo || false;
 
         // PROBLEMA RAÍZ IDENTIFICADO:
@@ -759,8 +755,8 @@ exports.generarPDF = async (req, res, next) => {
           // Aplicar factores de escala
           const topPosition = topPositionCalculated * scaleY;
           const leftPosition = leftPositionCalculated * scaleX;
-          const finalAncho = anchoReciboFinal * scaleX;
-          const finalAlto = altoReciboFinal * scaleY;
+          const finalAncho = reciboWidth * scaleX;
+          const finalAlto = reciboHeight * scaleY;
 
           // Mostrar borde de límite del recibo (solo si está habilitado)
           if (mostrarBordeRecibo) {
