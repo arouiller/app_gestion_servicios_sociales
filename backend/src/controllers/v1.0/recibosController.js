@@ -735,7 +735,7 @@ exports.generarPDF = async (req, res, next) => {
           </div>`;
 
           fullHTML += gridHTML;
-          console.log(`[PDF] Grilla - cellSize: ${cellSize}mm | cellSizeX: ${cellSizeX}mm | cellSizeY: ${cellSizeY}mm`);
+          console.log(`[PDF] Grilla - ${numCellsX}×${numCellsY} celdas de ${cellSize}mm`);
         }
 
         const recibosEnPagina = Math.min(recibosPerPage, recibos.length - i);
