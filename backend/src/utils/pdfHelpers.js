@@ -381,10 +381,23 @@ async function generateMultiPagePDF(fullHTML, pageSize, orientation, margins) {
 </html>`;
 
   return new Promise((resolve, reject) => {
+    // Mapear dimensiones de página en mm (A4: 210×297, A5: 148×210, Letter: 215.9×279.4)
+    const pageDimensions = {
+      'A4': { width: 210, height: 297 },
+      'A5': { width: 148, height: 210 },
+      'LETTER': { width: 215.9, height: 279.4 }
+    };
+
+    const dims = pageDimensions[pageSize.toUpperCase()] || pageDimensions['A4'];
+
     const options = {
-      format: pageSize.toUpperCase(),
+      // Especificar dimensiones exactas en mm en lugar de usar 'format'
+      // Esto evita que html-pdf auto-escale la página
+      width: `${dims.width}mm`,
+      height: `${dims.height}mm`,
       orientation: orientation || 'portrait',
       margin: `${margins || 0}mm`,
+      type: 'pdf'
     };
 
     pdf.create(htmlCompleto, options).toBuffer((err, buffer) => {
