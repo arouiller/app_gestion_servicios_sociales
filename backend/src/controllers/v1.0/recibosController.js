@@ -782,8 +782,7 @@ exports.generarPDF = async (req, res, next) => {
         const recibosEnPagina = Math.min(recibosPerPage, recibos.length - i);
 
 
-        // TEMPORALMENTE: Renderizado de recibos deshabilitado para testing de grilla
-        // Pero mostrar el límite/borde de cada recibo para visualizar posiciones
+        // Renderizar cada recibo con su tabla dentro de la página
         for (let j = 0; j < recibosPerPage && i + j < recibos.length; j++) {
           // Calcular posiciones (con compensación para html-pdf)
           const fila = Math.floor(j / recibosEnHorizontal);
@@ -791,9 +790,18 @@ exports.generarPDF = async (req, res, next) => {
           const topPosition = marginTopCompensated + (reciboHeight + gapVerticalCompensated) * fila;
           const leftPosition = marginLeftCompensated + (reciboWidth + gapHorizontalCompensated) * columna;
 
+          // Renderizar tabla con placeholders reemplazados
+          const reciboData = prepareReciboData(recibos[i + j]);
+          const tableHTMLForRecibo = replaceAllPlaceholders(tableHTMLWithPlaceholders, reciboData);
+
+          // Contenedor del recibo con tabla
+          fullHTML += `<div style="position: absolute; top: ${topPosition}mm; left: ${leftPosition}mm; width: ${reciboWidth}mm; height: ${reciboHeight}mm; margin: 0; padding: 0; box-sizing: border-box; overflow: hidden;">
+            ${tableHTMLForRecibo}
+          </div>`;
+
           // Mostrar borde de límite del recibo (solo si está habilitado)
           if (mostrarBordeRecibo) {
-            fullHTML += `<div style="position: absolute; top: ${topPosition}mm; left: ${leftPosition}mm; width: ${reciboWidth}mm; height: ${reciboHeight}mm; margin: 0; padding: 0; box-sizing: border-box; border: 1px solid #000;"></div>`;
+            fullHTML += `<div style="position: absolute; top: ${topPosition}mm; left: ${leftPosition}mm; width: ${reciboWidth}mm; height: ${reciboHeight}mm; margin: 0; padding: 0; box-sizing: border-box; border: 1px solid #000; pointer-events: none; z-index: 10;"></div>`;
           }
         }
 
