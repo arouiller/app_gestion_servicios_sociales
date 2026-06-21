@@ -645,10 +645,9 @@ exports.generarPDF = async (req, res, next) => {
       gap_vertical_mm: pageConfig.gap_vertical_mm
     });
 
-    // Obtener factores de escala una sola vez
-    const scaleX = pageConfig.scale_x || 1;
-    const scaleY = pageConfig.scale_y || 1;
-    console.log('[PDF] Template leído - scaleX:', scaleX, '| scaleY:', scaleY);
+    // Nota: Removiendo escalamiento - html-pdf lo ignora de todas formas
+    // const scaleX = pageConfig.scale_x || 1;
+    // const scaleY = pageConfig.scale_y || 1;
 
     // Determinar layout y cantidad de recibos en horizontal/vertical
     const layout = pageConfig.layout || 'vertical';
@@ -707,9 +706,9 @@ exports.generarPDF = async (req, res, next) => {
         var pageWidth = dimensions.width;
         var pageHeight = dimensions.height;
 
-        // Aplicar escala a dimensiones de página
-        pageWidth = pageWidth * scaleX
-        pageHeight = pageHeight * scaleY
+        // Sin escalamiento - usar dimensiones originales
+        // pageWidth = pageWidth * scaleX
+        // pageHeight = pageHeight * scaleY
 
         // El borde del recibo siempre usa las dimensiones calculadas (no tabla_ancho_mm/tabla_alto_mm)
         const mostrarBordeRecibo = pageConfig.mostrar_borde_recibo || false;
@@ -737,9 +736,7 @@ exports.generarPDF = async (req, res, next) => {
 
         // Borde de página (si está habilitado)
         if (mostrarBordePagina) {
-          const borderWidth = pageWidth * scaleX;
-          const borderHeight = pageHeight * scaleY;
-          fullHTML += `<div style="position: absolute; top: 0; left: 0; width: ${borderWidth}mm; height: ${borderHeight}mm; border: 1px solid #000; box-sizing: border-box; pointer-events: none; z-index: 1;"></div>`;
+          fullHTML += `<div style="position: absolute; inset: 0; border: 1px solid #000; box-sizing: border-box; pointer-events: none; z-index: 1;"></div>`;
         }
 
         if (pageConfig.show_grid) {
@@ -774,34 +771,15 @@ exports.generarPDF = async (req, res, next) => {
         // TEMPORALMENTE: Renderizado de recibos deshabilitado para testing de grilla
         // Pero mostrar el límite/borde de cada recibo para visualizar posiciones
         for (let j = 0; j < recibosPerPage && i + j < recibos.length; j++) {
-          // Calcular posiciones (sin escala, luego escalar)
+          // Calcular posiciones (sin escala)
           const fila = Math.floor(j / recibosEnHorizontal);
           const columna = j % recibosEnHorizontal;
-          const topPosition = (marginTop + (reciboHeight + gapVertical) * fila) * scaleY;
-          const leftPosition = (marginLeft + (reciboWidth + gapHorizontal) * columna) * scaleX;
-          const finalWidth = reciboWidth * scaleX;
-          const finalHeight = reciboHeight * scaleY;
-
-          if (j === 0) {
-            console.log('[PDF] Renderizado de recibo (primer recibo de página):', {
-              reciboHeight,
-              scaleY,
-              finalHeight,
-              topPosition,
-              leftPosition,
-              finalWidth
-            });
-          }
+          const topPosition = marginTop + (reciboHeight + gapVertical) * fila;
+          const leftPosition = marginLeft + (reciboWidth + gapHorizontal) * columna;
 
           // Mostrar borde de límite del recibo (solo si está habilitado)
           if (mostrarBordeRecibo) {
-            const divHTML = `<div style="position: absolute; top: ${topPosition}mm; left: ${leftPosition}mm; width: ${finalWidth}mm; height: ${finalHeight}mm; margin: 0; padding: 0; box-sizing: border-box; border: 1px solid #000;"></div>`;
-
-            if (j === 0) {
-              console.log('[PDF] HTML del recibo (primer recibo):', divHTML);
-            }
-
-            fullHTML += divHTML;
+            fullHTML += `<div style="position: absolute; top: ${topPosition}mm; left: ${leftPosition}mm; width: ${reciboWidth}mm; height: ${reciboHeight}mm; margin: 0; padding: 0; box-sizing: border-box; border: 1px solid #000;"></div>`;
           }
         }
 
