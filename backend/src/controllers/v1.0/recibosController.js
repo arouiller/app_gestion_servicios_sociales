@@ -716,10 +716,9 @@ exports.generarPDF = async (req, res, next) => {
           const cellSize = 10; // mm
           const cellSizeX = cellSize * scaleX;
           const cellSizeY = cellSize * scaleY;
-          // CORRECCIÓN: No escalar pageWidth/pageHeight en el cálculo de numCells
-          // porque el page div en CSS siempre tiene 210mm × 297mm (sin escala)
-          const numCellsX = Math.ceil(pageWidth / cellSizeX);
-          const numCellsY = Math.ceil(pageHeight / cellSizeY);
+          // Calcular cantidad de celdas: pageWidth / cellSizeX, pageHeight / cellSizeY
+          const numCellsX = pageWidth / cellSizeX;
+          const numCellsY = pageHeight / cellSizeY;
 
           let gridHTML = `<div style="position: absolute; top: 0; left: 0; width: 100%; height: 100%; z-index: 0; pointer-events: none;">
             <table style="width: 100%; height: 100%; border-collapse: collapse; margin: 0; padding: 0;">
