@@ -713,12 +713,13 @@ exports.generarPDF = async (req, res, next) => {
         fullHTML += `<div class="page" style="position: relative; page-break-after: always; margin: 0; padding: 0; width: ${pageWidth}mm; height: ${pageHeight}mm; box-sizing: border-box;">`;
 
         if (pageConfig.show_grid) {
-          const cellSize = 10; // mm
+          const cellSize = 10; // mm (tamaño original de la celda)
+          // Cantidad de celdas: pageWidth / 10, pageHeight / 10 (sin escala)
+          const numCellsX = Math.floor(pageWidth / cellSize);
+          const numCellsY = Math.floor(pageHeight / cellSize);
+          // Tamaño de renderización de cada celda (con escala aplicada)
           const cellSizeX = cellSize * scaleX;
           const cellSizeY = cellSize * scaleY;
-          // Calcular cantidad de celdas: pageWidth / cellSizeX, pageHeight / cellSizeY
-          const numCellsX = pageWidth / cellSizeX;
-          const numCellsY = pageHeight / cellSizeY;
 
           let gridHTML = `<div style="position: absolute; top: 0; left: 0; width: 100%; height: 100%; z-index: 0; pointer-events: none;">
             <table style="width: 100%; height: 100%; border-collapse: collapse; margin: 0; padding: 0;">
