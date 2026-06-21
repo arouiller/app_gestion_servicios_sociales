@@ -635,6 +635,16 @@ exports.generarPDF = async (req, res, next) => {
     const marginLeft = pageConfig.margen_izquierdo_mm || 10;
     const marginRight = pageConfig.margen_derecho_mm || 10;
 
+    console.log('[PDF] pageConfig leído:', {
+      marginTop,
+      marginBottom,
+      marginLeft,
+      marginRight,
+      tamaño: pageConfig.tamaño,
+      recibos_por_pagina: pageConfig.recibos_por_pagina,
+      gap_vertical_mm: pageConfig.gap_vertical_mm
+    });
+
     // Obtener factores de escala una sola vez
     const scaleX = pageConfig.scale_x || 1;
     const scaleY = pageConfig.scale_y || 1;
@@ -654,6 +664,17 @@ exports.generarPDF = async (req, res, next) => {
     const alturaLibre = dimensions.height - marginTop - marginBottom;
     const espaciosVerticalesTotales = gapVertical * Math.max(0, recibosEnVertical - 1);
     const reciboHeight = (alturaLibre - espaciosVerticalesTotales) / recibosEnVertical;
+
+    console.log('[PDF] Cálculo reciboHeight:', {
+      'dimensions.height': dimensions.height,
+      marginTop,
+      marginBottom,
+      alturaLibre,
+      gapVertical,
+      recibosEnVertical,
+      espaciosVerticalesTotales,
+      reciboHeight
+    });
 
     // Calcular ancho del recibo (SIN escala): (ancho_libre - espacios_entre) / recibos_horizontales
     const anchoLibre = dimensions.width - marginLeft - marginRight;
