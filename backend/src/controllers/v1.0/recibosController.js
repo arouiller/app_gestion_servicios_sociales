@@ -689,6 +689,9 @@ exports.generarPDF = async (req, res, next) => {
         const scaleX = pageConfig.scale_x || 1;
         const scaleY = pageConfig.scale_y || 1;
 
+        pageWidth = pageWidth * scaleX
+        pageHeight = pageHeight * scaleY
+
         // El borde del recibo siempre usa las dimensiones calculadas (no tabla_ancho_mm/tabla_alto_mm)
         const mostrarBordeRecibo = pageConfig.mostrar_borde_recibo || false;
 
