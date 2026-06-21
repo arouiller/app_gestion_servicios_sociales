@@ -645,29 +645,19 @@ exports.generarPDF = async (req, res, next) => {
       gap_vertical_mm: pageConfig.gap_vertical_mm
     });
 
-    // Factores de compensación para html-pdf (eje X e Y independientes)
-    // Obtenidos de la configuración del template (scale_x, scale_y)
-    const scaleX = pageConfig.scale_x || 1;
-    const scaleY = pageConfig.scale_y || 1;
-    const compensationX = 1 / scaleX; // e.g. 1/0.8654 = 1.1555
-    const compensationY = 1 / scaleY; // e.g. 1/0.8658 = 1.1550
+    // Factor de compensación hardcodeado para html-pdf (aplica factor 1.3125 internamente)
+    // Para contrarrestar: multiplicar todas las dimensiones por 1/1.3125 = 0.762
+    const HTML_PDF_COMPENSATION = 1 / 1.3125; // 0.762
 
-    console.log('[PDF] Factores de compensación:', {
-      scaleX,
-      scaleY,
-      compensationX,
-      compensationY
-    });
-
-    // Aplicar compensación independiente a dimensiones X e Y
-    const pageWidth = dimensions.width * compensationX;
-    const pageHeight = dimensions.height * compensationY;
-    const marginTopCompensated = marginTop * compensationY;
-    const marginBottomCompensated = marginBottom * compensationY;
-    const marginLeftCompensated = marginLeft * compensationX;
-    const marginRightCompensated = marginRight * compensationX;
-    const gapVerticalCompensated = gapVertical * compensationY;
-    const gapHorizontalCompensated = gapHorizontal * compensationX;
+    // Aplicar compensación a dimensiones de página y márgenes
+    const pageWidth = dimensions.width * HTML_PDF_COMPENSATION;
+    const pageHeight = dimensions.height * HTML_PDF_COMPENSATION;
+    const marginTopCompensated = marginTop * HTML_PDF_COMPENSATION;
+    const marginBottomCompensated = marginBottom * HTML_PDF_COMPENSATION;
+    const marginLeftCompensated = marginLeft * HTML_PDF_COMPENSATION;
+    const marginRightCompensated = marginRight * HTML_PDF_COMPENSATION;
+    const gapVerticalCompensated = gapVertical * HTML_PDF_COMPENSATION;
+    const gapHorizontalCompensated = gapHorizontal * HTML_PDF_COMPENSATION;
 
     // Determinar layout y cantidad de recibos en horizontal/vertical
     const layout = pageConfig.layout || 'vertical';
@@ -752,20 +742,19 @@ exports.generarPDF = async (req, res, next) => {
         }
 
         if (pageConfig.show_grid) {
-          const cellSizeX = 10 * compensationX; // mm (tamaño de celda X, compensado)
-          const cellSizeY = 10 * compensationY; // mm (tamaño de celda Y, compensado)
+          const cellSize = 10 * HTML_PDF_COMPENSATION; // mm (tamaño de la celda, compensado para html-pdf)
           // Cantidad de celdas: pageWidth / cellSize
-          const numCellsX = Math.floor(pageWidth / cellSizeX);
-          const numCellsY = Math.floor(pageHeight / cellSizeY);
+          const numCellsX = Math.floor(pageWidth / cellSize);
+          const numCellsY = Math.floor(pageHeight / cellSize);
 
           let gridHTML = `<div style="position: absolute; top: 0; left: 0; width: ${pageWidth}mm; height: ${pageHeight}mm; z-index: 0; pointer-events: none;">
             <table style="width: ${pageWidth}mm; height: ${pageHeight}mm; border-collapse: collapse; margin: 0; padding: 0;">
               <tbody>`;
 
           for (let y = 0; y < numCellsY; y++) {
-            gridHTML += `<tr style="height: ${cellSizeY}mm;">`;
+            gridHTML += `<tr style="height: ${cellSize}mm;">`;
             for (let x = 0; x < numCellsX; x++) {
-              gridHTML += `<td style="width: ${cellSizeX}mm; border: 1px solid #e0e0e0; margin: 0; padding: 0; box-sizing: border-box;"></td>`;
+              gridHTML += `<td style="width: ${cellSize}mm; border: 1px solid #e0e0e0; margin: 0; padding: 0; box-sizing: border-box;"></td>`;
             }
             gridHTML += `</tr>`;
           }
@@ -775,7 +764,7 @@ exports.generarPDF = async (req, res, next) => {
           </div>`;
 
           fullHTML += gridHTML;
-          console.log(`[PDF] Grilla - ${numCellsX}×${numCellsY} celdas de ${cellSizeX}mm×${cellSizeY}mm`);
+          console.log(`[PDF] Grilla - ${numCellsX}×${numCellsY} celdas de ${cellSize}mm`);
         }
 
         const recibosEnPagina = Math.min(recibosPerPage, recibos.length - i);
