@@ -713,22 +713,19 @@ exports.generarPDF = async (req, res, next) => {
         fullHTML += `<div class="page" style="position: relative; page-break-after: always; margin: 0; padding: 0; width: ${pageWidth}mm; height: ${pageHeight}mm; box-sizing: border-box;">`;
 
         if (pageConfig.show_grid) {
-          const cellSize = 10; // mm (tamaño original de la celda)
-          // Cantidad de celdas: pageWidth / 10, pageHeight / 10 (sin escala)
+          const cellSize = 10; // mm (tamaño de la celda, sin escala)
+          // Cantidad de celdas: pageWidth / 10, pageHeight / 10
           const numCellsX = Math.floor(pageWidth / cellSize);
           const numCellsY = Math.floor(pageHeight / cellSize);
-          // Tamaño de renderización de cada celda (con escala aplicada)
-          const cellSizeX = cellSize * scaleX;
-          const cellSizeY = cellSize * scaleY;
 
-          let gridHTML = `<div style="position: absolute; top: 0; left: 0; width: 100%; height: 100%; z-index: 0; pointer-events: none;">
-            <table style="width: 100%; height: 100%; border-collapse: collapse; margin: 0; padding: 0;">
+          let gridHTML = `<div style="position: absolute; top: 0; left: 0; width: ${pageWidth}mm; height: ${pageHeight}mm; z-index: 0; pointer-events: none;">
+            <table style="width: ${pageWidth}mm; height: ${pageHeight}mm; border-collapse: collapse; margin: 0; padding: 0;">
               <tbody>`;
 
           for (let y = 0; y < numCellsY; y++) {
-            gridHTML += `<tr style="height: ${cellSizeY}mm;">`;
+            gridHTML += `<tr style="height: ${cellSize}mm;">`;
             for (let x = 0; x < numCellsX; x++) {
-              gridHTML += `<td style="width: ${cellSizeX}mm; border: 1px solid #e0e0e0; margin: 0; padding: 0; box-sizing: border-box;"></td>`;
+              gridHTML += `<td style="width: ${cellSize}mm; border: 1px solid #e0e0e0; margin: 0; padding: 0; box-sizing: border-box;"></td>`;
             }
             gridHTML += `</tr>`;
           }
