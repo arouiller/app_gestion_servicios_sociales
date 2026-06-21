@@ -611,10 +611,6 @@ exports.generarPDF = async (req, res, next) => {
     }
 
     // Log al leer template
-    const scaleX = pageConfig.scale_x || 1;
-    const scaleY = pageConfig.scale_y || 1;
-    console.log('[PDF] Template leído - scaleX:', scaleX, '| scaleY:', scaleY);
-
     // Validar recibos_por_pagina es un número válido
     let recibosPerPage = pageConfig.recibos_por_pagina;
     if (!Number.isInteger(recibosPerPage) || recibosPerPage < 1) {
@@ -642,6 +638,7 @@ exports.generarPDF = async (req, res, next) => {
     // Obtener factores de escala una sola vez
     const scaleX = pageConfig.scale_x || 1;
     const scaleY = pageConfig.scale_y || 1;
+    console.log('[PDF] Template leído - scaleX:', scaleX, '| scaleY:', scaleY);
 
     // Determinar layout y cantidad de recibos en horizontal/vertical
     const layout = pageConfig.layout || 'vertical';
