@@ -650,23 +650,15 @@ exports.generarPDF = async (req, res, next) => {
       recibosEnVertical = Math.ceil(recibosPerPage / recibosEnHorizontal);
     }
 
-    // Escalar márgenes y gaps de forma consistente
-    const marginTopScaled = marginTop * scaleY;
-    const marginBottomScaled = marginBottom * scaleY;
-    const marginLeftScaled = marginLeft * scaleX;
-    const marginRightScaled = marginRight * scaleX;
-    const gapVerticalScaled = gapVertical * scaleY;
-    const gapHorizontalScaled = gapHorizontal * scaleX;
+    // Calcular alto del recibo (SIN escala): (altura_libre - espacios_entre) / recibos_verticales
+    const alturaLibre = dimensions.height - marginTop - marginBottom;
+    const espaciosVerticalesTotales = gapVertical * Math.max(0, recibosEnVertical - 1);
+    const reciboHeight = (alturaLibre - espaciosVerticalesTotales) / recibosEnVertical;
 
-    // Calcular alto del recibo: (altura_libre - espacios_entre) / recibos_verticales
-    const alturaLibreScaled = dimensions.height * scaleY - marginTopScaled - marginBottomScaled;
-    const espaciosVerticalesTotales = gapVerticalScaled * Math.max(0, recibosEnVertical - 1);
-    const reciboHeight = (alturaLibreScaled - espaciosVerticalesTotales) / recibosEnVertical;
-
-    // Calcular ancho del recibo: (ancho_libre - espacios_entre) / recibos_horizontales
-    const anchoLibreScaled = dimensions.width * scaleX - marginLeftScaled - marginRightScaled;
-    const espaciosHorizontalesTotales = gapHorizontalScaled * Math.max(0, recibosEnHorizontal - 1);
-    const reciboWidth = (anchoLibreScaled - espaciosHorizontalesTotales) / recibosEnHorizontal;
+    // Calcular ancho del recibo (SIN escala): (ancho_libre - espacios_entre) / recibos_horizontales
+    const anchoLibre = dimensions.width - marginLeft - marginRight;
+    const espaciosHorizontalesTotales = gapHorizontal * Math.max(0, recibosEnHorizontal - 1);
+    const reciboWidth = (anchoLibre - espaciosHorizontalesTotales) / recibosEnHorizontal;
 
     // Detectar si es tabla o bloques
     const isTabla = Array.isArray(templateDB?.bloques) && templateDB.bloques[0]?.type === 'tabla';
@@ -761,15 +753,17 @@ exports.generarPDF = async (req, res, next) => {
         // TEMPORALMENTE: Renderizado de recibos deshabilitado para testing de grilla
         // Pero mostrar el límite/borde de cada recibo para visualizar posiciones
         for (let j = 0; j < recibosPerPage && i + j < recibos.length; j++) {
-          // Calcular posiciones y dimensiones (usando valores ya escalados)
+          // Calcular posiciones (sin escala, luego escalar)
           const fila = Math.floor(j / recibosEnHorizontal);
           const columna = j % recibosEnHorizontal;
-          const topPosition = marginTopScaled + (reciboHeight + gapVerticalScaled) * fila;
-          const leftPosition = marginLeftScaled + (reciboWidth + gapHorizontalScaled) * columna;
+          const topPosition = (marginTop + (reciboHeight + gapVertical) * fila) * scaleY;
+          const leftPosition = (marginLeft + (reciboWidth + gapHorizontal) * columna) * scaleX;
+          const finalWidth = reciboWidth * scaleX;
+          const finalHeight = reciboHeight * scaleY;
 
           // Mostrar borde de límite del recibo (solo si está habilitado)
           if (mostrarBordeRecibo) {
-            fullHTML += `<div style="position: absolute; top: ${topPosition}mm; left: ${leftPosition}mm; width: ${reciboWidth}mm; height: ${reciboHeight}mm; margin: 0; padding: 0; box-sizing: border-box; border: 1px solid #000;"></div>`;
+            fullHTML += `<div style="position: absolute; top: ${topPosition}mm; left: ${leftPosition}mm; width: ${finalWidth}mm; height: ${finalHeight}mm; margin: 0; padding: 0; box-sizing: border-box; border: 1px solid #000;"></div>`;
           }
         }
 
