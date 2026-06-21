@@ -647,7 +647,8 @@ exports.generarPDF = async (req, res, next) => {
 
     // Factor de compensación hardcodeado para html-pdf (aplica factor 1.3125 internamente)
     // Para contrarrestar: multiplicar todas las dimensiones por 1/1.3125 = 0.762
-    const HTML_PDF_COMPENSATION = 1 / 1.3125; // 0.762
+    //const HTML_PDF_COMPENSATION = 1 / 1.3125; // 0.762
+    const HTML_PDF_COMPENSATION = 1 / 1.313; // 0.762
 
     // Aplicar compensación a dimensiones de página y márgenes
     const pageWidth = dimensions.width * HTML_PDF_COMPENSATION;
