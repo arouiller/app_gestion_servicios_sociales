@@ -716,6 +716,16 @@ exports.generarPDF = async (req, res, next) => {
         // El borde del recibo siempre usa las dimensiones calculadas (no tabla_ancho_mm/tabla_alto_mm)
         const mostrarBordeRecibo = pageConfig.mostrar_borde_recibo || false;
         const mostrarBordePagina = pageConfig.mostrar_borde_pagina || false;
+        const numPagina = Math.floor(i / recibosPerPage) + 1;
+
+        console.log(`[PDF] Generando página ${numPagina} con dimensiones compensadas:`, {
+          pageWidth,
+          pageHeight,
+          marginTopCompensated,
+          marginBottomCompensated,
+          marginLeftCompensated,
+          marginRightCompensated
+        });
 
         // PROBLEMA RAÍZ IDENTIFICADO:
         // 1. Page div siempre tiene tamaño fijo: width: 210mm; height: 297mm (sin escala aplicada)
@@ -788,6 +798,10 @@ exports.generarPDF = async (req, res, next) => {
 
         fullHTML += '</div>';
       }
+
+      const numPaginasGeneradas = Math.ceil(recibos.length / recibosPerPage);
+      console.log(`[PDF] Total de páginas generadas: ${numPaginasGeneradas}`);
+      console.log(`[PDF] Longitud de fullHTML: ${fullHTML.length} caracteres`);
     } else {
       // Para bloques: usar lógica legacy
       const fullTemplate = serializeTemplateBlocks(templateDB, scaleFactor);
