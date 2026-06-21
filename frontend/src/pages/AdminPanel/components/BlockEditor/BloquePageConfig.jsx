@@ -293,7 +293,7 @@ const BloquePageConfig = () => {
                   type="number"
                   min="0.5"
                   max="2"
-                  step="0.001"
+                  step="0.0001"
                   value={pageConfig.scale_x || 1}
                   onChange={(e) => handleChange('scale_x', Number(e.target.value))}
                   className="input"
@@ -306,7 +306,7 @@ const BloquePageConfig = () => {
                   type="number"
                   min="0.5"
                   max="2"
-                  step="0.001"
+                  step="0.0001"
                   value={pageConfig.scale_y || 1}
                   onChange={(e) => handleChange('scale_y', Number(e.target.value))}
                   className="input"
