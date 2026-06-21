@@ -682,8 +682,8 @@ exports.generarPDF = async (req, res, next) => {
 
       for (let i = 0; i < recibos.length; i += recibosPerPage) {
         // Usar position: absolute para posicionamiento exacto de recibos
-        const pageWidth = dimensions.width;
-        const pageHeight = dimensions.height;
+        var pageWidth = dimensions.width;
+        var pageHeight = dimensions.height;
 
         // Factores de escala (si existen)
         const scaleX = pageConfig.scale_x || 1;
