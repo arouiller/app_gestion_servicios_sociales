@@ -646,14 +646,13 @@ exports.generarPDF = async (req, res, next) => {
     });
 
     // Factor de compensación hardcodeado para html-pdf (aplica factor 1.3125 internamente)
-    // Para contrarrestar: multiplicar CONTENIDO por 1/1.3125 = 0.762
+    // Para contrarrestar: multiplicar todas las dimensiones por 1/1.3125 = 0.762
     //const HTML_PDF_COMPENSATION = 1 / 1.3125; // 0.762
     const HTML_PDF_COMPENSATION = 1 / 1.313; // 0.762
 
-    // IMPORTANTE: Dimensiones de página = REALES (A4 completo, SIN compensación)
-    // Solo se compensa el CONTENIDO dentro (márgenes, gaps, recibos, grilla)
-    const pageWidth = dimensions.width;    // 210mm (A4 real, sin compensación)
-    const pageHeight = dimensions.height;  // 297mm (A4 real, sin compensación)
+    // Aplicar compensación a dimensiones de página y márgenes
+    const pageWidth = dimensions.width * HTML_PDF_COMPENSATION;
+    const pageHeight = dimensions.height * HTML_PDF_COMPENSATION;
     const marginTopCompensated = marginTop * HTML_PDF_COMPENSATION;
     const marginBottomCompensated = marginBottom * HTML_PDF_COMPENSATION;
     const marginLeftCompensated = marginLeft * HTML_PDF_COMPENSATION;
