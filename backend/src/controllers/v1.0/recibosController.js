@@ -12,6 +12,7 @@ const {
   serializeTemplateTable,
   generateTableHTML,
   generateMultiPagePDF,
+  removirPaginasPares,
 } = require('../../utils/pdfHelpers');
 
 /**
@@ -831,7 +832,10 @@ ${reciboHTML}
 
     // Generar PDF único con todas las páginas
     try {
-      const pdfBuffer = await generateMultiPagePDF(fullHTML, pageSize, config.orientation, config.margins || 0);
+      let pdfBuffer = await generateMultiPagePDF(fullHTML, pageSize, config.orientation, config.margins || 0);
+
+      // Postprocesamiento: Remover páginas pares (páginas en blanco)
+      pdfBuffer = await removirPaginasPares(pdfBuffer);
 
       res.setHeader('Content-Type', 'application/pdf');
       res.setHeader('Content-Disposition', `attachment; filename="recibos_${periodo}.pdf"`);

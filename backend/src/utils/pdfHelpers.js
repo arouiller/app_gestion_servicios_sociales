@@ -520,6 +520,49 @@ ${tableHTML}`;
   return html;
 }
 
+/**
+ * Postprocesamiento: Remover páginas pares de un PDF
+ * Útil para eliminar páginas en blanco que html-pdf genera entre contenido
+ * Ej: PDF con páginas 1(contenido), 2(blanco), 3(contenido), 4(blanco)
+ *     Retorna PDF con solo páginas 1, 3, 5, etc.
+ * @param {Buffer} pdfBuffer - Buffer del PDF generado
+ * @returns {Promise<Buffer>} - Buffer del PDF con páginas pares removidas
+ */
+async function removirPaginasPares(pdfBuffer) {
+  const { PDFDocument } = require('pdf-lib');
+
+  try {
+    // Cargar el PDF desde el buffer
+    const pdfDoc = await PDFDocument.load(pdfBuffer);
+    const totalPages = pdfDoc.getPageCount();
+
+    console.log(`[PDF] Postprocesamiento: PDF original tiene ${totalPages} páginas`);
+
+    // Recolectar índices de páginas a remover (pares: 1, 3, 5, ...)
+    const indicesToRemove = [];
+    for (let i = 1; i < totalPages; i += 2) {
+      indicesToRemove.push(i);
+    }
+
+    // Remover páginas en orden inverso (para no afectar índices)
+    for (let i = indicesToRemove.length - 1; i >= 0; i--) {
+      pdfDoc.removePage(indicesToRemove[i]);
+      console.log(`[PDF] Removida página ${indicesToRemove[i] + 1}`);
+    }
+
+    const finalPageCount = pdfDoc.getPageCount();
+    console.log(`[PDF] Postprocesamiento completado: ${totalPages} → ${finalPageCount} páginas`);
+
+    // Guardar el PDF modificado a buffer
+    const pdfBytes = await pdfDoc.save();
+    return Buffer.from(pdfBytes);
+  } catch (err) {
+    console.error('[PDF] Error en postprocesamiento:', err);
+    // Si falla, retornar el PDF original
+    return pdfBuffer;
+  }
+}
+
 module.exports = {
   formatCurrency,
   replacePlaceholder,
@@ -534,4 +577,5 @@ module.exports = {
   serializeTemplateTable,
   generateTableHTML,
   generateMultiPagePDF,
+  removirPaginasPares,
 };
