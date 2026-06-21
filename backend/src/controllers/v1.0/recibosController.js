@@ -645,9 +645,19 @@ exports.generarPDF = async (req, res, next) => {
       gap_vertical_mm: pageConfig.gap_vertical_mm
     });
 
-    // Nota: Removiendo escalamiento - html-pdf lo ignora de todas formas
-    // const scaleX = pageConfig.scale_x || 1;
-    // const scaleY = pageConfig.scale_y || 1;
+    // Factor de compensación para html-pdf (aplica factor 1.3125 internamente)
+    // Para contrarrestar: multiplicar todas las dimensiones por 1/1.3125 = 0.762
+    const HTML_PDF_COMPENSATION = 1 / 1.3125; // 0.762
+
+    // Aplicar compensación a dimensiones de página y márgenes
+    const pageWidth = dimensions.width * HTML_PDF_COMPENSATION;
+    const pageHeight = dimensions.height * HTML_PDF_COMPENSATION;
+    const marginTopCompensated = marginTop * HTML_PDF_COMPENSATION;
+    const marginBottomCompensated = marginBottom * HTML_PDF_COMPENSATION;
+    const marginLeftCompensated = marginLeft * HTML_PDF_COMPENSATION;
+    const marginRightCompensated = marginRight * HTML_PDF_COMPENSATION;
+    const gapVerticalCompensated = gapVertical * HTML_PDF_COMPENSATION;
+    const gapHorizontalCompensated = gapHorizontal * HTML_PDF_COMPENSATION;
 
     // Determinar layout y cantidad de recibos en horizontal/vertical
     const layout = pageConfig.layout || 'vertical';
@@ -659,25 +669,25 @@ exports.generarPDF = async (req, res, next) => {
       recibosEnVertical = Math.ceil(recibosPerPage / recibosEnHorizontal);
     }
 
-    // Calcular alto del recibo (SIN escala): (altura_libre - espacios_entre) / recibos_verticales
-    const alturaLibre = dimensions.height - marginTop - marginBottom;
-    const espaciosVerticalesTotales = gapVertical * Math.max(0, recibosEnVertical - 1);
+    // Calcular alto del recibo (con compensación para html-pdf): (altura_libre - espacios_entre) / recibos_verticales
+    const alturaLibre = pageHeight - marginTopCompensated - marginBottomCompensated;
+    const espaciosVerticalesTotales = gapVerticalCompensated * Math.max(0, recibosEnVertical - 1);
     const reciboHeight = (alturaLibre - espaciosVerticalesTotales) / recibosEnVertical;
 
-    console.log('[PDF] Cálculo reciboHeight:', {
-      'dimensions.height': dimensions.height,
-      marginTop,
-      marginBottom,
+    console.log('[PDF] Cálculo reciboHeight (compensado):', {
+      'pageHeight (compensada)': pageHeight,
+      'marginTop (compensado)': marginTopCompensated,
+      'marginBottom (compensado)': marginBottomCompensated,
       alturaLibre,
-      gapVertical,
+      'gapVertical (compensado)': gapVerticalCompensated,
       recibosEnVertical,
       espaciosVerticalesTotales,
       reciboHeight
     });
 
-    // Calcular ancho del recibo (SIN escala): (ancho_libre - espacios_entre) / recibos_horizontales
-    const anchoLibre = dimensions.width - marginLeft - marginRight;
-    const espaciosHorizontalesTotales = gapHorizontal * Math.max(0, recibosEnHorizontal - 1);
+    // Calcular ancho del recibo (con compensación para html-pdf): (ancho_libre - espacios_entre) / recibos_horizontales
+    const anchoLibre = pageWidth - marginLeftCompensated - marginRightCompensated;
+    const espaciosHorizontalesTotales = gapHorizontalCompensated * Math.max(0, recibosEnHorizontal - 1);
     const reciboWidth = (anchoLibre - espaciosHorizontalesTotales) / recibosEnHorizontal;
 
     // Detectar si es tabla o bloques
@@ -702,14 +712,6 @@ exports.generarPDF = async (req, res, next) => {
       const tableHTMLWithPlaceholders = generateTableHTML(tablaData, tablaAncho, tablaAlto);
 
       for (let i = 0; i < recibos.length; i += recibosPerPage) {
-        // Usar position: absolute para posicionamiento exacto de recibos
-        var pageWidth = dimensions.width;
-        var pageHeight = dimensions.height;
-
-        // Sin escalamiento - usar dimensiones originales
-        // pageWidth = pageWidth * scaleX
-        // pageHeight = pageHeight * scaleY
-
         // El borde del recibo siempre usa las dimensiones calculadas (no tabla_ancho_mm/tabla_alto_mm)
         const mostrarBordeRecibo = pageConfig.mostrar_borde_recibo || false;
         const mostrarBordePagina = pageConfig.mostrar_borde_pagina || false;
@@ -740,8 +742,8 @@ exports.generarPDF = async (req, res, next) => {
         }
 
         if (pageConfig.show_grid) {
-          const cellSize = 10; // mm (tamaño de la celda, sin escala)
-          // Cantidad de celdas: pageWidth / 10, pageHeight / 10
+          const cellSize = 10 * HTML_PDF_COMPENSATION; // mm (tamaño de la celda, compensado para html-pdf)
+          // Cantidad de celdas: pageWidth / cellSize
           const numCellsX = Math.floor(pageWidth / cellSize);
           const numCellsY = Math.floor(pageHeight / cellSize);
 
@@ -771,11 +773,11 @@ exports.generarPDF = async (req, res, next) => {
         // TEMPORALMENTE: Renderizado de recibos deshabilitado para testing de grilla
         // Pero mostrar el límite/borde de cada recibo para visualizar posiciones
         for (let j = 0; j < recibosPerPage && i + j < recibos.length; j++) {
-          // Calcular posiciones (sin escala)
+          // Calcular posiciones (con compensación para html-pdf)
           const fila = Math.floor(j / recibosEnHorizontal);
           const columna = j % recibosEnHorizontal;
-          const topPosition = marginTop + (reciboHeight + gapVertical) * fila;
-          const leftPosition = marginLeft + (reciboWidth + gapHorizontal) * columna;
+          const topPosition = marginTopCompensated + (reciboHeight + gapVerticalCompensated) * fila;
+          const leftPosition = marginLeftCompensated + (reciboWidth + gapHorizontalCompensated) * columna;
 
           // Mostrar borde de límite del recibo (solo si está habilitado)
           if (mostrarBordeRecibo) {
