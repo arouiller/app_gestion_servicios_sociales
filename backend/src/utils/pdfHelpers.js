@@ -369,6 +369,7 @@ async function generateMultiPagePDF(fullHTML, pageSize, orientation, margins) {
       page-break-after: always;
       margin: 0;
       padding: 0;
+      overflow: hidden;
     }
     .page:last-child {
       page-break-after: avoid;
