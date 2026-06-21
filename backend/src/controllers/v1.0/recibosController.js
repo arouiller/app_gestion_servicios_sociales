@@ -782,6 +782,17 @@ exports.generarPDF = async (req, res, next) => {
           const finalWidth = reciboWidth * scaleX;
           const finalHeight = reciboHeight * scaleY;
 
+          if (j === 0) {
+            console.log('[PDF] Renderizado de recibo (primer recibo de página):', {
+              reciboHeight,
+              scaleY,
+              finalHeight,
+              topPosition,
+              leftPosition,
+              finalWidth
+            });
+          }
+
           // Mostrar borde de límite del recibo (solo si está habilitado)
           if (mostrarBordeRecibo) {
             fullHTML += `<div style="position: absolute; top: ${topPosition}mm; left: ${leftPosition}mm; width: ${finalWidth}mm; height: ${finalHeight}mm; margin: 0; padding: 0; box-sizing: border-box; border: 1px solid #000;"></div>`;
