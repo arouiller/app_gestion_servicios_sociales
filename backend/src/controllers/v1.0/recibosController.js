@@ -713,13 +713,13 @@ exports.generarPDF = async (req, res, next) => {
         fullHTML += `<div class="page" style="position: relative; page-break-after: always; margin: 0; padding: 0; width: ${pageWidth}mm; height: ${pageHeight}mm; box-sizing: border-box;">`;
 
         if (pageConfig.show_grid) {
-          const cellSize = 10; // mm
+          const cellSize = 10; // mm (tamaño original de la grilla)
+          // Calcular cantidad de celdas basado en tamaño original (sin escala)
+          const numCellsX = Math.floor(pageWidth / cellSize);
+          const numCellsY = Math.floor(pageHeight / cellSize);
+          // El escalamiento solo afecta la renderización del tamaño de cada celda
           const cellSizeX = cellSize * scaleX;
           const cellSizeY = cellSize * scaleY;
-          // CORRECCIÓN: No escalar pageWidth/pageHeight en el cálculo de numCells
-          // porque el page div en CSS siempre tiene 210mm × 297mm (sin escala)
-          const numCellsX = Math.ceil(pageWidth / cellSizeX);
-          const numCellsY = Math.ceil(pageHeight / cellSizeY);
 
           let gridHTML = `<div style="position: absolute; top: 0; left: 0; width: 100%; height: 100%; z-index: 0; pointer-events: none;">
             <table style="width: 100%; height: 100%; border-collapse: collapse; margin: 0; padding: 0;">
