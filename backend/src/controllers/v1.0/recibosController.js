@@ -718,7 +718,7 @@ exports.generarPDF = async (req, res, next) => {
 
         // Borde de página (si está habilitado)
         if (mostrarBordePagina) {
-          fullHTML += `<div style="position: absolute; inset: 0; border: 1px solid #000; box-sizing: border-box; pointer-events: none; z-index: 1;"></div>`;
+          fullHTML += `<div style="position: absolute; top: 0; left: 0; width: ${pageWidth}mm; height: ${pageHeight}mm; border: 1px solid #000; box-sizing: border-box; pointer-events: none; z-index: 1;"></div>`;
         }
 
         if (pageConfig.show_grid) {
