@@ -694,6 +694,8 @@ exports.generarPDF = async (req, res, next) => {
 
         // El borde del recibo siempre usa las dimensiones calculadas (no tabla_ancho_mm/tabla_alto_mm)
         const mostrarBordeRecibo = pageConfig.mostrar_borde_recibo || false;
+        const mostrarBordePagina = pageConfig.mostrar_borde_pagina || false;
+        const borderPageStyle = mostrarBordePagina ? 'border: 1px solid #000;' : '';
 
         // PROBLEMA RAÍZ IDENTIFICADO:
         // 1. Page div siempre tiene tamaño fijo: width: 210mm; height: 297mm (sin escala aplicada)
@@ -713,7 +715,7 @@ exports.generarPDF = async (req, res, next) => {
         //    - RESULTADO: Siempre 13mm × 13mm, sin importar la escala
         // CAUSA: numCellsX/Y usa (pageWidth * scaleX) pero pageWidth en CSS no se escala
 
-        fullHTML += `<div class="page" style="position: relative; page-break-after: always; margin: 0; padding: 0; width: ${pageWidth}mm; height: ${pageHeight}mm; box-sizing: border-box;">`;
+        fullHTML += `<div class="page" style="position: relative; page-break-after: always; margin: 0; padding: 0; width: ${pageWidth}mm; height: ${pageHeight}mm; box-sizing: border-box; ${borderPageStyle}">`;
 
         if (pageConfig.show_grid) {
           const cellSize = 10; // mm (tamaño de la celda, sin escala)

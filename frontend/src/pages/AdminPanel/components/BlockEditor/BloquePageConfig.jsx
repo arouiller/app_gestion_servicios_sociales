@@ -347,6 +347,21 @@ const BloquePageConfig = () => {
                 Muestra un borde negro 1px alrededor de cada recibo (útil para ajuste de posicionamiento)
               </div>
             </div>
+
+            {/* Checkbox para borde de página */}
+            <div style={{ marginTop: '12px', paddingTop: '0' }}>
+              <label style={{ display: 'flex', alignItems: 'center', gap: '8px', cursor: 'pointer' }}>
+                <input
+                  type="checkbox"
+                  checked={pageConfig.mostrar_borde_pagina || false}
+                  onChange={(e) => handleChange('mostrar_borde_pagina', e.target.checked)}
+                />
+                <span style={{ fontSize: '12px', color: '#666' }}>Imprimir borde de página en PDF</span>
+              </label>
+              <div style={{ marginTop: '4px', fontSize: '10px', color: '#999', marginLeft: '24px' }}>
+                Muestra un borde negro 1px alrededor de toda la página (útil para verificar límites)
+              </div>
+            </div>
           </div>
         </div>
       )}
