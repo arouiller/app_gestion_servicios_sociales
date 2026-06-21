@@ -795,7 +795,13 @@ exports.generarPDF = async (req, res, next) => {
 
           // Mostrar borde de límite del recibo (solo si está habilitado)
           if (mostrarBordeRecibo) {
-            fullHTML += `<div style="position: absolute; top: ${topPosition}mm; left: ${leftPosition}mm; width: ${finalWidth}mm; height: ${finalHeight}mm; margin: 0; padding: 0; box-sizing: border-box; border: 1px solid #000;"></div>`;
+            const divHTML = `<div style="position: absolute; top: ${topPosition}mm; left: ${leftPosition}mm; width: ${finalWidth}mm; height: ${finalHeight}mm; margin: 0; padding: 0; box-sizing: border-box; border: 1px solid #000;"></div>`;
+
+            if (j === 0) {
+              console.log('[PDF] HTML del recibo (primer recibo):', divHTML);
+            }
+
+            fullHTML += divHTML;
           }
         }
 
