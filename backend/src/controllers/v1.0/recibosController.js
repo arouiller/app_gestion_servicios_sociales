@@ -556,7 +556,7 @@ exports.generarPDF = async (req, res, next) => {
 
     // Obtener todos los recibos del período con localidad, datos del titular y abreviaciones
     const recibos = await sequelize.query(`
-      SELECT
+      SELECT DISTINCT
         r.*,
         l.nombre as localidad_nombre,
         pe.numero_documento,
