@@ -584,6 +584,21 @@ exports.generarPDF = async (req, res, next) => {
       });
     }
 
+    // LOG: Diagnóstico de duplicados - Ver datos de BD
+    console.log(`[PDF-DIAG] Total recibos obtenidos de BD: ${recibos.length}`);
+    const reciboIds = recibos.map(r => r.id);
+    const reciboNumeros = recibos.map(r => r.numero_recibo);
+    console.log(`[PDF-DIAG] IDs de recibos:`, reciboIds);
+    console.log(`[PDF-DIAG] Números de recibos:`, reciboNumeros);
+
+    // Detectar duplicados en BD
+    const idsUnicos = new Set(reciboIds);
+    if (idsUnicos.size !== recibos.length) {
+      console.warn(`[PDF-DIAG] ⚠️ DUPLICADOS EN BD: ${recibos.length} recibos pero ${idsUnicos.size} IDs únicos`);
+    } else {
+      console.log(`[PDF-DIAG] ✓ Sin duplicados en BD (${recibos.length} recibos, ${idsUnicos.size} IDs únicos)`);
+    }
+
     // Obtener template activo de la BD
     let templateDB = await db.ReciboTemplate.findOne({
       where: { activo: true },
@@ -814,6 +829,13 @@ exports.generarPDF = async (req, res, next) => {
       const numPaginasGeneradas = Math.ceil(recibos.length / recibosPerPage);
       console.log(`[PDF] Total de páginas generadas: ${numPaginasGeneradas}`);
       console.log(`[PDF] Longitud de fullHTML: ${fullHTML.length} caracteres`);
+
+      // LOG: Diagnóstico de duplicados - Ver cuántos se renderizaron
+      const numRecibosRenderizados = recibos.length;
+      console.log(`[PDF-DIAG] Recibos renderizados en PDF: ${numRecibosRenderizados}`);
+      if (numRecibosRenderizados !== recibos.length) {
+        console.warn(`[PDF-DIAG] ⚠️ MISMATCH: ${recibos.length} en BD pero ${numRecibosRenderizados} renderizados`);
+      }
     } else {
       // Para bloques: usar lógica legacy
       const fullTemplate = serializeTemplateBlocks(templateDB, scaleFactor);
