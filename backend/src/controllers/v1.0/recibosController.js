@@ -709,9 +709,12 @@ exports.generarPDF = async (req, res, next) => {
       // Obtener tabla plantilla una sola vez (con placeholders)
       // Las alturas de filas se respetan como se diseñaron en el template
       const tablaData = templateDB.bloques[0];
-      const tablaAncho = pageConfig.tabla_ancho_mm;
-      const tablaAlto = pageConfig.tabla_alto_mm;
+      // IMPORTANTE: Compensar dimensiones de tabla por factor html-pdf (0.762)
+      const tablaAncho = pageConfig.tabla_ancho_mm ? pageConfig.tabla_ancho_mm * HTML_PDF_COMPENSATION : null;
+      const tablaAlto = pageConfig.tabla_alto_mm ? pageConfig.tabla_alto_mm * HTML_PDF_COMPENSATION : null;
       const tableHTMLWithPlaceholders = generateTableHTML(tablaData, tablaAncho, tablaAlto);
+
+      console.log('[PDF] Dimensiones de tabla (compensadas):', { tablaAncho, tablaAlto });
 
       for (let i = 0; i < recibos.length; i += recibosPerPage) {
         // El borde del recibo siempre usa las dimensiones calculadas (no tabla_ancho_mm/tabla_alto_mm)
