@@ -554,28 +554,29 @@ exports.generarPDF = async (req, res, next) => {
       });
     }
 
-    // Obtener todos los recibos del período con localidad, datos del titular y abreviaciones
-    const recibos = await sequelize.query(`
-      SELECT DISTINCT
-        r.*,
-        l.nombre as localidad_nombre,
-        pe.numero_documento,
-        pe.fecha_nacimiento,
-        pe.fecha_cobertura,
-        tp.abreviacion as tipo_plan_abreviacion,
-        tg.abreviacion as tipo_grupo_abreviacion
-      FROM recibos r
-      LEFT JOIN planes p ON r.plan_numero = p.plan_numero
-      LEFT JOIN localidades l ON p.localidad_id = l.id
-      LEFT JOIN plan_integrantes pi ON r.plan_numero = pi.plan_numero AND pi.rol = 'titular'
-      LEFT JOIN personas pe ON pi.persona_id = pe.id
-      LEFT JOIN tipos_de_plan tp ON r.tipo_plan_nombre = tp.tipo_plan_nombre
-      LEFT JOIN tipos_de_grupo tg ON r.tipo_de_grupo_nombre = tg.tipo_de_grupo_nombre
-      WHERE r.periodo LIKE ?
-      ORDER BY r.id
-    `, {
-      replacements: [`${periodo}%`],
-      type: sequelize.QueryTypes.SELECT,
+    // Obtener todos los recibos del período usando Sequelize ORM (evita duplicados de JOINs)
+    // Igual que en exports.list() que se usa en el frontend
+    const recibos = await db.Recibo.findAll({
+      where: {
+        periodo: {
+          [Op.like]: `${periodo}%`,
+        },
+      },
+      include: [
+        {
+          model: db.PlanV1,
+          attributes: [],
+          include: [
+            { model: db.Localidad, attributes: ['nombre'] },
+            { model: db.PlanIntegrante, attributes: [], include: [{ model: db.Persona, attributes: ['numero_documento', 'fecha_nacimiento', 'fecha_cobertura'] }] },
+          ],
+        },
+        { model: db.TipoDePlan, attributes: ['abreviacion'] },
+        { model: db.TipoDeGrupo, attributes: ['abreviacion'] },
+      ],
+      order: [['id', 'ASC']],
+      raw: false,
+      subQuery: false,
     });
 
     if (recibos.length === 0) {
@@ -584,19 +585,30 @@ exports.generarPDF = async (req, res, next) => {
       });
     }
 
+    // Mapear datos de Sequelize al formato esperado (compatible con la lógica existente)
+    const recibosFormateados = recibos.map(r => ({
+      ...r.dataValues,
+      localidad_nombre: r.Plan?.Localidad?.nombre || null,
+      numero_documento: r.Plan?.PlanIntegrante?.find(pi => pi.rol === 'titular')?.Persona?.numero_documento || null,
+      fecha_nacimiento: r.Plan?.PlanIntegrante?.find(pi => pi.rol === 'titular')?.Persona?.fecha_nacimiento || null,
+      fecha_cobertura: r.Plan?.PlanIntegrante?.find(pi => pi.rol === 'titular')?.Persona?.fecha_cobertura || null,
+      tipo_plan_abreviacion: r.TipoDePlan?.abreviacion || null,
+      tipo_grupo_abreviacion: r.TipoDeGrupo?.abreviacion || null,
+    }));
+
     // LOG: Diagnóstico de duplicados - Ver datos de BD
-    console.log(`[PDF-DIAG] Total recibos obtenidos de BD: ${recibos.length}`);
-    const reciboIds = recibos.map(r => r.id);
-    const reciboNumeros = recibos.map(r => r.numero_recibo);
+    console.log(`[PDF-DIAG] Total recibos obtenidos de BD: ${recibosFormateados.length}`);
+    const reciboIds = recibosFormateados.map(r => r.id);
+    const reciboNumeros = recibosFormateados.map(r => r.numero_recibo);
     console.log(`[PDF-DIAG] IDs de recibos:`, reciboIds);
     console.log(`[PDF-DIAG] Números de recibos:`, reciboNumeros);
 
     // Detectar duplicados en BD
     const idsUnicos = new Set(reciboIds);
-    if (idsUnicos.size !== recibos.length) {
-      console.warn(`[PDF-DIAG] ⚠️ DUPLICADOS EN BD: ${recibos.length} recibos pero ${idsUnicos.size} IDs únicos`);
+    if (idsUnicos.size !== recibosFormateados.length) {
+      console.warn(`[PDF-DIAG] ⚠️ DUPLICADOS EN BD: ${recibosFormateados.length} recibos pero ${idsUnicos.size} IDs únicos`);
     } else {
-      console.log(`[PDF-DIAG] ✓ Sin duplicados en BD (${recibos.length} recibos, ${idsUnicos.size} IDs únicos)`);
+      console.log(`[PDF-DIAG] ✓ Sin duplicados en BD (${recibosFormateados.length} recibos, ${idsUnicos.size} IDs únicos)`);
     }
 
     // Obtener template activo de la BD
@@ -731,7 +743,7 @@ exports.generarPDF = async (req, res, next) => {
 
       console.log('[PDF] Dimensiones de tabla (compensadas):', { tablaAncho, tablaAlto });
 
-      for (let i = 0; i < recibos.length; i += recibosPerPage) {
+      for (let i = 0; i < recibosFormateados.length; i += recibosPerPage) {
         // El borde del recibo siempre usa las dimensiones calculadas (no tabla_ancho_mm/tabla_alto_mm)
         const mostrarBordeRecibo = pageConfig.mostrar_borde_recibo || false;
         const mostrarBordePagina = pageConfig.mostrar_borde_pagina || false;
@@ -797,11 +809,11 @@ exports.generarPDF = async (req, res, next) => {
           console.log(`[PDF] Grilla - ${numCellsX}×${numCellsY} celdas de ${cellSize}mm`);
         }
 
-        const recibosEnPagina = Math.min(recibosPerPage, recibos.length - i);
+        const recibosEnPagina = Math.min(recibosPerPage, recibosFormateados.length - i);
 
 
         // Renderizar cada recibo con su tabla dentro de la página
-        for (let j = 0; j < recibosPerPage && i + j < recibos.length; j++) {
+        for (let j = 0; j < recibosPerPage && i + j < recibosFormateados.length; j++) {
           // Calcular posiciones (con compensación para html-pdf)
           const fila = Math.floor(j / recibosEnHorizontal);
           const columna = j % recibosEnHorizontal;
@@ -809,7 +821,7 @@ exports.generarPDF = async (req, res, next) => {
           const leftPosition = marginLeftCompensated + (reciboWidth + gapHorizontalCompensated) * columna;
 
           // Renderizar tabla con placeholders reemplazados
-          const reciboData = prepareReciboData(recibos[i + j]);
+          const reciboData = prepareReciboData(recibosFormateados[i + j]);
           const tableHTMLForRecibo = replaceAllPlaceholders(tableHTMLWithPlaceholders, reciboData);
 
           // Contenedor del recibo con tabla
@@ -826,15 +838,15 @@ exports.generarPDF = async (req, res, next) => {
         fullHTML += '</div>';
       }
 
-      const numPaginasGeneradas = Math.ceil(recibos.length / recibosPerPage);
+      const numPaginasGeneradas = Math.ceil(recibosFormateados.length / recibosPerPage);
       console.log(`[PDF] Total de páginas generadas: ${numPaginasGeneradas}`);
       console.log(`[PDF] Longitud de fullHTML: ${fullHTML.length} caracteres`);
 
       // LOG: Diagnóstico de duplicados - Ver cuántos se renderizaron
-      const numRecibosRenderizados = recibos.length;
+      const numRecibosRenderizados = recibosFormateados.length;
       console.log(`[PDF-DIAG] Recibos renderizados en PDF: ${numRecibosRenderizados}`);
-      if (numRecibosRenderizados !== recibos.length) {
-        console.warn(`[PDF-DIAG] ⚠️ MISMATCH: ${recibos.length} en BD pero ${numRecibosRenderizados} renderizados`);
+      if (numRecibosRenderizados !== recibosFormateados.length) {
+        console.warn(`[PDF-DIAG] ⚠️ MISMATCH: ${recibosFormateados.length} en BD pero ${numRecibosRenderizados} renderizados`);
       }
     } else {
       // Para bloques: usar lógica legacy
@@ -844,15 +856,15 @@ exports.generarPDF = async (req, res, next) => {
       content = parsed.content;
       const contentWithoutStyles = content.replace(/<style[^>]*>[\s\S]*?<\/style>/gi, '');
 
-      for (let i = 0; i < recibos.length; i += recibosPerPage) {
+      for (let i = 0; i < recibosFormateados.length; i += recibosPerPage) {
         fullHTML += `<div class="page" style="page-break-after: always; margin: 0; padding: ${marginTop}mm ${marginRight}mm ${marginBottom}mm ${marginLeft}mm;">`;
 
         // Contenedor con todos los recibos de la página para mantenerlos juntos
-        const recibosEnPagina = Math.min(recibosPerPage, recibos.length - i);
+        const recibosEnPagina = Math.min(recibosPerPage, recibosFormateados.length - i);
         const alturaContenedor = reciboHeight * recibosEnPagina + gapVertical * Math.max(0, recibosEnPagina - 1);
         fullHTML += `<div style="height: ${alturaContenedor}mm; margin: 0; padding: 0; page-break-inside: avoid; box-sizing: border-box;">`;
 
-        for (let j = 0; j < recibosPerPage && i + j < recibos.length; j++) {
+        for (let j = 0; j < recibosPerPage && i + j < recibosFormateados.length; j++) {
           const reciboHTML = renderRecibo(recibos[i + j], contentWithoutStyles);
           fullHTML += `<div style="height: ${reciboHeight}mm; margin: 0; padding: 0; overflow: hidden; box-sizing: border-box;">
 ${reciboHTML}
