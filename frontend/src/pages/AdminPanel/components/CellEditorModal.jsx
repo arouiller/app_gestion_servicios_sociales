@@ -7,60 +7,33 @@ const CellEditorModal = ({ celda, placeholders = {}, onSave, onClose }) => {
   const [searchTerm, setSearchTerm] = useState('');
   const modalRef = useRef(null);
 
-  // Registrar módulos de Quill solo una vez
+  // Agregar estilos para tamaños de fuente (solo una vez)
   useEffect(() => {
-    try {
-      // Agregar estilos para tamaños de fuente
-      if (!document.getElementById('quill-size-styles')) {
-        const styleSheet = document.createElement('style');
-        styleSheet.id = 'quill-size-styles';
-        styleSheet.innerHTML = `
-          .ql-snow .ql-size[data-value="8px"]::before { content: "8px" !important; }
-          .ql-snow .ql-size[data-value="10px"]::before { content: "10px" !important; }
-          .ql-snow .ql-size[data-value="12px"]::before { content: "12px" !important; }
-          .ql-snow .ql-size[data-value="14px"]::before { content: "14px" !important; }
-          .ql-snow .ql-size[data-value="16px"]::before { content: "16px" !important; }
-          .ql-snow .ql-size[data-value="18px"]::before { content: "18px" !important; }
-          .ql-snow .ql-size[data-value="20px"]::before { content: "20px" !important; }
-          .ql-snow .ql-size[data-value="24px"]::before { content: "24px" !important; }
-          .ql-snow .ql-size[data-value="28px"]::before { content: "28px" !important; }
+    if (!document.getElementById('quill-size-styles')) {
+      const styleSheet = document.createElement('style');
+      styleSheet.id = 'quill-size-styles';
+      styleSheet.innerHTML = `
+        .ql-snow .ql-size[data-value="8px"]::before { content: "8px" !important; }
+        .ql-snow .ql-size[data-value="10px"]::before { content: "10px" !important; }
+        .ql-snow .ql-size[data-value="12px"]::before { content: "12px" !important; }
+        .ql-snow .ql-size[data-value="14px"]::before { content: "14px" !important; }
+        .ql-snow .ql-size[data-value="16px"]::before { content: "16px" !important; }
+        .ql-snow .ql-size[data-value="18px"]::before { content: "18px" !important; }
+        .ql-snow .ql-size[data-value="20px"]::before { content: "20px" !important; }
+        .ql-snow .ql-size[data-value="24px"]::before { content: "24px" !important; }
+        .ql-snow .ql-size[data-value="28px"]::before { content: "28px" !important; }
 
-          .ql-size-8px { font-size: 8px !important; }
-          .ql-size-10px { font-size: 10px !important; }
-          .ql-size-12px { font-size: 12px !important; }
-          .ql-size-14px { font-size: 14px !important; }
-          .ql-size-16px { font-size: 16px !important; }
-          .ql-size-18px { font-size: 18px !important; }
-          .ql-size-20px { font-size: 20px !important; }
-          .ql-size-24px { font-size: 24px !important; }
-          .ql-size-28px { font-size: 28px !important; }
-        `;
-        document.head.appendChild(styleSheet);
-      }
-
-      // Registrar formatos de size con valores en px (si no está ya registrado)
-      try {
-        const Size = Quill.import('formats/size');
-        if (Size && Size.whitelist && !Size.whitelist.includes('8px')) {
-          Size.whitelist = ['8px', '10px', '12px', '14px', '16px', '18px', '20px', '24px', '28px'];
-          Quill.register(Size, true);
-        }
-      } catch (e) {
-        console.warn('Size format already registered or unavailable');
-      }
-
-      // Registrar formatos de font (si no está ya registrado)
-      try {
-        const Font = Quill.import('formats/font');
-        if (Font && Font.whitelist && Font.whitelist.length === 0) {
-          Font.whitelist = ['Arial', 'Courier New', 'Georgia', 'Helvetica', 'Times New Roman', 'Verdana'];
-          Quill.register(Font, true);
-        }
-      } catch (e) {
-        console.warn('Font format already registered or unavailable');
-      }
-    } catch (err) {
-      console.error('Error registering Quill modules:', err);
+        .ql-size-8px { font-size: 8px !important; }
+        .ql-size-10px { font-size: 10px !important; }
+        .ql-size-12px { font-size: 12px !important; }
+        .ql-size-14px { font-size: 14px !important; }
+        .ql-size-16px { font-size: 16px !important; }
+        .ql-size-18px { font-size: 18px !important; }
+        .ql-size-20px { font-size: 20px !important; }
+        .ql-size-24px { font-size: 24px !important; }
+        .ql-size-28px { font-size: 28px !important; }
+      `;
+      document.head.appendChild(styleSheet);
     }
   }, []);
 
@@ -150,17 +123,19 @@ const CellEditorModal = ({ celda, placeholders = {}, onSave, onClose }) => {
               value={content}
               onChange={setContent}
               modules={{
-                toolbar: [
-                  [{ 'font': ['Arial', 'Courier New', 'Georgia', 'Helvetica', 'Times New Roman', 'Verdana'] }],
-                  [{ 'size': ['8px', '10px', '12px', '14px', '16px', '18px', '20px', '24px', '28px'] }],
-                  ['bold', 'italic', 'underline', 'strike'],
-                  ['blockquote', 'code-block'],
-                  [{ 'header': 1 }, { 'header': 2 }],
-                  [{ 'list': 'ordered' }, { 'list': 'bullet' }],
-                  ['link']
-                ]
+                table: {}
               }}
-              formats={['font', 'size', 'bold', 'italic', 'underline', 'strike', 'blockquote', 'code-block', 'header', 'list', 'link']}
+              toolbar={[
+                [{ 'font': ['Arial', 'Courier New', 'Georgia', 'Helvetica', 'Times New Roman', 'Verdana'] }],
+                [{ 'size': ['8px', '10px', '12px', '14px', '16px', '18px', '20px', '24px', '28px'] }],
+                ['bold', 'italic', 'underline', 'strike'],
+                ['blockquote', 'code-block'],
+                [{ 'header': 1 }, { 'header': 2 }],
+                [{ 'list': 'ordered' }, { 'list': 'bullet' }],
+                ['link'],
+                ['table']
+              ]}
+              formats={['font', 'size', 'bold', 'italic', 'underline', 'strike', 'blockquote', 'code-block', 'header', 'list', 'link', 'table']}
               style={{
                 flex: 1,
                 display: 'flex',
