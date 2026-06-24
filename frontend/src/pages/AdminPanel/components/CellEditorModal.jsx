@@ -1,6 +1,8 @@
 import React, { useState, useRef, useEffect } from 'react';
 import ReactQuill, { Quill } from 'react-quill';
 import 'react-quill/dist/quill.snow.css';
+import QuillBetterTable from 'quill-better-table';
+import 'quill-better-table/dist/quill-better-table.css';
 
 const CellEditorModal = ({ celda, placeholders = {}, onSave, onClose }) => {
   const [content, setContent] = useState(celda?.contenido || '');
@@ -10,6 +12,9 @@ const CellEditorModal = ({ celda, placeholders = {}, onSave, onClose }) => {
   // Registrar módulos de Quill solo una vez
   useEffect(() => {
     try {
+      // Registrar quill-better-table
+      Quill.register('modules/better-table', QuillBetterTable);
+
       // Agregar estilos para tamaños de fuente
       if (!document.getElementById('quill-size-styles')) {
         const styleSheet = document.createElement('style');
@@ -59,9 +64,6 @@ const CellEditorModal = ({ celda, placeholders = {}, onSave, onClose }) => {
       } catch (e) {
         console.warn('Font format already registered or unavailable');
       }
-
-      // Nota: Table module no está disponible en Quill 1.3.7 sin plugins adicionales
-      // Se omite por ahora para evitar errores de construcción
     } catch (err) {
       console.error('Error registering Quill modules:', err);
     }
@@ -153,6 +155,20 @@ const CellEditorModal = ({ celda, placeholders = {}, onSave, onClose }) => {
               value={content}
               onChange={setContent}
               modules={{
+                'better-table': {
+                  operationMenu: {
+                    items: {
+                      insertRowUp: {},
+                      insertRowDown: {},
+                      deleteRow: {},
+                      insertColLeft: {},
+                      insertColRight: {},
+                      deleteCol: {},
+                      mergeCells: {},
+                      unmergeCells: {}
+                    }
+                  }
+                },
                 toolbar: [
                   [{ 'font': ['Arial', 'Courier New', 'Georgia', 'Helvetica', 'Times New Roman', 'Verdana'] }],
                   [{ 'size': ['8px', '10px', '12px', '14px', '16px', '18px', '20px', '24px', '28px'] }],
@@ -160,10 +176,11 @@ const CellEditorModal = ({ celda, placeholders = {}, onSave, onClose }) => {
                   ['blockquote', 'code-block'],
                   [{ 'header': 1 }, { 'header': 2 }],
                   [{ 'list': 'ordered' }, { 'list': 'bullet' }],
-                  ['link']
+                  ['link'],
+                  ['better-table']
                 ]
               }}
-              formats={['font', 'size', 'bold', 'italic', 'underline', 'strike', 'blockquote', 'code-block', 'header', 'list', 'link']}
+              formats={['font', 'size', 'bold', 'italic', 'underline', 'strike', 'blockquote', 'code-block', 'header', 'list', 'link', 'table', 'tr', 'td']}
               style={{
                 flex: 1,
                 display: 'flex',
