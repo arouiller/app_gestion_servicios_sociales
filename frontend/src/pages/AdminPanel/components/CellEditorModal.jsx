@@ -122,9 +122,7 @@ const CellEditorModal = ({ celda, placeholders = {}, onSave, onClose }) => {
             <ReactQuill
               value={content}
               onChange={setContent}
-              modules={{
-                table: {}
-              }}
+              modules={{}}
               toolbar={[
                 [{ 'font': ['Arial', 'Courier New', 'Georgia', 'Helvetica', 'Times New Roman', 'Verdana'] }],
                 [{ 'size': ['8px', '10px', '12px', '14px', '16px', '18px', '20px', '24px', '28px'] }],
@@ -132,10 +130,9 @@ const CellEditorModal = ({ celda, placeholders = {}, onSave, onClose }) => {
                 ['blockquote', 'code-block'],
                 [{ 'header': 1 }, { 'header': 2 }],
                 [{ 'list': 'ordered' }, { 'list': 'bullet' }],
-                ['link'],
-                ['table']
+                ['link']
               ]}
-              formats={['font', 'size', 'bold', 'italic', 'underline', 'strike', 'blockquote', 'code-block', 'header', 'list', 'link', 'table']}
+              formats={['font', 'size', 'bold', 'italic', 'underline', 'strike', 'blockquote', 'code-block', 'header', 'list', 'link']}
               style={{
                 flex: 1,
                 display: 'flex',

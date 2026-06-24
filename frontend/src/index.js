@@ -4,15 +4,9 @@ import { Quill } from 'react-quill';
 import './index.scss';
 import App from './App';
 
-// Registrar módulos de Quill ANTES de que React renderice
+// Registrar formatos de Quill ANTES de que React renderice
 // Esto evita el timing issue de ReactQuill
 try {
-  // Registrar módulo Table nativo de Quill
-  const Table = Quill.import('modules/table');
-  if (Table) {
-    Quill.register('modules/table', Table);
-  }
-
   // Registrar formatos de size (valores en px)
   const Size = Quill.import('formats/size');
   if (Size) {
@@ -26,8 +20,10 @@ try {
     Font.whitelist = ['Arial', 'Courier New', 'Georgia', 'Helvetica', 'Times New Roman', 'Verdana'];
     Quill.register(Font, true);
   }
+
+  // Nota: módulo Table no está disponible en Quill 1.3.7 sin dependencias externas
 } catch (err) {
-  console.error('Error initializing Quill modules:', err);
+  console.error('Error initializing Quill formats:', err);
 }
 
 const root = ReactDOM.createRoot(document.getElementById('root'));
