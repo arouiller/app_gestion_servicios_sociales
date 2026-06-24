@@ -479,21 +479,19 @@ const TemplateEditor = ({ onBack }) => {
 
                 <div>
                   <label style={{ fontSize: '12px', fontWeight: 'bold', color: '#333', display: 'block', marginBottom: '6px' }}>
-                    Ancho de Columna (%)
+                    Ancho de Columna (mm)
                   </label>
                   <input
                     type="number"
                     min="10"
-                    max="100"
+                    max="200"
                     step="0.5"
-                    value={selectedCell.celda.ancho || 50}
+                    value={selectedCell.celda.ancho_mm || selectedCell.celda.ancho || 85}
                     onChange={(e) => {
                       const tabla = currentTemplate.bloques[0];
-                      const filaIndex = tabla.filas.findIndex(f => f.id === selectedCell.fila.id);
-                      const celdaIndex = tabla.filas[filaIndex].celdas.findIndex(c => c.id === selectedCell.celda.id);
                       const nuevaTabla = updateCeldaAncho(tabla, selectedCell.fila.id, selectedCell.celda.id, Number(e.target.value));
                       updateTemplate({ bloques: [nuevaTabla] });
-                      setSelectedCell({ ...selectedCell, celda: { ...selectedCell.celda, ancho: Number(e.target.value) } });
+                      setSelectedCell({ ...selectedCell, celda: { ...selectedCell.celda, ancho_mm: Number(e.target.value) } });
                     }}
                     style={{
                       width: '100%',
@@ -557,7 +555,7 @@ const TemplateEditor = ({ onBack }) => {
               updateTemplate({ bloques: [nuevaTabla] });
               setContextMenu(null);
             }}
-            style={{ display: 'block', width: '100%', textAlign: 'left', padding: '8px 12px', border: 'none', backgroundColor: 'transparent', cursor: 'pointer', fontSize: '12px' }}
+            style={{ display: 'block', width: '100%', textAlign: 'left', padding: '8px 12px', border: 'none', backgroundColor: 'transparent', cursor: 'pointer', fontSize: '12px', color: '#333' }}
           >
             Agregar fila arriba
           </button>
@@ -568,7 +566,7 @@ const TemplateEditor = ({ onBack }) => {
               updateTemplate({ bloques: [nuevaTabla] });
               setContextMenu(null);
             }}
-            style={{ display: 'block', width: '100%', textAlign: 'left', padding: '8px 12px', border: 'none', backgroundColor: 'transparent', cursor: 'pointer', fontSize: '12px' }}
+            style={{ display: 'block', width: '100%', textAlign: 'left', padding: '8px 12px', border: 'none', backgroundColor: 'transparent', cursor: 'pointer', fontSize: '12px', color: '#333' }}
           >
             Agregar fila abajo
           </button>
@@ -580,7 +578,7 @@ const TemplateEditor = ({ onBack }) => {
               updateTemplate({ bloques: [nuevaTabla] });
               setContextMenu(null);
             }}
-            style={{ display: 'block', width: '100%', textAlign: 'left', padding: '8px 12px', border: 'none', backgroundColor: 'transparent', cursor: 'pointer', fontSize: '12px' }}
+            style={{ display: 'block', width: '100%', textAlign: 'left', padding: '8px 12px', border: 'none', backgroundColor: 'transparent', cursor: 'pointer', fontSize: '12px', color: '#333' }}
           >
             Agregar columna antes
           </button>
@@ -591,7 +589,7 @@ const TemplateEditor = ({ onBack }) => {
               updateTemplate({ bloques: [nuevaTabla] });
               setContextMenu(null);
             }}
-            style={{ display: 'block', width: '100%', textAlign: 'left', padding: '8px 12px', border: 'none', backgroundColor: 'transparent', cursor: 'pointer', fontSize: '12px' }}
+            style={{ display: 'block', width: '100%', textAlign: 'left', padding: '8px 12px', border: 'none', backgroundColor: 'transparent', cursor: 'pointer', fontSize: '12px', color: '#333' }}
           >
             Agregar columna después
           </button>

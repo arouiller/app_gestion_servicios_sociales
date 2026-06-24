@@ -6,29 +6,30 @@ import '../RecibosTemplatesPage.scss';
 
 const initTabla = () => ({
   type: 'tabla',
+  anchoTotal_mm: 170, // Ancho total en mm
   filas: [
     {
       id: uuidv4(),
       altura: 15,
       celdas: [
-        { id: uuidv4(), contenido: '', ancho: 40 },
-        { id: uuidv4(), contenido: '', ancho: 60 }
+        { id: uuidv4(), contenido: '', ancho_mm: 85 },
+        { id: uuidv4(), contenido: '', ancho_mm: 85 }
       ]
     },
     {
       id: uuidv4(),
       altura: 15,
       celdas: [
-        { id: uuidv4(), contenido: '', ancho: 40 },
-        { id: uuidv4(), contenido: '', ancho: 60 }
+        { id: uuidv4(), contenido: '', ancho_mm: 85 },
+        { id: uuidv4(), contenido: '', ancho_mm: 85 }
       ]
     },
     {
       id: uuidv4(),
       altura: 15,
       celdas: [
-        { id: uuidv4(), contenido: '', ancho: 40 },
-        { id: uuidv4(), contenido: '', ancho: 60 }
+        { id: uuidv4(), contenido: '', ancho_mm: 85 },
+        { id: uuidv4(), contenido: '', ancho_mm: 85 }
       ]
     }
   ],
@@ -42,7 +43,7 @@ const addFila = (tabla, atIndex = -1) => {
   const nuevaCeldas = ultimaFila.celdas.map(celda => ({
     id: uuidv4(),
     contenido: '',
-    ancho: celda.ancho
+    ancho_mm: celda.ancho_mm || celda.ancho
   }));
   const nuevaFila = {
     id: uuidv4(),
@@ -78,16 +79,17 @@ const deleteFila = (tabla, rowId) => {
 const addColumna = (tabla, atIndex = -1) => {
   if (!tabla) return tabla;
   const numCols = tabla.filas[0]?.celdas.length || 1;
-  const anchoEquitativo = Math.round(100 / (numCols + 1));
+  const anchoTotal = tabla.anchoTotal_mm || 170;
+  const anchoEquitativo = Math.round(anchoTotal / (numCols + 1) * 10) / 10;
 
   return {
     ...tabla,
     filas: tabla.filas.map(fila => {
       const newCeldas = fila.celdas.map(celda => ({
         ...celda,
-        ancho: celda.ancho * numCols / (numCols + 1)
+        ancho_mm: (celda.ancho_mm || celda.ancho) * numCols / (numCols + 1)
       }));
-      const nuevaCelda = { id: uuidv4(), contenido: '', ancho: anchoEquitativo };
+      const nuevaCelda = { id: uuidv4(), contenido: '', ancho_mm: anchoEquitativo };
 
       if (atIndex >= 0 && atIndex <= newCeldas.length) {
         return {
@@ -151,26 +153,24 @@ const updateFilaAltura = (tabla, rowId, altura) => {
   };
 };
 
-const updateCeldaAncho = (tabla, rowId, cellId, nuevoAncho) => {
+const updateCeldaAncho = (tabla, rowId, cellId, nuevoAncho_mm) => {
   return {
     ...tabla,
     filas: tabla.filas.map(fila => {
       if (fila.id === rowId) {
-        // Encontrar índice de la celda siendo resizeada
         const celdaIdx = fila.celdas.findIndex(c => c.id === cellId);
         if (celdaIdx === -1) return fila;
 
-        const oldAncho = fila.celdas[celdaIdx].ancho;
-        const anchoDiff = nuevoAncho - oldAncho;
+        const oldAncho = fila.celdas[celdaIdx].ancho_mm || fila.celdas[celdaIdx].ancho;
+        const anchoDiff = nuevoAncho_mm - oldAncho;
 
-        // Ajustar la siguiente celda para mantener suma = 100
         const newCeldas = [...fila.celdas];
-        newCeldas[celdaIdx] = { ...newCeldas[celdaIdx], ancho: Math.max(10, nuevoAncho) };
+        newCeldas[celdaIdx] = { ...newCeldas[celdaIdx], ancho_mm: Math.max(10, nuevoAncho_mm) };
 
-        // Si hay siguiente celda, restarle el cambio
+        // Si hay siguiente celda, restarle el cambio (mantener ancho total fijo)
         if (celdaIdx + 1 < newCeldas.length) {
           const siguienteCelda = newCeldas[celdaIdx + 1];
-          newCeldas[celdaIdx + 1] = { ...siguienteCelda, ancho: Math.max(10, siguienteCelda.ancho - anchoDiff) };
+          newCeldas[celdaIdx + 1] = { ...siguienteCelda, ancho_mm: Math.max(10, (siguienteCelda.ancho_mm || siguienteCelda.ancho) - anchoDiff) };
         }
 
         return { ...fila, celdas: newCeldas };

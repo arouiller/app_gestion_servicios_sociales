@@ -128,6 +128,7 @@ const TablePreviewRecibo = ({ tabla, recibo, pageConfig, personData, onCellDoubl
           <tbody>
             {tabla.filas.map((fila, filaIdx) => {
               const altura = fila.altura || 15;
+              const anchoTotal = tabla.anchoTotal_mm || 170;
               return (
                 <tr key={`row-${fila.id}`} style={{ height: `${altura}mm` }}>
                   {fila.celdas.map((celda) => {
@@ -135,11 +136,13 @@ const TablePreviewRecibo = ({ tabla, recibo, pageConfig, personData, onCellDoubl
                     if (personData) {
                       contenido = replacePlaceholders(contenido, personData);
                     }
+                    const anchoMM = celda.ancho_mm || celda.ancho;
+                    const anchoPorcentaje = (anchoMM / anchoTotal) * 100;
                     return (
                       <td
                         key={`cell-${celda.id}`}
                         style={{
-                          width: `${celda.ancho}%`,
+                          width: `${anchoPorcentaje}%`,
                           padding: '4px',
                           border: tabla.bordeTabla ? '1px solid #000' : 'none',
                           verticalAlign: 'top',
