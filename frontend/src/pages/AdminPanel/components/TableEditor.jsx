@@ -194,34 +194,21 @@ const updateFilaAltura = (tabla, rowId, altura) => {
 };
 
 const updateCeldaAncho = (tabla, rowId, cellId, nuevoAncho_mm) => {
-  console.log('[updateCeldaAncho] rowId:', rowId, 'cellId:', cellId, 'nuevoAncho:', nuevoAncho_mm);
-  console.log('[updateCeldaAncho] tabla.filas:', tabla.filas.map(f => ({ id: f.id, celdas: f.celdas.length })));
-
   const filaConCelda = tabla.filas.find(f => f.id === rowId);
-  if (!filaConCelda) {
-    console.log('[updateCeldaAncho] ERROR: No se encontró fila con rowId', rowId);
-    return tabla;
-  }
+  if (!filaConCelda) return tabla;
 
   const celdaIdx = filaConCelda.celdas.findIndex(c => c.id === cellId);
-  if (celdaIdx === -1) {
-    console.log('[updateCeldaAncho] ERROR: No se encontró celda con cellId', cellId);
-    return tabla;
-  }
+  if (celdaIdx === -1) return tabla;
 
   const oldAncho = filaConCelda.celdas[celdaIdx].ancho_mm || filaConCelda.celdas[celdaIdx].ancho;
   const anchoDiff = nuevoAncho_mm - oldAncho;
   const numCeldasEnFila = filaConCelda.celdas.length;
   const anchoTotal = tabla.anchoTotal_mm || 170;
 
-  console.log('[updateCeldaAncho] oldAncho:', oldAncho, 'anchoDiff:', anchoDiff, 'celdaIdx:', celdaIdx);
-
   // Cascada a nivel de fila: si cambias una celda, la última (o penúltima si cambias última) absorbe
   return {
     ...tabla,
     filas: tabla.filas.map(fila => {
-      console.log('[updateCeldaAncho] procesando fila:', fila.id, 'rowId:', rowId, 'coincide:', fila.id === rowId);
-
       // IMPORTANTE: siempre crear un nuevo array de celdas (no compartir referencias)
       if (fila.id !== rowId) {
         return {

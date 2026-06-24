@@ -107,6 +107,7 @@ const TablePreviewRecibo = ({ tabla, recibo, pageConfig, personData, onCellDoubl
                             const anchoMM = celda.ancho_mm || celda.ancho;
                             const anchoPorcentaje = (anchoMM / anchoTotal) * 100;
                             const isSelected = selectedCellId === celda.id;
+                            console.log(`[TablePreview] Fila ${filaIdx}, Celda: ancho_mm=${celda.ancho_mm}, anchoPorcentaje=${anchoPorcentaje.toFixed(2)}%`);
 
                             return (
                               <td
