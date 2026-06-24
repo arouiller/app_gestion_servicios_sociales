@@ -193,6 +193,49 @@ const updateFilaAltura = (tabla, rowId, altura) => {
   return { ...tabla, filas: newFilas };
 };
 
+const updateAltoTotal = (tabla, nuevoAltoTotal_mm) => {
+  if (!tabla || tabla.filas.length === 0) return tabla;
+
+  const altoActual = tabla.filas.reduce((sum, fila) => sum + (fila.altura || 15), 0);
+  const alturaDiff = nuevoAltoTotal_mm - altoActual;
+
+  // Ajustar la última fila
+  return {
+    ...tabla,
+    altoTotal_mm: nuevoAltoTotal_mm,
+    filas: tabla.filas.map((fila, idx) => {
+      if (idx === tabla.filas.length - 1) {
+        return { ...fila, altura: Math.max(5, (fila.altura || 15) + alturaDiff) };
+      }
+      return fila;
+    })
+  };
+};
+
+const updateAnchoTotal = (tabla, nuevoAnchoTotal_mm) => {
+  if (!tabla || tabla.filas.length === 0) return tabla;
+
+  const anchoActual = tabla.filas[0].celdas.reduce((sum, celda) => sum + (celda.ancho_mm || celda.ancho || 10), 0);
+  const anchoDiff = nuevoAnchoTotal_mm - anchoActual;
+
+  // Ajustar la última celda de cada fila
+  return {
+    ...tabla,
+    anchoTotal_mm: nuevoAnchoTotal_mm,
+    filas: tabla.filas.map(fila => {
+      const newCeldas = fila.celdas.map(c => ({ ...c }));
+      if (newCeldas.length > 0) {
+        const lastIdx = newCeldas.length - 1;
+        newCeldas[lastIdx] = {
+          ...newCeldas[lastIdx],
+          ancho_mm: Math.max(10, (newCeldas[lastIdx].ancho_mm || newCeldas[lastIdx].ancho || 10) + anchoDiff)
+        };
+      }
+      return { ...fila, celdas: newCeldas };
+    })
+  };
+};
+
 const updateCeldaAncho = (tabla, rowId, cellId, nuevoAncho_mm) => {
   const filaConCelda = tabla.filas.find(f => f.id === rowId);
   if (!filaConCelda) return tabla;
@@ -461,4 +504,4 @@ const TableEditor = ({ placeholders = {} }) => {
 };
 
 export default TableEditor;
-export { initTabla, addFila, deleteFila, addCelda, deleteCelda, updateCelda, updateFilaAltura, updateCeldaAncho };
+export { initTabla, addFila, deleteFila, addCelda, deleteCelda, updateCelda, updateFilaAltura, updateCeldaAncho, updateAltoTotal, updateAnchoTotal };

@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import useTemplateStore from '../../../hooks/useTemplateStore';
-import { updateFilaAltura, updateCeldaAncho } from './TableEditor'; // addCelda/deleteCelda no se usan aquí
+import { updateFilaAltura, updateCeldaAncho, updateAltoTotal, updateAnchoTotal } from './TableEditor';
 
 const TemplateConfigPanel = ({ selectedCell, placeholders = {} }) => {
   const currentTemplate = useTemplateStore((state) => state.currentTemplate);
@@ -270,7 +270,7 @@ const TemplateConfigPanel = ({ selectedCell, placeholders = {} }) => {
                 value={currentTemplate.bloques?.[0]?.anchoTotal_mm || 170}
                 onChange={(e) => {
                   const tabla = currentTemplate.bloques[0];
-                  const nuevaTabla = { ...tabla, anchoTotal_mm: Number(e.target.value) };
+                  const nuevaTabla = updateAnchoTotal(tabla, Number(e.target.value));
                   updateTemplate({ bloques: [nuevaTabla] });
                 }}
                 style={{
@@ -296,7 +296,7 @@ const TemplateConfigPanel = ({ selectedCell, placeholders = {} }) => {
                 value={currentTemplate.bloques?.[0]?.altoTotal_mm || 100}
                 onChange={(e) => {
                   const tabla = currentTemplate.bloques[0];
-                  const nuevaTabla = { ...tabla, altoTotal_mm: Number(e.target.value) };
+                  const nuevaTabla = updateAltoTotal(tabla, Number(e.target.value));
                   updateTemplate({ bloques: [nuevaTabla] });
                 }}
                 style={{
