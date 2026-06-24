@@ -55,8 +55,8 @@ const CellEditorModal = ({ celda, placeholders = {}, onSave, onClose }) => {
       <div
         ref={modalRef}
         style={{
-          width: '50%',
-          height: '50vh',
+          width: '75%',
+          height: '75vh',
           backgroundColor: 'white',
           borderRadius: '8px',
           display: 'flex',
@@ -95,6 +95,7 @@ const CellEditorModal = ({ celda, placeholders = {}, onSave, onClose }) => {
               modules={{
                 toolbar: [
                   ['bold', 'italic', 'underline', 'strike'],
+                  [{ 'size': ['small', false, 'large', 'huge'] }],
                   ['blockquote', 'code-block'],
                   [{ 'header': 1 }, { 'header': 2 }],
                   [{ 'list': 'ordered' }, { 'list': 'bullet' }],
@@ -113,18 +114,18 @@ const CellEditorModal = ({ celda, placeholders = {}, onSave, onClose }) => {
           {/* Panel de placeholders */}
           <div
             style={{
-              width: '250px',
-              backgroundColor: '#f5f5f5',
+              width: '280px',
+              backgroundColor: '#fff9e6',
               borderRadius: '4px',
               padding: '12px',
               display: 'flex',
               flexDirection: 'column',
               overflow: 'hidden',
-              borderLeft: '1px solid #ddd'
+              borderLeft: '3px solid #ffd700'
             }}
           >
-            <label style={{ fontSize: '12px', fontWeight: 'bold', marginBottom: '8px', color: '#666' }}>
-              Placeholders
+            <label style={{ fontSize: '12px', fontWeight: 'bold', marginBottom: '8px', color: '#333' }}>
+              📋 Placeholders
             </label>
             <input
               type="text"
@@ -136,7 +137,8 @@ const CellEditorModal = ({ celda, placeholders = {}, onSave, onClose }) => {
                 padding: '6px 8px',
                 border: '1px solid #ddd',
                 borderRadius: '3px',
-                marginBottom: '8px'
+                marginBottom: '8px',
+                backgroundColor: '#fff'
               }}
             />
 
@@ -144,7 +146,7 @@ const CellEditorModal = ({ celda, placeholders = {}, onSave, onClose }) => {
               {Object.entries(filteredPlaceholders).length > 0 ? (
                 Object.entries(filteredPlaceholders).map(([category, items]) => (
                   <div key={category} style={{ marginBottom: '12px' }}>
-                    <div style={{ fontSize: '10px', fontWeight: 'bold', color: '#666', marginBottom: '4px' }}>
+                    <div style={{ fontSize: '10px', fontWeight: 'bold', color: '#333', marginBottom: '4px', textTransform: 'uppercase' }}>
                       {category}
                     </div>
                     {items.map((placeholder) => (
@@ -158,20 +160,25 @@ const CellEditorModal = ({ celda, placeholders = {}, onSave, onClose }) => {
                           fontSize: '10px',
                           padding: '6px 8px',
                           marginBottom: '2px',
-                          border: '1px solid #e0e0e0',
+                          border: '1px solid #ddd',
                           borderRadius: '3px',
                           backgroundColor: '#fff',
+                          color: '#333',
                           cursor: 'pointer',
                           transition: 'all 0.2s',
                           fontFamily: 'monospace'
                         }}
                         onMouseEnter={(e) => {
-                          e.target.style.backgroundColor = '#e8f4f8';
-                          e.target.style.borderColor = '#4dabf7';
+                          e.target.style.backgroundColor = '#ffd700';
+                          e.target.style.borderColor = '#ff9800';
+                          e.target.style.color = '#000';
+                          e.target.style.fontWeight = 'bold';
                         }}
                         onMouseLeave={(e) => {
                           e.target.style.backgroundColor = '#fff';
-                          e.target.style.borderColor = '#e0e0e0';
+                          e.target.style.borderColor = '#ddd';
+                          e.target.style.color = '#333';
+                          e.target.style.fontWeight = 'normal';
                         }}
                       >
                         {placeholder}

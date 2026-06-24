@@ -8,8 +8,9 @@ import useTemplateStore from '../../../hooks/useTemplateStore';
 import { replacePlaceholders } from '../../../utils/placeholderReplacer';
 import PageGuides, { calculateRecibosPositions } from './PageGuides';
 import BloquePageConfig from './BlockEditor/BloquePageConfig';
-import TableEditor from './TableEditor';
+import TableEditor, { updateCelda } from './TableEditor';
 import TablePreview from './TablePreview';
+import CellEditorModal from './CellEditorModal';
 import { HorizontalRuler, VerticalRuler, RULER_WIDTH, MM_TO_PX } from './Ruler';
 import '../RecibosTemplatesPage.scss';
 
@@ -249,6 +250,8 @@ const TemplateEditor = ({ onBack }) => {
    * Mapea datos del plan + titular a una estructura compatible con placeholderReplacer
    * Combina datos del plan (cuota, obra social, zona) con datos del titular (nombre, documento)
    */
+  const [editingCell, setEditingCell] = useState(null);
+
   const handleRulerOffsetChange = (axis, newOffset) => {
     if (!pageConfigObj) return;
 
@@ -259,6 +262,10 @@ const TemplateEditor = ({ onBack }) => {
     };
 
     updateTemplate({ bloque_pageconfig: updatedConfig });
+  };
+
+  const handleCanvasCellDoubleClick = (fila, celda) => {
+    setEditingCell({ fila, celda });
   };
 
   const mapPlanToPersonData = (planData) => {
@@ -397,6 +404,7 @@ const TemplateEditor = ({ onBack }) => {
                     reciboPositions={reciboPositions}
                     pageConfig={pageConfigObj}
                     personData={mapPlanToPersonData(selectedPlanData)}
+                    onCellDoubleClick={handleCanvasCellDoubleClick}
                   />
                 </div>
               </div>
@@ -418,6 +426,26 @@ const TemplateEditor = ({ onBack }) => {
           </div>
         </div>
       </div>
+
+      {/* Modal de edición desde canvas */}
+      {editingCell && (
+        <CellEditorModal
+          celda={editingCell.celda}
+          placeholders={placeholders}
+          onSave={(nuevoContenido) => {
+            const nuevaTabla = updateCelda(
+              currentTemplate.bloques[0],
+              editingCell.fila.id,
+              editingCell.celda.id,
+              'contenido',
+              nuevoContenido
+            );
+            updateTemplate({ bloques: [nuevaTabla] });
+            setEditingCell(null);
+          }}
+          onClose={() => setEditingCell(null)}
+        />
+      )}
 
       {/* Footer */}
       <div className="editor-footer">

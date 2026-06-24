@@ -30,7 +30,7 @@ ${filasHTML}
 </table>`;
 };
 
-const TablePreviewRecibo = ({ tabla, recibo, pageConfig, personData }) => {
+const TablePreviewRecibo = ({ tabla, recibo, pageConfig, personData, onCellDoubleClick }) => {
   const updateTemplate = useTemplateStore((state) => state.updateTemplate);
   const [resizingFila, setResizingFila] = useState(null);
   const [resizingCelda, setResizingCelda] = useState(null);
@@ -78,28 +78,6 @@ const TablePreviewRecibo = ({ tabla, recibo, pageConfig, personData }) => {
     };
   }, [resizingFila, resizingCelda, startPos, tabla, updateTemplate, recibo.width]);
 
-  const filasHTML = tabla.filas
-    .map((fila, filaIdx) => {
-      const altura = fila.altura || 15;
-      const celdasHTML = fila.celdas
-        .map((celda) => {
-          let contenido = celda.contenido || '';
-          if (personData) {
-            contenido = replacePlaceholders(contenido, personData);
-          }
-          return `<td style="width: ${celda.ancho}%; padding: 4px; border: ${tabla.bordeTabla ? '1px solid #000' : 'none'}; vertical-align: top; font-size: inherit; position: relative;">${contenido}</td>`;
-        })
-        .join('');
-      return `<tr style="height: ${altura}mm;">${celdasHTML}</tr>`;
-    })
-    .join('');
-
-  const tableHTML = `<table style="width: 100%; border-collapse: collapse; font-size: ${tabla.tamanoFuente || 11}px; font-family: Arial, sans-serif; table-layout: fixed;">
-<tbody>
-${filasHTML}
-</tbody>
-</table>`;
-
   // Usar tabla_ancho_mm y tabla_alto_mm del pageConfig si están disponibles
   const tablaAncho = pageConfig?.tabla_ancho_mm;
   const tablaAlto = pageConfig?.tabla_alto_mm;
@@ -137,15 +115,60 @@ ${filasHTML}
           boxSizing: 'border-box'
         }}
       >
-        <div
+        <table
           style={{
             width: '100%',
-            height: '100%',
-            fontSize: '11px',
-            lineHeight: '1.2'
+            borderCollapse: 'collapse',
+            fontSize: `${tabla.tamanoFuente || 11}px`,
+            fontFamily: 'Arial, sans-serif',
+            tableLayout: 'fixed',
+            height: '100%'
           }}
-          dangerouslySetInnerHTML={{ __html: tableHTML }}
-        />
+        >
+          <tbody>
+            {tabla.filas.map((fila, filaIdx) => {
+              const altura = fila.altura || 15;
+              return (
+                <tr key={`row-${fila.id}`} style={{ height: `${altura}mm` }}>
+                  {fila.celdas.map((celda) => {
+                    let contenido = celda.contenido || '';
+                    if (personData) {
+                      contenido = replacePlaceholders(contenido, personData);
+                    }
+                    return (
+                      <td
+                        key={`cell-${celda.id}`}
+                        style={{
+                          width: `${celda.ancho}%`,
+                          padding: '4px',
+                          border: tabla.bordeTabla ? '1px solid #000' : 'none',
+                          verticalAlign: 'top',
+                          fontSize: 'inherit',
+                          position: 'relative',
+                          whiteSpace: 'nowrap',
+                          overflow: 'hidden',
+                          textOverflow: 'ellipsis',
+                          cursor: 'pointer'
+                        }}
+                        onDoubleClick={() => {
+                          if (onCellDoubleClick && recibo.number === 1) {
+                            onCellDoubleClick(fila, celda);
+                          }
+                        }}
+                      >
+                        {contenido ? (
+                          <div dangerouslySetInnerHTML={{ __html: contenido }} />
+                        ) : (
+                          <em style={{ color: '#ccc' }}>vacío</em>
+                        )}
+                      </td>
+                    );
+                  })}
+                </tr>
+              );
+            })}
+          </tbody>
+        </table>
       </div>
 
       {/* Handles de resize FUERA del overflow: hidden */}
@@ -218,7 +241,7 @@ ${filasHTML}
   );
 };
 
-const TablePreview = ({ tabla, reciboPositions, pageConfig, personData }) => {
+const TablePreview = ({ tabla, reciboPositions, pageConfig, personData, onCellDoubleClick }) => {
   if (!tabla || tabla.type !== 'tabla' || !reciboPositions || !reciboPositions.recibos) {
     return null;
   }
@@ -232,6 +255,7 @@ const TablePreview = ({ tabla, reciboPositions, pageConfig, personData }) => {
           recibo={recibo}
           pageConfig={pageConfig}
           personData={personData}
+          onCellDoubleClick={onCellDoubleClick}
         />
       ))}
     </>
