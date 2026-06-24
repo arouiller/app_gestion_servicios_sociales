@@ -249,6 +249,18 @@ const TemplateEditor = ({ onBack }) => {
    * Mapea datos del plan + titular a una estructura compatible con placeholderReplacer
    * Combina datos del plan (cuota, obra social, zona) con datos del titular (nombre, documento)
    */
+  const handleRulerOffsetChange = (axis, newOffset) => {
+    if (!pageConfigObj) return;
+
+    const field = axis === 'horizontal' ? 'ruler_offset_horizontal_mm' : 'ruler_offset_vertical_mm';
+    const updatedConfig = {
+      ...pageConfigObj,
+      [field]: Math.round(newOffset * 100) / 100 // Redondear a 2 decimales
+    };
+
+    updateTemplate({ bloque_pageconfig: updatedConfig });
+  };
+
   const mapPlanToPersonData = (planData) => {
     if (!planData) return null;
 
@@ -348,6 +360,7 @@ const TemplateEditor = ({ onBack }) => {
               <HorizontalRuler
                 width={pageDimensions.width * MM_TO_PX}
                 offsetMM={pageConfigObj?.ruler_offset_horizontal_mm || 0}
+                onOffsetChange={(newOffset) => handleRulerOffsetChange('horizontal', newOffset)}
               />
             </div>
           </div>
@@ -359,6 +372,7 @@ const TemplateEditor = ({ onBack }) => {
               <VerticalRuler
                 height={pageDimensions.height * MM_TO_PX}
                 offsetMM={pageConfigObj?.ruler_offset_vertical_mm || 0}
+                onOffsetChange={(newOffset) => handleRulerOffsetChange('vertical', newOffset)}
               />
             </div>
 

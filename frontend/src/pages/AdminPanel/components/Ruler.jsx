@@ -1,10 +1,50 @@
-import React from 'react';
+import React, { useState, useRef } from 'react';
 import '../RecibosTemplatesPage.scss';
 
 const MM_TO_PX = 3.7795;
 const RULER_WIDTH = 40; // px
 
-const HorizontalRuler = ({ width, offsetMM = 0 }) => {
+const HorizontalRuler = ({ width, offsetMM = 0, onOffsetChange }) => {
+  const [isDragging, setIsDragging] = useState(false);
+  const [dragStart, setDragStart] = useState(null);
+  const rulerRef = useRef(null);
+
+  const handleMouseDown = (e) => {
+    setIsDragging(true);
+    setDragStart(e.clientX);
+  };
+
+  React.useEffect(() => {
+    const handleMouseMove = (e) => {
+      if (!isDragging || dragStart === null) return;
+
+      const delta = e.clientX - dragStart;
+      const deltaMM = delta / MM_TO_PX;
+      const newOffset = offsetMM + deltaMM;
+
+      if (onOffsetChange) {
+        onOffsetChange(newOffset);
+      }
+
+      setDragStart(e.clientX);
+    };
+
+    const handleMouseUp = () => {
+      setIsDragging(false);
+      setDragStart(null);
+    };
+
+    if (isDragging) {
+      document.addEventListener('mousemove', handleMouseMove);
+      document.addEventListener('mouseup', handleMouseUp);
+    }
+
+    return () => {
+      document.removeEventListener('mousemove', handleMouseMove);
+      document.removeEventListener('mouseup', handleMouseUp);
+    };
+  }, [isDragging, dragStart, offsetMM, onOffsetChange]);
+
   const totalMM = width / MM_TO_PX + Math.abs(offsetMM);
   const marks = [];
   const offsetPX = offsetMM * MM_TO_PX;
@@ -55,13 +95,68 @@ const HorizontalRuler = ({ width, offsetMM = 0 }) => {
   }
 
   return (
-    <div className="ruler ruler-horizontal" style={{ width: `${width}px`, height: `${RULER_WIDTH}px`, margin: 0, padding: 0 }}>
+    <div
+      ref={rulerRef}
+      className="ruler ruler-horizontal"
+      onMouseDown={handleMouseDown}
+      style={{
+        width: `${width}px`,
+        height: `${RULER_WIDTH}px`,
+        margin: 0,
+        padding: 0,
+        cursor: isDragging ? 'grabbing' : 'grab',
+        userSelect: 'none',
+        opacity: isDragging ? 0.8 : 1,
+        transition: isDragging ? 'none' : 'opacity 0.2s'
+      }}
+      title="Arrastra para desplazar el offset horizontal"
+    >
       {marks}
     </div>
   );
 };
 
-const VerticalRuler = ({ height, offsetMM = 0 }) => {
+const VerticalRuler = ({ height, offsetMM = 0, onOffsetChange }) => {
+  const [isDragging, setIsDragging] = useState(false);
+  const [dragStart, setDragStart] = useState(null);
+  const rulerRef = useRef(null);
+
+  const handleMouseDown = (e) => {
+    setIsDragging(true);
+    setDragStart(e.clientY);
+  };
+
+  React.useEffect(() => {
+    const handleMouseMove = (e) => {
+      if (!isDragging || dragStart === null) return;
+
+      const delta = e.clientY - dragStart;
+      const deltaMM = delta / MM_TO_PX;
+      const newOffset = offsetMM + deltaMM;
+
+      if (onOffsetChange) {
+        onOffsetChange(newOffset);
+      }
+
+      setDragStart(e.clientY);
+    };
+
+    const handleMouseUp = () => {
+      setIsDragging(false);
+      setDragStart(null);
+    };
+
+    if (isDragging) {
+      document.addEventListener('mousemove', handleMouseMove);
+      document.addEventListener('mouseup', handleMouseUp);
+    }
+
+    return () => {
+      document.removeEventListener('mousemove', handleMouseMove);
+      document.removeEventListener('mouseup', handleMouseUp);
+    };
+  }, [isDragging, dragStart, offsetMM, onOffsetChange]);
+
   const totalMM = height / MM_TO_PX + Math.abs(offsetMM);
   const marks = [];
   const offsetPX = offsetMM * MM_TO_PX;
@@ -113,7 +208,22 @@ const VerticalRuler = ({ height, offsetMM = 0 }) => {
   }
 
   return (
-    <div className="ruler ruler-vertical" style={{ width: `${RULER_WIDTH}px`, height: `${height}px`, margin: 0, padding: 0 }}>
+    <div
+      ref={rulerRef}
+      className="ruler ruler-vertical"
+      onMouseDown={handleMouseDown}
+      style={{
+        width: `${RULER_WIDTH}px`,
+        height: `${height}px`,
+        margin: 0,
+        padding: 0,
+        cursor: isDragging ? 'grabbing' : 'grab',
+        userSelect: 'none',
+        opacity: isDragging ? 0.8 : 1,
+        transition: isDragging ? 'none' : 'opacity 0.2s'
+      }}
+      title="Arrastra para desplazar el offset vertical"
+    >
       {marks}
     </div>
   );
