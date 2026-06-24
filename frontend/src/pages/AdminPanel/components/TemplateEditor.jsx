@@ -272,6 +272,9 @@ const TemplateEditor = ({ onBack }) => {
   };
 
   const handleCanvasCellClick = (fila, celda) => {
+    console.log('[handleCanvasCellClick] fila:', fila);
+    console.log('[handleCanvasCellClick] fila.id:', fila.id);
+    console.log('[handleCanvasCellClick] celda:', celda);
     setSelectedCell({ fila, celda });
   };
 
