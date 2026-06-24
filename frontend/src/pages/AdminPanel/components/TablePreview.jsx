@@ -30,7 +30,7 @@ ${filasHTML}
 </table>`;
 };
 
-const TablePreviewRecibo = ({ tabla, recibo, pageConfig, personData, onCellDoubleClick }) => {
+const TablePreviewRecibo = ({ tabla, recibo, pageConfig, personData, onCellDoubleClick, onCellClick, onContextMenu }) => {
   const updateTemplate = useTemplateStore((state) => state.updateTemplate);
   const [resizingFila, setResizingFila] = useState(null);
   const [resizingCelda, setResizingCelda] = useState(null);
@@ -155,6 +155,17 @@ const TablePreviewRecibo = ({ tabla, recibo, pageConfig, personData, onCellDoubl
                             onCellDoubleClick(fila, celda);
                           }
                         }}
+                        onClick={() => {
+                          if (onCellClick && recibo.number === 1) {
+                            onCellClick(fila, celda);
+                          }
+                        }}
+                        onContextMenu={(e) => {
+                          e.preventDefault();
+                          if (onContextMenu && recibo.number === 1) {
+                            onContextMenu(e, fila, celda);
+                          }
+                        }}
                       >
                         {contenido ? (
                           <div dangerouslySetInnerHTML={{ __html: contenido }} />
@@ -241,7 +252,7 @@ const TablePreviewRecibo = ({ tabla, recibo, pageConfig, personData, onCellDoubl
   );
 };
 
-const TablePreview = ({ tabla, reciboPositions, pageConfig, personData, onCellDoubleClick }) => {
+const TablePreview = ({ tabla, reciboPositions, pageConfig, personData, onCellDoubleClick, onCellClick, onContextMenu }) => {
   if (!tabla || tabla.type !== 'tabla' || !reciboPositions || !reciboPositions.recibos) {
     return null;
   }
@@ -256,6 +267,8 @@ const TablePreview = ({ tabla, reciboPositions, pageConfig, personData, onCellDo
           pageConfig={pageConfig}
           personData={personData}
           onCellDoubleClick={onCellDoubleClick}
+          onCellClick={onCellClick}
+          onContextMenu={onContextMenu}
         />
       ))}
     </>

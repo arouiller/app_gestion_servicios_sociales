@@ -8,7 +8,7 @@ import useTemplateStore from '../../../hooks/useTemplateStore';
 import { replacePlaceholders } from '../../../utils/placeholderReplacer';
 import PageGuides, { calculateRecibosPositions } from './PageGuides';
 import BloquePageConfig from './BlockEditor/BloquePageConfig';
-import TableEditor, { updateCelda } from './TableEditor';
+import TableEditor, { updateCelda, addFila, addColumna, deleteFila, deleteColumna, updateFilaAltura, updateCeldaAncho } from './TableEditor';
 import TablePreview from './TablePreview';
 import CellEditorModal from './CellEditorModal';
 import { HorizontalRuler, VerticalRuler, RULER_WIDTH, MM_TO_PX } from './Ruler';
@@ -251,6 +251,8 @@ const TemplateEditor = ({ onBack }) => {
    * Combina datos del plan (cuota, obra social, zona) con datos del titular (nombre, documento)
    */
   const [editingCell, setEditingCell] = useState(null);
+  const [selectedCell, setSelectedCell] = useState(null);
+  const [contextMenu, setContextMenu] = useState(null);
 
   const handleRulerOffsetChange = (axis, newOffset) => {
     if (!pageConfigObj) return;
@@ -267,6 +269,32 @@ const TemplateEditor = ({ onBack }) => {
   const handleCanvasCellDoubleClick = (fila, celda) => {
     setEditingCell({ fila, celda });
   };
+
+  const handleCanvasCellClick = (fila, celda) => {
+    setSelectedCell({ fila, celda });
+  };
+
+  const handleCanvasCellContextMenu = (e, fila, celda) => {
+    const tabla = currentTemplate.bloques?.[0];
+    const filaIndex = tabla.filas.findIndex(f => f.id === fila.id);
+    const celdaIndex = fila.celdas.findIndex(c => c.id === celda.id);
+
+    setContextMenu({
+      x: e.clientX,
+      y: e.clientY,
+      filaIndex,
+      celdaIndex,
+      fila,
+      celda
+    });
+  };
+
+  // Cerrar context menu al hacer click afuera
+  React.useEffect(() => {
+    const handleClick = () => setContextMenu(null);
+    document.addEventListener('click', handleClick);
+    return () => document.removeEventListener('click', handleClick);
+  }, []);
 
   const mapPlanToPersonData = (planData) => {
     if (!planData) return null;
@@ -405,6 +433,8 @@ const TemplateEditor = ({ onBack }) => {
                     pageConfig={pageConfigObj}
                     personData={mapPlanToPersonData(selectedPlanData)}
                     onCellDoubleClick={handleCanvasCellDoubleClick}
+                    onCellClick={handleCanvasCellClick}
+                    onContextMenu={handleCanvasCellContextMenu}
                   />
                 </div>
               </div>
@@ -416,7 +446,85 @@ const TemplateEditor = ({ onBack }) => {
         <div className="editor-properties">
           <h3>Configuración</h3>
           <div className="blocks-editor">
-            <TableEditor placeholders={placeholders} />
+            {selectedCell ? (
+              <div style={{ padding: '12px', backgroundColor: '#f0f8ff', borderRadius: '4px', marginBottom: '16px' }}>
+                <h4 style={{ margin: '0 0 12px 0', fontSize: '14px' }}>📐 Tamaño de Celda</h4>
+
+                <div style={{ marginBottom: '12px' }}>
+                  <label style={{ fontSize: '12px', fontWeight: 'bold', color: '#333', display: 'block', marginBottom: '6px' }}>
+                    Altura de Fila (mm)
+                  </label>
+                  <input
+                    type="number"
+                    min="5"
+                    max="100"
+                    step="0.5"
+                    value={selectedCell.fila.altura || 15}
+                    onChange={(e) => {
+                      const tabla = currentTemplate.bloques[0];
+                      const nuevaTabla = updateFilaAltura(tabla, selectedCell.fila.id, Number(e.target.value));
+                      updateTemplate({ bloques: [nuevaTabla] });
+                      setSelectedCell({ ...selectedCell, fila: { ...selectedCell.fila, altura: Number(e.target.value) } });
+                    }}
+                    style={{
+                      width: '100%',
+                      padding: '6px 8px',
+                      border: '1px solid #ddd',
+                      borderRadius: '4px',
+                      fontSize: '12px',
+                      boxSizing: 'border-box'
+                    }}
+                  />
+                </div>
+
+                <div>
+                  <label style={{ fontSize: '12px', fontWeight: 'bold', color: '#333', display: 'block', marginBottom: '6px' }}>
+                    Ancho de Columna (%)
+                  </label>
+                  <input
+                    type="number"
+                    min="10"
+                    max="100"
+                    step="0.5"
+                    value={selectedCell.celda.ancho || 50}
+                    onChange={(e) => {
+                      const tabla = currentTemplate.bloques[0];
+                      const filaIndex = tabla.filas.findIndex(f => f.id === selectedCell.fila.id);
+                      const celdaIndex = tabla.filas[filaIndex].celdas.findIndex(c => c.id === selectedCell.celda.id);
+                      const nuevaTabla = updateCeldaAncho(tabla, selectedCell.fila.id, selectedCell.celda.id, Number(e.target.value));
+                      updateTemplate({ bloques: [nuevaTabla] });
+                      setSelectedCell({ ...selectedCell, celda: { ...selectedCell.celda, ancho: Number(e.target.value) } });
+                    }}
+                    style={{
+                      width: '100%',
+                      padding: '6px 8px',
+                      border: '1px solid #ddd',
+                      borderRadius: '4px',
+                      fontSize: '12px',
+                      boxSizing: 'border-box'
+                    }}
+                  />
+                </div>
+
+                <button
+                  onClick={() => setSelectedCell(null)}
+                  style={{
+                    marginTop: '12px',
+                    padding: '6px 12px',
+                    backgroundColor: '#e0e0e0',
+                    border: 'none',
+                    borderRadius: '4px',
+                    cursor: 'pointer',
+                    fontSize: '12px',
+                    width: '100%'
+                  }}
+                >
+                  Cerrar
+                </button>
+              </div>
+            ) : (
+              <TableEditor placeholders={placeholders} />
+            )}
 
             <div className="pageconfig-section" style={{ marginTop: '20px' }}>
               <hr />
@@ -426,6 +534,92 @@ const TemplateEditor = ({ onBack }) => {
           </div>
         </div>
       </div>
+
+      {/* Context menu */}
+      {contextMenu && (
+        <div
+          style={{
+            position: 'fixed',
+            left: `${contextMenu.x}px`,
+            top: `${contextMenu.y}px`,
+            backgroundColor: 'white',
+            border: '1px solid #ddd',
+            borderRadius: '4px',
+            boxShadow: '0 2px 8px rgba(0,0,0,0.15)',
+            zIndex: 1001,
+            minWidth: '200px'
+          }}
+        >
+          <button
+            onClick={() => {
+              const tabla = currentTemplate.bloques[0];
+              const nuevaTabla = addFila(tabla, contextMenu.filaIndex);
+              updateTemplate({ bloques: [nuevaTabla] });
+              setContextMenu(null);
+            }}
+            style={{ display: 'block', width: '100%', textAlign: 'left', padding: '8px 12px', border: 'none', backgroundColor: 'transparent', cursor: 'pointer', fontSize: '12px' }}
+          >
+            Agregar fila arriba
+          </button>
+          <button
+            onClick={() => {
+              const tabla = currentTemplate.bloques[0];
+              const nuevaTabla = addFila(tabla, contextMenu.filaIndex + 1);
+              updateTemplate({ bloques: [nuevaTabla] });
+              setContextMenu(null);
+            }}
+            style={{ display: 'block', width: '100%', textAlign: 'left', padding: '8px 12px', border: 'none', backgroundColor: 'transparent', cursor: 'pointer', fontSize: '12px' }}
+          >
+            Agregar fila abajo
+          </button>
+          <div style={{ borderTop: '1px solid #eee', margin: '4px 0' }} />
+          <button
+            onClick={() => {
+              const tabla = currentTemplate.bloques[0];
+              const nuevaTabla = addColumna(tabla, contextMenu.celdaIndex);
+              updateTemplate({ bloques: [nuevaTabla] });
+              setContextMenu(null);
+            }}
+            style={{ display: 'block', width: '100%', textAlign: 'left', padding: '8px 12px', border: 'none', backgroundColor: 'transparent', cursor: 'pointer', fontSize: '12px' }}
+          >
+            Agregar columna antes
+          </button>
+          <button
+            onClick={() => {
+              const tabla = currentTemplate.bloques[0];
+              const nuevaTabla = addColumna(tabla, contextMenu.celdaIndex + 1);
+              updateTemplate({ bloques: [nuevaTabla] });
+              setContextMenu(null);
+            }}
+            style={{ display: 'block', width: '100%', textAlign: 'left', padding: '8px 12px', border: 'none', backgroundColor: 'transparent', cursor: 'pointer', fontSize: '12px' }}
+          >
+            Agregar columna después
+          </button>
+          <div style={{ borderTop: '1px solid #eee', margin: '4px 0' }} />
+          <button
+            onClick={() => {
+              const tabla = currentTemplate.bloques[0];
+              const nuevaTabla = deleteFila(tabla, contextMenu.fila.id);
+              updateTemplate({ bloques: [nuevaTabla] });
+              setContextMenu(null);
+            }}
+            style={{ display: 'block', width: '100%', textAlign: 'left', padding: '8px 12px', border: 'none', backgroundColor: 'transparent', cursor: 'pointer', fontSize: '12px', color: '#d32f2f' }}
+          >
+            Eliminar fila
+          </button>
+          <button
+            onClick={() => {
+              const tabla = currentTemplate.bloques[0];
+              const nuevaTabla = deleteColumna(tabla, contextMenu.celdaIndex);
+              updateTemplate({ bloques: [nuevaTabla] });
+              setContextMenu(null);
+            }}
+            style={{ display: 'block', width: '100%', textAlign: 'left', padding: '8px 12px', border: 'none', backgroundColor: 'transparent', cursor: 'pointer', fontSize: '12px', color: '#d32f2f' }}
+          >
+            Eliminar columna
+          </button>
+        </div>
+      )}
 
       {/* Modal de edición desde canvas */}
       {editingCell && (
