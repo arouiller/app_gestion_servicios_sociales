@@ -34,9 +34,9 @@ const TablePreviewRecibo = ({ tabla, recibo, pageConfig, personData, onCellDoubl
   const updateTemplate = useTemplateStore((state) => state.updateTemplate);
   const containerRef = useRef(null);
 
-  // Usar tabla_ancho_mm y tabla_alto_mm del pageConfig si están disponibles
-  const tablaAncho = pageConfig?.tabla_ancho_mm;
-  const tablaAlto = pageConfig?.tabla_alto_mm;
+  // Usar valores de la tabla (anchoTotal_mm y altoTotal_mm) si están disponibles
+  const tablaAncho = tabla?.anchoTotal_mm;
+  const tablaAlto = tabla?.altoTotal_mm;
 
   // Convertir de mm a píxeles
   const containerWidth = tablaAncho ? tablaAncho * MM_TO_PX : recibo.width * MM_TO_PX - 7.5;
