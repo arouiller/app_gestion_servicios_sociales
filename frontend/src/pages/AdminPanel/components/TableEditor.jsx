@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { v4 as uuidv4 } from 'uuid';
 import useTemplateStore from '../../../hooks/useTemplateStore';
+import CellEditorModal from './CellEditorModal';
 import '../RecibosTemplatesPage.scss';
 
 const initTabla = () => ({
@@ -159,6 +160,7 @@ const TableEditor = ({ placeholders = {} }) => {
   const updateTemplate = useTemplateStore((state) => state.updateTemplate);
   const [editingCellId, setEditingCellId] = useState(null);
   const [showPlaceholderPopover, setShowPlaceholderPopover] = useState(null);
+  const [modalCell, setModalCell] = useState(null);
 
   // Inicializar tabla si no existe
   const tabla = currentTemplate.bloques?.[0]?.type === 'tabla'
@@ -206,7 +208,29 @@ const TableEditor = ({ placeholders = {} }) => {
     setShowPlaceholderPopover(null);
   };
 
+  const handleCellDoubleClick = (rowId, cellId) => {
+    const fila = tabla.filas.find(f => f.id === rowId);
+    const celda = fila?.celdas.find(c => c.id === cellId);
+    if (celda) {
+      setModalCell({ rowId, cellId, contenido: celda.contenido });
+    }
+  };
+
+  const handleModalSave = (nuevoContenido) => {
+    if (modalCell) {
+      handleCeldaChange(modalCell.rowId, modalCell.cellId, nuevoContenido);
+      setModalCell(null);
+    }
+  };
+
   const numCols = tabla.filas[0]?.celdas.length || 1;
+
+  // Obtener celda actual del modal
+  const modalCelda = modalCell
+    ? tabla.filas
+        .find(f => f.id === modalCell.rowId)
+        ?.celdas.find(c => c.id === modalCell.cellId)
+    : null;
 
   return (
     <div className="table-editor">
@@ -282,7 +306,7 @@ const TableEditor = ({ placeholders = {} }) => {
                   cursor: 'pointer',
                   fontSize: '11px'
                 }}
-                onClick={() => setEditingCellId(celda.id)}
+                onDoubleClick={() => handleCellDoubleClick(fila.id, celda.id)}
               >
                 {editingCellId === celda.id ? (
                   <div style={{ position: 'relative' }}>
@@ -365,14 +389,11 @@ const TableEditor = ({ placeholders = {} }) => {
                 ) : (
                   <div
                     style={{
-                      wordBreak: 'break-word',
+                      whiteSpace: 'nowrap',
                       fontSize: '10px',
                       maxHeight: '50px',
                       overflow: 'hidden',
                       textOverflow: 'ellipsis',
-                      display: '-webkit-box',
-                      WebkitLineClamp: 3,
-                      WebkitBoxOrient: 'vertical',
                       lineHeight: '1.3'
                     }}
                   >
@@ -409,9 +430,19 @@ const TableEditor = ({ placeholders = {} }) => {
       </div>
 
       <div style={{ marginTop: '12px', fontSize: '11px', color: '#999' }}>
-        <p>💡 Haz click en una celda para editar. Usa &lt;strong&gt;, &lt;em&gt;, etc. para HTML.</p>
-        <p>💡 Inserta placeholders entre dobles llaves: {'{{numero_afiliado}}'}, {'{{obra_social_nombre}}'}, etc.</p>
+        <p>💡 Haz doble click en una celda para editar con opciones avanzadas. Usa texto enriquecido e inserta placeholders.</p>
+        <p>💡 Placeholders disponibles: {'{{numero_afiliado}}'}, {'{{obra_social_nombre}}'}, etc.</p>
       </div>
+
+      {/* Modal de edición */}
+      {modalCelda && (
+        <CellEditorModal
+          celda={modalCelda}
+          placeholders={placeholders}
+          onSave={handleModalSave}
+          onClose={() => setModalCell(null)}
+        />
+      )}
     </div>
   );
 };
