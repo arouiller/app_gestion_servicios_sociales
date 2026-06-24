@@ -286,16 +286,17 @@ const TemplateConfigPanel = ({ selectedCell, placeholders = {} }) => {
 
             <div>
               <label style={{ fontSize: '11px', fontWeight: 'bold', color: '#333', display: 'block', marginBottom: '6px' }}>
-                2.2 Tamaño de Fuente (px)
+                2.2 Alto Total de Tabla (mm)
               </label>
               <input
                 type="number"
-                min="8"
-                max="24"
-                value={currentTemplate.bloques?.[0]?.tamanoFuente || 11}
+                min="20"
+                max="400"
+                step="0.5"
+                value={currentTemplate.bloques?.[0]?.altoTotal_mm || 100}
                 onChange={(e) => {
                   const tabla = currentTemplate.bloques[0];
-                  const nuevaTabla = { ...tabla, tamanoFuente: Number(e.target.value) };
+                  const nuevaTabla = { ...tabla, altoTotal_mm: Number(e.target.value) };
                   updateTemplate({ bloques: [nuevaTabla] });
                 }}
                 style={{

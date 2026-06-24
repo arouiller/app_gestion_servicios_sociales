@@ -2,15 +2,19 @@ import React, { useState, useRef, useEffect } from 'react';
 import ReactQuill, { Quill } from 'react-quill';
 import 'react-quill/dist/quill.snow.css';
 
-// Registrar formatos de size
-const Size = Quill.import('formats/size');
-Size.whitelist = ['8px', '10px', '12px', '14px', '16px', '18px', '20px', '24px', '28px'];
-Quill.register(Size, true);
+// Registrar formatos de size (solo una vez)
+if (!Quill.import('formats/size').whitelist) {
+  const Size = Quill.import('formats/size');
+  Size.whitelist = ['8px', '10px', '12px', '14px', '16px', '18px', '20px', '24px', '28px'];
+  Quill.register(Size, true);
+}
 
-// Registrar formatos de font
-const Font = Quill.import('formats/font');
-Font.whitelist = ['Arial', 'Courier New', 'Georgia', 'Helvetica', 'Times New Roman', 'Verdana'];
-Quill.register(Font, true);
+// Registrar formatos de font (solo una vez)
+if (!Quill.import('formats/font').whitelist) {
+  const Font = Quill.import('formats/font');
+  Font.whitelist = ['Arial', 'Courier New', 'Georgia', 'Helvetica', 'Times New Roman', 'Verdana'];
+  Quill.register(Font, true);
+}
 
 const CellEditorModal = ({ celda, placeholders = {}, onSave, onClose }) => {
   const [content, setContent] = useState(celda?.contenido || '');

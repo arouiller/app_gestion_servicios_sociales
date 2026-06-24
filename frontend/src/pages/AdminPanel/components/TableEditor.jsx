@@ -154,28 +154,30 @@ const updateFilaAltura = (tabla, rowId, altura) => {
 };
 
 const updateCeldaAncho = (tabla, rowId, cellId, nuevoAncho_mm) => {
+  // Encontrar índice de columna
+  const filaConCelda = tabla.filas.find(f => f.id === rowId);
+  if (!filaConCelda) return tabla;
+
+  const celdaIdx = filaConCelda.celdas.findIndex(c => c.id === cellId);
+  if (celdaIdx === -1) return tabla;
+
+  const oldAncho = filaConCelda.celdas[celdaIdx].ancho_mm || filaConCelda.celdas[celdaIdx].ancho;
+  const anchoDiff = nuevoAncho_mm - oldAncho;
+
+  // Actualizar TODAS las celdas de la misma columna (índice celdaIdx)
   return {
     ...tabla,
     filas: tabla.filas.map(fila => {
-      if (fila.id === rowId) {
-        const celdaIdx = fila.celdas.findIndex(c => c.id === cellId);
-        if (celdaIdx === -1) return fila;
+      const newCeldas = [...fila.celdas];
+      newCeldas[celdaIdx] = { ...newCeldas[celdaIdx], ancho_mm: Math.max(10, nuevoAncho_mm) };
 
-        const oldAncho = fila.celdas[celdaIdx].ancho_mm || fila.celdas[celdaIdx].ancho;
-        const anchoDiff = nuevoAncho_mm - oldAncho;
-
-        const newCeldas = [...fila.celdas];
-        newCeldas[celdaIdx] = { ...newCeldas[celdaIdx], ancho_mm: Math.max(10, nuevoAncho_mm) };
-
-        // Si hay siguiente celda, restarle el cambio (mantener ancho total fijo)
-        if (celdaIdx + 1 < newCeldas.length) {
-          const siguienteCelda = newCeldas[celdaIdx + 1];
-          newCeldas[celdaIdx + 1] = { ...siguienteCelda, ancho_mm: Math.max(10, (siguienteCelda.ancho_mm || siguienteCelda.ancho) - anchoDiff) };
-        }
-
-        return { ...fila, celdas: newCeldas };
+      // Si hay siguiente celda en esta fila, restarle el cambio (mantener ancho total fijo)
+      if (celdaIdx + 1 < newCeldas.length) {
+        const siguienteCelda = newCeldas[celdaIdx + 1];
+        newCeldas[celdaIdx + 1] = { ...siguienteCelda, ancho_mm: Math.max(10, (siguienteCelda.ancho_mm || siguienteCelda.ancho) - anchoDiff) };
       }
-      return fila;
+
+      return { ...fila, celdas: newCeldas };
     })
   };
 };
