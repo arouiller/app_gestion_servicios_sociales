@@ -123,8 +123,9 @@ const TablePreviewRecibo = ({ tabla, recibo, pageConfig, personData, onCellDoubl
                                   backgroundColor: isSelected ? '#e8f4f8' : 'transparent',
                                   minWidth: '0',
                                   overflow: 'hidden',
-                                  wordBreak: 'break-word',
-                                  wordWrap: 'break-word'
+                                  whiteSpace: 'nowrap',
+                                  textOverflow: 'ellipsis',
+                                  height: '100%'
                                 }}
                                 onDoubleClick={() => {
                                   if (onCellDoubleClick && recibo.number === 1) {
