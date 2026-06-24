@@ -8,7 +8,7 @@ import useTemplateStore from '../../../hooks/useTemplateStore';
 import { replacePlaceholders } from '../../../utils/placeholderReplacer';
 import PageGuides, { calculateRecibosPositions } from './PageGuides';
 import TemplateConfigPanel from './TemplateConfigPanel';
-import TableEditor, { updateCelda, addFila, addColumna, deleteFila, deleteColumna, updateFilaAltura, updateCeldaAncho } from './TableEditor';
+import TableEditor, { updateCelda, addFila, deleteFila, updateFilaAltura, updateCeldaAncho } from './TableEditor';
 import TablePreview from './TablePreview';
 import CellEditorModal from './CellEditorModal';
 import { HorizontalRuler, VerticalRuler, RULER_WIDTH, MM_TO_PX } from './Ruler';
