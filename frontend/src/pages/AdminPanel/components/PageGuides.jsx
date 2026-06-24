@@ -79,6 +79,42 @@ const PageGuides = ({ pageConfig }) => {
   const svgWidth = A4_WIDTH;
   const svgHeight = A4_HEIGHT;
 
+  // Grilla de 5x5mm
+  const gridSize = 5;
+  const gridLines = [];
+
+  // Líneas verticales de grilla
+  for (let x = 0; x <= svgWidth; x += gridSize) {
+    gridLines.push(
+      <line
+        key={`grid-v-${x}`}
+        x1={x}
+        y1={0}
+        x2={x}
+        y2={svgHeight}
+        stroke="#e9ecef"
+        strokeWidth="0.3"
+        opacity="0.5"
+      />
+    );
+  }
+
+  // Líneas horizontales de grilla
+  for (let y = 0; y <= svgHeight; y += gridSize) {
+    gridLines.push(
+      <line
+        key={`grid-h-${y}`}
+        x1={0}
+        y1={y}
+        x2={svgWidth}
+        y2={y}
+        stroke="#e9ecef"
+        strokeWidth="0.3"
+        opacity="0.5"
+      />
+    );
+  }
+
   return (
     <svg
       className="page-guides"
@@ -90,9 +126,14 @@ const PageGuides = ({ pageConfig }) => {
         width: '100%',
         height: '100%',
         pointerEvents: 'none',
-        zIndex: 1
+        zIndex: 1,
+        margin: 0,
+        padding: 0
       }}
     >
+      {/* Grilla de 5x5mm */}
+      {gridLines}
+
       {/* Márgenes - líneas punteadas */}
       <rect
         x={margins.marginLeft}

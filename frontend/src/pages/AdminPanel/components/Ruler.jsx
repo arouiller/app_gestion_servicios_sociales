@@ -31,12 +31,13 @@ const HorizontalRuler = ({ width }) => {
         style={{
           left: `${px}px`,
           height: `${markSize}px`,
-          borderLeft: '1px solid #333'
+          borderLeft: '1px solid #333',
+          boxSizing: 'border-box'
         }}
         title={`${mm}mm`}
       >
         {label !== null && (
-          <span className="ruler-label" style={{ position: 'absolute', top: '2px', left: '2px', fontSize: '9px' }}>
+          <span className="ruler-label" style={{ position: 'absolute', top: '2px', left: '3px', fontSize: '9px', lineHeight: '1' }}>
             {label}
           </span>
         )}
@@ -45,7 +46,7 @@ const HorizontalRuler = ({ width }) => {
   }
 
   return (
-    <div className="ruler ruler-horizontal" style={{ width: `${width}px`, height: `${RULER_WIDTH}px` }}>
+    <div className="ruler ruler-horizontal" style={{ width: `${width}px`, height: `${RULER_WIDTH}px`, margin: 0, padding: 0 }}>
       {marks}
     </div>
   );
@@ -78,12 +79,13 @@ const VerticalRuler = ({ height }) => {
         style={{
           top: `${px}px`,
           width: `${markSize}px`,
-          borderTop: '1px solid #333'
+          borderTop: '1px solid #333',
+          boxSizing: 'border-box'
         }}
         title={`${mm}mm`}
       >
         {label !== null && (
-          <span className="ruler-label" style={{ position: 'absolute', top: '2px', right: '2px', fontSize: '9px' }}>
+          <span className="ruler-label" style={{ position: 'absolute', top: '2px', right: '3px', fontSize: '9px', lineHeight: '1' }}>
             {label}
           </span>
         )}
@@ -92,7 +94,7 @@ const VerticalRuler = ({ height }) => {
   }
 
   return (
-    <div className="ruler ruler-vertical" style={{ width: `${RULER_WIDTH}px`, height: `${height}px` }}>
+    <div className="ruler ruler-vertical" style={{ width: `${RULER_WIDTH}px`, height: `${height}px`, margin: 0, padding: 0 }}>
       {marks}
     </div>
   );

@@ -336,38 +336,46 @@ const TemplateEditor = ({ onBack }) => {
       {successMessage && <div className="alert alert-success">{successMessage}</div>}
 
       <div className="editor-container-new">
-        {/* Canvas A4 con Rulers */}
-        <div className="rulers-container" style={{ width: '100%', height: '100%' }}>
-          {/* Ruler Vertical */}
-          <div style={{ display: 'flex', flexDirection: 'column' }}>
-            <div style={{ width: RULER_WIDTH, height: RULER_WIDTH }}></div>
-            <VerticalRuler height={pageDimensions.height * MM_TO_PX} />
+        {/* Layout de Rulers + Canvas */}
+        <div className="rulers-container">
+          {/* Esquina superior izquierda (intersección de reglas) */}
+          <div className="ruler-corner" style={{ width: RULER_WIDTH, height: RULER_WIDTH }} />
+
+          {/* Ruler Horizontal - sticky */}
+          <div className="ruler-horizontal-container" style={{ flex: 1 }}>
+            <HorizontalRuler width={pageDimensions.width * MM_TO_PX} />
           </div>
 
-          {/* Canvas Wrapper con Ruler Horizontal */}
-          <div className="canvas-wrapper" style={{ flex: 1 }}>
-            <HorizontalRuler width={pageDimensions.width * MM_TO_PX} />
-            <div className="editor-canvas">
-              <div
-                className="a4-page"
-                ref={canvasRef}
-                style={{
-                  width: `${pageDimensions.width}mm`,
-                  height: `${pageDimensions.height}mm`
-                }}
-              >
-                {/* Guías visuales */}
-                {currentTemplate.bloque_pageconfig && (
-                  <PageGuides pageConfig={currentTemplate.bloque_pageconfig} />
-                )}
+          {/* Fila 2: Ruler Vertical + Canvas */}
+          <div style={{ display: 'flex', flex: 1, width: '100%' }}>
+            {/* Ruler Vertical - sticky */}
+            <div className="ruler-vertical-container">
+              <VerticalRuler height={pageDimensions.height * MM_TO_PX} />
+            </div>
 
-                {/* Tabla en canvas */}
-                <TablePreview
-                  tabla={currentTemplate.bloques?.[0]}
-                  reciboPositions={reciboPositions}
-                  pageConfig={pageConfigObj}
-                  personData={mapPlanToPersonData(selectedPlanData)}
-                />
+            {/* Canvas Wrapper */}
+            <div className="canvas-wrapper">
+              <div className="editor-canvas" ref={canvasRef}>
+                <div
+                  className="a4-page"
+                  style={{
+                    width: `${pageDimensions.width}mm`,
+                    height: `${pageDimensions.height}mm`
+                  }}
+                >
+                  {/* Guías visuales */}
+                  {currentTemplate.bloque_pageconfig && (
+                    <PageGuides pageConfig={currentTemplate.bloque_pageconfig} />
+                  )}
+
+                  {/* Tabla en canvas */}
+                  <TablePreview
+                    tabla={currentTemplate.bloques?.[0]}
+                    reciboPositions={reciboPositions}
+                    pageConfig={pageConfigObj}
+                    personData={mapPlanToPersonData(selectedPlanData)}
+                  />
+                </div>
               </div>
             </div>
           </div>
