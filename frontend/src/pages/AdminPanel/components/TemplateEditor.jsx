@@ -520,9 +520,7 @@ const TemplateEditor = ({ onBack }) => {
                   Cerrar
                 </button>
               </div>
-            ) : (
-              <TableEditor placeholders={placeholders} />
-            )}
+            ) : null}
 
             <div className="pageconfig-section" style={{ marginTop: '20px' }}>
               <hr />
