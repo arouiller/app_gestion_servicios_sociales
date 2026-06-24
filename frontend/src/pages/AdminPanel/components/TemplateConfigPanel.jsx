@@ -70,6 +70,7 @@ const TemplateConfigPanel = ({ selectedCell, placeholders = {} }) => {
                     const tabla = currentTemplate.bloques[0];
                     const nuevaTabla = updateFilaAltura(tabla, selectedCell.fila.id, Number(e.target.value));
                     updateTemplate({ bloques: [nuevaTabla] });
+                    selectedCell.fila.altura = Number(e.target.value);
                   }}
                   style={{
                     width: '100%',
@@ -96,6 +97,7 @@ const TemplateConfigPanel = ({ selectedCell, placeholders = {} }) => {
                     const tabla = currentTemplate.bloques[0];
                     const nuevaTabla = updateCeldaAncho(tabla, selectedCell.fila.id, selectedCell.celda.id, Number(e.target.value));
                     updateTemplate({ bloques: [nuevaTabla] });
+                    selectedCell.celda.ancho_mm = Number(e.target.value);
                   }}
                   style={{
                     width: '100%',

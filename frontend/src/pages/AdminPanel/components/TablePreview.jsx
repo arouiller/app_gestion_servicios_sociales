@@ -32,51 +32,7 @@ ${filasHTML}
 
 const TablePreviewRecibo = ({ tabla, recibo, pageConfig, personData, onCellDoubleClick, onCellClick, onContextMenu, selectedCellId }) => {
   const updateTemplate = useTemplateStore((state) => state.updateTemplate);
-  const [resizingFila, setResizingFila] = useState(null);
-  const [resizingCelda, setResizingCelda] = useState(null);
-  const [startPos, setStartPos] = useState(null);
   const containerRef = useRef(null);
-
-  useEffect(() => {
-    if (!resizingFila && !resizingCelda) return;
-
-    const handleMouseMove = (e) => {
-      if (!containerRef.current || !startPos) return;
-
-      const rect = containerRef.current.getBoundingClientRect();
-      const currentX = e.clientX - rect.left;
-      const currentY = e.clientY - rect.top;
-      const deltaX = currentX - startPos.x;
-      const deltaY = currentY - startPos.y;
-
-      if (resizingFila) {
-        const nuevaAltura = startPos.originalAltura + deltaY / MM_TO_PX;
-        const nuevaTabla = updateFilaAltura(tabla, resizingFila.id, nuevaAltura);
-        updateTemplate({ bloques: [nuevaTabla] });
-      }
-
-      if (resizingCelda) {
-        const containerWidth = recibo.width * MM_TO_PX - 7.5;
-        const nuevoAncho = startPos.originalAncho + (deltaX / containerWidth) * 100;
-        const nuevaTabla = updateCeldaAncho(tabla, resizingCelda.rowId, resizingCelda.id, nuevoAncho);
-        updateTemplate({ bloques: [nuevaTabla] });
-      }
-    };
-
-    const handleMouseUp = () => {
-      setResizingFila(null);
-      setResizingCelda(null);
-      setStartPos(null);
-    };
-
-    document.addEventListener('mousemove', handleMouseMove);
-    document.addEventListener('mouseup', handleMouseUp);
-
-    return () => {
-      document.removeEventListener('mousemove', handleMouseMove);
-      document.removeEventListener('mouseup', handleMouseUp);
-    };
-  }, [resizingFila, resizingCelda, startPos, tabla, updateTemplate, recibo.width]);
 
   // Usar tabla_ancho_mm y tabla_alto_mm del pageConfig si están disponibles
   const tablaAncho = pageConfig?.tabla_ancho_mm;
@@ -187,72 +143,6 @@ const TablePreviewRecibo = ({ tabla, recibo, pageConfig, personData, onCellDoubl
         </table>
       </div>
 
-      {/* Handles de resize FUERA del overflow: hidden */}
-      {recibo.number === 1 && (
-        <>
-          {/* Handles de resize para FILAS */}
-          {tabla.filas.map((fila, filaIdx) => (
-            <div
-              key={`resize-fila-${fila.id}`}
-              style={{
-                position: 'absolute',
-                left: '0',
-                top: `${tabla.filas.slice(0, filaIdx + 1).reduce((sum, f) => sum + (f.altura || 15), 0) * MM_TO_PX - 4}px`,
-                width: '100%',
-                height: '8px',
-                cursor: 'row-resize',
-                backgroundColor: resizingFila?.id === fila.id ? '#4dabf7' : 'transparent',
-                zIndex: 10,
-                pointerEvents: 'auto'
-              }}
-              onMouseDown={(e) => {
-                setResizingFila({ id: fila.id, index: filaIdx });
-                setStartPos({
-                  x: e.clientX - containerRef.current.getBoundingClientRect().left,
-                  y: e.clientY - containerRef.current.getBoundingClientRect().top,
-                  originalAltura: fila.altura || 15
-                });
-              }}
-              title="Arrastra para cambiar altura de fila"
-            />
-          ))}
-
-          {/* Handles de resize para COLUMNAS */}
-          {tabla.filas[0]?.celdas.map((celda, celdaIdx) => {
-            // Calcular posición X del borde derecho de esta celda
-            const anchoAcumulado = tabla.filas[0].celdas
-              .slice(0, celdaIdx + 1)
-              .reduce((sum, c) => sum + (c.ancho || 50), 0);
-            const posX = (anchoAcumulado / 100) * containerWidth;
-
-            return (
-              <div
-                key={`resize-celda-${celda.id}`}
-                style={{
-                  position: 'absolute',
-                  left: `${posX - 4}px`,
-                  top: '0',
-                  width: '8px',
-                  height: '100%',
-                  cursor: 'col-resize',
-                  backgroundColor: resizingCelda?.id === celda.id ? '#4dabf7' : 'transparent',
-                  zIndex: 10,
-                  pointerEvents: 'auto'
-                }}
-                onMouseDown={(e) => {
-                  setResizingCelda({ id: celda.id, rowId: tabla.filas[0].id, celdaIdx });
-                  setStartPos({
-                    x: e.clientX - containerRef.current.getBoundingClientRect().left,
-                    y: e.clientY - containerRef.current.getBoundingClientRect().top,
-                    originalAncho: celda.ancho || 50
-                  });
-                }}
-                title="Arrastra para cambiar ancho de columna"
-              />
-            );
-          })}
-        </>
-      )}
     </div>
   );
 };
