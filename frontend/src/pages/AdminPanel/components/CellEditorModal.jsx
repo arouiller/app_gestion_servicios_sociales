@@ -94,14 +94,16 @@ const CellEditorModal = ({ celda, placeholders = {}, onSave, onClose }) => {
               onChange={setContent}
               modules={{
                 toolbar: [
+                  [{ 'font': ['Arial', 'Courier New', 'Georgia', 'Helvetica', 'Times New Roman', 'Verdana'] }],
+                  [{ 'size': ['10px', '12px', '14px', '16px', '18px', '20px', '24px', '28px'] }],
                   ['bold', 'italic', 'underline', 'strike'],
-                  [{ 'size': ['small', false, 'large', 'huge'] }],
                   ['blockquote', 'code-block'],
                   [{ 'header': 1 }, { 'header': 2 }],
                   [{ 'list': 'ordered' }, { 'list': 'bullet' }],
                   ['link']
                 ]
               }}
+              formats={['font', 'size', 'bold', 'italic', 'underline', 'strike', 'blockquote', 'code-block', 'header', 'list', 'link']}
               style={{
                 flex: 1,
                 display: 'flex',

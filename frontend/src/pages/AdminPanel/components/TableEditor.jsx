@@ -11,24 +11,24 @@ const initTabla = () => ({
       id: uuidv4(),
       altura: 15,
       celdas: [
-        { id: uuidv4(), contenido: '<strong>Afiliado</strong>', ancho: 40 },
-        { id: uuidv4(), contenido: '{{numero_afiliado}}', ancho: 60 }
+        { id: uuidv4(), contenido: '', ancho: 40 },
+        { id: uuidv4(), contenido: '', ancho: 60 }
       ]
     },
     {
       id: uuidv4(),
       altura: 15,
       celdas: [
-        { id: uuidv4(), contenido: '<strong>Titular</strong>', ancho: 40 },
-        { id: uuidv4(), contenido: '{{titular_apellido}}, {{titular_nombre}}', ancho: 60 }
+        { id: uuidv4(), contenido: '', ancho: 40 },
+        { id: uuidv4(), contenido: '', ancho: 60 }
       ]
     },
     {
       id: uuidv4(),
       altura: 15,
       celdas: [
-        { id: uuidv4(), contenido: '<strong>O.S.</strong>', ancho: 40 },
-        { id: uuidv4(), contenido: '{{obra_social_nombre}}', ancho: 60 }
+        { id: uuidv4(), contenido: '', ancho: 40 },
+        { id: uuidv4(), contenido: '', ancho: 60 }
       ]
     }
   ],
@@ -427,11 +427,6 @@ const TableEditor = ({ placeholders = {} }) => {
             )}
           </div>
         ))}
-      </div>
-
-      <div style={{ marginTop: '12px', fontSize: '11px', color: '#999' }}>
-        <p>💡 Haz doble click en una celda para editar con opciones avanzadas. Usa texto enriquecido e inserta placeholders.</p>
-        <p>💡 Placeholders disponibles: {'{{numero_afiliado}}'}, {'{{obra_social_nombre}}'}, etc.</p>
       </div>
 
       {/* Modal de edición */}
