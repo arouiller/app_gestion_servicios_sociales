@@ -60,17 +60,8 @@ const CellEditorModal = ({ celda, placeholders = {}, onSave, onClose }) => {
         console.warn('Font format already registered or unavailable');
       }
 
-      // Registrar Table module (si no está ya registrado)
-      try {
-        if (!Quill.modules.table) {
-          const Table = Quill.import('modules/table');
-          if (Table) {
-            Quill.register('modules/table', Table);
-          }
-        }
-      } catch (e) {
-        console.warn('Table module already registered or unavailable');
-      }
+      // Nota: Table module no está disponible en Quill 1.3.7 sin plugins adicionales
+      // Se omite por ahora para evitar errores de construcción
     } catch (err) {
       console.error('Error registering Quill modules:', err);
     }
@@ -169,15 +160,10 @@ const CellEditorModal = ({ celda, placeholders = {}, onSave, onClose }) => {
                   ['blockquote', 'code-block'],
                   [{ 'header': 1 }, { 'header': 2 }],
                   [{ 'list': 'ordered' }, { 'list': 'bullet' }],
-                  ['link'],
-                  ['table'],
-                  [{ 'table-insert': 'Insert Table' }]
-                ],
-                table: {
-                  styles: 'Bordered'
-                }
+                  ['link']
+                ]
               }}
-              formats={['font', 'size', 'bold', 'italic', 'underline', 'strike', 'blockquote', 'code-block', 'header', 'list', 'link', 'table']}
+              formats={['font', 'size', 'bold', 'italic', 'underline', 'strike', 'blockquote', 'code-block', 'header', 'list', 'link']}
               style={{
                 flex: 1,
                 display: 'flex',
