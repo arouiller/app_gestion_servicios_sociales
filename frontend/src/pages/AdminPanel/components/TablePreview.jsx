@@ -77,7 +77,6 @@ const TablePreviewRecibo = ({ tabla, recibo, pageConfig, personData, onCellDoubl
             borderCollapse: 'collapse',
             fontSize: `${tabla.tamanoFuente || 11}px`,
             fontFamily: 'Arial, sans-serif',
-            tableLayout: 'fixed',
             height: '100%'
           }}
         >
