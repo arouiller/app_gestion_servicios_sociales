@@ -30,7 +30,7 @@ ${filasHTML}
 </table>`;
 };
 
-const TablePreviewRecibo = ({ tabla, recibo, pageConfig, personData, onCellDoubleClick, onCellClick, onContextMenu }) => {
+const TablePreviewRecibo = ({ tabla, recibo, pageConfig, personData, onCellDoubleClick, onCellClick, onContextMenu, selectedCellId }) => {
   const updateTemplate = useTemplateStore((state) => state.updateTemplate);
   const [resizingFila, setResizingFila] = useState(null);
   const [resizingCelda, setResizingCelda] = useState(null);
@@ -138,20 +138,22 @@ const TablePreviewRecibo = ({ tabla, recibo, pageConfig, personData, onCellDoubl
                     }
                     const anchoMM = celda.ancho_mm || celda.ancho;
                     const anchoPorcentaje = (anchoMM / anchoTotal) * 100;
+                    const isSelected = selectedCellId === celda.id;
                     return (
                       <td
                         key={`cell-${celda.id}`}
                         style={{
                           width: `${anchoPorcentaje}%`,
                           padding: '4px',
-                          border: tabla.bordeTabla ? '1px solid #000' : 'none',
+                          border: isSelected ? '2px solid #4dabf7' : tabla.bordeTabla ? '1px solid #000' : 'none',
                           verticalAlign: 'top',
                           fontSize: 'inherit',
                           position: 'relative',
                           whiteSpace: 'nowrap',
                           overflow: 'hidden',
                           textOverflow: 'ellipsis',
-                          cursor: 'pointer'
+                          cursor: 'pointer',
+                          backgroundColor: isSelected ? '#e8f4f8' : 'transparent'
                         }}
                         onDoubleClick={() => {
                           if (onCellDoubleClick && recibo.number === 1) {
@@ -255,7 +257,7 @@ const TablePreviewRecibo = ({ tabla, recibo, pageConfig, personData, onCellDoubl
   );
 };
 
-const TablePreview = ({ tabla, reciboPositions, pageConfig, personData, onCellDoubleClick, onCellClick, onContextMenu }) => {
+const TablePreview = ({ tabla, reciboPositions, pageConfig, personData, onCellDoubleClick, onCellClick, onContextMenu, selectedCellId }) => {
   if (!tabla || tabla.type !== 'tabla' || !reciboPositions || !reciboPositions.recibos) {
     return null;
   }
@@ -272,6 +274,7 @@ const TablePreview = ({ tabla, reciboPositions, pageConfig, personData, onCellDo
           onCellDoubleClick={onCellDoubleClick}
           onCellClick={onCellClick}
           onContextMenu={onContextMenu}
+          selectedCellId={selectedCellId}
         />
       ))}
     </>

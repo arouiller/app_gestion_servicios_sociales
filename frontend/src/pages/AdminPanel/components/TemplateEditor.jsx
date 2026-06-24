@@ -253,6 +253,7 @@ const TemplateEditor = ({ onBack }) => {
   const [editingCell, setEditingCell] = useState(null);
   const [selectedCell, setSelectedCell] = useState(null);
   const [contextMenu, setContextMenu] = useState(null);
+  const [showHtmlEditor, setShowHtmlEditor] = useState(false);
 
   const handleRulerOffsetChange = (axis, newOffset) => {
     if (!pageConfigObj) return;
@@ -345,11 +346,11 @@ const TemplateEditor = ({ onBack }) => {
           <span className="badge badge-active">✓ ACTIVO</span>
         )}
         <button
-          className="btn btn-info btn-help"
-          onClick={() => setShowPlaceholders(!showPlaceholders)}
-          title="Ver placeholders disponibles"
+          className="btn btn-info"
+          onClick={() => setShowHtmlEditor(!showHtmlEditor)}
+          title="Ver/editar HTML crudo"
         >
-          ? Placeholders
+          &lt;/&gt; HTML
         </button>
 
         {/* Combo de Planes Pre-cargado */}
@@ -435,6 +436,7 @@ const TemplateEditor = ({ onBack }) => {
                     onCellDoubleClick={handleCanvasCellDoubleClick}
                     onCellClick={handleCanvasCellClick}
                     onContextMenu={handleCanvasCellContextMenu}
+                    selectedCellId={selectedCell?.celda?.id}
                   />
                 </div>
               </div>
@@ -534,6 +536,110 @@ const TemplateEditor = ({ onBack }) => {
           >
             Eliminar columna
           </button>
+        </div>
+      )}
+
+      {/* Modal HTML Editor */}
+      {showHtmlEditor && (
+        <div
+          style={{
+            position: 'fixed',
+            top: 0,
+            left: 0,
+            right: 0,
+            bottom: 0,
+            backgroundColor: 'rgba(0,0,0,0.5)',
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+            zIndex: 1000
+          }}
+          onClick={() => setShowHtmlEditor(false)}
+        >
+          <div
+            style={{
+              width: '80%',
+              height: '80vh',
+              backgroundColor: 'white',
+              borderRadius: '8px',
+              display: 'flex',
+              flexDirection: 'column',
+              boxShadow: '0 4px 16px rgba(0,0,0,0.2)',
+              padding: '20px'
+            }}
+            onClick={(e) => e.stopPropagation()}
+          >
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '16px' }}>
+              <h3 style={{ margin: 0 }}>HTML Crudo</h3>
+              <button
+                onClick={() => setShowHtmlEditor(false)}
+                style={{
+                  background: 'none',
+                  border: 'none',
+                  fontSize: '20px',
+                  cursor: 'pointer',
+                  color: '#999'
+                }}
+              >
+                ✕
+              </button>
+            </div>
+
+            <textarea
+              defaultValue={JSON.stringify(currentTemplate.bloques[0], null, 2)}
+              style={{
+                flex: 1,
+                padding: '12px',
+                border: '1px solid #ddd',
+                borderRadius: '4px',
+                fontFamily: 'monospace',
+                fontSize: '12px',
+                marginBottom: '12px',
+                boxSizing: 'border-box',
+                resize: 'none'
+              }}
+              id="html-editor-textarea"
+            />
+
+            <div style={{ display: 'flex', gap: '8px', justifyContent: 'flex-end' }}>
+              <button
+                onClick={() => setShowHtmlEditor(false)}
+                style={{
+                  padding: '8px 16px',
+                  border: '1px solid #ddd',
+                  borderRadius: '4px',
+                  backgroundColor: '#f5f5f5',
+                  cursor: 'pointer',
+                  fontSize: '12px'
+                }}
+              >
+                Cancelar
+              </button>
+              <button
+                onClick={() => {
+                  try {
+                    const textarea = document.getElementById('html-editor-textarea');
+                    const nuevaTabla = JSON.parse(textarea.value);
+                    updateTemplate({ bloques: [nuevaTabla] });
+                    setShowHtmlEditor(false);
+                  } catch (e) {
+                    alert('JSON inválido: ' + e.message);
+                  }
+                }}
+                style={{
+                  padding: '8px 16px',
+                  border: 'none',
+                  borderRadius: '4px',
+                  backgroundColor: '#28a745',
+                  color: 'white',
+                  cursor: 'pointer',
+                  fontSize: '12px'
+                }}
+              >
+                Guardar
+              </button>
+            </div>
+          </div>
         </div>
       )}
 
