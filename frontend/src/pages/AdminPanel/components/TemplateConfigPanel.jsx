@@ -94,7 +94,10 @@ const TemplateConfigPanel = ({ selectedCell, placeholders = {} }) => {
                   step="0.5"
                   value={selectedCell.celda.ancho_mm || selectedCell.celda.ancho || 85}
                   onChange={(e) => {
+                    console.log('[TemplateConfigPanel] onChange ancho_mm');
                     const tabla = currentTemplate.bloques[0];
+                    console.log('[TemplateConfigPanel] selectedCell:', selectedCell);
+                    console.log('[TemplateConfigPanel] updateCeldaAncho:', updateCeldaAncho);
                     const nuevaTabla = updateCeldaAncho(tabla, selectedCell.fila.id, selectedCell.celda.id, Number(e.target.value));
                     updateTemplate({ bloques: [nuevaTabla] });
                     selectedCell.celda.ancho_mm = Number(e.target.value);
