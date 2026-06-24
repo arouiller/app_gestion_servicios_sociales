@@ -7,7 +7,7 @@ import templateService from '../../../services/templateService';
 import useTemplateStore from '../../../hooks/useTemplateStore';
 import { replacePlaceholders } from '../../../utils/placeholderReplacer';
 import PageGuides, { calculateRecibosPositions } from './PageGuides';
-import BloquePageConfig from './BlockEditor/BloquePageConfig';
+import TemplateConfigPanel from './TemplateConfigPanel';
 import TableEditor, { updateCelda, addFila, addColumna, deleteFila, deleteColumna, updateFilaAltura, updateCeldaAncho } from './TableEditor';
 import TablePreview from './TablePreview';
 import CellEditorModal from './CellEditorModal';
@@ -446,87 +446,7 @@ const TemplateEditor = ({ onBack }) => {
         <div className="editor-properties">
           <h3>Configuración</h3>
           <div className="blocks-editor">
-            {selectedCell ? (
-              <div style={{ padding: '12px', backgroundColor: '#f0f8ff', borderRadius: '4px', marginBottom: '16px' }}>
-                <h4 style={{ margin: '0 0 12px 0', fontSize: '14px' }}>📐 Tamaño de Celda</h4>
-
-                <div style={{ marginBottom: '12px' }}>
-                  <label style={{ fontSize: '12px', fontWeight: 'bold', color: '#333', display: 'block', marginBottom: '6px' }}>
-                    Altura de Fila (mm)
-                  </label>
-                  <input
-                    type="number"
-                    min="5"
-                    max="100"
-                    step="0.5"
-                    value={selectedCell.fila.altura || 15}
-                    onChange={(e) => {
-                      const tabla = currentTemplate.bloques[0];
-                      const nuevaTabla = updateFilaAltura(tabla, selectedCell.fila.id, Number(e.target.value));
-                      updateTemplate({ bloques: [nuevaTabla] });
-                      setSelectedCell({ ...selectedCell, fila: { ...selectedCell.fila, altura: Number(e.target.value) } });
-                    }}
-                    style={{
-                      width: '100%',
-                      padding: '6px 8px',
-                      border: '1px solid #ddd',
-                      borderRadius: '4px',
-                      fontSize: '12px',
-                      boxSizing: 'border-box'
-                    }}
-                  />
-                </div>
-
-                <div>
-                  <label style={{ fontSize: '12px', fontWeight: 'bold', color: '#333', display: 'block', marginBottom: '6px' }}>
-                    Ancho de Columna (mm)
-                  </label>
-                  <input
-                    type="number"
-                    min="10"
-                    max="200"
-                    step="0.5"
-                    value={selectedCell.celda.ancho_mm || selectedCell.celda.ancho || 85}
-                    onChange={(e) => {
-                      const tabla = currentTemplate.bloques[0];
-                      const nuevaTabla = updateCeldaAncho(tabla, selectedCell.fila.id, selectedCell.celda.id, Number(e.target.value));
-                      updateTemplate({ bloques: [nuevaTabla] });
-                      setSelectedCell({ ...selectedCell, celda: { ...selectedCell.celda, ancho_mm: Number(e.target.value) } });
-                    }}
-                    style={{
-                      width: '100%',
-                      padding: '6px 8px',
-                      border: '1px solid #ddd',
-                      borderRadius: '4px',
-                      fontSize: '12px',
-                      boxSizing: 'border-box'
-                    }}
-                  />
-                </div>
-
-                <button
-                  onClick={() => setSelectedCell(null)}
-                  style={{
-                    marginTop: '12px',
-                    padding: '6px 12px',
-                    backgroundColor: '#e0e0e0',
-                    border: 'none',
-                    borderRadius: '4px',
-                    cursor: 'pointer',
-                    fontSize: '12px',
-                    width: '100%'
-                  }}
-                >
-                  Cerrar
-                </button>
-              </div>
-            ) : null}
-
-            <div className="pageconfig-section" style={{ marginTop: '20px' }}>
-              <hr />
-              <h4>Configuración de Página</h4>
-              <BloquePageConfig />
-            </div>
+            <TemplateConfigPanel selectedCell={selectedCell} placeholders={placeholders} />
           </div>
         </div>
       </div>
