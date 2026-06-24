@@ -345,7 +345,10 @@ const TemplateEditor = ({ onBack }) => {
 
             {/* Ruler Horizontal - sticky */}
             <div className="ruler-horizontal-container" style={{ flex: 1 }}>
-              <HorizontalRuler width={pageDimensions.width * MM_TO_PX} />
+              <HorizontalRuler
+                width={pageDimensions.width * MM_TO_PX}
+                offsetMM={pageConfigObj?.ruler_offset_horizontal_mm || 0}
+              />
             </div>
           </div>
 
@@ -353,7 +356,10 @@ const TemplateEditor = ({ onBack }) => {
           <div style={{ display: 'flex', flex: 1, width: '100%' }}>
             {/* Ruler Vertical - sticky */}
             <div className="ruler-vertical-container" style={{ flexShrink: 0 }}>
-              <VerticalRuler height={pageDimensions.height * MM_TO_PX} />
+              <VerticalRuler
+                height={pageDimensions.height * MM_TO_PX}
+                offsetMM={pageConfigObj?.ruler_offset_vertical_mm || 0}
+              />
             </div>
 
             {/* Canvas Wrapper */}

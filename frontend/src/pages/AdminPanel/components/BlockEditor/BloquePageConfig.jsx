@@ -318,6 +318,44 @@ const BloquePageConfig = () => {
               Solo afecta PDF (no afecta vista previa). Ej: 1.3 si el PDF se imprime 30% más grande.
             </div>
 
+            {/* Offsets de reglas */}
+            <div style={{ marginTop: '12px', paddingTop: '12px', borderTop: '1px solid #ddd' }}>
+              <label style={{ fontSize: '12px', color: '#666', fontWeight: 'bold' }}>📏 Offsets de Reglas (mm)</label>
+              <div style={{ marginTop: '8px', display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '10px' }}>
+                <div>
+                  <label style={{ fontSize: '11px', color: '#666' }}>Horizontal</label>
+                  <input
+                    type="number"
+                    min="-300"
+                    max="300"
+                    step="0.5"
+                    value={pageConfig.ruler_offset_horizontal_mm || 0}
+                    onChange={(e) => handleChange('ruler_offset_horizontal_mm', Number(e.target.value))}
+                    className="input"
+                    style={{ width: '100%', marginTop: '4px' }}
+                    title="Desplazamiento del 0 en la regla superior"
+                  />
+                </div>
+                <div>
+                  <label style={{ fontSize: '11px', color: '#666' }}>Vertical</label>
+                  <input
+                    type="number"
+                    min="-400"
+                    max="400"
+                    step="0.5"
+                    value={pageConfig.ruler_offset_vertical_mm || 0}
+                    onChange={(e) => handleChange('ruler_offset_vertical_mm', Number(e.target.value))}
+                    className="input"
+                    style={{ width: '100%', marginTop: '4px' }}
+                    title="Desplazamiento del 0 en la regla izquierda"
+                  />
+                </div>
+              </div>
+              <div style={{ marginTop: '8px', fontSize: '10px', color: '#999' }}>
+                Ajusta dónde comienza el "0" en las reglas. Valores positivos desplazan derecha/abajo, negativos hacia izquierda/arriba.
+              </div>
+            </div>
+
             {/* Checkbox para grilla */}
             <div style={{ marginTop: '12px', paddingTop: '12px', borderTop: '1px solid #ddd' }}>
               <label style={{ display: 'flex', alignItems: 'center', gap: '8px', cursor: 'pointer' }}>

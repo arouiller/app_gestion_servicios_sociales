@@ -4,23 +4,32 @@ import '../RecibosTemplatesPage.scss';
 const MM_TO_PX = 3.7795;
 const RULER_WIDTH = 40; // px
 
-const HorizontalRuler = ({ width }) => {
-  const totalMM = width / MM_TO_PX;
+const HorizontalRuler = ({ width, offsetMM = 0 }) => {
+  const totalMM = width / MM_TO_PX + Math.abs(offsetMM);
   const marks = [];
+  const offsetPX = offsetMM * MM_TO_PX;
+
+  // Calcular punto de inicio basado en offset
+  const startMM = offsetMM < 0 ? Math.abs(offsetMM) : 0;
 
   // Generar marcas cada 1mm
-  for (let mm = 0; mm <= totalMM; mm += 1) {
-    const px = mm * MM_TO_PX;
+  for (let mm = startMM; mm <= totalMM; mm += 1) {
+    const px = (mm - startMM) * MM_TO_PX - offsetPX;
+
+    // Solo mostrar marcas dentro de los límites visibles
+    if (px < -5 || px > width + 5) continue;
+
     let markSize = 2; // 1mm mark (pequeño)
     let label = null;
+    const displayValue = mm - startMM; // Valor mostrado en la regla
 
     // Cada 10mm (1cm) - marca principal
-    if (mm % 10 === 0) {
+    if (displayValue % 10 === 0) {
       markSize = 20;
-      label = mm / 10; // mostrar números en cm
+      label = displayValue / 10; // mostrar números en cm
     }
     // Cada 5mm - marca secundaria
-    else if (mm % 5 === 0) {
+    else if (displayValue % 5 === 0) {
       markSize = 10;
     }
 
@@ -34,7 +43,7 @@ const HorizontalRuler = ({ width }) => {
           borderLeft: '1px solid #333',
           boxSizing: 'border-box'
         }}
-        title={`${mm}mm`}
+        title={`${displayValue}mm`}
       >
         {label !== null && (
           <span className="ruler-label" style={{ position: 'absolute', top: '2px', left: '3px', fontSize: '9px', lineHeight: '1' }}>
@@ -52,23 +61,32 @@ const HorizontalRuler = ({ width }) => {
   );
 };
 
-const VerticalRuler = ({ height }) => {
-  const totalMM = height / MM_TO_PX;
+const VerticalRuler = ({ height, offsetMM = 0 }) => {
+  const totalMM = height / MM_TO_PX + Math.abs(offsetMM);
   const marks = [];
+  const offsetPX = offsetMM * MM_TO_PX;
+
+  // Calcular punto de inicio basado en offset
+  const startMM = offsetMM < 0 ? Math.abs(offsetMM) : 0;
 
   // Generar marcas cada 1mm
-  for (let mm = 0; mm <= totalMM; mm += 1) {
-    const px = mm * MM_TO_PX;
+  for (let mm = startMM; mm <= totalMM; mm += 1) {
+    const px = (mm - startMM) * MM_TO_PX - offsetPX;
+
+    // Solo mostrar marcas dentro de los límites visibles
+    if (px < -5 || px > height + 5) continue;
+
     let markSize = 2; // 1mm mark (pequeño)
     let label = null;
+    const displayValue = mm - startMM; // Valor mostrado en la regla
 
     // Cada 10mm (1cm) - marca principal
-    if (mm % 10 === 0) {
+    if (displayValue % 10 === 0) {
       markSize = 20;
-      label = mm / 10; // mostrar números en cm
+      label = displayValue / 10; // mostrar números en cm
     }
     // Cada 5mm - marca secundaria
-    else if (mm % 5 === 0) {
+    else if (displayValue % 5 === 0) {
       markSize = 10;
     }
 
@@ -82,7 +100,7 @@ const VerticalRuler = ({ height }) => {
           borderTop: '1px solid #333',
           boxSizing: 'border-box'
         }}
-        title={`${mm}mm`}
+        title={`${displayValue}mm`}
       >
         {label !== null && (
           <span className="ruler-label" style={{ position: 'absolute', top: '2px', right: '3px', fontSize: '9px', lineHeight: '1' }}>
