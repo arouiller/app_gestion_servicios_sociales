@@ -423,14 +423,18 @@ function generateTableHTML(tablaData, tablaAncho = null, tablaAlto = null) {
   if (!tablaData) return '';
 
   const borderStyle = tablaData.bordeTabla ? '1px solid #000' : 'none';
+  const anchoTotalMM = tablaData.anchoTotal_mm || 170; // Ancho total en mm
 
   const filasHTML = tablaData.filas
     .map(fila => {
       const altura = fila.altura || 15;
       const celdas = fila.celdas
         .map(celda => {
-          const ancho = celda.ancho || 50;
-          return `<td style="width: ${ancho}%; border: ${borderStyle}; vertical-align: middle; font-size: inherit; height: ${altura}mm;">${celda.contenido || ''}</td>`;
+          // Usar ancho_mm (nuevo formato) o ancho (formato antiguo)
+          const anchoMM = celda.ancho_mm || celda.ancho;
+          // Convertir mm a porcentaje
+          const anchoPorcentaje = (anchoMM / anchoTotalMM) * 100;
+          return `<td style="width: ${anchoPorcentaje}%; border: ${borderStyle}; vertical-align: middle; font-size: inherit; height: ${altura}mm;">${celda.contenido || ''}</td>`;
         })
         .join('');
       return `<tr style="height: ${altura}mm;">${celdas}</tr>`;
