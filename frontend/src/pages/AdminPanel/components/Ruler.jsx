@@ -98,7 +98,8 @@ const VerticalRuler = ({ height, offsetMM = 0 }) => {
           top: `${px}px`,
           width: `${markSize}px`,
           borderTop: '1px solid #333',
-          boxSizing: 'border-box'
+          boxSizing: 'border-box',
+          marginLeft: 'auto'
         }}
         title={`${displayValue}mm`}
       >
