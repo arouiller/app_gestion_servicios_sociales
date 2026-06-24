@@ -2,10 +2,10 @@ import React, { useState, useRef, useEffect } from 'react';
 import ReactQuill, { Quill } from 'react-quill';
 import 'react-quill/dist/quill.snow.css';
 
-// Registrar formatos de size (solo una vez)
+// Registrar formatos de size (solo una vez) - sin unidad
 if (!Quill.import('formats/size').whitelist) {
   const Size = Quill.import('formats/size');
-  Size.whitelist = ['8px', '10px', '12px', '14px', '16px', '18px', '20px', '24px', '28px'];
+  Size.whitelist = ['8', '10', '12', '14', '16', '18', '20', '24', '28'];
   Quill.register(Size, true);
 }
 
@@ -109,7 +109,7 @@ const CellEditorModal = ({ celda, placeholders = {}, onSave, onClose }) => {
               modules={{
                 toolbar: [
                   [{ 'font': ['Arial', 'Courier New', 'Georgia', 'Helvetica', 'Times New Roman', 'Verdana'] }],
-                  [{ 'size': ['10px', '12px', '14px', '16px', '18px', '20px', '24px', '28px'] }],
+                  [{ 'size': ['8', '10', '12', '14', '16', '18', '20', '24', '28'] }],
                   ['bold', 'italic', 'underline', 'strike'],
                   ['blockquote', 'code-block'],
                   [{ 'header': 1 }, { 'header': 2 }],

@@ -145,22 +145,42 @@ const updateCelda = (tabla, rowId, cellId, campo, valor) => {
 };
 
 const updateFilaAltura = (tabla, rowId, altura) => {
-  return {
-    ...tabla,
-    filas: tabla.filas.map(fila =>
-      fila.id === rowId ? { ...fila, altura: Math.max(5, altura) } : fila
-    )
-  };
+  const filaIdx = tabla.filas.findIndex(f => f.id === rowId);
+  if (filaIdx === -1) return tabla;
+
+  const fila = tabla.filas[filaIdx];
+  const oldAltura = fila.altura || 15;
+  const alturaDiff = altura - oldAltura;
+  const numFilas = tabla.filas.length;
+
+  const newFilas = tabla.filas.map((f, idx) => {
+    if (f.id === rowId) {
+      return { ...f, altura: Math.max(5, altura) };
+    }
+
+    // Si es la última fila, ajustar la anterior
+    if (filaIdx === numFilas - 1 && idx === numFilas - 2) {
+      return { ...f, altura: Math.max(5, (f.altura || 15) - alturaDiff) };
+    }
+    // Si no es la última, ajustar la última fila
+    else if (filaIdx < numFilas - 1 && idx === numFilas - 1) {
+      return { ...f, altura: Math.max(5, (f.altura || 15) - alturaDiff) };
+    }
+
+    return f;
+  });
+
+  return { ...tabla, filas: newFilas };
 };
 
 const updateCeldaAncho = (tabla, rowId, cellId, nuevoAncho_mm) => {
-  // Encontrar índice de columna
   const filaConCelda = tabla.filas.find(f => f.id === rowId);
   if (!filaConCelda) return tabla;
 
   const celdaIdx = filaConCelda.celdas.findIndex(c => c.id === cellId);
   if (celdaIdx === -1) return tabla;
 
+  const numCols = filaConCelda.celdas.length;
   const oldAncho = filaConCelda.celdas[celdaIdx].ancho_mm || filaConCelda.celdas[celdaIdx].ancho;
   const anchoDiff = nuevoAncho_mm - oldAncho;
 
@@ -171,10 +191,15 @@ const updateCeldaAncho = (tabla, rowId, cellId, nuevoAncho_mm) => {
       const newCeldas = [...fila.celdas];
       newCeldas[celdaIdx] = { ...newCeldas[celdaIdx], ancho_mm: Math.max(10, nuevoAncho_mm) };
 
-      // Si hay siguiente celda en esta fila, restarle el cambio (mantener ancho total fijo)
-      if (celdaIdx + 1 < newCeldas.length) {
-        const siguienteCelda = newCeldas[celdaIdx + 1];
-        newCeldas[celdaIdx + 1] = { ...siguienteCelda, ancho_mm: Math.max(10, (siguienteCelda.ancho_mm || siguienteCelda.ancho) - anchoDiff) };
+      // Si es la última columna, ajustar la anterior
+      if (celdaIdx === numCols - 1 && celdaIdx > 0) {
+        const anteriorCelda = newCeldas[celdaIdx - 1];
+        newCeldas[celdaIdx - 1] = { ...anteriorCelda, ancho_mm: Math.max(10, (anteriorCelda.ancho_mm || anteriorCelda.ancho) - anchoDiff) };
+      }
+      // Si no es la última, ajustar la última columna
+      else if (celdaIdx < numCols - 1) {
+        const ultimaCelda = newCeldas[numCols - 1];
+        newCeldas[numCols - 1] = { ...ultimaCelda, ancho_mm: Math.max(10, (ultimaCelda.ancho_mm || ultimaCelda.ancho) - anchoDiff) };
       }
 
       return { ...fila, celdas: newCeldas };
