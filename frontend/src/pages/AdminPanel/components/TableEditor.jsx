@@ -221,25 +221,33 @@ const updateCeldaAncho = (tabla, rowId, cellId, nuevoAncho_mm) => {
     ...tabla,
     filas: tabla.filas.map(fila => {
       console.log('[updateCeldaAncho] procesando fila:', fila.id, 'rowId:', rowId, 'coincide:', fila.id === rowId);
-      if (fila.id !== rowId) return fila;
 
-      const newCeldas = [...fila.celdas];
+      // IMPORTANTE: siempre crear un nuevo array de celdas (no compartir referencias)
+      if (fila.id !== rowId) {
+        return {
+          ...fila,
+          celdas: fila.celdas.map(c => ({ ...c })) // Clonar cada celda
+        };
+      }
+
+      // Clonar TODAS las celdas primero
+      const newCeldas = fila.celdas.map(c => ({ ...c }));
+
+      // Modificar la celda cambiadaSRE
       newCeldas[celdaIdx] = { ...newCeldas[celdaIdx], ancho_mm: Math.max(10, nuevoAncho_mm) };
 
       // Si es la última celda de la fila, ajustar la penúltima
       if (celdaIdx === numCeldasEnFila - 1 && celdaIdx > 0) {
-        const anteriorCelda = newCeldas[celdaIdx - 1];
         newCeldas[celdaIdx - 1] = {
-          ...anteriorCelda,
-          ancho_mm: Math.max(10, (anteriorCelda.ancho_mm || anteriorCelda.ancho) - anchoDiff)
+          ...newCeldas[celdaIdx - 1],
+          ancho_mm: Math.max(10, (newCeldas[celdaIdx - 1].ancho_mm || newCeldas[celdaIdx - 1].ancho) - anchoDiff)
         };
       }
       // Si no es la última, ajustar la última celda de esta fila
       else if (celdaIdx < numCeldasEnFila - 1) {
-        const ultimaCelda = newCeldas[numCeldasEnFila - 1];
         newCeldas[numCeldasEnFila - 1] = {
-          ...ultimaCelda,
-          ancho_mm: Math.max(10, (ultimaCelda.ancho_mm || ultimaCelda.ancho) - anchoDiff)
+          ...newCeldas[numCeldasEnFila - 1],
+          ancho_mm: Math.max(10, (newCeldas[numCeldasEnFila - 1].ancho_mm || newCeldas[numCeldasEnFila - 1].ancho) - anchoDiff)
         };
       }
 
