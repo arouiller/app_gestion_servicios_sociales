@@ -94,7 +94,8 @@ const TablePreviewRecibo = ({ tabla, recibo, pageConfig, personData, onCellDoubl
                       style={{
                         width: '100%',
                         borderCollapse: 'collapse',
-                        height: '100%'
+                        height: '100%',
+                        tableLayout: 'fixed'
                       }}
                     >
                       <tbody>
@@ -120,7 +121,10 @@ const TablePreviewRecibo = ({ tabla, recibo, pageConfig, personData, onCellDoubl
                                   fontSize: 'inherit',
                                   cursor: 'pointer',
                                   backgroundColor: isSelected ? '#e8f4f8' : 'transparent',
-                                  minWidth: '0'
+                                  minWidth: '0',
+                                  overflow: 'hidden',
+                                  wordBreak: 'break-word',
+                                  wordWrap: 'break-word'
                                 }}
                                 onDoubleClick={() => {
                                   if (onCellDoubleClick && recibo.number === 1) {
