@@ -555,7 +555,7 @@ exports.generarPDF = async (req, res, next) => {
     }
 
     // Obtener todos los recibos del período usando Sequelize ORM (evita duplicados de JOINs)
-    // Igual que en exports.list() que se usa en el frontend
+    // Solo incluir asociaciones que existen en el modelo Recibo
     const recibos = await db.Recibo.findAll({
       where: {
         periodo: {
@@ -565,14 +565,18 @@ exports.generarPDF = async (req, res, next) => {
       include: [
         {
           model: db.PlanV1,
-          attributes: [],
+          attributes: ['plan_numero', 'localidad_id'],
           include: [
             { model: db.Localidad, attributes: ['nombre'] },
-            { model: db.PlanIntegrante, attributes: [], include: [{ model: db.Persona, attributes: ['numero_documento', 'fecha_nacimiento', 'fecha_cobertura'] }] },
+            {
+              model: db.PlanIntegrante,
+              attributes: ['persona_id', 'rol'],
+              include: [{ model: db.Persona, attributes: ['numero_documento', 'fecha_nacimiento', 'fecha_cobertura'] }],
+              where: { rol: 'titular' },
+              required: false,
+            },
           ],
         },
-        { model: db.TipoDePlan, attributes: ['abreviacion'] },
-        { model: db.TipoDeGrupo, attributes: ['abreviacion'] },
       ],
       order: [['id', 'ASC']],
       raw: false,
@@ -585,15 +589,22 @@ exports.generarPDF = async (req, res, next) => {
       });
     }
 
+    // Obtener abreviaciones de tipo_plan y tipo_grupo para mapeo posterior
+    const tiposPlanes = await db.TipoDePlan.findAll({ raw: true });
+    const tiposGrupos = await db.TipoDeGrupo.findAll({ raw: true });
+
+    const tipoPlanMap = Object.fromEntries(tiposPlanes.map(tp => [tp.tipo_plan_nombre, tp.abreviacion]));
+    const tipoGrupoMap = Object.fromEntries(tiposGrupos.map(tg => [tg.tipo_de_grupo_nombre, tg.abreviacion]));
+
     // Mapear datos de Sequelize al formato esperado (compatible con la lógica existente)
     const recibosFormateados = recibos.map(r => ({
       ...r.dataValues,
-      localidad_nombre: r.Plan?.Localidad?.nombre || null,
-      numero_documento: r.Plan?.PlanIntegrante?.find(pi => pi.rol === 'titular')?.Persona?.numero_documento || null,
-      fecha_nacimiento: r.Plan?.PlanIntegrante?.find(pi => pi.rol === 'titular')?.Persona?.fecha_nacimiento || null,
-      fecha_cobertura: r.Plan?.PlanIntegrante?.find(pi => pi.rol === 'titular')?.Persona?.fecha_cobertura || null,
-      tipo_plan_abreviacion: r.TipoDePlan?.abreviacion || null,
-      tipo_grupo_abreviacion: r.TipoDeGrupo?.abreviacion || null,
+      localidad_nombre: r.PlanV1?.Localidad?.nombre || null,
+      numero_documento: r.PlanV1?.PlanIntegrantes?.[0]?.Persona?.numero_documento || null,
+      fecha_nacimiento: r.PlanV1?.PlanIntegrantes?.[0]?.Persona?.fecha_nacimiento || null,
+      fecha_cobertura: r.PlanV1?.PlanIntegrantes?.[0]?.Persona?.fecha_cobertura || null,
+      tipo_plan_abreviacion: tipoPlanMap[r.tipo_plan_nombre] || null,
+      tipo_grupo_abreviacion: tipoGrupoMap[r.tipo_de_grupo_nombre] || null,
     }));
 
     // LOG: Diagnóstico de duplicados - Ver datos de BD
