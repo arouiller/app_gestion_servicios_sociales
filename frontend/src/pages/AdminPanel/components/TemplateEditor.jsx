@@ -494,29 +494,6 @@ const TemplateEditor = ({ onBack }) => {
           <button
             onClick={() => {
               const tabla = currentTemplate.bloques[0];
-              const nuevaTabla = addColumna(tabla, contextMenu.celdaIndex);
-              updateTemplate({ bloques: [nuevaTabla] });
-              setContextMenu(null);
-            }}
-            style={{ display: 'block', width: '100%', textAlign: 'left', padding: '8px 12px', border: 'none', backgroundColor: 'transparent', cursor: 'pointer', fontSize: '12px', color: '#333' }}
-          >
-            Agregar columna antes
-          </button>
-          <button
-            onClick={() => {
-              const tabla = currentTemplate.bloques[0];
-              const nuevaTabla = addColumna(tabla, contextMenu.celdaIndex + 1);
-              updateTemplate({ bloques: [nuevaTabla] });
-              setContextMenu(null);
-            }}
-            style={{ display: 'block', width: '100%', textAlign: 'left', padding: '8px 12px', border: 'none', backgroundColor: 'transparent', cursor: 'pointer', fontSize: '12px', color: '#333' }}
-          >
-            Agregar columna después
-          </button>
-          <div style={{ borderTop: '1px solid #eee', margin: '4px 0' }} />
-          <button
-            onClick={() => {
-              const tabla = currentTemplate.bloques[0];
               const nuevaTabla = deleteFila(tabla, contextMenu.fila.id);
               updateTemplate({ bloques: [nuevaTabla] });
               setContextMenu(null);
@@ -524,17 +501,6 @@ const TemplateEditor = ({ onBack }) => {
             style={{ display: 'block', width: '100%', textAlign: 'left', padding: '8px 12px', border: 'none', backgroundColor: 'transparent', cursor: 'pointer', fontSize: '12px', color: '#d32f2f' }}
           >
             Eliminar fila
-          </button>
-          <button
-            onClick={() => {
-              const tabla = currentTemplate.bloques[0];
-              const nuevaTabla = deleteColumna(tabla, contextMenu.celdaIndex);
-              updateTemplate({ bloques: [nuevaTabla] });
-              setContextMenu(null);
-            }}
-            style={{ display: 'block', width: '100%', textAlign: 'left', padding: '8px 12px', border: 'none', backgroundColor: 'transparent', cursor: 'pointer', fontSize: '12px', color: '#d32f2f' }}
-          >
-            Eliminar columna
           </button>
         </div>
       )}

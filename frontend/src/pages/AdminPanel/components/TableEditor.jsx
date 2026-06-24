@@ -317,7 +317,7 @@ const TableEditor = ({ placeholders = {} }) => {
 
       <div className="table-toolbar" style={{ marginBottom: '12px' }}>
         <small style={{ color: '#666', fontWeight: 'bold' }}>
-          {tabla.filas.length} filas × {numCols} columnas
+          {tabla.filas.length} filas (cada fila puede tener diferente número de celdas)
         </small>
       </div>
 
