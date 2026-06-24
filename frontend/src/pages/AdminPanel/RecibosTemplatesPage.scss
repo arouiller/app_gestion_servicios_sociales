@@ -1301,7 +1301,6 @@ $color-neutral-700: #374151;
   position: relative;
 
   .ruler-corner {
-    flex-shrink: 0;
     background-color: #f5f5f5;
     border-bottom: 1px solid $color-neutral-300;
     border-right: 1px solid $color-neutral-300;
@@ -1312,15 +1311,13 @@ $color-neutral-700: #374151;
     top: 0;
     z-index: 100;
     background-color: #f5f5f5;
-    flex-shrink: 0;
   }
 
   .ruler-vertical-container {
     position: sticky;
     left: 0;
-    z-index: 100;
+    z-index: 99;
     background-color: #f5f5f5;
-    flex-shrink: 0;
     overflow: hidden;
   }
 

@@ -338,18 +338,21 @@ const TemplateEditor = ({ onBack }) => {
       <div className="editor-container-new">
         {/* Layout de Rulers + Canvas */}
         <div className="rulers-container">
-          {/* Esquina superior izquierda (intersección de reglas) */}
-          <div className="ruler-corner" style={{ width: RULER_WIDTH, height: RULER_WIDTH }} />
+          {/* Fila 1: Esquina + Ruler Horizontal */}
+          <div style={{ display: 'flex', width: '100%', flex: 'none' }}>
+            {/* Esquina superior izquierda (intersección de reglas) */}
+            <div className="ruler-corner" style={{ width: RULER_WIDTH, height: RULER_WIDTH, flexShrink: 0 }} />
 
-          {/* Ruler Horizontal - sticky */}
-          <div className="ruler-horizontal-container" style={{ flex: 1 }}>
-            <HorizontalRuler width={pageDimensions.width * MM_TO_PX} />
+            {/* Ruler Horizontal - sticky */}
+            <div className="ruler-horizontal-container" style={{ flex: 1 }}>
+              <HorizontalRuler width={pageDimensions.width * MM_TO_PX} />
+            </div>
           </div>
 
           {/* Fila 2: Ruler Vertical + Canvas */}
           <div style={{ display: 'flex', flex: 1, width: '100%' }}>
             {/* Ruler Vertical - sticky */}
-            <div className="ruler-vertical-container">
+            <div className="ruler-vertical-container" style={{ flexShrink: 0 }}>
               <VerticalRuler height={pageDimensions.height * MM_TO_PX} />
             </div>
 
