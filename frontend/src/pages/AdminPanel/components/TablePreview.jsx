@@ -71,6 +71,7 @@ const TablePreviewRecibo = ({ tabla, recibo, pageConfig, personData, onCellDoubl
           boxSizing: 'border-box'
         }}
       >
+        {/* Tabla raíz: 1 celda por fila, cada celda contiene una tabla interna */}
         <table
           style={{
             width: '100%',
@@ -84,58 +85,71 @@ const TablePreviewRecibo = ({ tabla, recibo, pageConfig, personData, onCellDoubl
             {tabla.filas.map((fila, filaIdx) => {
               const altura = fila.altura || 15;
               const anchoTotal = tabla.anchoTotal_mm || 170;
+
               return (
-                <tr key={`row-${fila.id}`} style={{ height: `${altura}mm` }}>
-                  {fila.celdas.map((celda) => {
-                    let contenido = celda.contenido || '';
-                    if (personData) {
-                      contenido = replacePlaceholders(contenido, personData);
-                    }
-                    const anchoMM = celda.ancho_mm || celda.ancho;
-                    const anchoPorcentaje = (anchoMM / anchoTotal) * 100;
-                    console.log(`[TablePreview] Fila ${filaIdx}, Celda: ancho_mm=${celda.ancho_mm}, ancho=${celda.ancho}, anchoTotal=${anchoTotal}, anchoPorcentaje=${anchoPorcentaje.toFixed(2)}%`);
-                    const isSelected = selectedCellId === celda.id;
-                    return (
-                      <td
-                        key={`cell-${celda.id}`}
-                        style={{
-                          width: `${anchoPorcentaje}%`,
-                          padding: '4px',
-                          border: isSelected ? '2px solid #4dabf7' : tabla.bordeTabla ? '1px solid #000' : 'none',
-                          verticalAlign: 'top',
-                          fontSize: 'inherit',
-                          position: 'relative',
-                          whiteSpace: 'nowrap',
-                          overflow: 'hidden',
-                          textOverflow: 'ellipsis',
-                          cursor: 'pointer',
-                          backgroundColor: isSelected ? '#e8f4f8' : 'transparent'
-                        }}
-                        onDoubleClick={() => {
-                          if (onCellDoubleClick && recibo.number === 1) {
-                            onCellDoubleClick(fila, celda);
-                          }
-                        }}
-                        onClick={() => {
-                          if (onCellClick && recibo.number === 1) {
-                            onCellClick(fila, celda);
-                          }
-                        }}
-                        onContextMenu={(e) => {
-                          e.preventDefault();
-                          if (onContextMenu && recibo.number === 1) {
-                            onContextMenu(e, fila, celda);
-                          }
-                        }}
-                      >
-                        {contenido ? (
-                          <div dangerouslySetInnerHTML={{ __html: contenido }} />
-                        ) : (
-                          <em style={{ color: '#ccc' }}>vacío</em>
-                        )}
-                      </td>
-                    );
-                  })}
+                <tr key={`row-${fila.id}`} style={{ height: `${altura}mm`, padding: 0 }}>
+                  <td style={{ padding: 0, border: tabla.bordeTabla ? '1px solid #000' : 'none', width: '100%' }}>
+                    {/* Tabla interna: 1 fila, M columnas con anchos independientes */}
+                    <table
+                      style={{
+                        width: '100%',
+                        borderCollapse: 'collapse',
+                        height: '100%'
+                      }}
+                    >
+                      <tbody>
+                        <tr>
+                          {fila.celdas.map((celda) => {
+                            let contenido = celda.contenido || '';
+                            if (personData) {
+                              contenido = replacePlaceholders(contenido, personData);
+                            }
+                            const anchoMM = celda.ancho_mm || celda.ancho;
+                            const anchoPorcentaje = (anchoMM / anchoTotal) * 100;
+                            const isSelected = selectedCellId === celda.id;
+
+                            return (
+                              <td
+                                key={`cell-${celda.id}`}
+                                style={{
+                                  width: `${anchoPorcentaje}%`,
+                                  padding: '4px',
+                                  border: isSelected ? '2px solid #4dabf7' : tabla.bordeTabla ? '1px solid #000' : 'none',
+                                  verticalAlign: 'top',
+                                  fontSize: 'inherit',
+                                  cursor: 'pointer',
+                                  backgroundColor: isSelected ? '#e8f4f8' : 'transparent',
+                                  minWidth: '0'
+                                }}
+                                onDoubleClick={() => {
+                                  if (onCellDoubleClick && recibo.number === 1) {
+                                    onCellDoubleClick(fila, celda);
+                                  }
+                                }}
+                                onClick={() => {
+                                  if (onCellClick && recibo.number === 1) {
+                                    onCellClick(fila, celda);
+                                  }
+                                }}
+                                onContextMenu={(e) => {
+                                  e.preventDefault();
+                                  if (onContextMenu && recibo.number === 1) {
+                                    onContextMenu(e, fila, celda);
+                                  }
+                                }}
+                              >
+                                {contenido ? (
+                                  <div dangerouslySetInnerHTML={{ __html: contenido }} />
+                                ) : (
+                                  <em style={{ color: '#ccc' }}>vacío</em>
+                                )}
+                              </td>
+                            );
+                          })}
+                        </tr>
+                      </tbody>
+                    </table>
+                  </td>
                 </tr>
               );
             })}
