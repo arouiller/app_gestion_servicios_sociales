@@ -76,19 +76,24 @@ const deleteFila = (tabla, rowId) => {
   };
 };
 
-const addColumna = (tabla, atIndex = -1) => {
+const addCelda = (tabla, rowId, atIndex = -1) => {
   if (!tabla) return tabla;
-  const numCols = tabla.filas[0]?.celdas.length || 1;
   const anchoTotal = tabla.anchoTotal_mm || 170;
-  const anchoEquitativo = Math.round(anchoTotal / (numCols + 1) * 10) / 10;
 
   return {
     ...tabla,
     filas: tabla.filas.map(fila => {
+      if (fila.id !== rowId) return fila;
+
+      const numCeldasActuales = fila.celdas.length;
+      const anchoEquitativo = Math.round(anchoTotal / (numCeldasActuales + 1) * 10) / 10;
+
+      // Reducir todas las celdas proporcionalmente
       const newCeldas = fila.celdas.map(celda => ({
         ...celda,
-        ancho_mm: (celda.ancho_mm || celda.ancho) * numCols / (numCols + 1)
+        ancho_mm: Math.round((celda.ancho_mm || celda.ancho) * numCeldasActuales / (numCeldasActuales + 1) * 10) / 10
       }));
+
       const nuevaCelda = { id: uuidv4(), contenido: '', ancho_mm: anchoEquitativo };
 
       if (atIndex >= 0 && atIndex <= newCeldas.length) {
@@ -110,20 +115,35 @@ const addColumna = (tabla, atIndex = -1) => {
   };
 };
 
-const deleteColumna = (tabla, colIndex) => {
-  if (!tabla || tabla.filas[0].celdas.length <= 1) return tabla;
-  const numCols = tabla.filas[0].celdas.length;
+const deleteCelda = (tabla, rowId, cellId) => {
+  if (!tabla) return tabla;
+  const anchoTotal = tabla.anchoTotal_mm || 170;
+
   return {
     ...tabla,
-    filas: tabla.filas.map(fila => ({
-      ...fila,
-      celdas: fila.celdas
-        .filter((_, idx) => idx !== colIndex)
+    filas: tabla.filas.map(fila => {
+      if (fila.id !== rowId) return fila;
+      if (fila.celdas.length <= 1) return fila; // No eliminar si es la última celda
+
+      const celdaAEliminar = fila.celdas.find(c => c.id === cellId);
+      if (!celdaAEliminar) return fila;
+
+      const anchoALiberar = celdaAEliminar.ancho_mm || celdaAEliminar.ancho;
+      const numCeldasNuevas = fila.celdas.length - 1;
+
+      // Redistribuir el ancho liberado entre todas las celdas restantes
+      const newCeldas = fila.celdas
+        .filter(c => c.id !== cellId)
         .map(celda => ({
           ...celda,
-          ancho: celda.ancho * numCols / (numCols - 1)
-        }))
-    }))
+          ancho_mm: Math.round(((celda.ancho_mm || celda.ancho) + anchoALiberar / numCeldasNuevas) * 10) / 10
+        }));
+
+      return {
+        ...fila,
+        celdas: newCeldas
+      };
+    })
   };
 };
 
@@ -180,26 +200,35 @@ const updateCeldaAncho = (tabla, rowId, cellId, nuevoAncho_mm) => {
   const celdaIdx = filaConCelda.celdas.findIndex(c => c.id === cellId);
   if (celdaIdx === -1) return tabla;
 
-  const numCols = filaConCelda.celdas.length;
   const oldAncho = filaConCelda.celdas[celdaIdx].ancho_mm || filaConCelda.celdas[celdaIdx].ancho;
   const anchoDiff = nuevoAncho_mm - oldAncho;
+  const numCeldasEnFila = filaConCelda.celdas.length;
+  const anchoTotal = tabla.anchoTotal_mm || 170;
 
-  // Actualizar TODAS las celdas de la misma columna (índice celdaIdx)
+  // Cascada a nivel de fila: si cambias una celda, la última (o penúltima si cambias última) absorbe
   return {
     ...tabla,
     filas: tabla.filas.map(fila => {
+      if (fila.id !== rowId) return fila;
+
       const newCeldas = [...fila.celdas];
       newCeldas[celdaIdx] = { ...newCeldas[celdaIdx], ancho_mm: Math.max(10, nuevoAncho_mm) };
 
-      // Si es la última columna, ajustar la anterior
-      if (celdaIdx === numCols - 1 && celdaIdx > 0) {
+      // Si es la última celda de la fila, ajustar la penúltima
+      if (celdaIdx === numCeldasEnFila - 1 && celdaIdx > 0) {
         const anteriorCelda = newCeldas[celdaIdx - 1];
-        newCeldas[celdaIdx - 1] = { ...anteriorCelda, ancho_mm: Math.max(10, (anteriorCelda.ancho_mm || anteriorCelda.ancho) - anchoDiff) };
+        newCeldas[celdaIdx - 1] = {
+          ...anteriorCelda,
+          ancho_mm: Math.max(10, (anteriorCelda.ancho_mm || anteriorCelda.ancho) - anchoDiff)
+        };
       }
-      // Si no es la última, ajustar la última columna
-      else if (celdaIdx < numCols - 1) {
-        const ultimaCelda = newCeldas[numCols - 1];
-        newCeldas[numCols - 1] = { ...ultimaCelda, ancho_mm: Math.max(10, (ultimaCelda.ancho_mm || ultimaCelda.ancho) - anchoDiff) };
+      // Si no es la última, ajustar la última celda de esta fila
+      else if (celdaIdx < numCeldasEnFila - 1) {
+        const ultimaCelda = newCeldas[numCeldasEnFila - 1];
+        newCeldas[numCeldasEnFila - 1] = {
+          ...ultimaCelda,
+          ancho_mm: Math.max(10, (ultimaCelda.ancho_mm || ultimaCelda.ancho) - anchoDiff)
+        };
       }
 
       return { ...fila, celdas: newCeldas };
@@ -234,13 +263,13 @@ const TableEditor = ({ placeholders = {} }) => {
     updateTemplate({ bloques: [nuevaTabla], isDirty: true });
   };
 
-  const handleAddColumna = () => {
-    const nuevaTabla = addColumna(tabla);
+  const handleAddCelda = (rowId, atIndex = -1) => {
+    const nuevaTabla = addCelda(tabla, rowId, atIndex);
     updateTemplate({ bloques: [nuevaTabla], isDirty: true });
   };
 
-  const handleDeleteColumna = (colIndex) => {
-    const nuevaTabla = deleteColumna(tabla, colIndex);
+  const handleDeleteCelda = (rowId, cellId) => {
+    const nuevaTabla = deleteCelda(tabla, rowId, cellId);
     updateTemplate({ bloques: [nuevaTabla], isDirty: true });
   };
 
@@ -274,8 +303,6 @@ const TableEditor = ({ placeholders = {} }) => {
       setModalCell(null);
     }
   };
-
-  const numCols = tabla.filas[0]?.celdas.length || 1;
 
   // Obtener celda actual del modal
   const modalCelda = modalCell
@@ -347,12 +374,12 @@ const TableEditor = ({ placeholders = {} }) => {
                   </div>
                 </td>
 
-                {/* Celdas de estructura */}
-                {fila.celdas.map((celda, colIndex) => (
+                {/* Celdas de estructura con controles por celda */}
+                {fila.celdas.map((celda, celdaIdx) => (
                   <td
                     key={`cell-${celda.id}`}
                     style={{
-                      width: `${celda.ancho}%`,
+                      width: `${((celda.ancho_mm || celda.ancho) / (tabla.anchoTotal_mm || 170)) * 100}%`,
                       height: '40px',
                       padding: '0',
                       border: '1px solid #ddd',
@@ -361,58 +388,50 @@ const TableEditor = ({ placeholders = {} }) => {
                       position: 'relative'
                     }}
                   >
-                    {/* Controles de columna en la primera fila */}
-                    {rowIndex === 0 && (
-                      <div
-                        style={{
-                          position: 'absolute',
-                          top: '-24px',
-                          left: '0',
-                          right: '0',
-                          height: '20px',
-                          display: 'flex',
-                          gap: '2px',
-                          justifyContent: 'center',
-                          alignItems: 'center',
-                          backgroundColor: '#f0f0f0',
-                          borderBottom: '1px solid #ddd',
-                          fontSize: '9px'
-                        }}
+                    {/* Controles de celda en cada celda */}
+                    <div
+                      style={{
+                        position: 'absolute',
+                        top: '-24px',
+                        left: '0',
+                        right: '0',
+                        height: '20px',
+                        display: 'flex',
+                        gap: '2px',
+                        justifyContent: 'center',
+                        alignItems: 'center',
+                        backgroundColor: '#f0f0f0',
+                        borderBottom: '1px solid #ddd',
+                        fontSize: '9px'
+                      }}
+                    >
+                      <button
+                        className="btn btn-xs"
+                        onClick={() => handleAddCelda(fila.id, celdaIdx)}
+                        title="Agregar celda antes"
+                        style={{ padding: '2px 4px' }}
                       >
+                        ◀
+                      </button>
+                      <button
+                        className="btn btn-xs"
+                        onClick={() => handleAddCelda(fila.id, celdaIdx + 1)}
+                        title="Agregar celda después"
+                        style={{ padding: '2px 4px' }}
+                      >
+                        ▶
+                      </button>
+                      {fila.celdas.length > 1 && (
                         <button
-                          className="btn btn-xs"
-                          onClick={() => {
-                            const nuevaTabla = addColumna(tabla, colIndex);
-                            updateTemplate({ bloques: [nuevaTabla], isDirty: true });
-                          }}
-                          title="Agregar columna antes"
+                          className="btn btn-xs btn-danger"
+                          onClick={() => handleDeleteCelda(fila.id, celda.id)}
+                          title="Eliminar celda"
                           style={{ padding: '2px 4px' }}
                         >
-                          ◀
+                          ✕
                         </button>
-                        <button
-                          className="btn btn-xs"
-                          onClick={() => {
-                            const nuevaTabla = addColumna(tabla, colIndex + 1);
-                            updateTemplate({ bloques: [nuevaTabla], isDirty: true });
-                          }}
-                          title="Agregar columna después"
-                          style={{ padding: '2px 4px' }}
-                        >
-                          ▶
-                        </button>
-                        {numCols > 1 && (
-                          <button
-                            className="btn btn-xs btn-danger"
-                            onClick={() => handleDeleteColumna(colIndex)}
-                            title="Eliminar columna"
-                            style={{ padding: '2px 4px' }}
-                          >
-                            ✕
-                          </button>
-                        )}
-                      </div>
-                    )}
+                      )}
+                    </div>
                   </td>
                 ))}
               </tr>
@@ -435,4 +454,4 @@ const TableEditor = ({ placeholders = {} }) => {
 };
 
 export default TableEditor;
-export { initTabla, addFila, deleteFila, addColumna, deleteColumna, updateCelda, updateFilaAltura, updateCeldaAncho };
+export { initTabla, addFila, deleteFila, addCelda, deleteCelda, updateCelda, updateFilaAltura, updateCeldaAncho };

@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import useTemplateStore from '../../../hooks/useTemplateStore';
-import { updateFilaAltura, updateCeldaAncho } from './TableEditor';
+import { updateFilaAltura, updateCeldaAncho } from './TableEditor'; // addCelda/deleteCelda no se usan aquí
 
 const TemplateConfigPanel = ({ selectedCell, placeholders = {} }) => {
   const currentTemplate = useTemplateStore((state) => state.currentTemplate);
@@ -85,7 +85,7 @@ const TemplateConfigPanel = ({ selectedCell, placeholders = {} }) => {
 
               <div>
                 <label style={{ fontSize: '11px', fontWeight: 'bold', color: '#333', display: 'block', marginBottom: '6px' }}>
-                  0.2 Ancho de Columna (mm)
+                  0.2 Ancho de Celda (mm)
                 </label>
                 <input
                   type="number"
