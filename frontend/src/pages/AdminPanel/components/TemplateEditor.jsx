@@ -8,7 +8,7 @@ import useTemplateStore from '../../../hooks/useTemplateStore';
 import { replacePlaceholders } from '../../../utils/placeholderReplacer';
 import PageGuides, { calculateRecibosPositions } from './PageGuides';
 import TemplateConfigPanel from './TemplateConfigPanel';
-import TableEditor, { updateCelda, addFila, deleteFila, updateFilaAltura, updateCeldaAncho } from './TableEditor';
+import TableEditor, { updateCelda, addFila, deleteFila, addCelda, deleteCelda, updateFilaAltura, updateCeldaAncho } from './TableEditor';
 import TablePreview from './TablePreview';
 import CellEditorModal from './CellEditorModal';
 import { HorizontalRuler, VerticalRuler, RULER_WIDTH, MM_TO_PX } from './Ruler';
@@ -502,6 +502,44 @@ const TemplateEditor = ({ onBack }) => {
           >
             Eliminar fila
           </button>
+          <div style={{ borderTop: '1px solid #eee', margin: '4px 0' }} />
+          <button
+            onClick={() => {
+              const tabla = currentTemplate.bloques[0];
+              const celdaIdx = contextMenu.fila.celdas.findIndex(c => c.id === contextMenu.celda.id);
+              const nuevaTabla = addCelda(tabla, contextMenu.fila.id, celdaIdx);
+              updateTemplate({ bloques: [nuevaTabla], isDirty: true });
+              setContextMenu(null);
+            }}
+            style={{ display: 'block', width: '100%', textAlign: 'left', padding: '8px 12px', border: 'none', backgroundColor: 'transparent', cursor: 'pointer', fontSize: '12px', color: '#333' }}
+          >
+            Agregar celda antes
+          </button>
+          <button
+            onClick={() => {
+              const tabla = currentTemplate.bloques[0];
+              const celdaIdx = contextMenu.fila.celdas.findIndex(c => c.id === contextMenu.celda.id);
+              const nuevaTabla = addCelda(tabla, contextMenu.fila.id, celdaIdx + 1);
+              updateTemplate({ bloques: [nuevaTabla], isDirty: true });
+              setContextMenu(null);
+            }}
+            style={{ display: 'block', width: '100%', textAlign: 'left', padding: '8px 12px', border: 'none', backgroundColor: 'transparent', cursor: 'pointer', fontSize: '12px', color: '#333' }}
+          >
+            Agregar celda después
+          </button>
+          {contextMenu.fila.celdas.length > 1 && (
+            <button
+              onClick={() => {
+                const tabla = currentTemplate.bloques[0];
+                const nuevaTabla = deleteCelda(tabla, contextMenu.fila.id, contextMenu.celda.id);
+                updateTemplate({ bloques: [nuevaTabla], isDirty: true });
+                setContextMenu(null);
+              }}
+              style={{ display: 'block', width: '100%', textAlign: 'left', padding: '8px 12px', border: 'none', backgroundColor: 'transparent', cursor: 'pointer', fontSize: '12px', color: '#d32f2f' }}
+            >
+              Eliminar celda
+            </button>
+          )}
         </div>
       )}
 
