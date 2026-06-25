@@ -102,16 +102,13 @@ exports.generar = async (req, res, next) => {
         transaction,
       });
       planesAGenerar = todosPlanes.map((p) => p.plan_numero);
-      console.log(`[RECIBOS] Planes encontrados para ${periodoYYYYMM}: ${planesAGenerar.length}`, planesAGenerar);
     } else {
       planesAGenerar = planes;
-      console.log(`[RECIBOS] Planes especificados para ${periodoYYYYMM}: ${planesAGenerar.length}`, planesAGenerar);
     }
 
     const recibosGenerados = [];
     let reciboIndex = 0;
 
-    console.log(`[RECIBOS] Iniciando loop de generación para ${planesAGenerar.length} planes`);
 
     for (const planNumero of planesAGenerar) {
       try {
@@ -124,7 +121,6 @@ exports.generar = async (req, res, next) => {
 
           if (existente) {
             // Omitir sin error
-            console.log(`[RECIBOS] Plan ${planNumero} ya tiene recibo para ${periodoYYYYMM}, omitiendo`);
             continue;
           }
         }
@@ -143,7 +139,6 @@ exports.generar = async (req, res, next) => {
         });
 
         if (!plan) {
-          console.log(`[RECIBOS] Plan ${planNumero} no encontrado, omitiendo`);
           continue;
         }
 
@@ -157,7 +152,6 @@ exports.generar = async (req, res, next) => {
         // Encontrar titular
         const titular = integrantes.find((i) => i.rol === 'titular');
         if (!titular) {
-          console.log(`[RECIBOS] Plan ${planNumero} sin titular, omitiendo`);
           continue; // Sin titular, omitir
         }
 
@@ -174,14 +168,7 @@ exports.generar = async (req, res, next) => {
       const valorCuota = parseFloat(plan.valor_cuota || 0);
       const arancelPorServicio = valorCuota - cuotaSocial;
 
-      // BACKLOG-079: Log warning si arancel es negativo
-      if (arancelPorServicio < 0) {
-        console.warn(
-          `[BACKLOG-079] arancel_por_servicio negativo en recibo. ` +
-          `Plan: ${plan.numero_afiliado}, valor_cuota: ${valorCuota}, ` +
-          `cuota_social: ${cuotaSocial}, arancel: ${arancelPorServicio}`
-        );
-      }
+      // BACKLOG-079: arancel_por_servicio puede ser negativo (cuota social > valor_cuota)
 
       // Crear recibo con snapshots y desglose
       const recibo = await db.Recibo.create(
@@ -238,18 +225,14 @@ exports.generar = async (req, res, next) => {
         );
       }
 
-        console.log(`[RECIBOS] Recibo creado para plan ${planNumero}, período ${periodoYYYYMM}`);
         recibosGenerados.push(recibo);
       } catch (err) {
-        console.error(`[RECIBOS ERROR] Error generando recibo para plan ${planNumero}:`, err.message);
         throw err; // Relanzar para que la transacción se haga rollback
       }
     }
 
-    console.log(`[RECIBOS] Total recibos generados: ${recibosGenerados.length} para período ${periodoYYYYMM}`);
 
     // Crear o actualizar registro en periodos_recibos
-    console.log(`[RECIBOS] Intentando upsert en periodos_recibos: período=${periodoYYYYMM}, cantidad=${recibosGenerados.length}`);
 
     try {
       const [periodoRecord, creado] = await db.PeriodosRecibos.upsert(
@@ -260,15 +243,11 @@ exports.generar = async (req, res, next) => {
         },
         { transaction }
       );
-      console.log(`[RECIBOS] Upsert exitoso: ${creado ? 'creado' : 'actualizado'} registro para ${periodoYYYYMM}`);
     } catch (err) {
-      console.error(`[RECIBOS ERROR] Error en upsert de periodos_recibos:`, err.message);
       throw err;
     }
 
-    console.log(`[RECIBOS] Commiteando transacción...`);
     await transaction.commit();
-    console.log(`[RECIBOS] Transacción commiteada exitosamente`);
 
     res.status(201).json({
       success: true,
@@ -306,7 +285,6 @@ exports.list = async (req, res, next) => {
         const firstDayNum = parseInt(firstDay.replace(/-/g, ''));  // 20260401
         const lastDayNum = parseInt(lastDay.replace(/-/g, ''));   // 20260430
 
-        console.log(`[BUG-019 DEBUG] Búsqueda por rango: ${firstDay} a ${lastDay} (${firstDayNum} a ${lastDayNum})`);
 
         // Usar SQL directo con DATE_FORMAT + CAST para evitar problemas de timezone
         where[Op.and] = [
@@ -315,7 +293,6 @@ exports.list = async (req, res, next) => {
       } else if (periodo.length === 10 && /^\d{4}-\d{2}-\d{2}$/.test(periodo)) {
         // YYYY-MM-DD: buscar ese día específico
         const periodoNum = parseInt(periodo.replace(/-/g, ''));
-        console.log(`[BUG-019 DEBUG] Búsqueda exacta: ${periodo} (${periodoNum})`);
         where[Op.and] = [
           literal(`CAST(DATE_FORMAT(\`periodo\`, '%Y%m%d') AS UNSIGNED) = ${periodoNum}`)
         ];
@@ -332,7 +309,6 @@ exports.list = async (req, res, next) => {
       });
     }
 
-    console.log(`[BUG-019 DEBUG] Where clause:`, JSON.stringify(where, null, 2));
 
     const recibos = await db.Recibo.findAll({
       where,
@@ -352,9 +328,7 @@ exports.list = async (req, res, next) => {
       order: [['periodo', 'DESC'], ['id', 'DESC']],
     });
 
-    console.log(`[BUG-019 DEBUG] Resultado: ${recibos.length} recibos encontrados`);
     if (recibos.length > 0) {
-      console.log(`[BUG-019 DEBUG] Primer recibo periodo:`, recibos[0].periodo, `(tipo: ${typeof recibos[0].periodo})`);
     }
 
     res.status(200).json(recibos);
@@ -530,7 +504,6 @@ exports.deletePeriodo = async (req, res, next) => {
     });
   } catch (error) {
     await transaction.rollback();
-    console.error('Error deleting recibos for period:', error);
     res.status(500).json({
       error: error.message || 'Error al eliminar recibos',
     });
@@ -608,18 +581,13 @@ exports.generarPDF = async (req, res, next) => {
     }));
 
     // LOG: Diagnóstico de duplicados - Ver datos de BD
-    console.log(`[PDF-DIAG] Total recibos obtenidos de BD: ${recibosFormateados.length}`);
     const reciboIds = recibosFormateados.map(r => r.id);
     const reciboNumeros = recibosFormateados.map(r => r.numero_recibo);
-    console.log(`[PDF-DIAG] IDs de recibos:`, reciboIds);
-    console.log(`[PDF-DIAG] Números de recibos:`, reciboNumeros);
 
     // Detectar duplicados en BD
     const idsUnicos = new Set(reciboIds);
     if (idsUnicos.size !== recibosFormateados.length) {
-      console.warn(`[PDF-DIAG] ⚠️ DUPLICADOS EN BD: ${recibosFormateados.length} recibos pero ${idsUnicos.size} IDs únicos`);
     } else {
-      console.log(`[PDF-DIAG] ✓ Sin duplicados en BD (${recibosFormateados.length} recibos, ${idsUnicos.size} IDs únicos)`);
     }
 
     // Obtener template activo de la BD
@@ -637,7 +605,6 @@ exports.generarPDF = async (req, res, next) => {
         try {
           pageConfig = JSON.parse(rawConfig);
         } catch (e) {
-          console.error('[PDF] Error parseando bloque_pageconfig (string):', e.message);
           pageConfig = {};
         }
       } else if (typeof rawConfig === 'object' && rawConfig !== null) {
@@ -653,7 +620,6 @@ exports.generarPDF = async (req, res, next) => {
     // Validar recibos_por_pagina es un número válido
     let recibosPerPage = pageConfig.recibos_por_pagina;
     if (!Number.isInteger(recibosPerPage) || recibosPerPage < 1) {
-      console.warn('[PDF] recibos_por_pagina inválido:', recibosPerPage, '→ usando default 1');
       recibosPerPage = 1;
     }
 
@@ -674,7 +640,6 @@ exports.generarPDF = async (req, res, next) => {
     const marginLeft = pageConfig.margen_izquierdo_mm || 10;
     const marginRight = pageConfig.margen_derecho_mm || 10;
 
-    console.log('[PDF] pageConfig leído:', {
       marginTop,
       marginBottom,
       marginLeft,
@@ -714,7 +679,6 @@ exports.generarPDF = async (req, res, next) => {
     const espaciosVerticalesTotales = gapVerticalCompensated * Math.max(0, recibosEnVertical - 1);
     const reciboHeight = (alturaLibre - espaciosVerticalesTotales) / recibosEnVertical;
 
-    console.log('[PDF] Cálculo reciboHeight (compensado):', {
       'pageHeight (compensada)': pageHeight,
       'marginTop (compensado)': marginTopCompensated,
       'marginBottom (compensado)': marginBottomCompensated,
@@ -749,7 +713,6 @@ exports.generarPDF = async (req, res, next) => {
       const tablaData = templateDB.bloques[0];
       const tableHTMLWithPlaceholders = generateTableHTML(tablaData, tablaData.anchoTotal_mm, reciboHeight);
 
-      console.log('[PDF] Dimensiones de tabla:', { anchoTotal_mm: tablaData.anchoTotal_mm, reciboHeight });
 
       for (let i = 0; i < recibosFormateados.length; i += recibosPerPage) {
         // El borde del recibo siempre usa las dimensiones calculadas (no tabla_ancho_mm/tabla_alto_mm)
@@ -757,7 +720,6 @@ exports.generarPDF = async (req, res, next) => {
         const mostrarBordePagina = pageConfig.mostrar_borde_pagina || false;
         const numPagina = Math.floor(i / recibosPerPage) + 1;
 
-        console.log(`[PDF] Generando página ${numPagina} con dimensiones compensadas:`, {
           pageWidth,
           pageHeight,
           marginTopCompensated,
@@ -814,7 +776,6 @@ exports.generarPDF = async (req, res, next) => {
           </div>`;
 
           fullHTML += gridHTML;
-          console.log(`[PDF] Grilla - ${numCellsX}×${numCellsY} celdas de ${cellSize}mm`);
         }
 
         const recibosEnPagina = Math.min(recibosPerPage, recibosFormateados.length - i);
@@ -847,14 +808,10 @@ exports.generarPDF = async (req, res, next) => {
       }
 
       const numPaginasGeneradas = Math.ceil(recibosFormateados.length / recibosPerPage);
-      console.log(`[PDF] Total de páginas generadas: ${numPaginasGeneradas}`);
-      console.log(`[PDF] Longitud de fullHTML: ${fullHTML.length} caracteres`);
 
       // LOG: Diagnóstico de duplicados - Ver cuántos se renderizaron
       const numRecibosRenderizados = recibosFormateados.length;
-      console.log(`[PDF-DIAG] Recibos renderizados en PDF: ${numRecibosRenderizados}`);
       if (numRecibosRenderizados !== recibosFormateados.length) {
-        console.warn(`[PDF-DIAG] ⚠️ MISMATCH: ${recibosFormateados.length} en BD pero ${numRecibosRenderizados} renderizados`);
       }
     } else {
       // Para bloques: usar lógica legacy
@@ -894,13 +851,11 @@ ${reciboHTML}
       res.setHeader('Content-Disposition', `attachment; filename="recibos_${periodo}.pdf"`);
       res.send(pdfBuffer);
     } catch (err) {
-      console.error('[PDF] Error generando PDF:', err);
       return res.status(500).json({
         error: 'Error al generar PDF: ' + err.message,
       });
     }
   } catch (error) {
-    console.error('Error generating PDF:', error);
     res.status(500).json({
       error: error.message || 'Error al generar PDF',
     });
