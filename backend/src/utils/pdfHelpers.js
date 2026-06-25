@@ -467,8 +467,9 @@ ${filasHTML}
   const finalAncho = tablaAncho ? (tablaAncho - 2) : null;
   const wrapperWidth = finalAncho ? `${finalAncho}mm` : '100%';
   const wrapperHeight = tablaAlto ? `${tablaAlto}mm` : 'auto';
+  const wrapperBorder = tablaData.bordeTabla ? '1px solid #000' : '0';
 
-  return `<div style="border: 1px solid #000; box-sizing: border-box; width: ${wrapperWidth}; height: ${wrapperHeight}; margin-left: 1mm; margin-right: 1mm; overflow: hidden;">
+  return `<div style="border: ${wrapperBorder}; box-sizing: border-box; width: ${wrapperWidth}; height: ${wrapperHeight}; margin-left: 1mm; margin-right: 1mm; overflow: hidden;">
 ${tableHTML}
 </div>`;
 }
