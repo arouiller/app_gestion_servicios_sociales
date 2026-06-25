@@ -423,7 +423,7 @@ function generateTableHTML(tablaData, tablaAncho = null, tablaAlto = null) {
   if (!tablaData) return '';
 
   const SCALE_FACTOR = 0.762; // Compensar scaling de html-pdf
-  const borderStyle = tablaData.bordeTabla ? '1px solid #000' : '0';
+  const borderStyle = tablaData.bordeTabla ? '0.5px solid #000' : '0';
   const anchoTotalMM = tablaData.anchoTotal_mm || 170; // Ancho total en mm
   const fontSize = Math.round((tablaData.tamanoFuente || 11) * SCALE_FACTOR);
   const paddingPx = Math.round(4 * SCALE_FACTOR);
