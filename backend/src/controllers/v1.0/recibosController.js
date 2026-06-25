@@ -594,16 +594,24 @@ exports.generarPDF = async (req, res, next) => {
     const tipoPlanMap = Object.fromEntries(tiposPlanes.map(tp => [tp.tipo_plan_nombre, tp.abreviacion]));
     const tipoGrupoMap = Object.fromEntries(tiposGrupos.map(tg => [tg.tipo_de_grupo_nombre, tg.abreviacion]));
 
+    // Diagnóstico: verificar qué retorna Sequelize
+    if (recibos.length > 0) {
+      console.log('[DEBUG-RECIBO-0] Keys:', Object.keys(recibos[0]));
+      console.log('[DEBUG-RECIBO-0] ReciboIntegrantes:', recibos[0].ReciboIntegrantes);
+      if (recibos[0].ReciboIntegrantes && recibos[0].ReciboIntegrantes.length > 0) {
+        console.log('[DEBUG-RECIBO-INTEGRANTE-0]:', recibos[0].ReciboIntegrantes[0].dataValues || recibos[0].ReciboIntegrantes[0]);
+      }
+    }
+
     // Mapear datos de Sequelize al formato esperado (compatible con la lógica existente)
     const recibosFormateados = recibos.map(r => {
       const reciboIntegrante = r.ReciboIntegrantes?.[0];
-      const persona = reciboIntegrante?.Persona;
       return {
         ...r.dataValues,
         localidad_nombre: r.PlanV1?.Localidad?.nombre || null,
-        numero_documento: persona?.numero_documento || null,
-        fecha_nacimiento: persona?.fecha_nacimiento || null,
-        fecha_cobertura: persona?.fecha_cobertura || null,
+        numero_documento: reciboIntegrante?.numero_documento || null,
+        fecha_nacimiento: reciboIntegrante?.fecha_nacimiento || null,
+        fecha_cobertura: reciboIntegrante?.fecha_cobertura || null,
         tipo_plan_abreviacion: tipoPlanMap[r.tipo_plan_nombre] || null,
         tipo_grupo_abreviacion: tipoGrupoMap[r.tipo_de_grupo_nombre] || null,
       };
