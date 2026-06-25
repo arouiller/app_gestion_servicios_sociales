@@ -249,6 +249,71 @@ const TemplateConfigPanel = ({ selectedCell, placeholders = {} }) => {
                 </div>
               </div>
             </div>
+
+            {/* 1.4 Recibos por página y gaps */}
+            <div style={{ marginTop: '12px' }}>
+              <label style={{ fontSize: '11px', fontWeight: 'bold', color: '#333', display: 'block', marginBottom: '8px' }}>
+                1.4 Recibos y espacios
+              </label>
+              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '8px' }}>
+                <div>
+                  <label style={{ fontSize: '10px', color: '#666', display: 'block', marginBottom: '4px' }}>Recibos por página</label>
+                  <input
+                    type="number"
+                    min="1"
+                    max="10"
+                    value={pageConfig.recibos_por_pagina || 1}
+                    onChange={(e) => handlePageConfigChange('recibos_por_pagina', Number(e.target.value))}
+                    style={{
+                      width: '100%',
+                      padding: '4px 6px',
+                      border: '1px solid #ddd',
+                      borderRadius: '3px',
+                      fontSize: '11px',
+                      boxSizing: 'border-box'
+                    }}
+                  />
+                </div>
+                <div>
+                  <label style={{ fontSize: '10px', color: '#666', display: 'block', marginBottom: '4px' }}>Gap vertical (mm)</label>
+                  <input
+                    type="number"
+                    min="0"
+                    max="50"
+                    step="0.5"
+                    value={pageConfig.gap_vertical_mm || 0}
+                    onChange={(e) => handlePageConfigChange('gap_vertical_mm', Number(e.target.value))}
+                    style={{
+                      width: '100%',
+                      padding: '4px 6px',
+                      border: '1px solid #ddd',
+                      borderRadius: '3px',
+                      fontSize: '11px',
+                      boxSizing: 'border-box'
+                    }}
+                  />
+                </div>
+                <div>
+                  <label style={{ fontSize: '10px', color: '#666', display: 'block', marginBottom: '4px' }}>Gap horizontal (mm)</label>
+                  <input
+                    type="number"
+                    min="0"
+                    max="50"
+                    step="0.5"
+                    value={pageConfig.gap_horizontal_mm || 0}
+                    onChange={(e) => handlePageConfigChange('gap_horizontal_mm', Number(e.target.value))}
+                    style={{
+                      width: '100%',
+                      padding: '4px 6px',
+                      border: '1px solid #ddd',
+                      borderRadius: '3px',
+                      fontSize: '11px',
+                      boxSizing: 'border-box'
+                    }}
+                  />
+                </div>
+              </div>
+            </div>
           </div>
         )}
       </div>
