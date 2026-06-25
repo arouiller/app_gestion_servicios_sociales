@@ -317,7 +317,7 @@ function replaceAllPlaceholders(html, recibo) {
   let result = html;
 
   const placeholders = [
-    'numero_recibo', 'numero_afiliado', 'zona_codigo',
+    'numero_recibo', 'numero_afiliado', 'zona_codigo', 'zona_nombre',
     'titular_apellido', 'titular_nombre',
     'obra_social_nombre', 'tipo_de_grupo_nombre', 'tipo_plan_nombre',
     'localidad_nombre', 'domicilio',

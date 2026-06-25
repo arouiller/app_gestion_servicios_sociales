@@ -564,9 +564,10 @@ exports.generarPDF = async (req, res, next) => {
       include: [
         {
           model: db.PlanV1,
-          attributes: ['plan_numero', 'localidad_id'],
+          attributes: ['plan_numero', 'localidad_id', 'zona_id'],
           include: [
             { model: db.Localidad, attributes: ['nombre'] },
+            { model: db.Zona, attributes: ['nombre'] },
           ],
         },
         {
@@ -608,6 +609,7 @@ exports.generarPDF = async (req, res, next) => {
       const reciboIntegrante = r.ReciboIntegrantes?.[0];
       return {
         ...r.dataValues,
+        zona_nombre: r.PlanV1?.Zona?.nombre || null,
         localidad_nombre: r.PlanV1?.Localidad?.nombre || null,
         numero_documento: reciboIntegrante?.numero_documento || null,
         fecha_nacimiento: reciboIntegrante?.fecha_nacimiento || null,
