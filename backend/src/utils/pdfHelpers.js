@@ -507,7 +507,7 @@ function serializeTemplateTable(template) {
 
   const pageSize = pageConfig.tamaño || 'A4';
   const orientation = pageConfig.orientacion || 'portrait';
-  const tableHTML = generateTableHTML(tablaData);
+  const tableHTML = generateTableHTML(tablaData, tablaData.anchoTotal_mm, tablaData.altoTotal_mm);
 
   const html = `---
 pageSize: ${pageSize}
