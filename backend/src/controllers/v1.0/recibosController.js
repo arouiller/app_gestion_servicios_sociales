@@ -598,6 +598,12 @@ exports.generarPDF = async (req, res, next) => {
     // Diagnóstico: verificar qué retorna Sequelize
     if (recibos.length > 0) {
       console.log('[DEBUG-RECIBO-0] Keys:', Object.keys(recibos[0]));
+      console.log('[DEBUG-RECIBO-0] PlanV1:', recibos[0].PlanV1);
+      if (recibos[0].PlanV1) {
+        console.log('[DEBUG-PLANV1] Keys:', Object.keys(recibos[0].PlanV1));
+        console.log('[DEBUG-PLANV1] Localidad:', recibos[0].PlanV1.Localidad);
+        console.log('[DEBUG-PLANV1] Zona:', recibos[0].PlanV1.Zona);
+      }
       console.log('[DEBUG-RECIBO-0] ReciboIntegrantes:', recibos[0].ReciboIntegrantes);
       if (recibos[0].ReciboIntegrantes && recibos[0].ReciboIntegrantes.length > 0) {
         console.log('[DEBUG-RECIBO-INTEGRANTE-0]:', recibos[0].ReciboIntegrantes[0].dataValues || recibos[0].ReciboIntegrantes[0]);
