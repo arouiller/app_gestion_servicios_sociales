@@ -179,7 +179,7 @@ const TemplateConfigPanel = ({ selectedCell, placeholders = {} }) => {
                   <label style={{ fontSize: '10px', color: '#666', display: 'block', marginBottom: '4px' }}>Superior</label>
                   <input
                     type="number"
-                    min="1"
+                    min="2"
                     max="50"
                     value={pageConfig.margen_superior_mm || 10}
                     onChange={(e) => handlePageConfigChange('margen_superior_mm', Number(e.target.value))}
@@ -197,7 +197,7 @@ const TemplateConfigPanel = ({ selectedCell, placeholders = {} }) => {
                   <label style={{ fontSize: '10px', color: '#666', display: 'block', marginBottom: '4px' }}>Derecho</label>
                   <input
                     type="number"
-                    min="1"
+                    min="2"
                     max="50"
                     value={pageConfig.margen_derecho_mm || 10}
                     onChange={(e) => handlePageConfigChange('margen_derecho_mm', Number(e.target.value))}
@@ -215,7 +215,7 @@ const TemplateConfigPanel = ({ selectedCell, placeholders = {} }) => {
                   <label style={{ fontSize: '10px', color: '#666', display: 'block', marginBottom: '4px' }}>Inferior</label>
                   <input
                     type="number"
-                    min="1"
+                    min="2"
                     max="50"
                     value={pageConfig.margen_inferior_mm || 10}
                     onChange={(e) => handlePageConfigChange('margen_inferior_mm', Number(e.target.value))}
@@ -233,7 +233,7 @@ const TemplateConfigPanel = ({ selectedCell, placeholders = {} }) => {
                   <label style={{ fontSize: '10px', color: '#666', display: 'block', marginBottom: '4px' }}>Izquierdo</label>
                   <input
                     type="number"
-                    min="1"
+                    min="2"
                     max="50"
                     value={pageConfig.margen_izquierdo_mm || 10}
                     onChange={(e) => handlePageConfigChange('margen_izquierdo_mm', Number(e.target.value))}
@@ -278,7 +278,7 @@ const TemplateConfigPanel = ({ selectedCell, placeholders = {} }) => {
                   <label style={{ fontSize: '10px', color: '#666', display: 'block', marginBottom: '4px' }}>Gap vertical (mm)</label>
                   <input
                     type="number"
-                    min="0"
+                    min="2"
                     max="50"
                     step="0.5"
                     value={pageConfig.gap_vertical_mm || 0}
@@ -297,7 +297,7 @@ const TemplateConfigPanel = ({ selectedCell, placeholders = {} }) => {
                   <label style={{ fontSize: '10px', color: '#666', display: 'block', marginBottom: '4px' }}>Gap horizontal (mm)</label>
                   <input
                     type="number"
-                    min="0"
+                    min="2"
                     max="50"
                     step="0.5"
                     value={pageConfig.gap_horizontal_mm || 0}
