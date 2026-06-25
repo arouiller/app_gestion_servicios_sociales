@@ -68,6 +68,7 @@ app.get('*', (req, res) => {
 // ── Error handler global ──────────────────────────────────────────────────────
 // eslint-disable-next-line no-unused-vars
 app.use((err, req, res, next) => {
+  console.error(err);
   const status = err.status || err.statusCode || 500;
   res.status(status).json({
     success: false,
@@ -82,8 +83,10 @@ const PORT = process.env.PORT || 5000;
 async function startServer() {
   try {
     await sequelize.authenticate();
+    console.log('✅ Base de datos conectada');
 
     app.listen(PORT, () => {
+      console.log(`🚀 Backend corriendo en http://localhost:${PORT} [${process.env.NODE_ENV || 'development'}]`);
     });
 
     // ── Limpieza diaria de audit_log según retención configurada ────────────
@@ -98,11 +101,14 @@ async function startServer() {
         const cutoff = new Date(Date.now() - days * 24 * 60 * 60 * 1000);
         const deleted = await AuditLog.destroy({ where: { fecha_hora: { [Op.lt]: cutoff } } });
         if (deleted > 0) {
+          console.log(`[audit] limpieza: ${deleted} registros eliminados`);
         }
       } catch (err) {
+        console.error('[audit] error en limpieza:', err.message);
       }
     }, 24 * 60 * 60 * 1000); // 24 horas
   } catch (err) {
+    console.error('❌ Error al iniciar servidor:', err.message);
     process.exit(1);
   }
 }

@@ -468,9 +468,8 @@ ${filasHTML}
   const wrapperWidth = finalAncho ? `${finalAncho}mm` : '100%';
   const wrapperHeight = tablaAlto ? `${tablaAlto}mm` : 'auto';
   const wrapperBorder = tablaData.bordeTabla ? '1px solid #000' : '0';
-  const HTML_PDF_SCALE = 0.762;
 
-  return `<div style="border: ${wrapperBorder}; box-sizing: border-box; width: ${wrapperWidth}; height: ${wrapperHeight}; margin-left: 1mm; margin-right: 1mm; overflow: hidden; transform: scale(${HTML_PDF_SCALE}); transform-origin: top left;">
+  return `<div style="border: ${wrapperBorder}; box-sizing: border-box; width: ${wrapperWidth}; height: ${wrapperHeight}; margin-left: 1mm; margin-right: 1mm; overflow: hidden;">
 ${tableHTML}
 </div>`;
 }
@@ -557,6 +556,7 @@ async function removirPaginasPares(pdfBuffer) {
     const pdfDoc = await PDFDocument.load(pdfBuffer);
     const totalPages = pdfDoc.getPageCount();
 
+    console.log(`[PDF] Postprocesamiento: PDF original tiene ${totalPages} páginas`);
 
     // Recolectar índices de páginas a remover (pares: 1, 3, 5, ...)
     const indicesToRemove = [];
@@ -567,9 +567,11 @@ async function removirPaginasPares(pdfBuffer) {
     // Remover páginas en orden inverso (para no afectar índices)
     for (let i = indicesToRemove.length - 1; i >= 0; i--) {
       pdfDoc.removePage(indicesToRemove[i]);
+      console.log(`[PDF] Removida página ${indicesToRemove[i] + 1}`);
     }
 
     const finalPageCount = pdfDoc.getPageCount();
+    console.log(`[PDF] Postprocesamiento completado: ${totalPages} → ${finalPageCount} páginas`);
 
     // Guardar el PDF modificado a buffer
     const pdfBytes = await pdfDoc.save();
