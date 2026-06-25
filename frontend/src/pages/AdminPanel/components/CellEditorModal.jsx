@@ -13,15 +13,16 @@ const CellEditorModal = ({ celda, placeholders = {}, onSave, onClose }) => {
       const styleSheet = document.createElement('style');
       styleSheet.id = 'quill-size-styles';
       styleSheet.innerHTML = `
-        .ql-snow .ql-size[data-value="8px"]::before { content: "8px" !important; }
-        .ql-snow .ql-size[data-value="10px"]::before { content: "10px" !important; }
-        .ql-snow .ql-size[data-value="12px"]::before { content: "12px" !important; }
-        .ql-snow .ql-size[data-value="14px"]::before { content: "14px" !important; }
-        .ql-snow .ql-size[data-value="16px"]::before { content: "16px" !important; }
-        .ql-snow .ql-size[data-value="18px"]::before { content: "18px" !important; }
-        .ql-snow .ql-size[data-value="20px"]::before { content: "20px" !important; }
-        .ql-snow .ql-size[data-value="24px"]::before { content: "24px" !important; }
-        .ql-snow .ql-size[data-value="28px"]::before { content: "28px" !important; }
+        .ql-snow .ql-picker.ql-size .ql-picker-label::before { content: "Tamaño" !important; }
+        .ql-snow .ql-picker.ql-size .ql-picker-item[data-value="8px"]::before { content: "8px" !important; }
+        .ql-snow .ql-picker.ql-size .ql-picker-item[data-value="10px"]::before { content: "10px" !important; }
+        .ql-snow .ql-picker.ql-size .ql-picker-item[data-value="12px"]::before { content: "12px" !important; }
+        .ql-snow .ql-picker.ql-size .ql-picker-item[data-value="14px"]::before { content: "14px" !important; }
+        .ql-snow .ql-picker.ql-size .ql-picker-item[data-value="16px"]::before { content: "16px" !important; }
+        .ql-snow .ql-picker.ql-size .ql-picker-item[data-value="18px"]::before { content: "18px" !important; }
+        .ql-snow .ql-picker.ql-size .ql-picker-item[data-value="20px"]::before { content: "20px" !important; }
+        .ql-snow .ql-picker.ql-size .ql-picker-item[data-value="24px"]::before { content: "24px" !important; }
+        .ql-snow .ql-picker.ql-size .ql-picker-item[data-value="28px"]::before { content: "28px" !important; }
 
         .ql-size-8px { font-size: 8px !important; }
         .ql-size-10px { font-size: 10px !important; }
