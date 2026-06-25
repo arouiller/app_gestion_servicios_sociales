@@ -468,8 +468,9 @@ ${filasHTML}
   const wrapperWidth = finalAncho ? `${finalAncho}mm` : '100%';
   const wrapperHeight = tablaAlto ? `${tablaAlto}mm` : 'auto';
   const wrapperBorder = tablaData.bordeTabla ? '1px solid #000' : '0';
+  const HTML_PDF_SCALE = 0.762;
 
-  return `<div style="border: ${wrapperBorder}; box-sizing: border-box; width: ${wrapperWidth}; height: ${wrapperHeight}; margin-left: 1mm; margin-right: 1mm; overflow: hidden;">
+  return `<div style="border: ${wrapperBorder}; box-sizing: border-box; width: ${wrapperWidth}; height: ${wrapperHeight}; margin-left: 1mm; margin-right: 1mm; overflow: hidden; transform: scale(${HTML_PDF_SCALE}); transform-origin: top left;">
 ${tableHTML}
 </div>`;
 }
