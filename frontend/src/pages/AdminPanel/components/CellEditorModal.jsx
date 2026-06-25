@@ -7,11 +7,11 @@ const CellEditorModal = ({ celda, placeholders = {}, onSave, onClose }) => {
   const [searchTerm, setSearchTerm] = useState('');
   const modalRef = useRef(null);
 
-  // Agregar estilos para tamaños de fuente (solo una vez)
+  // Agregar estilos para tamaños y fuentes (solo una vez)
   useEffect(() => {
-    if (!document.getElementById('quill-size-styles')) {
+    if (!document.getElementById('quill-size-font-styles')) {
       const styleSheet = document.createElement('style');
-      styleSheet.id = 'quill-size-styles';
+      styleSheet.id = 'quill-size-font-styles';
       styleSheet.innerHTML = `
         .ql-snow .ql-picker.ql-size .ql-picker-label::before { content: "Tamaño" !important; }
         .ql-snow .ql-picker.ql-size .ql-picker-item[data-value="8px"]::before { content: "8px" !important; }
@@ -23,6 +23,21 @@ const CellEditorModal = ({ celda, placeholders = {}, onSave, onClose }) => {
         .ql-snow .ql-picker.ql-size .ql-picker-item[data-value="20px"]::before { content: "20px" !important; }
         .ql-snow .ql-picker.ql-size .ql-picker-item[data-value="24px"]::before { content: "24px" !important; }
         .ql-snow .ql-picker.ql-size .ql-picker-item[data-value="28px"]::before { content: "28px" !important; }
+
+        .ql-snow .ql-picker.ql-font .ql-picker-label::before { content: "Fuente" !important; }
+        .ql-snow .ql-picker.ql-font .ql-picker-item[data-value="Arial"]::before { content: "Arial" !important; }
+        .ql-snow .ql-picker.ql-font .ql-picker-item[data-value="Courier New"]::before { content: "Courier New" !important; }
+        .ql-snow .ql-picker.ql-font .ql-picker-item[data-value="Georgia"]::before { content: "Georgia" !important; }
+        .ql-snow .ql-picker.ql-font .ql-picker-item[data-value="Helvetica"]::before { content: "Helvetica" !important; }
+        .ql-snow .ql-picker.ql-font .ql-picker-item[data-value="Times New Roman"]::before { content: "Times New Roman" !important; }
+        .ql-snow .ql-picker.ql-font .ql-picker-item[data-value="Verdana"]::before { content: "Verdana" !important; }
+
+        .ql-font-Arial { font-family: Arial !important; }
+        .ql-font-Courier-New { font-family: 'Courier New' !important; }
+        .ql-font-Georgia { font-family: Georgia !important; }
+        .ql-font-Helvetica { font-family: Helvetica !important; }
+        .ql-font-Times-New-Roman { font-family: 'Times New Roman' !important; }
+        .ql-font-Verdana { font-family: Verdana !important; }
 
         .ql-size-8px { font-size: 8px !important; }
         .ql-size-10px { font-size: 10px !important; }
