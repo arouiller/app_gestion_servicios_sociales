@@ -597,15 +597,30 @@ exports.generarPDF = async (req, res, next) => {
     const tipoGrupoMap = Object.fromEntries(tiposGrupos.map(tg => [tg.tipo_de_grupo_nombre, tg.abreviacion]));
 
     // Mapear datos de Sequelize al formato esperado (compatible con la lógica existente)
-    const recibosFormateados = recibos.map(r => ({
-      ...r.dataValues,
-      localidad_nombre: r.PlanV1?.Localidad?.nombre || null,
-      numero_documento: r.PlanV1?.PlanIntegrantes?.[0]?.Persona?.numero_documento || null,
-      fecha_nacimiento: r.PlanV1?.PlanIntegrantes?.[0]?.Persona?.fecha_nacimiento || null,
-      fecha_cobertura: r.PlanV1?.fecha_cobertura || null,
-      tipo_plan_abreviacion: tipoPlanMap[r.tipo_plan_nombre] || null,
-      tipo_grupo_abreviacion: tipoGrupoMap[r.tipo_de_grupo_nombre] || null,
-    }));
+    const recibosFormateados = recibos.map(r => {
+      const persona = r.PlanV1?.PlanIntegrantes?.[0]?.Persona;
+      return {
+        ...r.dataValues,
+        localidad_nombre: r.PlanV1?.Localidad?.nombre || null,
+        numero_documento: persona?.numero_documento || null,
+        fecha_nacimiento: persona?.fecha_nacimiento || null,
+        fecha_cobertura: persona?.fecha_cobertura || null,
+        tipo_plan_abreviacion: tipoPlanMap[r.tipo_plan_nombre] || null,
+        tipo_grupo_abreviacion: tipoGrupoMap[r.tipo_de_grupo_nombre] || null,
+      };
+    });
+
+    // Diagnóstico: verificar si los campos se están cargando
+    if (recibosFormateados.length > 0) {
+      const firstRecibo = recibosFormateados[0];
+      console.log('[PDF-PLACEHOLDERS]', {
+        numero_documento: firstRecibo.numero_documento,
+        fecha_nacimiento: firstRecibo.fecha_nacimiento,
+        fecha_cobertura: firstRecibo.fecha_cobertura,
+        tipo_de_grupo_nombre: firstRecibo.tipo_de_grupo_nombre,
+        planIntegrantesCount: recibos[0].PlanV1?.PlanIntegrantes?.length || 0,
+      });
+    }
 
     // LOG: Diagnóstico de duplicados - Ver datos de BD
     console.log(`[PDF-DIAG] Total recibos obtenidos de BD: ${recibosFormateados.length}`);
