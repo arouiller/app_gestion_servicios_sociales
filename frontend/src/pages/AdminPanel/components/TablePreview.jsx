@@ -5,6 +5,19 @@ import { updateFilaAltura, updateCeldaAncho } from './TableEditor';
 
 const MM_TO_PX = 3.7795;
 
+// Inyectar estilos para alineación de Quill
+if (!document.getElementById('quill-align-styles')) {
+  const styleSheet = document.createElement('style');
+  styleSheet.id = 'quill-align-styles';
+  styleSheet.innerHTML = `
+    .ql-align-center { text-align: center !important; }
+    .ql-align-right { text-align: right !important; }
+    .ql-align-justify { text-align: justify !important; }
+    .ql-align-left { text-align: left !important; }
+  `;
+  document.head.appendChild(styleSheet);
+}
+
 const renderTablaHTML = (tabla, personData) => {
   const borderStyle = tabla.bordeTabla ? '1px solid #000' : 'none';
 

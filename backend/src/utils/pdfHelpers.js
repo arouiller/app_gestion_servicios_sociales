@@ -475,7 +475,17 @@ ${filasHTML}
   const wrapperHeight = finalAlto ? `${finalAlto}mm` : 'auto';
   const wrapperBorder = tablaData.bordeTabla ? '1px solid #000' : 'none';
 
-  return `<div style="border: ${wrapperBorder}; box-sizing: border-box; width: ${wrapperWidth}; height: ${wrapperHeight}; margin-left: ${marginMM.toFixed(2)}mm; margin-right: ${marginMM.toFixed(2)}mm; overflow: hidden;">
+  const alignStyles = `
+    <style>
+      .ql-align-center { text-align: center !important; }
+      .ql-align-right { text-align: right !important; }
+      .ql-align-justify { text-align: justify !important; }
+      .ql-align-left { text-align: left !important; }
+    </style>
+  `;
+
+  return `${alignStyles}
+<div style="border: ${wrapperBorder}; box-sizing: border-box; width: ${wrapperWidth}; height: ${wrapperHeight}; margin-left: ${marginMM.toFixed(2)}mm; margin-right: ${marginMM.toFixed(2)}mm; overflow: hidden;">
 ${tableHTML}
 </div>`;
 }
