@@ -425,23 +425,38 @@ function generateTableHTML(tablaData, tablaAncho = null, tablaAlto = null) {
   const borderStyle = tablaData.bordeTabla ? '1px solid #000' : 'none';
   const anchoTotalMM = tablaData.anchoTotal_mm || 170; // Ancho total en mm
 
+  // Tabla raíz: una fila por "fila lógica", cada fila tiene 1 celda que contiene una tabla interna
   const filasHTML = tablaData.filas
     .map(fila => {
       const altura = fila.altura || 15;
-      const celdas = fila.celdas
+
+      // Tabla interna: 1 fila, M columnas con anchos independientes
+      const celdasHTML = fila.celdas
         .map(celda => {
-          // Usar ancho_mm (nuevo formato) o ancho (formato antiguo)
           const anchoMM = celda.ancho_mm || celda.ancho;
-          // Convertir mm a porcentaje
           const anchoPorcentaje = (anchoMM / anchoTotalMM) * 100;
-          return `<td style="width: ${anchoPorcentaje}%; border: ${borderStyle}; vertical-align: middle; font-size: inherit; height: ${altura}mm;">${celda.contenido || ''}</td>`;
+          return `<td style="width: ${anchoPorcentaje}%; border: ${borderStyle}; padding: 4px; vertical-align: top; overflow: hidden; white-space: nowrap; text-overflow: ellipsis;">${celda.contenido || ''}</td>`;
         })
         .join('');
-      return `<tr style="height: ${altura}mm;">${celdas}</tr>`;
+
+      const tablaInternaHTML = `<table style="width: 100%; border-collapse: collapse; table-layout: fixed;">
+<tbody>
+<tr>
+${celdasHTML}
+</tr>
+</tbody>
+</table>`;
+
+      // Celda de la tabla raíz contiene la tabla interna
+      return `<tr style="height: ${altura}mm;">
+<td style="padding: 0; border: ${borderStyle}; width: 100%;">
+${tablaInternaHTML}
+</td>
+</tr>`;
     })
     .join('');
 
-  const tableHTML = `<table style="width: 100%; border-collapse: collapse; font-size: ${tablaData.tamanoFuente || 11}px; font-family: Arial, sans-serif; table-layout: fixed;">
+  const tableHTML = `<table style="width: 100%; border-collapse: collapse; font-size: ${tablaData.tamanoFuente || 11}px; font-family: Arial, sans-serif; height: 100%;">
 <tbody>
 ${filasHTML}
 </tbody>
