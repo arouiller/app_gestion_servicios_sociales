@@ -709,17 +709,18 @@ exports.generarPDF = async (req, res, next) => {
       recibosEnVertical = Math.ceil(recibosPerPage / recibosEnHorizontal);
     }
 
-    // Calcular alto del recibo (con compensación para html-pdf): (altura_libre - espacios_entre) / recibos_verticales
-    const alturaLibre = pageHeight - marginTopCompensated - marginBottomCompensated;
-    const espaciosVerticalesTotales = gapVerticalCompensated * Math.max(0, recibosEnVertical - 1);
+    // Calcular alto del recibo SIN compensación (valores reales en mm)
+    // La compensación se aplica al renderizado HTML, no al cálculo del layout
+    const alturaLibre = dimensions.height - marginTop - marginBottom;
+    const espaciosVerticalesTotales = gapVertical * Math.max(0, recibosEnVertical - 1);
     const reciboHeight = (alturaLibre - espaciosVerticalesTotales) / recibosEnVertical;
 
-    console.log('[PDF] Cálculo reciboHeight (compensado):', {
-      'pageHeight (compensada)': pageHeight,
-      'marginTop (compensado)': marginTopCompensated,
-      'marginBottom (compensado)': marginBottomCompensated,
+    console.log('[PDF] Cálculo reciboHeight (SIN compensación):', {
+      'pageHeight (real)': dimensions.height,
+      'marginTop (real)': marginTop,
+      'marginBottom (real)': marginBottom,
       alturaLibre,
-      'gapVertical (compensado)': gapVerticalCompensated,
+      'gapVertical (real)': gapVertical,
       recibosEnVertical,
       espaciosVerticalesTotales,
       reciboHeight
