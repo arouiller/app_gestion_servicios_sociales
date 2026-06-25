@@ -89,7 +89,7 @@ const TemplateConfigPanel = ({ selectedCell, placeholders = {} }) => {
                 </label>
                 <input
                   type="number"
-                  min="10"
+                  min="3"
                   max="200"
                   step="0.5"
                   value={selectedCell.celda.ancho_mm || selectedCell.celda.ancho || 85}
