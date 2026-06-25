@@ -439,7 +439,7 @@ function generateTableHTML(tablaData, tablaAncho = null, tablaAlto = null) {
         .map(celda => {
           const anchoMM = celda.ancho_mm || celda.ancho;
           const anchoPorcentaje = (anchoMM / anchoTotalMM) * 100;
-          return `<td style="width: ${anchoPorcentaje}%; border: ${borderStyle}; padding: ${paddingPx}px; vertical-align: top; overflow: hidden; white-space: nowrap; text-overflow: ellipsis; box-sizing: border-box;">${celda.contenido || ''}</td>`;
+          return `<td style="width: ${anchoPorcentaje}%; border: ${borderStyle}; padding: ${paddingPx}px; vertical-align: top; overflow: hidden; white-space: pre-wrap; word-break: break-word; box-sizing: border-box;">${celda.contenido || ''}</td>`;
         })
         .join('');
 

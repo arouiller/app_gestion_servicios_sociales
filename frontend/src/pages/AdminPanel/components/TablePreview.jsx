@@ -135,8 +135,8 @@ const TablePreviewRecibo = ({ tabla, recibo, pageConfig, personData, onCellDoubl
                                   backgroundColor: isSelected ? '#e8f4f8' : 'transparent',
                                   minWidth: '0',
                                   overflow: 'hidden',
-                                  whiteSpace: 'nowrap',
-                                  textOverflow: 'ellipsis',
+                                  whiteSpace: 'pre-wrap',
+                                  wordBreak: 'break-word',
                                   height: '100%'
                                 }}
                                 onDoubleClick={() => {
