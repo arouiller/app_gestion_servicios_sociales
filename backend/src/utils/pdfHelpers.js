@@ -423,7 +423,7 @@ function generateTableHTML(tablaData, tablaAncho = null, tablaAlto = null) {
   if (!tablaData) return '';
 
   const SCALE_FACTOR = 0.762; // Compensar scaling de html-pdf
-  const borderStyle = tablaData.bordeTabla ? '0.5px solid #000' : '0';
+  const borderStyle = tablaData.bordeTabla ? '1px solid #000' : 'none';
   const anchoTotalMM = tablaData.anchoTotal_mm || 170; // Ancho total en mm
   const fontSize = Math.round((tablaData.tamanoFuente || 11) * SCALE_FACTOR);
   const paddingPx = Math.round(4 * SCALE_FACTOR);
@@ -443,7 +443,7 @@ function generateTableHTML(tablaData, tablaAncho = null, tablaAlto = null) {
         })
         .join('');
 
-      const tablaInternaHTML = `<table style="width: 100%; height: 100%; border-collapse: collapse; table-layout: fixed;">
+      const tablaInternaHTML = `<table style="width: 100%; height: 100%; border-collapse: collapse; table-layout: fixed; border: ${borderStyle};">
 <tbody>
 <tr style="height: 100%;">
 ${celdasHTML}
@@ -460,7 +460,7 @@ ${tablaInternaHTML}
     })
     .join('');
 
-  const tableHTML = `<table style="width: 100%; border-collapse: collapse; font-size: ${fontSize}px; font-family: Arial, sans-serif; height: 100%;">
+  const tableHTML = `<table style="width: 100%; border-collapse: collapse; font-size: ${fontSize}px; font-family: Arial, sans-serif; height: 100%; border: ${borderStyle};">
 <tbody>
 ${filasHTML}
 </tbody>
@@ -473,7 +473,7 @@ ${filasHTML}
   const finalAlto = tablaAlto ? tablaAlto : null; // No escalar alto - mantener altura original del recibo
   const wrapperWidth = finalAncho ? `${finalAncho.toFixed(2)}mm` : '100%';
   const wrapperHeight = finalAlto ? `${finalAlto}mm` : 'auto';
-  const wrapperBorder = tablaData.bordeTabla ? '0.5px solid #000' : '0';
+  const wrapperBorder = tablaData.bordeTabla ? '1px solid #000' : 'none';
 
   return `<div style="border: ${wrapperBorder}; box-sizing: border-box; width: ${wrapperWidth}; height: ${wrapperHeight}; margin-left: ${marginMM.toFixed(2)}mm; margin-right: ${marginMM.toFixed(2)}mm; overflow: hidden;">
 ${tableHTML}
