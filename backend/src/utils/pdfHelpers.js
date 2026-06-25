@@ -422,7 +422,7 @@ async function generateMultiPagePDF(fullHTML, pageSize, orientation, margins) {
 function generateTableHTML(tablaData, tablaAncho = null, tablaAlto = null) {
   if (!tablaData) return '';
 
-  const borderStyle = tablaData.bordeTabla ? '1px solid #000' : 'none';
+  const borderStyle = tablaData.bordeTabla ? '1px solid #000' : '0';
   const anchoTotalMM = tablaData.anchoTotal_mm || 170; // Ancho total en mm
 
   // Tabla raíz: una fila por "fila lógica", cada fila tiene 1 celda que contiene una tabla interna

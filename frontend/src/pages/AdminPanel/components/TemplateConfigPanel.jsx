@@ -324,23 +324,8 @@ const TemplateConfigPanel = ({ selectedCell, placeholders = {} }) => {
         {expandedBlocks.tableConfig && (
           <div style={{ padding: '12px', backgroundColor: '#fff' }}>
             <div style={{ marginBottom: '12px' }}>
-              <label style={{ fontSize: '11px', display: 'flex', alignItems: 'center', gap: '8px', cursor: 'pointer' }}>
-                <input
-                  type="checkbox"
-                  checked={currentTemplate.bloques?.[0]?.bordeTabla || false}
-                  onChange={(e) => {
-                    const tabla = currentTemplate.bloques[0];
-                    const nuevaTabla = { ...tabla, bordeTabla: e.target.checked };
-                    updateTemplate({ bloques: [nuevaTabla] });
-                  }}
-                />
-                <span style={{ color: '#333' }}>2.1 Mostrar bordes de tabla</span>
-              </label>
-            </div>
-
-            <div style={{ marginBottom: '12px' }}>
               <label style={{ fontSize: '11px', fontWeight: 'bold', color: '#333', display: 'block', marginBottom: '6px' }}>
-                2.2 Ancho Total (mm)
+                2.1 Ancho Total (mm)
               </label>
               <input
                 type="number"
@@ -366,7 +351,7 @@ const TemplateConfigPanel = ({ selectedCell, placeholders = {} }) => {
 
             <div>
               <label style={{ fontSize: '11px', fontWeight: 'bold', color: '#333', display: 'block', marginBottom: '6px' }}>
-                2.3 Alto Total de Tabla (mm)
+                2.2 Alto Total de Tabla (mm)
               </label>
               <input
                 type="number"
@@ -454,10 +439,25 @@ const TemplateConfigPanel = ({ selectedCell, placeholders = {} }) => {
               <label style={{ fontSize: '11px', display: 'flex', alignItems: 'center', gap: '8px', cursor: 'pointer' }}>
                 <input
                   type="checkbox"
+                  checked={currentTemplate.bloques?.[0]?.bordeTabla || false}
+                  onChange={(e) => {
+                    const tabla = currentTemplate.bloques[0];
+                    const nuevaTabla = { ...tabla, bordeTabla: e.target.checked };
+                    updateTemplate({ bloques: [nuevaTabla] });
+                  }}
+                />
+                <span style={{ color: '#333' }}>4.1 Bordes de tabla</span>
+              </label>
+            </div>
+
+            <div style={{ marginBottom: '10px' }}>
+              <label style={{ fontSize: '11px', display: 'flex', alignItems: 'center', gap: '8px', cursor: 'pointer' }}>
+                <input
+                  type="checkbox"
                   checked={pageConfig.show_grid || false}
                   onChange={(e) => handlePageConfigChange('show_grid', e.target.checked)}
                 />
-                <span style={{ color: '#333' }}>4.1 Grilla de referencia 5x5mm en PDF</span>
+                <span style={{ color: '#333' }}>4.2 Grilla de referencia 5x5mm en PDF</span>
               </label>
             </div>
 
@@ -468,7 +468,7 @@ const TemplateConfigPanel = ({ selectedCell, placeholders = {} }) => {
                   checked={pageConfig.mostrar_borde_recibo || false}
                   onChange={(e) => handlePageConfigChange('mostrar_borde_recibo', e.target.checked)}
                 />
-                <span style={{ color: '#333' }}>4.2 Borde de recibo en PDF</span>
+                <span style={{ color: '#333' }}>4.3 Borde de recibo en PDF</span>
               </label>
             </div>
 
@@ -479,7 +479,7 @@ const TemplateConfigPanel = ({ selectedCell, placeholders = {} }) => {
                   checked={pageConfig.mostrar_borde_pagina || false}
                   onChange={(e) => handlePageConfigChange('mostrar_borde_pagina', e.target.checked)}
                 />
-                <span style={{ color: '#333' }}>4.3 Borde de página en PDF</span>
+                <span style={{ color: '#333' }}>4.4 Borde de página en PDF</span>
               </label>
             </div>
           </div>
