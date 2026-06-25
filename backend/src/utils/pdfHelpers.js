@@ -439,17 +439,17 @@ function generateTableHTML(tablaData, tablaAncho = null, tablaAlto = null) {
         })
         .join('');
 
-      const tablaInternaHTML = `<table style="width: 100%; border-collapse: collapse; table-layout: fixed;">
+      const tablaInternaHTML = `<table style="width: 100%; height: 100%; border-collapse: collapse; table-layout: fixed;">
 <tbody>
-<tr>
+<tr style="height: 100%;">
 ${celdasHTML}
 </tr>
 </tbody>
 </table>`;
 
       // Celda de la tabla raíz contiene la tabla interna
-      return `<tr style="height: ${altura}mm;">
-<td style="padding: 0; border: ${borderStyle}; width: 100%;">
+      return `<tr>
+<td style="padding: 0; border: ${borderStyle}; width: 100%; height: ${altura}mm; vertical-align: top;">
 ${tablaInternaHTML}
 </td>
 </tr>`;
