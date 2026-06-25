@@ -554,8 +554,7 @@ exports.generarPDF = async (req, res, next) => {
       });
     }
 
-    // Obtener todos los recibos del período usando Sequelize ORM (evita duplicados de JOINs)
-    // Solo incluir asociaciones que existen en el modelo Recibo
+    // Obtener todos los recibos del período usando Sequelize ORM
     const recibos = await db.Recibo.findAll({
       where: {
         periodo: {
@@ -568,14 +567,14 @@ exports.generarPDF = async (req, res, next) => {
           attributes: ['plan_numero', 'localidad_id'],
           include: [
             { model: db.Localidad, attributes: ['nombre'] },
-            {
-              model: db.PlanIntegrante,
-              attributes: ['persona_id', 'rol'],
-              include: [{ model: db.Persona, attributes: ['numero_documento', 'fecha_nacimiento', 'fecha_cobertura'] }],
-              where: { rol: 'titular' },
-              required: false,
-            },
           ],
+        },
+        {
+          model: db.ReciboIntegrante,
+          attributes: ['persona_id', 'rol'],
+          include: [{ model: db.Persona, attributes: ['numero_documento', 'fecha_nacimiento', 'fecha_cobertura'] }],
+          where: { rol: 'titular' },
+          required: false,
         },
       ],
       order: [['id', 'ASC']],
@@ -598,7 +597,8 @@ exports.generarPDF = async (req, res, next) => {
 
     // Mapear datos de Sequelize al formato esperado (compatible con la lógica existente)
     const recibosFormateados = recibos.map(r => {
-      const persona = r.PlanV1?.PlanIntegrantes?.[0]?.Persona;
+      const reciboIntegrante = r.ReciboIntegrantes?.[0];
+      const persona = reciboIntegrante?.Persona;
       return {
         ...r.dataValues,
         localidad_nombre: r.PlanV1?.Localidad?.nombre || null,
@@ -618,7 +618,7 @@ exports.generarPDF = async (req, res, next) => {
         fecha_nacimiento: firstRecibo.fecha_nacimiento,
         fecha_cobertura: firstRecibo.fecha_cobertura,
         tipo_de_grupo_nombre: firstRecibo.tipo_de_grupo_nombre,
-        planIntegrantesCount: recibos[0].PlanV1?.PlanIntegrantes?.length || 0,
+        reciboIntegrantesCount: recibos[0].ReciboIntegrantes?.length || 0,
       });
     }
 
