@@ -468,12 +468,14 @@ ${filasHTML}
 
   // Envolver la tabla en un div con dimensiones explícitas
   // Reducir ancho 2mm para dejar espacio al borde y evitar corte
-  const finalAncho = tablaAncho ? (tablaAncho - 2) : null;
-  const wrapperWidth = finalAncho ? `${finalAncho}mm` : '100%';
-  const wrapperHeight = tablaAlto ? `${tablaAlto}mm` : 'auto';
+  const marginMM = 1 * SCALE_FACTOR;
+  const finalAncho = tablaAncho ? ((tablaAncho - 2) * SCALE_FACTOR) : null;
+  const finalAlto = tablaAlto ? (tablaAlto * SCALE_FACTOR) : null;
+  const wrapperWidth = finalAncho ? `${finalAncho.toFixed(2)}mm` : '100%';
+  const wrapperHeight = finalAlto ? `${finalAlto.toFixed(2)}mm` : 'auto';
   const wrapperBorder = tablaData.bordeTabla ? '1px solid #000' : '0';
 
-  return `<div style="border: ${wrapperBorder}; box-sizing: border-box; width: ${wrapperWidth}; height: ${wrapperHeight}; margin-left: 1mm; margin-right: 1mm; overflow: hidden;">
+  return `<div style="border: ${wrapperBorder}; box-sizing: border-box; width: ${wrapperWidth}; height: ${wrapperHeight}; margin-left: ${marginMM.toFixed(2)}mm; margin-right: ${marginMM.toFixed(2)}mm; overflow: hidden;">
 ${tableHTML}
 </div>`;
 }
