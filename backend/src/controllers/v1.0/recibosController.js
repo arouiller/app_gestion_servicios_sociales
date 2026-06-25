@@ -750,7 +750,7 @@ exports.generarPDF = async (req, res, next) => {
       const tablaData = templateDB.bloques[0];
       const tableHTMLWithPlaceholders = generateTableHTML(tablaData, tablaData.anchoTotal_mm, reciboHeight);
 
-      console.log('[PDF] Dimensiones de tabla (compensadas):', { tablaAncho, tablaAlto });
+      console.log('[PDF] Dimensiones de tabla:', { anchoTotal_mm: tablaData.anchoTotal_mm, reciboHeight });
 
       for (let i = 0; i < recibosFormateados.length; i += recibosPerPage) {
         // El borde del recibo siempre usa las dimensiones calculadas (no tabla_ancho_mm/tabla_alto_mm)
