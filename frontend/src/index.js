@@ -23,6 +23,7 @@ try {
 
   // Nota: módulo Table no está disponible en Quill 1.3.7 sin dependencias externas
 } catch (err) {
+  console.error('Error initializing Quill formats:', err);
 }
 
 const root = ReactDOM.createRoot(document.getElementById('root'));
