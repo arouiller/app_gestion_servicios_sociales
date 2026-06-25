@@ -470,10 +470,10 @@ ${filasHTML}
   // Reducir ancho 2mm para dejar espacio al borde y evitar corte
   const marginMM = 1 * SCALE_FACTOR;
   const finalAncho = tablaAncho ? ((tablaAncho - 2) * SCALE_FACTOR) : null;
-  const finalAlto = tablaAlto ? (tablaAlto * SCALE_FACTOR) : null;
+  const finalAlto = tablaAlto ? tablaAlto : null; // No escalar alto - mantener altura original del recibo
   const wrapperWidth = finalAncho ? `${finalAncho.toFixed(2)}mm` : '100%';
-  const wrapperHeight = finalAlto ? `${finalAlto.toFixed(2)}mm` : 'auto';
-  const wrapperBorder = tablaData.bordeTabla ? '1px solid #000' : '0';
+  const wrapperHeight = finalAlto ? `${finalAlto}mm` : 'auto';
+  const wrapperBorder = tablaData.bordeTabla ? '0.5px solid #000' : '0';
 
   return `<div style="border: ${wrapperBorder}; box-sizing: border-box; width: ${wrapperWidth}; height: ${wrapperHeight}; margin-left: ${marginMM.toFixed(2)}mm; margin-right: ${marginMM.toFixed(2)}mm; overflow: hidden;">
 ${tableHTML}
