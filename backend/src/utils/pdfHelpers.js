@@ -435,7 +435,7 @@ function generateTableHTML(tablaData, tablaAncho = null, tablaAlto = null) {
         .map(celda => {
           const anchoMM = celda.ancho_mm || celda.ancho;
           const anchoPorcentaje = (anchoMM / anchoTotalMM) * 100;
-          return `<td style="width: ${anchoPorcentaje}%; border: ${borderStyle}; padding: 4px; vertical-align: top; overflow: hidden; white-space: nowrap; text-overflow: ellipsis;">${celda.contenido || ''}</td>`;
+          return `<td style="width: ${anchoPorcentaje}%; border: ${borderStyle}; padding: 4px; vertical-align: top; overflow: hidden; white-space: nowrap; text-overflow: ellipsis; box-sizing: border-box;">${celda.contenido || ''}</td>`;
         })
         .join('');
 
@@ -449,7 +449,7 @@ ${celdasHTML}
 
       // Celda de la tabla raíz contiene la tabla interna
       return `<tr>
-<td style="padding: 0; border: ${borderStyle}; width: 100%; height: ${altura}mm; vertical-align: top;">
+<td style="padding: 0; border: ${borderStyle}; width: 100%; height: ${altura}mm; vertical-align: top; box-sizing: border-box;">
 ${tablaInternaHTML}
 </td>
 </tr>`;
