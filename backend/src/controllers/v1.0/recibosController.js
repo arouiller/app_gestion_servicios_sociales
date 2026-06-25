@@ -602,7 +602,7 @@ exports.generarPDF = async (req, res, next) => {
       localidad_nombre: r.PlanV1?.Localidad?.nombre || null,
       numero_documento: r.PlanV1?.PlanIntegrantes?.[0]?.Persona?.numero_documento || null,
       fecha_nacimiento: r.PlanV1?.PlanIntegrantes?.[0]?.Persona?.fecha_nacimiento || null,
-      fecha_cobertura: r.PlanV1?.PlanIntegrantes?.[0]?.Persona?.fecha_cobertura || null,
+      fecha_cobertura: r.PlanV1?.fecha_cobertura || null,
       tipo_plan_abreviacion: tipoPlanMap[r.tipo_plan_nombre] || null,
       tipo_grupo_abreviacion: tipoGrupoMap[r.tipo_de_grupo_nombre] || null,
     }));
