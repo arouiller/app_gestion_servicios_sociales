@@ -948,9 +948,22 @@ function extractStylesFromTemplate(templateContent) {
 /**
  * BACKLOG-080: Renderiza un recibo individual reemplazando todos los placeholders
  */
+// Formatea periodo de YYYY-MM-DD a MM/YY
+function formatPeriodo(periodo) {
+  if (!periodo) return '-';
+  // Espera formato YYYY-MM-DD, retorna MM/YY
+  const match = periodo.match(/^(\d{4})-(\d{2})-(\d{2})/);
+  if (match) {
+    const year = match[1].slice(-2); // Últimos 2 dígitos del año
+    const month = match[2];
+    return `${month}/${year}`;
+  }
+  return periodo;
+}
+
 // Preparar datos del recibo para reemplazar placeholders
 function prepareReciboData(recibo) {
-  const numeroRecibo = recibo.numero_recibo ?? recibo.id;
+  const numeroRecibo = String(recibo.numero_recibo ?? recibo.id).padStart(8, '0');
   const numeroAfiliado = String(recibo.numero_afiliado).padStart(5, '0');
   const zonaCodigo = recibo.zona_codigo || '-';
   const localidad = recibo.localidad_nombre || '-';
@@ -983,7 +996,7 @@ function prepareReciboData(recibo) {
     fecha_nacimiento: recibo.fecha_nacimiento || '-',
     fecha_cobertura: recibo.fecha_cobertura || '-',
     numero_documento: recibo.numero_documento || '-',
-    periodo: recibo.periodo || '-',
+    periodo: formatPeriodo(recibo.periodo),
   };
 }
 
