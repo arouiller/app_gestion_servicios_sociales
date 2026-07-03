@@ -29,6 +29,8 @@ const Recibo = sequelize.define('Recibo', {
     comment: 'Diferencia entre valor_cuota y cuota_social (servicios facturados)'
   },
   zona_codigo: { type: DataTypes.STRING(10) },
+  localidad_id: { type: DataTypes.INTEGER },
+  localidad_nombre: { type: DataTypes.STRING(100) },
   fecha_emision: { type: DataTypes.DATE, allowNull: false, defaultValue: DataTypes.NOW },
   usuario_id: { type: DataTypes.INTEGER, allowNull: false },
 }, { tableName: 'recibos', timestamps: false });

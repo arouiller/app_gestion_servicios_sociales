@@ -1,6 +1,7 @@
 /**
  * PDF Helper Functions para generación de recibos con desglose (BACKLOG-080)
  */
+const Handlebars = require('handlebars');
 
 /**
  * Formatea un número como moneda ($X.XX)
@@ -314,31 +315,32 @@ margins: ${margins}
  * Los valores ya vienen formateados desde renderRecibo(), no reformatear
  */
 function replaceAllPlaceholders(html, recibo) {
-  let result = html;
+  try {
+    const template = Handlebars.compile(html);
+    return template(recibo);
+  } catch (error) {
+    console.error('[HANDLEBARS-ERROR]', error.message);
+    // Fallback a regex simple si Handlebars falla
+    let result = html;
+    const placeholders = [
+      'numero_recibo', 'numero_afiliado', 'zona_codigo', 'zona_nombre',
+      'titular_apellido', 'titular_nombre',
+      'obra_social_nombre', 'tipo_de_grupo_nombre', 'tipo_plan_nombre',
+      'localidad_nombre', 'domicilio',
+      'valor_cuota', 'cuota_social', 'arancel_por_servicio',
+      'arancel_negativo_class', 'arancel_warning_icon',
+      'arancel_bg', 'arancel_color',
+      'fecha_nacimiento', 'fecha_cobertura', 'numero_documento', 'periodo'
+    ];
 
-  const placeholders = [
-    'numero_recibo', 'numero_afiliado', 'zona_codigo', 'zona_nombre',
-    'titular_apellido', 'titular_nombre',
-    'obra_social_nombre', 'tipo_de_grupo_nombre', 'tipo_plan_nombre',
-    'localidad_nombre', 'domicilio',
-    'valor_cuota', 'cuota_social', 'arancel_por_servicio',
-    'arancel_negativo_class', 'arancel_warning_icon',
-    'arancel_bg', 'arancel_color',
-    'fecha_nacimiento', 'fecha_cobertura', 'numero_documento', 'periodo'
-  ];
+    placeholders.forEach((placeholder) => {
+      const value = recibo[placeholder] || '';
+      const regex = new RegExp(`{{${placeholder}}}`, 'g');
+      result = result.replace(regex, value);
+    });
 
-  placeholders.forEach((placeholder) => {
-    const key = placeholder;
-    let value = recibo[key] || '';
-
-    // NO reformatear valores que ya vienen formateados desde renderRecibo()
-    // Solo usar el valor tal como viene
-
-    const regex = new RegExp(`{{${placeholder}}}`, 'g');
-    result = result.replace(regex, value);
-  });
-
-  return result;
+    return result;
+  }
 }
 
 /**

@@ -131,13 +131,14 @@ exports.generar = async (req, res, next) => {
 
         // Obtener datos del plan con sus relaciones
         const plan = await db.PlanV1.findByPk(planNumero, {
-          attributes: ['plan_numero', 'numero_afiliado', 'domicilio', 'valor_cuota', 'zona_id'],
+          attributes: ['plan_numero', 'numero_afiliado', 'domicilio', 'valor_cuota', 'zona_id', 'localidad_id'],
           include: [
             { model: db.TipoDePlan, attributes: ['tipo_plan_nombre'] },
             { model: db.Cobrador, attributes: ['cobrador_apellido', 'cobrador_nombre'] },
             { model: db.TipoDeGrupo, attributes: ['tipo_de_grupo_nombre'] },
             { model: db.ObraSocial, attributes: ['os_nombre'] },
             { model: db.Zona, attributes: ['codigo'] },
+            { model: db.Localidad, attributes: ['nombre'] },
           ],
           transaction,
         });
@@ -202,6 +203,8 @@ exports.generar = async (req, res, next) => {
           cuota_social: cuotaSocial,
           arancel_por_servicio: arancelPorServicio,
           zona_codigo: plan.Zona?.codigo || null,
+          localidad_id: plan.localidad_id || null,
+          localidad_nombre: plan.Localidad?.nombre || null,
           usuario_id: userId,
         },
         { transaction }
@@ -975,10 +978,22 @@ function prepareReciboData(recibo) {
   const arancelBg = isArancelNegative ? '#fff3cd' : '#f9f9f9';
   const arancelColor = isArancelNegative ? '#856404' : '#27ae60';
 
+  // Preparar array de adherentes para Handlebars {{#each adherentes}}
+  const adherentes = (recibo.ReciboIntegrantes || []).map(integrante => ({
+    nombre: integrante.nombre || '',
+    apellido: integrante.apellido || '',
+    numero_documento: integrante.numero_documento || '',
+    tipo_documento: integrante.tipo_documento || '',
+    fecha_nacimiento: integrante.fecha_nacimiento || '',
+    fecha_cobertura: integrante.fecha_cobertura || '',
+    rol: integrante.rol || '',
+  }));
+
   return {
     numero_recibo: numeroRecibo,
     numero_afiliado: numeroAfiliado,
     zona_codigo: zonaCodigo,
+    zona_nombre: recibo.zona_nombre || '-',
     titular_apellido: recibo.titular_apellido,
     titular_nombre: recibo.titular_nombre,
     obra_social_nombre: recibo.obra_social_nombre,
@@ -997,6 +1012,7 @@ function prepareReciboData(recibo) {
     fecha_cobertura: recibo.fecha_cobertura || '-',
     numero_documento: recibo.numero_documento || '-',
     periodo: formatPeriodo(recibo.periodo),
+    adherentes: adherentes,
   };
 }
 
