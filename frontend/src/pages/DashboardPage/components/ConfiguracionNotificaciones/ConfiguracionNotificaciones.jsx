@@ -82,6 +82,12 @@ export default function ConfiguracionNotificaciones() {
         ...prev,
         [type]: value,
       }));
+    } else if (type === 'centro_emision') {
+      const numValue = parseInt(value, 10) || 0;
+      setValues((prev) => ({
+        ...prev,
+        [type]: Math.max(0, Math.min(numValue, 99999)),
+      }));
     } else {
       setValues((prev) => ({
         ...prev,
@@ -171,6 +177,17 @@ export default function ConfiguracionNotificaciones() {
       }
     }
 
+    // Validaciones específicas para centro_emision
+    if (type === 'centro_emision') {
+      if (!Number.isInteger(newValue) || newValue < 0 || newValue > 99999) {
+        setErrors((prev) => ({
+          ...prev,
+          [type]: 'Debe ser un número entero entre 0 y 99999 (sin decimales)',
+        }));
+        return;
+      }
+    }
+
     // Validaciones específicas para items_per_page
     if (type === 'items_per_page') {
       if (newValue !== 0 && (newValue < 5 || newValue > 1000)) {
@@ -191,9 +208,14 @@ export default function ConfiguracionNotificaciones() {
         valueToSave = parseFloat(normalized);
       }
       await configService.actualizarConfiguracion(type, valueToSave);
-      const successMsg = type === 'valor_cuota_social'
-        ? `Valor cuota social actualizado a ${parseFloat(valueToSave).toFixed(2)}`
-        : `Duración de ${type} actualizada a ${newValue}ms`;
+      let successMsg;
+      if (type === 'valor_cuota_social') {
+        successMsg = `Valor cuota social actualizado a ${parseFloat(valueToSave).toFixed(2)}`;
+      } else if (type === 'centro_emision') {
+        successMsg = `Centro de emisión actualizado a ${String(valueToSave).padStart(5, '0')}`;
+      } else {
+        successMsg = `Duración de ${type} actualizada a ${newValue}ms`;
+      }
       showSuccess(successMsg);
       setErrors((prev) => {
         const newErrors = { ...prev };

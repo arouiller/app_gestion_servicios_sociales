@@ -7,7 +7,7 @@ const queryExecController = require('../controllers/queryExecController');
 const router = express.Router();
 
 // Tipos de notificación y configuración válidos
-const VALID_TYPES = ['error', 'warning', 'success', 'info', 'debounce_delay_ms', 'items_per_page', 'audit_enabled', 'audit_retention_days', 'redondeo_precision', 'valor_cuota_social'];
+const VALID_TYPES = ['error', 'warning', 'success', 'info', 'debounce_delay_ms', 'items_per_page', 'audit_enabled', 'audit_retention_days', 'redondeo_precision', 'valor_cuota_social', 'centro_emision'];
 
 // GET /api/admin/configuracion - Público (lectura de configuración)
 router.get('/configuracion', async (req, res) => {
@@ -85,6 +85,13 @@ router.put('/configuracion/:tipo', verifyToken, requireAdmin, async (req, res) =
         return res.status(400).json({
           success: false,
           message: 'valor_cuota_social debe ser un número >= 0 (ej: 10.50)',
+        });
+      }
+    } else if (tipo === 'centro_emision') {
+      if (!Number.isInteger(duracion_ms) || duracion_ms < 0 || duracion_ms > 99999) {
+        return res.status(400).json({
+          success: false,
+          message: 'centro_emision debe ser un número entero entre 0 y 99999 (sin decimales)',
         });
       }
     }
