@@ -321,6 +321,46 @@ export default function ConfiguracionNotificaciones() {
                 </button>
               </td>
             </tr>
+            <tr>
+              <td>
+                <span className="configuracion-notificaciones__tipo-badge" style={{ backgroundColor: '#fef3c7', color: '#92400e', borderLeftColor: '#92400e' }}>
+                  <span className="configuracion-notificaciones__icon">🏢</span>
+                  Centro de Emisión
+                </span>
+              </td>
+              <td>Centro o sucursal emisor de los recibos</td>
+              <td className="configuracion-notificaciones__duration-cell">
+                <div className="configuracion-notificaciones__duration-group">
+                  <input
+                    type="number"
+                    min="0"
+                    step="1"
+                    className="configuracion-notificaciones__duration-input"
+                    value={values.centro_emision || 0}
+                    onChange={(e) => handleChange('centro_emision', e.target.value)}
+                    disabled={saving.centro_emision}
+                  />
+                  <span className="configuracion-notificaciones__hint">
+                    (número de centro)
+                  </span>
+                </div>
+                {errors.centro_emision && (
+                  <span className="configuracion-notificaciones__error">
+                    {errors.centro_emision}
+                  </span>
+                )}
+              </td>
+              <td className="configuracion-notificaciones__actions">
+                <button
+                  className="configuracion-notificaciones__btn-save"
+                  onClick={() => handleSave('centro_emision')}
+                  disabled={saving.centro_emision}
+                  title={saving.centro_emision ? 'Guardando...' : 'Guardar configuración'}
+                >
+                  {saving.centro_emision ? '⏳' : '💾'}
+                </button>
+              </td>
+            </tr>
           </tbody>
         </table>
       </div>
