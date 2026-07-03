@@ -602,7 +602,7 @@ exports.generarPDF = async (req, res, next) => {
       where: { tipo_notificacion: 'centro_emision' },
       raw: true,
     });
-    const centroEmision = configCentroEmision?.duracion_ms || 0;
+    const centroEmision = Math.floor(configCentroEmision?.duracion_ms || 0);
 
     // Diagnóstico: verificar qué retorna Sequelize
     if (recibos.length > 0) {
