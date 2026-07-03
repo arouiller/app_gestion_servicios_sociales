@@ -597,6 +597,13 @@ exports.generarPDF = async (req, res, next) => {
     const tipoPlanMap = Object.fromEntries(tiposPlanes.map(tp => [tp.tipo_plan_nombre, tp.abreviacion]));
     const tipoGrupoMap = Object.fromEntries(tiposGrupos.map(tg => [tg.tipo_de_grupo_nombre, tg.abreviacion]));
 
+    // Obtener parámetros de configuración
+    const configCentroEmision = await db.ConfiguracionApp.findOne({
+      where: { tipo_notificacion: 'centro_emision' },
+      raw: true,
+    });
+    const centroEmision = configCentroEmision?.duracion_ms || 0;
+
     // Diagnóstico: verificar qué retorna Sequelize
     if (recibos.length > 0) {
       console.log('[DEBUG-RECIBO-0] Keys:', Object.keys(recibos[0]));
@@ -861,7 +868,7 @@ exports.generarPDF = async (req, res, next) => {
           const leftPosition = marginLeftCompensated + (reciboWidth + gapHorizontalCompensated) * columna;
 
           // Renderizar tabla con placeholders reemplazados
-          const reciboData = prepareReciboData(recibosFormateados[i + j]);
+          const reciboData = prepareReciboData(recibosFormateados[i + j], centroEmision);
           const tableHTMLForRecibo = replaceAllPlaceholders(tableHTMLWithPlaceholders, reciboData);
 
           // Contenedor del recibo con tabla
@@ -964,7 +971,7 @@ function formatPeriodo(periodo) {
 }
 
 // Preparar datos del recibo para reemplazar placeholders
-function prepareReciboData(recibo) {
+function prepareReciboData(recibo, centroEmision = 0) {
   const numeroRecibo = String(recibo.numero_recibo ?? recibo.id).padStart(8, '0');
   const numeroAfiliado = String(recibo.numero_afiliado).padStart(5, '0');
   const zonaCodigo = recibo.zona_codigo || '-';
@@ -1014,6 +1021,7 @@ function prepareReciboData(recibo) {
     fecha_cobertura: recibo.fecha_cobertura || '-',
     numero_documento: recibo.numero_documento || '-',
     periodo: formatPeriodo(recibo.periodo),
+    centro_emision: centroEmision,
     adherentes: adherentes,
   };
 }
