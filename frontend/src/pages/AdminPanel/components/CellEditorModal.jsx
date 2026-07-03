@@ -3,7 +3,12 @@ import ReactQuill, { Quill } from 'react-quill';
 import 'react-quill/dist/quill.snow.css';
 
 const CellEditorModal = ({ celda, placeholders = {}, onSave, onClose }) => {
-  const [content, setContent] = useState(celda?.contenido || '');
+  // Reemplazar espacios múltiples con &nbsp; al cargar para que ReactQuill los preserve
+  const preserveMultipleSpaces = (text) => {
+    return text.replace(/ {2,}/g, (match) => '&nbsp;'.repeat(match.length));
+  };
+
+  const [content, setContent] = useState(preserveMultipleSpaces(celda?.contenido || ''));
   const [searchTerm, setSearchTerm] = useState('');
   const modalRef = useRef(null);
 
@@ -49,8 +54,13 @@ const CellEditorModal = ({ celda, placeholders = {}, onSave, onClose }) => {
     return () => document.removeEventListener('mousedown', handleClickOutside);
   }, [onClose]);
 
+  // Convertir &nbsp; de vuelta a espacios al guardar
+  const restoreMultipleSpaces = (text) => {
+    return text.replace(/(&nbsp;)+/g, (match) => ' '.repeat(match.length / 6)); // &nbsp; tiene 6 caracteres
+  };
+
   const handleSave = () => {
-    onSave(content);
+    onSave(restoreMultipleSpaces(content));
   };
 
   const handleInsertPlaceholder = (placeholder) => {
