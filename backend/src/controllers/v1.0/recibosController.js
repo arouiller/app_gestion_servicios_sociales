@@ -575,7 +575,7 @@ exports.generarPDF = async (req, res, next) => {
         },
         {
           model: db.ReciboIntegrante,
-          attributes: ['numero_documento', 'fecha_nacimiento', 'fecha_cobertura', 'rol'],
+          attributes: ['nombre', 'apellido', 'numero_documento', 'tipo_documento', 'fecha_nacimiento', 'fecha_cobertura', 'rol'],
           where: { rol: 'titular' },
           required: false,
         },
