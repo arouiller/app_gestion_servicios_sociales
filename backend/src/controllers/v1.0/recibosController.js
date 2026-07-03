@@ -576,7 +576,6 @@ exports.generarPDF = async (req, res, next) => {
         {
           model: db.ReciboIntegrante,
           attributes: ['nombre', 'apellido', 'numero_documento', 'tipo_documento', 'fecha_nacimiento', 'fecha_cobertura', 'rol'],
-          where: { rol: 'titular' },
           required: false,
         },
       ],
@@ -979,15 +978,18 @@ function prepareReciboData(recibo) {
   const arancelColor = isArancelNegative ? '#856404' : '#27ae60';
 
   // Preparar array de adherentes para Handlebars {{#each adherentes}}
-  const adherentes = (recibo.ReciboIntegrantes || []).map(integrante => ({
-    nombre: integrante.nombre || '',
-    apellido: integrante.apellido || '',
-    numero_documento: integrante.numero_documento || '',
-    tipo_documento: integrante.tipo_documento || '',
-    fecha_nacimiento: integrante.fecha_nacimiento || '',
-    fecha_cobertura: integrante.fecha_cobertura || '',
-    rol: integrante.rol || '',
-  }));
+  // Excluir al titular, mostrar solo integrantes
+  const adherentes = (recibo.ReciboIntegrantes || [])
+    .filter(integrante => integrante.rol !== 'titular')
+    .map(integrante => ({
+      nombre: integrante.nombre || '',
+      apellido: integrante.apellido || '',
+      numero_documento: integrante.numero_documento || '',
+      tipo_documento: integrante.tipo_documento || '',
+      fecha_nacimiento: integrante.fecha_nacimiento || '',
+      fecha_cobertura: integrante.fecha_cobertura || '',
+      rol: integrante.rol || '',
+    }));
 
   return {
     numero_recibo: numeroRecibo,
