@@ -618,8 +618,8 @@ exports.generarPDF = async (req, res, next) => {
       const reciboIntegrante = r.ReciboIntegrantes?.[0];
       return {
         ...r.dataValues,
-        zona_nombre: r.PlanV1?.Zona?.nombre || null,
-        localidad_nombre: r.PlanV1?.Localidad?.nombre || null,
+        zona_nombre: r.zona_nombre || r.PlanV1?.Zona?.nombre || null,
+        localidad_nombre: r.localidad_nombre || r.PlanV1?.Localidad?.nombre || null,
         numero_documento: reciboIntegrante?.numero_documento || null,
         fecha_nacimiento: reciboIntegrante?.fecha_nacimiento || null,
         fecha_cobertura: reciboIntegrante?.fecha_cobertura || null,
