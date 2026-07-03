@@ -1021,7 +1021,7 @@ function prepareReciboData(recibo, centroEmision = 0) {
     fecha_cobertura: recibo.fecha_cobertura || '-',
     numero_documento: recibo.numero_documento || '-',
     periodo: formatPeriodo(recibo.periodo),
-    centro_emision: centroEmision,
+    centro_emision: String(centroEmision || 0).padStart(5, '0'),
     adherentes: adherentes,
   };
 }

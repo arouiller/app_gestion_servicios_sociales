@@ -328,20 +328,22 @@ export default function ConfiguracionNotificaciones() {
                   Centro de Emisión
                 </span>
               </td>
-              <td>Centro o sucursal emisor de los recibos</td>
+              <td>Centro o sucursal emisor de los recibos (5 dígitos)</td>
               <td className="configuracion-notificaciones__duration-cell">
                 <div className="configuracion-notificaciones__duration-group">
                   <input
                     type="number"
                     min="0"
+                    max="99999"
                     step="1"
                     className="configuracion-notificaciones__duration-input"
                     value={values.centro_emision || 0}
                     onChange={(e) => handleChange('centro_emision', e.target.value)}
                     disabled={saving.centro_emision}
+                    title="Número entre 0 y 99999 (se rellenará con ceros a la izquierda)"
                   />
                   <span className="configuracion-notificaciones__hint">
-                    (número de centro)
+                    (0-99999, se mostrará como 5 dígitos)
                   </span>
                 </div>
                 {errors.centro_emision && (
